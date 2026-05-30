@@ -20,21 +20,27 @@ Each phase produces documented artifacts before proceeding to the next, ensuring
 
 ```
 hermes-spec-kit/
-  README.md           # This file
-  design.md           # System architecture and design decisions
-  workflow.md         # Detailed workflow phases and execution flow
-  skills.md           # Skill definitions and implementation details
-  migration.md        # Migration guide from OpenCode/Cline spec kit
-  automation.md       # Cron jobs, delegation, and automation patterns
-  templates/          # Template files for spec artifacts
-    constitution.md   # Project constitution template
-    spec.md           # Feature specification template
-    plan.md           # Implementation plan template
-    tasks.md          # Task breakdown template
-    checklist.md      # Quality checklist template
-    research.md       # Research document template
-    data-model.md     # Data model template
+  README.md              # This file
+  design.md              # System architecture and design decisions
+  workflow.md            # Workflow phases and execution flow
+  skills.md              # Skill reference
+  automation.md          # Cron jobs, delegation, and automation patterns
+  src/skills/            # Skill files (installed to ~/.hermes/skills/)
+  src/templates/         # Artifact templates
+    constitution-template.md
+    spec-template.md
+    plan-template.md
+    tasks-template.md
+    checklist-template.md
+    research-template.md
+    data-model-template.md
+  scripts/
+    install.sh           # Installs skills + templates to ~/.hermes/skills/
 ```
+
+## Templates
+
+Templates live in `src/templates/`. They are installed to `~/.hermes/skills/spec-kit/templates/` by `./scripts/install.sh`. Do not edit `templates/` directly — that directory is deprecated.
 
 ## Core Concepts
 
@@ -45,9 +51,9 @@ Every feature starts with a specification, not code. The spec defines:
 - How success is measured (acceptance criteria)
 - What constraints exist (non-functional requirements)
 
-### Phase Gating
+### Phase Advancement
 
-Each phase must complete and pass validation before the next begins. Quality checklists enforce this.
+Each phase must produce documented artifacts before proceeding to the next. Phase transitions are manual — the user decides when to advance.
 
 ### Technology-Agnostic Specifications
 

@@ -224,18 +224,14 @@ hermes
 
 Replace OpenCode's script-based automation with Hermes Agent cron jobs:
 
-```bash
+```python
 # Spec completeness check
-hermes cron create \
-  --name "spec-check" \
-  --schedule "every 24h" \
-  --prompt "Check all spec directories for completeness. Report missing files."
+cronjob(action='create', name='spec-check', schedule='every 24h',
+  prompt='Check all spec directories for completeness. Report missing files.')
 
 # AGENTS.md update
-hermes cron create \
-  --name "agents-update" \
-  --schedule "every 12h" \
-  --prompt "Update AGENTS.md SPECKIT section with current spec references."
+cronjob(action='create', name='agents-update', schedule='every 12h',
+  prompt='Update AGENTS.md SPECKIT section with current spec references.')
 ```
 
 ## Feature Comparison

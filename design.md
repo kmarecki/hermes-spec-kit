@@ -43,12 +43,12 @@ Each workflow phase is implemented as a Hermes Agent skill:
 - Validates phase completion before allowing progression
 
 **Phase Skills:**
-- `spec-kit-constitution`: Project principles and constraints
-- `spec-kit-specify`: Feature specification creation
-- `spec-kit-clarify`: Ambiguity resolution
-- `spec-kit-plan`: Implementation planning
-- `spec-kit-tasks`: Task breakdown generation
-- `spec-kit-implement`: Task execution with TDD
+- `spec-kit-constitution`: Phase 0 — Project principles and constraints
+- `spec-kit-specify`: Phase 1 — Feature specification creation
+- `spec-kit-clarify`: Phase 2 — Ambiguity resolution (optional)
+- `spec-kit-plan`: Phase 3 — Implementation planning
+- `spec-kit-tasks`: Phase 4 — Task breakdown generation
+- `spec-kit-implement`: Phase 5 — Task execution with TDD
 
 ### 2. Artifact Structure
 
@@ -75,7 +75,7 @@ specs/
 
 ### 3. Validation System
 
-Quality checklists enforce phase gates:
+Quality checklists are optional guides, not blocking gates:
 
 **Requirements Checklist (spec.md)**
 - No implementation details leaked
@@ -89,7 +89,6 @@ Quality checklists enforce phase gates:
 - Test tasks precede implementation
 - Parallel tasks marked [P]
 - File paths specified
-- Dependencies resolved
 
 ### 4. Memory Integration
 
@@ -125,20 +124,25 @@ Main agent verifies and merges
 
 ## Data Flow
 
+### Phase 0: Constitution
+```
+ constitution.md → spec-kit-constitution skill → project principles
+```
+
 ### Phase 1: Specify
 ```
-User Input → spec-kit-specify skill → spec.md + checklists/requirements.md
+User Input → spec-kit-specify skill → spec.md
 ```
 
 ### Phase 2: Clarify (Optional)
 ```
-spec.md ambiguities → spec-kit-clarify skill → clarify.md → spec.md updated
+spec.md ambiguities → spec-kit-clarify skill → clarify.md
 ```
 
 ### Phase 3: Plan
 ```
-spec.md + constitution.md → spec-kit-plan skill → 
-  ├─ research.md (parallel research)
+spec.md + constitution.md → spec-kit-plan skill →
+  ├─ research.md
   ├─ data-model.md
   ├─ contracts/
   └─ plan.md
@@ -146,12 +150,12 @@ spec.md + constitution.md → spec-kit-plan skill →
 
 ### Phase 4: Tasks
 ```
-plan.md + spec.md → spec-kit-tasks skill → tasks.md + checklists/implementation.md
+plan.md + spec.md → spec-kit-tasks skill → tasks.md
 ```
 
 ### Phase 5: Implement
 ```
-tasks.md + checklists → spec-kit-implement skill → code changes + test results
+tasks.md → spec-kit-implement skill → code changes + test results
 ```
 
 ## Security Considerations
@@ -189,11 +193,6 @@ tasks.md + checklists → spec-kit-implement skill → code changes + test resul
 - Sessions can be resumed from any phase
 
 ## Error Handling
-
-### Phase Validation Failures
-- Checklist failures block progression
-- Specific issues documented with quotes from artifacts
-- User prompted to fix before continuing
 
 ### Missing Artifacts
 - Skills check for required files before proceeding
