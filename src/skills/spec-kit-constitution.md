@@ -8,23 +8,23 @@ category: software-development
 
 **Phase**: 0 (Foundation)
 
-**Purpose**: Create or update the project constitution at `.specify/memory/constitution.md`. This defines core principles that govern all subsequent development.
+**Purpose**: Create or update the project constitution at `specs/constitution.md`. This defines core principles that govern all subsequent development.
 
 **Prerequisites**: None. This is the first skill — run first for a new project.
 
 **Artifacts**:
-- `.specify/memory/constitution.md` (primary artifact)
+- `specs/constitution.md` (primary artifact)
 - `.specify/memory/constitution.version` (version tracking)
 
 ## Execution
 
 ### Step 1: Check for existing constitution
 ```
-IF .specify/memory/constitution.md EXISTS:
+IF specs/constitution.md EXISTS:
   LOAD existing constitution
   READ current version from header
 ELSE:
-  COPY templates/constitution.md → .specify/memory/constitution.md
+  COPY templates/constitution.md → specs/constitution.md
   SET version to 0.1.0
 ```
 
