@@ -77,6 +77,21 @@ Implementation tasks are organized to write tests before code, with explicit tes
 | Memory | Context window only | Persistent cross-session memory |
 | Portability | Agent-specific (.clinerules) | Universal skills |
 | Project context | CLAUDE.md only | AGENTS.md + workdir + profile support |
+| Slash commands | `/speckit.specify`, `/speckit.plan` — full commands with args | `/skill-name` loads skill text only, no arg parsing |
+
+## Slash Command Limitation
+
+Hermes Agent does **not** have a user-extensible slash command system like OpenCode. Skills installed in `~/.hermes/skills/` are automatically exposed as `/skill-name` commands, but they only **inject the skill's markdown text into context** — they do not execute the skill with parsed arguments.
+
+| What you might expect | What actually happens |
+|------------------------|------------------------|
+| `/spec-kit-specify "user auth"` | Typing `/spec-kit-specify` loads the skill text. You then type "create a spec for user auth" as a normal message. |
+| `/speckit plan 006` | No equivalent. Use "Plan 006-multi-layered-visualizer" as a normal message. |
+| `/speckit.implement` | No dot-notation subcommands. Each skill is its own slash command. |
+
+The Hermes `COMMAND_REGISTRY` is a hardcoded Python list in `hermes_cli/commands.py`. There is no config-driven or file-driven way for users to register new slash commands with argument parsing. The `quick_commands` field in `config.yaml` exists but is unimplemented.
+
+**Workaround:** Use natural language. The `spec-kit-workflow` skill routes phrases like "Create a spec for ...", "Plan ...", "Implement ..." to the correct phase skill. See examples below.
 
 ## Usage
 
@@ -84,21 +99,62 @@ Implementation tasks are organized to write tests before code, with explicit tes
 
 ```
 User: "Create a spec for user authentication with OAuth2"
-Agent: Loads spec-kit-workflow skill, creates spec directory, generates spec.md
+Agent: Loads spec-kit-workflow skill, routes to spec-kit-specify, creates spec directory, generates spec.md
 ```
 
 ### Continuing an Existing Feature
 
 ```
 User: "What phase is 006-multi-layered-visualizer in?"
-Agent: Reads spec directory, checks task completion, reports status
+Agent: Reads spec directory, reports current phase based on artifacts present
+
+User: "Plan 006-multi-layered-visualizer"
+Agent: Loads spec-kit-plan skill, generates plan.md, research.md, data-model.md
+
+User: "Generate tasks for 006-multi-layered-visualizer"
+Agent: Loads spec-kit-tasks skill, generates tasks.md
+
+User: "Implement 006-multi-layered-visualizer"
+Agent: Loads spec-kit-implement skill, executes tasks with TDD
 ```
 
-### Implementing Tasks
+### Using Slash Commands (Context Injection)
 
 ```
-User: "Implement the next tasks for 006-multi-layered-visualizer"
-Agent: Loads tasks.md, finds next incomplete task, executes with TDD
+/spec-kit-workflow     — loads the orchestrator skill text
+/spec-kit-specify      — loads the specify skill text
+/spec-kit-plan         — loads the plan skill text
+/spec-kit-tasks        — loads the tasks skill text
+/spec-kit-implement    — loads the implement skill text
+```
+
+After typing a slash command, the skill instructions appear in context. You then type a normal message to execute the skill.
+
+### Using Skill Bundles
+
+Group all spec-kit skills under a single slash command:
+
+```
+hermes bundles create speckit \
+  --skill spec-kit-workflow \
+  --skill spec-kit-constitution \
+  --skill spec-kit-specify \
+  --skill spec-kit-clarify \
+  --skill spec-kit-plan \
+  --skill spec-kit-tasks \
+  --skill spec-kit-analyze \
+  --skill spec-kit-checklist \
+  --skill spec-kit-implement
+```
+
+Then use `/speckit` to load all spec-kit skills at once. Same limitation applies — slash commands inject text, they don't execute with arguments.
+
+### Reloading After Installation
+
+After running `./scripts/install.sh`, reload skills in your Hermes session:
+
+```
+/reload-skills
 ```
 
 ## Related Projects
