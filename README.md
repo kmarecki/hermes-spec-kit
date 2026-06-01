@@ -27,6 +27,7 @@ hermes-spec-kit/
   automation.md          # Cron jobs, delegation, and automation patterns
   src/skills/            # Skill files (installed to ~/.hermes/skills/)
   src/templates/         # Artifact templates
+    AGENTS-template.md       # Starting AGENTS.md for spec-kit projects
     constitution-template.md
     spec-template.md
     plan-template.md
@@ -40,7 +41,10 @@ hermes-spec-kit/
 
 ## Templates
 
-Templates live in `src/templates/`. They are installed to `~/.hermes/skills/spec-kit/templates/` by `./scripts/install.sh`. Do not edit `templates/` directly — that directory is deprecated.
+Templates live in `src/templates/`. They are installed to `~/.hermes/skills/spec-kit/templates/` by `./scripts/install.sh`. Do not edit `templates/` directly.
+
+- `AGENTS-template.md` — copy this to your project root as the starting `AGENTS.md` file. Spec-kit does NOT auto-update it; maintain the SPECKIT section manually as specs progress.
+- `*template.md` — used by skills to generate spec artifacts. Do not edit these directly.
 
 ## Core Concepts
 

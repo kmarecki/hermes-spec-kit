@@ -71,12 +71,23 @@ To determine the current phase of a feature, check which artifacts exist:
 | tasks.md with completions | Implementing |
 | All tasks complete | Complete |
 
+## Project Setup
+
+### AGENTS.md
+
+Use `src/templates/AGENTS-template.md` as the starting `AGENTS.md` for projects using spec-kit. Copy it to the project root at the beginning. Spec-kit does NOT auto-update AGENTS.md — maintain the SPECKIT section manually as specs progress.
+
+### Constitution
+
+Run `spec-kit-constitution` first for a new project. This creates `specs/constitution.md` (or `.specify/memory/constitution.md` per official spec-kit convention) with project principles. All plans must address these principles.
+
 ## Templates
 
 Templates are in `src/templates/`. Each template is a standalone markdown file:
 
 ```
 src/templates/
+  AGENTS-template.md       # Starting AGENTS.md for new projects
   constitution-template.md
   spec-template.md
   plan-template.md

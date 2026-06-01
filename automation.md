@@ -31,24 +31,14 @@ Report:
 4. Recommendations for next steps
 ```
 
-### AGENTS.md Maintenance
+### AGENTS.md Reference
 
-Automatically updates the SPECKIT section in AGENTS.md.
+AGENTS.md is a project-level context file for Hermes Agent. It is read automatically on every message. Spec-kit does NOT auto-update AGENTS.md — manual updates only.
+
+When creating a project, copy `src/templates/AGENTS-template.md` to the project root as a starting point. Maintain the SPECKIT section manually as specs progress.
 
 ```
-cronjob(action='create', name='agents-md-update', schedule='every 12h', prompt='...')
-```
-
-**Prompt content:**
-```
-Read AGENTS.md and check the SPECKIT section.
-Compare with actual files in specs/ directory.
-Update the SPECKIT section to include:
-- All current spec plan.md files
-- All current spec research.md files
-- All current spec data-model.md files
-- All current spec contract files
-Preserve manual content outside SPECKIT markers.
+cp ~/.hermes/skills/spec-kit/templates/AGENTS-template.md /path/to/project/AGENTS.md
 ```
 
 ### Task Progress Tracker
@@ -145,11 +135,8 @@ Agent:
 3. Create specs/NNN-feature-name/ directory
 4. Load spec-kit-specify skill
 5. Generate spec.md from user description
-6. Update AGENTS.md SPECKIT section (optional)
-7. Report: "Spec created at specs/NNN-feature-name/"
+6. Report: "Spec created at specs/NNN-feature-name/"
 ```
-
-### Phase Advancement
 
 When the user wants to advance to the next phase:
 
