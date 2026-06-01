@@ -92,12 +92,18 @@ Document structure decision in plan.
 If constitutional gates violated, document in plan:
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 
-### Step 9: Write phase marker
-```
-WRITE specs/[feature]/.phase: "plan"
-```
+## Completion
 
-## Idempotency
+Report:
+- Plan path
+- Generated artifacts (research.md, data-model.md, contracts/)
+- Gate status (pass/fail with justifications)
+- Suggest next command
+
+## Next Skills
+
+- Run `spec-kit-tasks` to create task breakdown
+- Run `spec-kit-analyze` for optional quality gate before implementation
 
 **Re-running this skill**:
 1. LOAD existing plan, research, data-model

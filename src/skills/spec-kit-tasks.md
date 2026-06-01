@@ -91,12 +91,18 @@ At end of tasks.md:
 - User story dependencies
 - Parallel execution opportunities
 
-### Step 8: Write phase marker
-```
-WRITE specs/[feature]/.phase: "tasks"
-```
+## Completion
 
-## Idempotency
+Report:
+- Task count by phase
+- Parallelizable task count
+- Requirement coverage percentage
+- Suggest next command
+
+## Next Skills
+
+- Run `spec-kit-analyze` for optional quality gate before implementation
+- Run `spec-kit-implement` to execute tasks
 
 **Re-running this skill**:
 1. LOAD existing tasks.md

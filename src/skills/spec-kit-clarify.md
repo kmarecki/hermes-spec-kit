@@ -84,12 +84,18 @@ RE-EVALUATE `specs/[feature]/checklists/requirements.md`:
 - TOGGLE `[ ]` to `[x]` for newly satisfied criteria
 - TOGGLE `[x]` to `[ ]` for regressed criteria
 
-### Step 9: Write phase marker
-```
-WRITE specs/[feature]/.phase: "clarify"
-```
+## Completion
 
-## Idempotency
+Report:
+- Number of questions asked and answered
+- Sections updated in spec
+- Checklist status (before → after)
+- Suggest next command
+
+## Next Skills
+
+- Run `spec-kit-specify` again to make additional changes
+- Run `spec-kit-plan` when all critical ambiguities are resolved
 
 **Re-running this skill**:
 1. LOAD current spec

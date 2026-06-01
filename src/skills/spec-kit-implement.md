@@ -85,12 +85,20 @@ After each task:
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
-### Step 9: Write phase marker
-```
-WRITE specs/[feature]/.phase: "implement"
-```
+## Completion
 
-## Idempotency
+Report:
+- Final status
+- Tasks completed vs total
+- Tests passing
+- Summary of completed work
+
+## Done When
+
+- [ ] All tasks in tasks.md completed and marked [X]
+- [ ] Implementation validated against spec and plan
+- [ ] All tests passing
+- [ ] Implementation complete
 
 **Re-running this skill**:
 1. LOAD tasks.md and find next incomplete task

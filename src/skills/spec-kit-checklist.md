@@ -86,12 +86,19 @@ Add brief notes explaining:
 - What to look for
 - Common failure modes
 
-### Step 5: Write phase marker
-```
-WRITE specs/[feature]/checklists/[name].phase: "[type]"
-```
+### Step 5: Complete
 
-## Idempotency
+Report:
+- Checklist path
+- Item count by category
+- Completion status
+- Suggest what to do with results
+
+## Next Skills
+
+- Run `spec-kit-analyze` to cross-check against all artifacts
+- Run `spec-kit-implement` after checklist validation
+- Run the relevant prerequisite skill to fix flagged issues
 
 **Re-running this skill**:
 1. LOAD existing checklist (if one exists for this type/feature)

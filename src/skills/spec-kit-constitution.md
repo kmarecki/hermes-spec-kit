@@ -59,12 +59,16 @@ Read and update references in:
 - `src/templates/spec-template.md` — mandatory sections
 - `src/templates/tasks-template.md` — principle-driven task types
 
-### Step 7: Write phase marker
-```
-WRITE .specify/memory/constitution.phase: "constitution"
-```
+## Completion
 
-## Idempotency
+Report:
+- New version and bump rationale
+- List of modified principles
+- Suggested commit message
+
+## Next Skill
+
+Run `spec-kit-specify` to create the first feature specification.
 
 **Re-running this skill**:
 1. LOAD existing constitution

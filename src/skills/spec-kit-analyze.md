@@ -141,12 +141,20 @@ IF only LOW/MEDIUM:
 - User may proceed
 - Provide improvement suggestions
 
-### Step 8: Write phase marker
-```
-WRITE specs/[feature]/.phase: "analyze"
-```
+### Step 8: Complete
 
-## Idempotency
+Report:
+- Findings count by severity
+- Coverage percentage
+- Explicit remediation commands
+- Recommend whether to proceed to `spec-kit-implement`
+
+## Next Skills
+
+- Run `spec-kit-specify` to fix spec issues
+- Run `spec-kit-plan` to fix plan issues
+- Run `spec-kit-tasks` to fix coverage gaps
+- Run `spec-kit-implement` when all CRITICAL issues resolved
 
 **Re-running this skill**:
 1. Re-run all detection passes

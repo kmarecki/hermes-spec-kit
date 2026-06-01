@@ -71,12 +71,18 @@ Validate:
 - Success criteria measurable
 - Max 3 [NEEDS CLARIFICATION] markers
 
-### Step 8: Write phase marker
-```
-WRITE specs/[feature]/.phase: "spec"
-```
+## Completion
 
-## Idempotency
+Report:
+- Feature directory path
+- Spec file path
+- Checklist status
+- List readiness for next phase
+
+## Next Skills
+
+- Run `spec-kit-clarify` for iterative clarification (optional but recommended)
+- Run `spec-kit-plan` when ready for technical planning
 
 **Re-running this skill**:
 1. LOAD existing `specs/[feature]/spec.md`

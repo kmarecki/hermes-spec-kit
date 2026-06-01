@@ -65,25 +65,36 @@ Check for artifacts to determine current phase:
 | `tasks.md` with completions | Implementing |
 | All tasks complete | Complete |
 
-## Skill State Tracking
+## Skill Routing
 
-Each skill writes state to `specs/[feature]/.phase`:
-- `constitution` — constitution created
-- `spec` — spec created
-- `clarify` — clarification complete
-- `plan` — plan created
-- `tasks` — tasks created
-- `analyze` — analysis complete
-- `implement` — implementation started
+### New Feature
+- User says: "Create a spec for [description]"
+- Route to: `spec-kit-specify`
 
-## Idempotency
+### Existing Feature
+- User says: "What phase is [feature] in?"
+- Check `specs/[feature]/` directory structure
+- Report current phase
 
-All phase skills are idempotent:
-- Re-running updates the skill's own artifacts
-- User can go back and re-run any skill to update its output
-- Re-running a skill does NOT invalidate downstream artifacts by default
+### Advance Phase
+- User says: "Plan [feature]"
+- Route to: `spec-kit-plan`
 
-## Prerequisite Enforcement
+### Clarify Ambiguities
+- User says: "Clarify [feature]"
+- Route to: `spec-kit-clarify`
+
+### Constitution
+- User says: "Create constitution"
+- Route to: `spec-kit-constitution`
+
+### Analyze
+- User says: "Analyze [feature]"
+- Route to: `spec-kit-analyze`
+
+### Implement
+- User says: "Implement [feature]"
+- Route to: `spec-kit-implement`
 
 Each skill BLOCKS if prerequisites are not met:
 - `spec-kit-constitution`: No prerequisites (phase 0)
