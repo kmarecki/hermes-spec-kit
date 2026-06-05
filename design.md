@@ -11,9 +11,13 @@ The Hermes Spec Kit is built on three layers:
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                     Workflow Orchestration Layer             │
-│  spec-kit-workflow skill routes to phase-specific skills    │
-│  Constitution → Specify → Clarify → Plan → Tasks → Implement│
+|                     Workflow Orchestration Layer             |
+|  spec-kit-workflow skill routes to phase-specific skills    |
+|  Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
+|                                                          └── bugfix loop ──┐
+|                                                     ┌──────────────────────┘
+|                                                     ▼
+|                                               Clarify → Plan → Tasks → [Analyze] → Implement → Test|
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -49,6 +53,7 @@ Each workflow phase is implemented as a Hermes Agent skill:
 - `spec-kit-plan`: Phase 3 — Implementation planning
 - `spec-kit-tasks`: Phase 4 — Task breakdown generation
 - `spec-kit-implement`: Phase 5 — Task execution with TDD
+- `spec-kit-test`: Phase 6 — Testing & bug tracking
 
 ### 2. Artifact Structure
 
@@ -71,6 +76,7 @@ specs/
       requirements.md    # Spec quality
       implementation.md  # Implementation readiness
     tasks.md             # Phase 4: Task breakdown
+    bugs.md              # Phase 6: Bug log (added by Testing phase)
 ```
 
 ### 3. Validation System
@@ -156,6 +162,15 @@ plan.md + spec.md → spec-kit-tasks skill → tasks.md
 ### Phase 5: Implement
 ```
 tasks.md → spec-kit-implement skill → code changes + test results
+```
+
+### Phase 6: Test
+```
+Implementation → spec-kit-test skill → bugs.md (manual bug logging)
+```
+
+### Bugfix Loop
+```bugs.md (open bugs) → [Clarify if needed] → Plan → Tasks → [Analyze] → Implement → Test (verify)
 ```
 
 ## Security Considerations

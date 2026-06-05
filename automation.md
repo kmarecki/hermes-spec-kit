@@ -2,6 +2,58 @@
 
 This document covers automation patterns for the Hermes Spec Kit workflow, including cron jobs, delegation strategies, and maintenance automation.
 
+## Testing Phase Patterns
+
+### Bug Status Monitor
+
+Cron job to alert on stale bugs.
+
+```
+cronjob(action='create', name='bug-status-monitor', schedule='every 24h', prompt='...')
+```
+
+**Prompt content:**
+```
+Check all bugs.md files in specs/ directories.
+For each feature with bugs.md:
+- Count bugs by status (open, in-progress, resolved, verified)
+- Flag bugs that have been open for 7+ days
+- Flag bugs that are still "open" after a bugfix run
+- Report summary with feature name, bug count, and oldest open bug
+```
+
+### Bugfix Progress Reporter
+
+```
+cronjob(action='create', name='bugfix-progress', schedule='every 12h', prompt='...')
+```
+
+**Prompt content:**
+```
+Check all tasks.md files for bugfix tasks (BF-### prefix).
+For each feature:
+- Count total bugfix tasks
+- Count completed bugfix tasks
+- Report features with unresolved bugs but no bugfix tasks
+```
+
+### Weekly Bug Health Report
+
+```
+cronjob(action='create', name='weekly-bug-health', schedule='0 9 * * 1', prompt='...')
+```
+
+**Prompt content:**
+```
+Generate a weekly bug health report:
+
+1. Features with open bugs
+2. Recently resolved bugs (last 7 days)
+3. Stale bugs (open 7+ days)
+4. Features with all bugs verified
+5. Recommendations
+```
+
 ## Cron Job Patterns
 
 All cron jobs are created using the `cronjob` tool (action='create'). These examples show the `prompt` and `schedule` fields as used with that tool.
@@ -118,6 +170,25 @@ delegate_task(
 )
 ```
 
+### Bugfix Delegation
+
+When implementing bugfixes for independent bugs:
+
+```python
+delegate_task(tasks=[
+  {
+    "goal": "Plan and implement BUG-001 fix for [feature]",
+    "context": "Read bugs.md, plan.md, spec.md. Create bugfix task and implement the fix with TDD.",
+    "toolsets": ["file", "terminal"]
+  },
+  {
+    "goal": "Plan and implement BUG-002 fix for [feature]",
+    "context": "Read bugs.md, plan.md, spec.md. Create bugfix task and implement the fix with TDD.",
+    "toolsets": ["file", "terminal"]
+  }
+])
+```
+
 ## Automation Workflow
 
 All phase progression is manual. The agent responds to user prompts; there are no automatic phase gates.
@@ -148,8 +219,27 @@ Agent:
 2. Read spec.md to understand the feature
 3. Generate research.md (optional — user may skip)
 4. Generate data-model.md (optional)
-5. Generate plan.md
+5. Generate `plan.md`
 6. Report: "Plan complete"
+
+If bugs.md exists (bugfix mode):
+- Read bugs.md and plan.md bugfix sections
+- Focus plan on root cause analysis and fix approach
+
+### Task Generation (bugfix mode)
+
+When starting bugfix task generation:
+
+```
+User: "Generate tasks for [feature]" (with bugs.md present)
+
+Agent:
+1. Load spec-kit-tasks skill
+2. Read bugs.md, plan.md, spec.md
+3. For each open bug, create a bugfix task with BF-### prefix
+4. Include test tasks to verify each fix
+5. Include regression test tasks if needed
+6. Report: "N bugfix tasks generated"
 ```
 
 ### Implementation
@@ -169,6 +259,37 @@ Agent:
 7. Update tasks.md
 8. Repeat until user stops or all tasks done
 9. Report progress
+```
+
+### Testing & Bugfix
+
+When implementation is complete and the user wants to test:
+
+```
+User: "Test [feature]"
+
+Agent:
+1. Load spec-kit-test skill
+2. Check if bugs.md exists
+3. If not: create from template and instruct user to log bugs
+4. If yes: show current bug summary
+5. Report: "bugs.md ready — log bugs manually, then run 'bugfix [feature]'"
+```
+
+When bugs are logged and the user wants to fix them:
+
+```
+User: "bugfix [feature]"
+
+Agent:
+1. Load spec-kit-workflow skill
+2. Read bugs.md
+3. For bugs needing clarification: route to spec-kit-clarify
+4. Route to spec-kit-plan (with bugfix context)
+5. Route to spec-kit-tasks (generate bugfix tasks)
+6. Optional: route to spec-kit-analyze
+7. Route to spec-kit-implement (execute bugfixes)
+8. Report: "Bugfix cycle complete — please test and update bugs.md"
 ```
 
 ## Maintenance Automation

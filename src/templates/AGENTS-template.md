@@ -8,6 +8,19 @@ This project uses spec-driven development (SDD). All features should follow the 
 
 ## Workflow Phases
 
+```
+Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
+                                                              │
+                                                              └── bugfix loop ──┐
+                                                        ┌──────────────────────┘
+                                                        ▼
+                                                  Clarify → Plan → Tasks → [Analyze] → Implement → Test
+```
+
+The workflow has two paths:
+- **Initial path**: Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
+- **Bugfix loop**: Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test (repeat)
+
 When the user requests a new feature:
 
 1. **Specify**: "Create a spec for [feature description]" → produces `specs/NNN-feature-name/spec.md`
@@ -15,6 +28,8 @@ When the user requests a new feature:
 3. **Plan**: "Plan [feature]" → produces `specs/NNN-feature-name/plan.md`, `research.md`, `data-model.md`
 4. **Tasks**: "Generate tasks for [feature]" → produces `specs/NNN-feature-name/tasks.md`
 5. **Implement**: "Implement [feature]" → executes tasks with TDD
+6. **Test**: "Test [feature]" — creates/opens bugs.md for tracking discovered bugs
+7. **Bugfix**: "bugfix [feature]" — routes back through Plan/Tasks/Implement for each bug
 
 ## Spec Kit Skills
 
@@ -28,6 +43,7 @@ Load the appropriate skill for each phase:
 - `spec-kit-analyze` — optional quality review
 - `spec-kit-checklist` — optional quality checklists
 - `spec-kit-implement` — task execution
+- `spec-kit-test` — testing & bug tracking
 
 ## Project Constitution
 

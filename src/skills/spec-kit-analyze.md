@@ -9,6 +9,7 @@ category: software-development
 **Phase**: 3.5 (Optional Quality Gate)
 
 **Purpose**: Perform a non-destructive consistency and quality analysis across the three core artifacts. **READ-ONLY** — outputs a report, does not modify files.
+**Bugfix mode**: When bugs.md exists, also validates bugfix tasks against spec + plan + bugs.
 
 **Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` + `spec-kit-tasks` must be run first
 
@@ -50,6 +51,12 @@ From **constitution.md**:
 - Principle names
 - MUST/SHOULD statements
 
+From **bugs.md** (bugfix mode only):
+- Bug IDs (BUG-###)
+- Bugfix tasks (BF-###)
+- Severity levels
+- Requires Clarification flags
+
 ### Step 3: Build semantic models
 Create internal representations:
 - **Requirements inventory**: FR-### with imperative-phrase slug
@@ -85,6 +92,12 @@ Create internal representations:
 - Terminology drift (same concept named differently)
 - Data entities in plan but absent in spec
 - Task ordering contradictions
+
+**G. Bugfix Coverage (bugfix mode only)**
+- Bugs with no corresponding bugfix task (BF-###)
+- Bugfix tasks not referencing a plan bugfix section
+- Bugfix tasks without verification/regression test tasks
+- Unclear mapping between bug and fix approach
 
 ### Step 5: Severity assignment
 Use heuristic:
@@ -122,6 +135,10 @@ OUTPUT:
 
 [If any]
 
+## Uncovered Bugs (bugfix mode)
+
+[If any]
+
 ## Metrics
 
 - Total Requirements: N
@@ -136,6 +153,7 @@ OUTPUT:
 IF CRITICAL issues exist:
 - Recommend resolving before `spec-kit-implement`
 - Suggest explicit remediation commands
+- In bugfix mode: Recommend fixing bug coverage gaps before implementing fixes
 
 IF only LOW/MEDIUM:
 - User may proceed
@@ -155,6 +173,7 @@ Report:
 - Run `spec-kit-plan` to fix plan issues
 - Run `spec-kit-tasks` to fix coverage gaps
 - Run `spec-kit-implement` when all CRITICAL issues resolved
+- In bugfix mode: Run `spec-kit-tasks` to add missing bugfix tasks
 
 **Re-running this skill**:
 1. Re-run all detection passes
@@ -188,3 +207,4 @@ Report:
 - Run `spec-kit-plan` to fix plan issues
 - Run `spec-kit-tasks` to fix coverage gaps
 - Run `spec-kit-implement` when all CRITICAL issues resolved
+- In bugfix mode: Run `spec-kit-tasks` to add missing bugfix tasks

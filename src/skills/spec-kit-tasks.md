@@ -4,11 +4,12 @@
      4|category: software-development
      5|---
      6|
-     7|# spec-kit-tasks
-     8|
-     9|**Phase**: 3
-    10|
-    11|**Purpose**: Create or update `specs/[feature]/tasks.md` — an executable task list derived from the plan.
+     # spec-kit-tasks
+
+     **Phase**: 3
+
+     **Purpose**: Create or update `specs/[feature]/tasks.md` — an executable task list derived from the plan.
+     **Bugfix mode**: When run from the bugfix loop, generates bugfix tasks from bugs.md + plan.md.
     12|
     13|**Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` must be run first
     14|
@@ -27,22 +28,34 @@
     27|  ERROR: "Run spec-kit-constitution first"
     28|```
     29|
-    30|### Step 2: Load context
-    31|- LOAD `specs/[feature]/plan.md` — for architecture and phases
-    32|- LOAD `specs/[feature]/spec.md` — for user stories and requirements
-    33|- LOAD `specs/[feature]/data-model.md` — for entities
-    34|- LOAD `specs/[feature]/contracts/` — for API specs
-    35|- LOAD `templates/tasks.md`
+    ### Step 2: Load context
+    - LOAD `specs/[feature]/plan.md` — for architecture and phases
+    - LOAD `specs/[feature]/spec.md` — for user stories and requirements
+    - LOAD `specs/[feature]/data-model.md` — for entities
+    - LOAD `specs/[feature]/contracts/` — for API specs
+    - LOAD `templates/tasks.md`
+    - IF `specs/[feature]/bugs.md` EXISTS (bugfix mode):
+      - LOAD bugs.md for bug context
+      - LOAD plan.md bugfix sections for fix approaches
     36|
-    37|### Step 3: Map requirements to tasks
-    38|For each Functional Requirement (FR-###):
-    39|- IDENTIFY which tasks implement it
-    40|- RECORD requirement-task mapping
-    41|
-    42|For each User Story:
-    43|- MAP acceptance scenarios to test tasks
-    44|- MAP entities to model tasks
-    45|- MAP services to implementation tasks
+    ### Step 4: Map requirements to tasks
+    For each Functional Requirement (FR-###):
+    - IDENTIFY which tasks implement it
+    - RECORD requirement-task mapping
+
+    For each User Story:
+    - MAP acceptance scenarios to test tasks
+    - MAP entities to model tasks
+    - MAP services to implementation tasks
+
+    ### Step 4b: Map bugfix tasks (bugfix mode only)
+    IF bugs.md EXISTS:
+      FOR EACH bug with Status: open or in-progress:
+        - CREATE bugfix task matching the plan's bugfix section
+        - TASKS use prefix: BF-### (e.g., BF-001, BF-002)
+        - MARK with tag [BUGFIX]
+        - INCLUDE test task to verify the fix
+        - INCLUDE regression test task if needed
     46|
     47|### Step 4: Generate task breakdown
     48|Organize tasks by phase:
@@ -101,8 +114,9 @@
    101|
    102|## Next Skills
    103|
-   104|- Run `spec-kit-analyze` for optional quality gate before implementation
-   105|- Run `spec-kit-implement` to execute tasks
+   - Run `spec-kit-analyze` for optional quality gate before implementation
+   - Run `spec-kit-implement` to execute tasks
+   - In bugfix mode: Run `spec-kit-analyze` to verify bugfix tasks against bugs.md + spec + plan
    106|
    107|**Re-running this skill**:
    108|1. LOAD existing tasks.md
@@ -147,5 +161,6 @@
    147|
    148|## Next Skills
    149|
-   150|- Run `spec-kit-analyze` for optional quality gate before implementation
-   151|- Run `spec-kit-implement` to execute tasks
+   - Run `spec-kit-analyze` for optional quality gate before implementation
+   - Run `spec-kit-implement` to execute tasks
+   - In bugfix mode: Run `spec-kit-analyze` to verify bugfix tasks against bugs.md + spec + plan

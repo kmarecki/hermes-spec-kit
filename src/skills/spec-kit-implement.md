@@ -4,13 +4,15 @@
      4|category: software-development
      5|---
      6|
-     7|# spec-kit-implement
-     8|
-     9|**Phase**: 4
-    10|
-    11|**Purpose**: Execute implementation following `specs/[feature]/tasks.md`. Runs tasks in order with TDD approach.
-    12|
-    13|**Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` + `spec-kit-tasks` must be run first
+     # spec-kit-implement
+
+     **Phase**: 4
+
+     **Purpose**: Execute implementation following `specs/[feature]/tasks.md`. Runs tasks in order with TDD approach.
+     **Bugfix mode**: When tasks.md contains bugfix tasks (prefixed with BF-###), executes them alongside regular tasks.
+
+     **Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` + `spec-kit-tasks` must be run first<br>
+     **Bugfix mode**: When bugs.md exists, load it for bugfix task context
     14|
     15|**Artifacts**: Updated `specs/[feature]/tasks.md` (with completion markers)
     16|
@@ -41,14 +43,15 @@
     41|  IF "yes": CONTINUE
     42|```
     43|
-    44|### Step 3: Load implementation context
-    45|- LOAD `specs/[feature]/tasks.md` (REQUIRED)
-    46|- LOAD `specs/[feature]/plan.md` (REQUIRED)
-    47|- LOAD `specs/[feature]/data-model.md` (IF EXISTS)
-    48|- LOAD `specs/[feature]/contracts/` (IF EXISTS)
-    49|- LOAD `specs/[feature]/research.md` (IF EXISTS)
-    50|- LOAD `specs/constitution.md` (IF EXISTS)
-    51|- LOAD `specs/[feature]/quickstart.md` (IF EXISTS)
+    ### Step 3: Load implementation context
+    - LOAD `specs/[feature]/tasks.md` (REQUIRED)
+    - LOAD `specs/[feature]/plan.md` (REQUIRED)
+    - LOAD `specs/[feature]/data-model.md` (IF EXISTS)
+    - LOAD `specs/[feature]/contracts/` (IF EXISTS)
+    - LOAD `specs/[feature]/research.md` (IF EXISTS)
+    - LOAD `specs/constitution.md` (IF EXISTS)
+    - LOAD `specs/[feature]/quickstart.md` (IF EXISTS)
+    - IF `specs/[feature]/bugs.md` EXISTS: LOAD bugs.md for bugfix task context
     52|
     53|### Step 4: Parse tasks.md
     54|Extract:
@@ -72,14 +75,15 @@
     72|d. VERIFY task completion
     73|e. UPDATE tasks.md with [X] completion marker
     74|
-    75|### Step 7: Progress reporting
-    76|After each task:
-    77|- Report tasks completed: N/Total
-    78|- Report current phase
-    79|- Report next task
-    80|- Report tests passing: Yes/No
-    81|
-    82|### Step 8: Handle errors
+    ### Step 7: Progress reporting
+    After each task:
+    - Report tasks completed: N/Total
+    - Report current phase
+    - Report next task
+    - Report tests passing: Yes/No
+    - In bugfix mode: Also report bugfix task progress (BF-### completed/total)
+
+    ### Step 8: Handle errors
     83|- HALT execution if non-parallel task fails
     84|- FOR parallel tasks [P]: continue with successful, report failed
     85|- PROVIDE clear error messages with context
@@ -93,12 +97,13 @@
     93|- Tests passing
     94|- Summary of completed work
     95|
-    96|## Done When
-    97|
-    98|- [ ] All tasks in tasks.md completed and marked [X]
-    99|- [ ] Implementation validated against spec and plan
-   100|- [ ] All tests passing
-   101|- [ ] Implementation complete
+    ## Done When
+
+    - [ ] All tasks in tasks.md completed and marked [X]
+    - [ ] Implementation validated against spec and plan
+    - [ ] All tests passing
+    - [ ] Implementation complete
+    - [ ] In bugfix mode: All bugfix tasks completed and verified
    102|
    103|**Re-running this skill**:
    104|1. LOAD tasks.md and find next incomplete task
@@ -114,14 +119,15 @@
    114|- `spec-kit-plan` has not been run
    115|- `spec-kit-tasks` has not been run
    116|
-   117|## Implementation Rules
-   118|
-   119|- NEVER skip test tasks
-   120|- NEVER implement without understanding the requirement
-   121|- ALWAYS verify file paths exist or create them
-   122|- ALWAYS run tests after implementation
-   123|- STOP on test failures and report
-   124|- UPDATE tasks.md immediately after completion
+   ## Implementation Rules
+
+   - NEVER skip test tasks
+   - NEVER implement without understanding the requirement
+   - ALWAYS verify file paths exist or create them
+   - ALWAYS run tests after implementation
+   - STOP on test failures and report
+   - UPDATE tasks.md immediately after completion
+   - In bugfix mode: Update bugs.md Status after fixing a bug (set to "resolved")
    125|
    126|## Completion
    127|
@@ -131,9 +137,10 @@
    131|- Tests passing
    132|- Summary of completed work
    133|
-   134|## Done When
-   135|
-   136|- [ ] All tasks in tasks.md completed and marked [X]
-   137|- [ ] Implementation validated against spec and plan
-   138|- [ ] All tests passing
-   139|- [ ] Implementation complete
+   ## Done When
+
+   - [ ] All tasks in tasks.md completed and marked [X]
+   - [ ] Implementation validated against spec and plan
+   - [ ] All tests passing
+   - [ ] Implementation complete
+   - [ ] In bugfix mode: All bugfix tasks completed and verified

@@ -6,7 +6,7 @@ A spec-driven development workflow system for Hermes Agent, migrated from the Cl
 
 This system implements a structured, phase-based approach to software development using Hermes Agent's skills, delegation, and automation capabilities. It enforces a disciplined workflow:
 
-**Constitution -> Specify -> Clarify -> Plan -> Tasks -> Implement**
+**Constitution -> Specify -> Clarify -> Plan -> Tasks -> Implement -> Test (bugfix loop)**
 
 Each phase produces documented artifacts before proceeding to the next, ensuring quality and traceability.
 
@@ -14,7 +14,7 @@ Each phase produces documented artifacts before proceeding to the next, ensuring
 
 1. Load the `spec-kit-workflow` skill in your Hermes Agent session
 2. Say: "Create a spec for [feature description]"
-3. Follow the guided phases through implementation
+3. Follow the guided phases through implementation and testing
 
 ## File Structure
 
@@ -116,6 +116,12 @@ Agent: Loads spec-kit-tasks skill, generates tasks.md
 
 User: "Implement 006-multi-layered-visualizer"
 Agent: Loads spec-kit-implement skill, executes tasks with TDD
+
+User: "Test 006-multi-layered-visualizer"
+Agent: Loads spec-kit-test skill, creates bugs.md for bug tracking
+
+User: "bugfix 006-multi-layered-visualizer"
+Agent: Routes to bugfix loop — loads spec-kit-plan (or clarify if needed), then tasks, analyze, implement
 ```
 
 ### Using Slash Commands (Context Injection)
@@ -126,6 +132,7 @@ Agent: Loads spec-kit-implement skill, executes tasks with TDD
 /spec-kit-plan         — loads the plan skill text
 /spec-kit-tasks        — loads the tasks skill text
 /spec-kit-implement    — loads the implement skill text
+/spec-kit-test         — loads the test skill text
 ```
 
 After typing a slash command, the skill instructions appear in context. You then type a normal message to execute the skill.
@@ -144,7 +151,8 @@ hermes bundles create speckit \
   --skill spec-kit-tasks \
   --skill spec-kit-analyze \
   --skill spec-kit-checklist \
-  --skill spec-kit-implement
+  --skill spec-kit-implement \
+  --skill spec-kit-test
 ```
 
 Then use `/speckit` to load all spec-kit skills at once. Same limitation applies — slash commands inject text, they don't execute with arguments.

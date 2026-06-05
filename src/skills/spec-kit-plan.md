@@ -10,7 +10,8 @@
     10|
     11|**Purpose**: Create or update the implementation plan at `specs/[feature]/plan.md`. Defines technical architecture, resolves constitutional gates, generates design artifacts.
     12|
-    13|**Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` must be run first
+    13|**Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` must be run first<br>
+**Bugfix mode**: When run from the bugfix loop, `specs/[feature]/bugs.md` must also exist
     14|
     15|**Artifacts**:
     16|- `specs/[feature]/plan.md` (primary artifact)
@@ -29,10 +30,11 @@
     29|  ERROR: "Run spec-kit-specify first"
     30|```
     31|
-    32|### Step 2: Load context
-    33|- LOAD `specs/[feature]/spec.md`
-    34|- LOAD `specs/constitution.md`
-    35|- LOAD `templates/plan.md`
+    ### Step 2: Load context
+    - LOAD `specs/[feature]/spec.md`
+    - LOAD `specs/constitution.md`
+    - LOAD `templates/plan.md`
+    - IF `specs/[feature]/bugs.md` EXISTS (bugfix mode): LOAD bugs.md for bug context
     36|
     37|### Step 3: Fill Technical Context
     38|Document:
@@ -88,9 +90,24 @@
     88|
     89|Document structure decision in plan.
     90|
-    91|### Step 8: Complexity tracking
-    92|If constitutional gates violated, document in plan:
-    93|| Violation | Why Needed | Simpler Alternative Rejected Because |
+    ### Step 8: Complexity tracking
+    If constitutional gates violated, document in plan:
+    | Violation | Why Needed | Simpler Alternative Rejected Because |
+
+    ### Step 9: Bugfix planning (bugfix mode only)
+    IF `bugs.md` EXISTS:
+      FOR EACH bug with Status: open or in-progress:
+        - ANALYZE root cause in context of spec + plan
+        - ADD bugfix section to plan.md: root cause, approach, files affected
+        - SET Plan Ref in bugs.md to reference the plan section
+      GENERATE bugfix plan content:
+    ```markdown
+    ## Bugfix: BUG-001 — [Title]
+    - **Root Cause**: [analysis]
+    - **Approach**: [fix strategy]
+    - **Files Affected**: [list]
+    - **Verification**: [how to verify the fix]
+    ```
     94|
     95|## Completion
     96|
@@ -100,22 +117,23 @@
    100|- Gate status (pass/fail with justifications)
    101|- Suggest next command
    102|
-   103|## Next Skills
-   104|
-   105|- Run `spec-kit-tasks` to create task breakdown
-   106|- Run `spec-kit-analyze` for optional quality gate before implementation
-   107|
-   108|**Re-running this skill**:
-   109|1. LOAD existing plan, research, data-model
-   110|2. COMPARE against current spec
-   111|3. UPDATE only changed sections
-   112|4. PRESERVE research findings unless spec changed
-   113|
-   114|## Prerequisite Enforcement
-   115|
-   116|**BLOCKED** if:
-   117|- `spec-kit-constitution` has not been run
-   118|- `spec-kit-specify` has not been run
+   ## Next Skills
+
+   - Run `spec-kit-tasks` to create task breakdown
+   - Run `spec-kit-analyze` for optional quality gate before implementation
+   - In bugfix mode: Run `spec-kit-tasks` for bugfix task breakdown
+
+   **Re-running this skill**:
+   1. LOAD existing plan, research, data-model
+   2. COMPARE against current spec
+   3. UPDATE only changed sections
+   4. PRESERVE research findings unless spec changed
+
+   ## Prerequisite Enforcement
+
+   **BLOCKED** if:
+   - `spec-kit-constitution` has not been run
+   - `spec-kit-specify` has not been run
    119|
    120|## Re-run Enforcement
    121|

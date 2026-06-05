@@ -2,11 +2,60 @@
 
 The spec-kit workflow is a linear sequence of phases. Each phase produces documented artifacts. All phase transitions are manual — the user decides when to advance.
 
+### Phase 5: Implement
+**Skill**: `spec-kit-implement`
+
+Execute tasks from tasks.md. Tests first, then implementation. Update tasks as completed.
+
+**Artifacts**: Updated `tasks.md`, code changes
+
+### Phase 6: Test
+**Skill**: `spec-kit-test`
+
+Manual testing phase. User discovers bugs and logs them in `bugs.md`. Routes back through the bugfix loop.
+
+**Artifacts**: `specs/NNN-feature-name/bugs.md`
+
+#### Bugfix Loop
+
+The Testing phase is iterative — it can run multiple times until the user is satisfied:
+
+```
+      ┌──────────────────────────────────────────────────┐
+      │                                                  │
+      ▼                                                  │
+[Test] ──► [Clarify if needed] ──► [Plan] ──► [Tasks] ──┘
+                                         │
+                                         ▼
+                                    [optional Analyze]
+                                         │
+                                         ▼
+                                    [Implement] ──► [Test again]
+```
+
+1. **Log bugs**: User adds bugs to `bugs.md` with severity, description, and clarification flag
+2. **Route to Plan** (default): `spec-kit-plan` generates bugfix approach
+3. **Route to Clarify** (per bug): If a bug needs clarification, `spec-kit-clarify` runs first
+4. **Generate tasks**: `spec-kit-tasks` produces bugfix tasks
+5. **Optionally analyze**: `spec-kit-analyze` verifies bugfix tasks against spec + plan + bugs
+6. **Implement**: `spec-kit-implement` executes bugfix tasks with TDD
+7. **Re-test**: User tests again, marks bugs as verified, or discovers new bugs
+8. **Repeat**: Loop continues until all bugs are verified and user is satisfied
+
 ## Phase Sequence
 
 ```
-Constitution → Specify → Clarify → Plan → Tasks → Implement
+Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
+                                                              │
+                                                              └── bugfix loop ──┐
+                                                        ┌──────────────────────┘
+                                                        ▼
+                                                  Clarify → Plan → Tasks → [Analyze] → Implement → Test
 ```
+
+The workflow has two distinct paths:
+- **Initial path** (forward): Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
+- **Bugfix loop** (iterative): Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test (repeat)
 
 ### Phase 0: Constitution
 **Skill**: `spec-kit-constitution`
@@ -62,13 +111,15 @@ Execute tasks from tasks.md. Tests first, then implementation. Update tasks as c
 | **Checklists optional** | Quality checklists guide but do not block |
 | **Idempotent** | Each phase skill can be re-run to update its artifact |
 | **Non-blocking** | User can skip phases or go back to revise |
+| **Bugfix loop** | Testing phase routes back to Plan (or Clarify) for iterative bugfix cycles |
 
 ## Resuming Work
 
 To resume a stalled feature:
 1. Identify the current phase by checking which artifacts exist
-2. Load the appropriate skill
-3. Continue from where work stopped
+2. If `bugs.md` exists with open bugs, you're in the Testing phase — run "bugfix [feature]" to continue
+3. Load the appropriate skill
+4. Continue from where work stopped
 
 ## Skipping Phases
 

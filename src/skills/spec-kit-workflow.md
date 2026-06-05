@@ -10,15 +10,17 @@ This is the master orchestrator that routes user requests to the appropriate pha
 
 ## Workflow Phases (in order)
 
-| Phase | Skill | Purpose | Prerequisite |
-|:------|:------|:--------|:-------------|
-| 0 | `spec-kit-constitution` | Project principles | None |
-| 1 | `spec-kit-specify` | Feature spec | Constitution |
-| 1.5 | `spec-kit-clarify` | Iterative clarification | Spec |
-| 2 | `spec-kit-plan` | Technical plan | Spec + Constitution |
-| 3 | `spec-kit-tasks` | Task breakdown | Plan |
-| 3.5 | `spec-kit-analyze` | Quality gate (optional) | Tasks |
-| 4 | `spec-kit-implement` | Execute tasks | Tasks |
+|| Phase | Skill | Purpose | Prerequisite |
+||:------|:------|:--------|:-------------|
+|| 0 | `spec-kit-constitution` | Project principles | None |
+|| 1 | `spec-kit-specify` | Feature spec | Constitution |
+|| 1.5 | `spec-kit-clarify` | Iterative clarification | Spec |
+|| 2 | `spec-kit-plan` | Technical plan | Spec + Constitution |
+|| 3 | `spec-kit-tasks` | Task breakdown | Plan |
+|| 3.5 | `spec-kit-analyze` | Quality gate (optional) | Tasks |
+|| 4 | `spec-kit-implement` | Execute tasks | Tasks |
+|| 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
+|| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test | bugs.md with open bugs |
 
 ## Routing Logic
 
@@ -55,15 +57,17 @@ This is the master orchestrator that routes user requests to the appropriate pha
 
 Check for artifacts to determine current phase:
 
-| Artifacts Present | Current Phase |
-|:-----------------|:-------------|
-| `constitution.md` only | Ready to Specify |
-| `spec.md` exists | Specified |
-| `clarify.md` exists | Clarifying/Clarified |
-| `plan.md` exists | Planning/Planned |
-| `tasks.md` exists | Tasking/Tasked |
-| `tasks.md` with completions | Implementing |
-| All tasks complete | Complete |
+|| Artifacts Present | Current Phase |
+||:-----------------|:-------------|
+|| `constitution.md` only | Ready to Specify |
+|| `spec.md` exists | Specified |
+|| `clarify.md` exists | Clarifying/Clarified |
+|| `plan.md` exists | Planning/Planned |
+|| `tasks.md` exists | Tasking/Tasked |
+|| `tasks.md` with completions | Implementing |
+|| `bugs.md` with open bugs | Testing (bugfix loop) |
+|| `bugs.md` all verified | Testing complete |
+|| All tasks complete + all bugs verified | Complete |
 
 ## Skill Routing
 
@@ -104,6 +108,25 @@ Each skill BLOCKS if prerequisites are not met:
 - `spec-kit-tasks`: Requires `plan.md` + `spec.md`
 - `spec-kit-analyze`: Requires `tasks.md` + `plan.md` + `spec.md`
 - `spec-kit-implement`: Requires `tasks.md`
+- `spec-kit-test`: Requires `spec.md` (or existing implementation)<br>  Bugfix prerequisite: `bugs.md` with at least one open bug
+
+## Bugfix Routing
+
+### Start bugfix loop
+- User says: "bugfix [feature]" or "fix bugs in [feature]"
+- LOAD `specs/[feature]/bugs.md`
+- FOR each bug with Status: open or in-progress:
+  - IF Requires Clarification == yes: ROUTE to `spec-kit-clarify` first, then `spec-kit-plan`
+  - ELSE: ROUTE to `spec-kit-plan` directly
+- DEFAULT route: `spec-kit-plan` (when no bugs need clarification)
+
+### Test phase
+- User says: "Test [feature]"
+- Route to: `spec-kit-test`
+
+### Verify bug
+- User says: "Verify [BUG-ID] in [feature]"
+- Route to: `spec-kit-test` (mark bug as verified)
 
 ## Usage Examples
 
@@ -114,3 +137,7 @@ Each skill BLOCKS if prerequisites are not met:
 - "Generate tasks for 003-user-auth"
 - "Analyze 003-user-auth for issues"
 - "Implement 003-user-auth"
+- "Test 003-user-auth"
+- "bugfix 003-user-auth"
+- "Verify BUG-001 in 003-user-auth"
+- "Bug status 003-user-auth"

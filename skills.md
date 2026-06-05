@@ -4,25 +4,30 @@ Each workflow phase is implemented as a standalone skill file. Skills are instal
 
 ## Skill Map
 
-| Skill | Phase | Purpose |
-|-------|-------|---------|
-| `spec-kit-workflow` | — | Master orchestrator — routes requests to phase skills |
-| `spec-kit-constitution` | 0 | Project principles and constraints |
-| `spec-kit-specify` | 1 | Feature specification creation |
-| `spec-kit-clarify` | 1.5 | Ambiguity resolution (optional) |
-| `spec-kit-plan` | 2 | Implementation planning |
-| `spec-kit-tasks` | 3 | Task breakdown generation |
-| `spec-kit-analyze` | 3.5 | Quality gate review (optional) |
-| `spec-kit-checklist` | N | Checklists (optional, not a gate) |
-| `spec-kit-implement` | 4 | Task execution |
+|| Skill | Phase | Purpose |
+||-------|-------|---------|
+|| `spec-kit-workflow` | — | Master orchestrator — routes requests to phase skills |
+|| `spec-kit-constitution` | 0 | Project principles and constraints |
+|| `spec-kit-specify` | 1 | Feature specification creation |
+|| `spec-kit-clarify` | 1.5 | Ambiguity resolution (optional) |
+|| `spec-kit-plan` | 2 | Implementation planning |
+|| `spec-kit-tasks` | 3 | Task breakdown generation |
+|| `spec-kit-analyze` | 3.5 | Quality gate review (optional) |
+|| `spec-kit-checklist` | N | Checklists (optional, not a gate) |
+|| `spec-kit-implement` | 4 | Task execution |
+|| `spec-kit-test` | 5 | Testing & bug tracking |
 
 ## Workflow Phases
 
 ```
-Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement
-```
+Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
+                                                                      │
+                                                                      └── bugfix loop ──┐
+                                                                ┌──────────────────────┘
+                                                                ▼
+                                                          Clarify → Plan → Tasks → [Analyze] → Implement → Test
 
-All phase transitions are manual. Checklists are optional — they guide quality but do not block progression.
+All phase transitions are manual. Checklists are optional — they guide quality but do not block progression. The Testing phase routes back through the bugfix loop (Clarify → Plan → Tasks → [Analyze] → Implement) until all bugs are verified.
 
 ## Phase Routing
 
@@ -33,8 +38,8 @@ When the user requests spec kit operations, the agent:
 3. **Advance Phase**: "Plan [feature]" / "Generate tasks for [feature]" / "Implement [feature]" → loads appropriate phase skill
 4. **Clarify**: "Clarify [feature]" → loads `spec-kit-clarify`
 5. **Project Constitution**: "Create constitution" → loads `spec-kit-constitution`
-
-## Skill Files
+6. **Testing**: "Test [feature]" → loads `spec-kit-test` for bug tracking
+7. **Bugfix**: "bugfix [feature]" → routes to Plan (or Clarify if bugs need it)
 
 All skill files live in `src/skills/` and are installed to `~/.hermes/skills/`:
 
@@ -49,6 +54,7 @@ src/skills/
   spec-kit-analyze.md
   spec-kit-checklist.md
   spec-kit-implement.md
+  spec-kit-test.md
 ```
 
 Each skill is self-contained, idempotent, and can be re-run to update its output without affecting downstream phases.
@@ -69,7 +75,9 @@ To determine the current phase of a feature, check which artifacts exist:
 | plan.md exists | Planning/Planned |
 | tasks.md exists | Tasking/Tasked |
 | tasks.md with completions | Implementing |
-| All tasks complete | Complete |
+| bugs.md with open bugs | Testing (bugfix loop) |
+| bugs.md all verified | Testing complete |
+| All tasks complete + all bugs verified | Complete |
 
 ## Project Setup
 
@@ -95,6 +103,7 @@ src/templates/
   checklist-template.md   # Both spec quality + implementation checklists
   research-template.md
   data-model-template.md
+  bugs-template.md          # Bug report template
 ```
 
 Templates are installed alongside skills via `./scripts/install.sh`.

@@ -4,11 +4,12 @@
      4|category: software-development
      5|---
      6|
-     7|# spec-kit-clarify
-     8|
-     9|**Phase**: 1.5
-    10|
-    11|**Purpose**: Identify and resolve underspecified areas in the current feature spec through a structured Q&A dialog.
+     # spec-kit-clarify
+
+     **Phase**: 1.5
+
+     **Purpose**: Identify and resolve underspecified areas in the current feature spec through a structured Q&A dialog.
+     **Bugfix mode**: When run from the bugfix loop, resolves ambiguities about specific bugs in bugs.md.
     12|
     13|**Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` must be run first
     14|
@@ -26,8 +27,12 @@
     26|  ERROR: "Run spec-kit-specify first to create the feature specification"
     27|```
     28|
-    29|### Step 2: Load spec
-    30|LOAD `specs/[feature]/spec.md`
+    ### Step 2: Load spec
+    LOAD `specs/[feature]/spec.md`
+    IF `specs/[feature]/bugs.md` EXISTS (bugfix mode):
+      LOAD bugs.md
+      FILTER bugs where Requires Clarification == yes
+      USE bug descriptions as the basis for clarification questions
     31|
     32|### Step 3: Ambiguity scan
     33|Analyze these categories for gaps:
@@ -55,29 +60,31 @@
     55|4. Validate response (option letter, "yes", or short answer)
     56|5. Record answer
     57|
-    58|### Step 6: Integrate answers
-    59|After each accepted answer:
-    60|- UPDATE `specs/[feature]/spec.md` with the resolved value
-    61|- REPLACE [NEEDS CLARIFICATION] marker with resolved answer
-    62|- WRITE spec file after each integration
+    ### Step 6: Integrate answers
+    After each accepted answer:
+    - UPDATE `specs/[feature]/spec.md` with the resolved value
+    - REPLACE [NEEDS CLARIFICATION] marker with resolved answer
+    - WRITE spec file after each integration
+    - In bugfix mode: Also UPDATE the bug's Requires Clarification flag to "no" and add clarification notes
     63|
-    64|### Step 7: Generate clarify.md
-    65|CREATE `specs/[feature]/clarify.md`:
-    66|```
-    67|# Clarification Log: [Feature]
-    68|
-    69|**Feature**: specs/[feature]/spec.md
-    70|**Created**: [DATE]
-    71|**Questions Asked**: N
-    72|**Questions Resolved**: N
-    73|
-    74|## Q1: [Question]
-    75|**Context**: [Relevant spec section]
-    76|**Options**:
-    77|| Option | Answer | Implications |
-    78|**Answer**: [Selected]
-    79|**Resolution**: [How it was applied to spec]
-    80|```
+    ### Step 7: Generate clarify.md
+    CREATE `specs/[feature]/clarify.md`:
+    ```
+    # Clarification Log: [Feature]
+
+    **Feature**: specs/[feature]/spec.md
+    **Created**: [DATE]
+    **Questions Asked**: N
+    **Questions Resolved**: N
+    **Bugfix mode**: [yes/no — if yes, lists which BUG-IDs were clarified]
+
+    ## Q1: [Question]
+    **Context**: [Relevant spec section]
+    **Options**:
+    | Option | Answer | Implications |
+    **Answer**: [Selected]
+    **Resolution**: [How it was applied to spec]
+    ```
     81|
     82|### Step 8: Update requirements checklist
     83|RE-EVALUATE `specs/[feature]/checklists/requirements.md`:
