@@ -31,7 +31,7 @@
     LOAD `specs/[feature]/spec.md`
     IF `specs/[feature]/bugs.md` EXISTS (bugfix mode):
       LOAD bugs.md
-      FILTER bugs where Requires Clarification == yes
+      FILTER bugs where Requires Clarification "yes" checkbox is checked
       USE bug descriptions as the basis for clarification questions
     31|
     32|### Step 3: Ambiguity scan
@@ -65,7 +65,7 @@
     - UPDATE `specs/[feature]/spec.md` with the resolved value
     - REPLACE [NEEDS CLARIFICATION] marker with resolved answer
     - WRITE spec file after each integration
-    - In bugfix mode: Also UPDATE the bug's Requires Clarification flag to "no" and add clarification notes
+    - In bugfix mode: Also UPDATE the bug's Requires Clarification checkboxes: tick "[x] yes" → "[x] no" and add clarification notes
     63|
     ### Step 7: Generate clarify.md
     CREATE `specs/[feature]/clarify.md`:

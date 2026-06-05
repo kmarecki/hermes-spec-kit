@@ -128,6 +128,20 @@
    - STOP on test failures and report
    - UPDATE tasks.md immediately after completion
    - In bugfix mode: Update bugs.md Status after fixing a bug (set to "resolved")
+
+## Phase Guardrail — STRICT
+
+This is the **ONLY** phase where code-editing tools are permitted.
+
+| Tool | Implement Phase | All Other Phases |
+|------|----------------|-----------------|
+| `write_file` (source code) | ALLOWED | **BLOCKED** |
+| `patch` (source code) | ALLOWED | **BLOCKED** |
+| `terminal` (build/compile/test) | ALLOWED | **BLOCKED** |
+| `write_file` (spec artifacts) | ALLOWED (tasks.md, bugs.md status) | Allowed (phase-specific only) |
+| `read_file`, `search_files`, `skill_view` | ALLOWED | ALLOWED |
+
+If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Analyze, Test), you MUST NOT call `write_file`, `patch`, or `terminal` for compilation/builds on source code files.
    125|
    126|## Completion
    127|

@@ -49,7 +49,7 @@ The user adds bugs to `bugs.md` in the following format:
   1. ...
 - **Actual Result**: [what happens]
 - **Expected Result**: [what should happen]
-- **Requires Clarification**: [yes/no]
+- **Requires Clarification**: [ ] no / [ ] yes
 - **Plan Ref**:
 - **Status**: open
 ```
@@ -75,7 +75,7 @@ When user says "bugfix [feature]":
 LOAD specs/[feature]/bugs.md
 
 FOR EACH bug with Status: open or in-progress:
-  IF Requires Clarification == yes:
+  IF Requires Clarification checkbox "yes" is checked:
     ROUTE: spec-kit-clarify (with bug context)
     NOTE: Clarify resolves ambiguities about the bug's expected behavior
   ELSE:

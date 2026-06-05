@@ -17,7 +17,7 @@
   3. [Step 3]
 - **Actual Result**: [What currently happens]
 - **Expected Result**: [What should happen]
-- **Requires Clarification**: [yes/no — if yes, run spec-kit-clarify before plan]
+- **Requires Clarification**: [ ] no / [ ] yes (if yes, run spec-kit-clarify before plan)
 - **Plan Ref**: [Populated by plan phase — reference to plan.md fix section]
 - **Status**: [open/in-progress/resolved/verified]
 
@@ -31,7 +31,7 @@
   2. [Step 2]
 - **Actual Result**: [What currently happens]
 - **Expected Result**: [What should happen]
-- **Requires Clarification**: [yes/no]
+- **Requires Clarification**: [ ] no / [ ] yes
 - **Plan Ref**: [Populated by plan phase]
 - **Status**: [open/in-progress/resolved/verified]
 
@@ -41,10 +41,10 @@
 
 ## Summary
 
-| Bug ID | Severity | Area | Status |
-|--------|----------|------|--------|
-| BUG-001 | [severity] | [area] | open |
-| BUG-002 | [severity] | [area] | open |
+| Bug ID | Severity | Area | Status | Needs Clarification |
+|--------|----------|------|--------|---------------------|
+| BUG-001 | [severity] | [area] | open | [ ] no / [ ] yes |
+| BUG-002 | [severity] | [area] | open | [ ] no / [ ] yes |
 
 **Total Bugs**: N
 **Open**: N

@@ -112,6 +112,31 @@ Execute tasks from tasks.md. Tests first, then implementation. Update tasks as c
 | **Idempotent** | Each phase skill can be re-run to update its artifact |
 | **Non-blocking** | User can skip phases or go back to revise |
 | **Bugfix loop** | Testing phase routes back to Plan (or Clarify) for iterative bugfix cycles |
+| **Code-freeze guardrail** | Source code changes are only permitted during Implement and bugfix-implementation phases. All other phases are read-only for code. See Permission Matrix below. |
+
+## Permission Matrix (Phase Guardrails)
+
+You MUST determine the current phase before any tool call. Each phase has strict limits on what files and tools are allowed:
+
+| Phase | Allowed to Write | Code-Editing Tools | Required Prerequisite Artifact |
+|-------|-----------------|-------------------|-------------------------------|
+| **Constitution** (0) | `constitution.md` only | BLOCKED | None |
+| **Specify** (1) | `spec.md`, `checklists/requirements.md` | BLOCKED | `constitution.md` |
+| **Clarify** (1.5) | `clarify.md`, `spec.md` (amend ambiguities) | BLOCKED | `spec.md` |
+| **Plan** (2) | `plan.md`, `research.md`, `data-model.md`, `contracts/*.md`, `quickstart.md` | BLOCKED | `spec.md` + `constitution.md` |
+| **Tasks** (3) | `tasks.md` only | BLOCKED | `plan.md` |
+| **Analyze** (3.5) | None (read-only report) | BLOCKED | `tasks.md` + `plan.md` + `spec.md` |
+| **Implement** (4) | source code files, `tasks.md` (mark completions), `bugs.md` (mark resolved in bugfix loop) | ALLOWED (write_file, patch, terminal for build/test) | `tasks.md` |
+| **Test** (5) | `bugs.md` only | BLOCKED | `spec.md` |
+
+> **Bugfix loop**: reuses Plan, Tasks, and Implement — same permissions, just with `bugs.md` as additional input context. No separate bugfix phases.
+
+### Enforcement Rules
+- `write_file`, `patch`, `terminal` (for compilation/builds) → **ONLY** during Implement (including bugfix loop implementations)
+- Writing to spec artifacts (`spec.md`, `plan.md`, `tasks.md`, `bugs.md`) → only during their respective phase
+- Reading files, searching, loading skills → allowed in all phases
+- If you cannot determine the phase → ASK the user
+- If the user asks for code changes outside Implement → politely refuse and suggest running the correct phase first
 
 ## Resuming Work
 

@@ -165,6 +165,64 @@ After running `./scripts/install.sh`, reload skills in your Hermes session:
 /reload-skills
 ```
 
+## Installing Spec-Kit to a New Project
+
+To set up spec-driven development in a new project:
+
+### 1. Install the skills (one-time)
+
+From the spec-kit repo:
+```bash
+cd /path/to/hermes-spec-kit
+./scripts/install.sh
+```
+
+This copies all skill files to `~/.hermes/skills/` and templates to `~/.hermes/skills/spec-kit/templates/`.
+
+### 2. Copy AGENTS.md to your project
+
+```bash
+cp ~/.hermes/skills/spec-kit/templates/AGENTS-template.md /path/to/your-project/AGENTS.md
+```
+
+Then edit `AGENTS.md` to fill in the project-specific sections (tech stack, build commands, conventions, etc.) and update the SPECKIT section as specs are created.
+
+### 3. Run the constitution phase
+
+```bash
+cd /path/to/your-project
+```
+
+Start a Hermes session and:
+```
+User: "Create the project constitution"
+Agent: Loads spec-kit-constitution, generates specs/constitution.md
+```
+
+### 4. Verify setup
+
+Create a test spec to confirm the workflow works:
+```
+User: "Create a spec for an initial feature"
+```
+
+### Updating an Existing Project
+
+If you already have spec-kit installed and want to update to the latest version:
+
+```bash
+cd /path/to/hermes-spec-kit
+git pull              # get latest changes
+./scripts/install.sh  # re-install all skills and templates
+```
+
+Then in your Hermes session:
+```
+/reload-skills
+```
+
+The AGENTS.md in your project is NOT auto-updated — maintain the SPECKIT section manually.
+
 ## Related Projects
 
 - [JRedeker/cline-spec-kit-workflows](https://github.com/JRedeker/cline-spec-kit-workflows) - Original Cline workflow files

@@ -68,6 +68,48 @@ This section keeps track of current spec artifacts. Update it manually when spec
 - Test tasks must precede implementation tasks
 - Plans must include a Constitution Check
 
+## Phase Guardrails — STRICT
+
+You MUST determine the current phase before any tool call. Track the current phase per spec in the SPECKIT section above using `<!-- PHASE: [phase name] -->` comments.
+
+### Permission Matrix
+
+| Phase | Allowed to Write | Code-Editing Tools | Read-Only Tools Only |
+|-------|-----------------|-------------------|---------------------|
+| **Constitution** | `constitution.md` only | BLOCKED | read_file, search_files, skill_view, web, terminal (inspect only) |
+| **Specify** | `spec.md`, `checklists/requirements.md` | BLOCKED | read_file, search_files, skill_view, web, terminal (inspect only) |
+| **Clarify** | `clarify.md`, `spec.md` (amend ambiguities) | BLOCKED | read_file, search_files, skill_view |
+| **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*.md`, `quickstart.md` | BLOCKED | read_file, search_files, skill_view, web, terminal (inspect only) |
+| **Tasks** | `tasks.md` only | BLOCKED | read_file, search_files, skill_view |
+| **Analyze** | None (read-only report) | BLOCKED | read_file, search_files, skill_view |
+| **Implement** | `tasks.md` (mark completions), source code files, `bugs.md` (mark resolved in bugfix loop) | ALLOWED (write_file, patch, terminal for build/test) | — |
+| **Test** | `bugs.md` only | BLOCKED | read_file, search_files, skill_view |
+
+> **Bugfix loop**: reuses Plan, Tasks, and Implement phases — same permissions as above, just with `bugs.md` as additional input context. No separate phases needed.
+
+### Pre-Work Self-Check
+
+Before making ANY tool call, verify:
+1. **What phase am I in?** Check SPECKIT section for `<!-- PHASE: ... -->`, or detect from artifacts present.
+2. **Is this tool allowed?** Check the Permission Matrix above.
+3. **Am I about to write code?** If YES and phase is NOT Implement or Bugfix Implement → **STOP**. You are violating the guardrail.
+
+### Enforcement
+
+- `write_file`, `patch`, `terminal` (for compilation/builds) → **ONLY** during Implement and Bugfix Implement
+- Writing to spec artifacts (`spec.md`, `plan.md`, `tasks.md`, `bugs.md` etc.) → only during their respective phases
+- Reading files, searching, loading skills → allowed in all phases
+- If you cannot determine the current phase → ASK the user: "What phase are we in?"
+- If the user asks for code changes outside Implement → POLITELY REFUSE and suggest running the appropriate phase first
+
+### Violation Recovery
+
+If you realize you've written code in the wrong phase:
+1. STOP immediately
+2. Revert the changes (`git checkout -- <files>`)
+3. Inform the user which phase you should be in instead
+4. Ask if they want to proceed with the correct phase
+
 ## Conventions
 
 - Spec numbering: `NNN-feature-name` (sequential, 3 digits)

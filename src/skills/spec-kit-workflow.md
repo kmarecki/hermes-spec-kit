@@ -141,3 +141,26 @@ Each skill BLOCKS if prerequisites are not met:
 - "bugfix 003-user-auth"
 - "Verify BUG-001 in 003-user-auth"
 - "Bug status 003-user-auth"
+
+## Phase Guardrails — STRICT
+
+You MUST determine the current phase before any tool call. Each phase has strict limits:
+
+| Phase | Allowed to Write | Code-Editing Tools | Detect By |
+|-------|-----------------|-------------------|-----------|
+| **Constitution** | `constitution.md` only | BLOCKED | `specs/constitution.md` exists, no `spec.md` |
+| **Specify** | `spec.md`, `checklists/requirements.md` | BLOCKED | `specs/NNN-name/spec.md` exists, no `plan.md` |
+| **Clarify** | `clarify.md`, `spec.md` (amend) | BLOCKED | `clarify.md` exists |
+| **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md` | BLOCKED | `plan.md` exists, no `tasks.md` |
+| **Tasks** | `tasks.md` only | BLOCKED | `tasks.md` exists, no completions |
+| **Analyze** | None (read-only) | BLOCKED | User says "analyze" |
+| **Implement** | source code, `tasks.md` (completions), `bugs.md` (mark resolved) | ALLOWED | `tasks.md` with pending tasks |
+| **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
+
+> **Bugfix loop**: reuses Plan, Tasks, and Implement — same permissions, just with `bugs.md` as additional input context.
+
+### Enforcement Rules
+- `write_file`/`patch`/`terminal` for builds → **ONLY** during Implement (including bugfix loop implementations)
+- Writing to spec artifacts (`spec.md`, `plan.md`, `tasks.md`, `bugs.md`) → only during their respective phase
+- Unknown phase → ASK the user
+- User asks for code outside Implement → REFUSE, suggest correct phase
