@@ -10,6 +10,15 @@ category: software-development
 
 **Purpose**: Document discovered bugs in `specs/[feature]/bugs.md` and orchestrate the bugfix loop. Testing is manual — the user discovers and reports bugs. This skill creates the bug tracking document and routes bugs back through Clarify → Plan → Tasks → Analyze → Implement as needed.
 
+## Hard Rule: Bugs Always Go to bugs.md First
+
+When the user reports a bug or unexpected behavior:
+1. ALWAYS write the bug to `bugs.md` with Status: open
+2. NEVER implement a fix directly — not even for "trivial" or "obvious" bugs
+3. The fix must follow the full bugfix loop: plan → tasks → implement
+4. Trigger the loop with "bugfix [feature]" — never skip straight to implementation
+5. Exception: User can always edit, change, or iterate over any markdown artifact (spec.md, plan.md, tasks.md, bugs.md, etc.) directly — that is NOT a code bugfix, just documentation.
+
 **Prerequisites**: `spec-kit-implement` must have been run (or artifacts exist from prior phases)
 
 **Artifacts**:
@@ -77,12 +86,15 @@ LOAD specs/[feature]/bugs.md
 FOR EACH bug with Status: open or in-progress:
   IF Requires Clarification checkbox "yes" is checked:
     ROUTE: spec-kit-clarify (with bug context)
-    NOTE: Clarify resolves ambiguities about the bug's expected behavior
+    AFTER clarify → AUTOMATICALLY route to spec-kit-plan
   ELSE:
     ROUTE: spec-kit-plan (with bugfix context)
-    NOTE: Plan produces bugfix approach in the existing plan.md
 
-DEFAULT ROUTING: spec-kit-plan
+AFTER plan completes → AUTOMATICALLY route to spec-kit-tasks
+AFTER tasks completes → AUTOMATICALLY route to spec-kit-implement
+
+DEFAULT ROUTING: spec-kit-plan → spec-kit-tasks → spec-kit-implement (automatic chain)
+NOTE: No user choice between tasks and implement for bugfixes. Always chain all three.
 ```
 
 ### Step 6: Mark bugs as verified
@@ -121,31 +133,31 @@ ELSE:
         ▼
  ┌──────────────┐
  │ Needs        │
- │ Clarification│──yes──► spec-kit-clarify ──► spec-kit-plan
- │  (per bug)?  │
- └──────┬───────┘
-        │ no
-        ▼
-  ┌───────────┐
-  │ spec-kit- │──► If bugs touch spec, update spec.md first
-  │   plan    │
-  └─────┬─────┘
+ │ Clarification│──yes──► spec-kit-clarify ──┐
+ │  (per bug)?  │                            │
+ └──────┬───────┘                            │
+        │ no                                 │
+        ▼                                    ▼
+  ┌───────────┐                         ┌───────────┐
+  │ spec-kit- │                         │ spec-kit- │
+  │   plan    │◄────────────────────────│  clarify  │
+  └─────┬─────┘                        └───────────┘
         │
         ▼
   ┌───────────┐
-  │ spec-kit- │──► Generate bugfix tasks
+  │ spec-kit- │──► AUTOMATIC (no user choice)
   │   tasks   │
   └─────┬─────┘
         │
         ▼
   ┌──────────────┐
-  │  spec-kit-   │──► (optional) Verify bugfix tasks against spec+plan+bugs
+  │  spec-kit-   │──► (optional, only if user asks)
   │   analyze    │
   └──────┬───────┘
          │
          ▼
   ┌───────────┐
-  │ spec-kit- │──► Execute bugfix tasks with TDD
+  │ spec-kit- │──► AUTOMATIC (no user choice)
   │ implement │
   └─────┬─────┘
         │

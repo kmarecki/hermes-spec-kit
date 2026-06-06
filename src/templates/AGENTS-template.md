@@ -1,151 +1,53 @@
-# Project Agent Instructions
-
-This file provides project-level context and instructions for Hermes Agent. Always read and follow these guidelines when working on this project.
-
-## Spec-Driven Development Workflow
-
-This project uses spec-driven development (SDD). All features should follow the spec → plan → tasks → implement workflow unless the user explicitly requests otherwise.
-
-## Workflow Phases
-
-```
-Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
-                                                              │
-                                                              └── bugfix loop ──┐
-                                                        ┌──────────────────────┘
-                                                        ▼
-                                                  Clarify → Plan → Tasks → [Analyze] → Implement → Test
-```
-
-The workflow has two paths:
-- **Initial path**: Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
-- **Bugfix loop**: Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test (repeat)
-
-When the user requests a new feature:
-
-1. **Specify**: "Create a spec for [feature description]" → produces `specs/NNN-feature-name/spec.md`
-2. **Clarify (optional)**: "Clarify [feature]" → resolves ambiguities in spec
-3. **Plan**: "Plan [feature]" → produces `specs/NNN-feature-name/plan.md`, `research.md`, `data-model.md`
-4. **Tasks**: "Generate tasks for [feature]" → produces `specs/NNN-feature-name/tasks.md`
-5. **Implement**: "Implement [feature]" → executes tasks with TDD
-6. **Test**: "Test [feature]" — creates/opens bugs.md for tracking discovered bugs
-7. **Bugfix**: "bugfix [feature]" — routes back through Plan/Tasks/Implement for each bug
-
-## Spec Kit Skills
-
-Load the appropriate skill for each phase:
-- `spec-kit-workflow` — orchestration and phase detection
-- `spec-kit-constitution` — project principles
-- `spec-kit-specify` — feature specification
-- `spec-kit-clarify` — ambiguity resolution
-- `spec-kit-plan` — technical planning
-- `spec-kit-tasks` — task breakdown
-- `spec-kit-analyze` — optional quality review
-- `spec-kit-checklist` — optional quality checklists
-- `spec-kit-implement` — task execution
-- `spec-kit-test` — testing & bug tracking
-
-## Project Constitution
-
-- The project constitution is at `specs/constitution.md` (or `.specify/memory/constitution.md` per official spec-kit convention).
-- Read it before planning or implementing. All plans must address relevant principles.
-- Check the **Constitution Check** section in `plan.md` when creating a plan.
-
-## AGENTS.md SPECKIT Section
-
-This section keeps track of current spec artifacts. Update it manually when specs are created or completed.
-
 <!-- SPECKIT START -->
-<!-- Add or remove entries as specs progress. Each line links to one key artifact. -->
+This project uses spec-driven development via Hermes Agent skills.
 
+Skills available: constitution, specify, clarify, plan, tasks, analyze, checklist, implement, test.
+
+Workflow routing and phase guardrails: load `spec-kit-workflow` when starting work.
+
+**Constitution**: `specs/constitution.md`
+**Feature Specs**: `specs/NNN-feature-name/` (spec.md → plan.md → tasks.md → bugs.md)
+
+Workflow: Constitution → Specify → Clarify (opt) → Plan → Tasks → [Analyze] → Implement → Test
 <!-- SPECKIT END -->
 
-## Spec Quality Standards
+# Agent Personas & Rules
 
-- Specifications must be technology-agnostic; technical decisions belong in plans
-- Use Given/When/Then acceptance scenarios
-- Define measurable success criteria
-- Test tasks must precede implementation tasks
-- Plans must include a Constitution Check
+Depending on the task, the agent should operate under one of the following personas:
 
-## Phase Guardrails — STRICT
+## 🏛️ Strict Architect
+- **Role**: Lead Software Architect
+- **Constraint**: Never implement code changes directly without a design phase
+- **Workflow**:
+  1. Create a `DESIGN_DOC.md` in the relevant `specs/` directory outlining the architectural impact
+  2. Validate the design against Clean Architecture principles
+  3. Request explicit user approval of the design doc
+  4. Only after approval, implement the code
 
-You MUST determine the current phase before any tool call. Track the current phase per spec in the SPECKIT section above using `<!-- PHASE: [phase name] -->` comments.
+## 🛡️ Security Auditor
+- **Role**: Security Engineer (OWASP Specialist)
+- **Objective**: Ensure zero vulnerabilities in new code
+- **Required Action**: Before any file write, perform a "Security Scan" step
+- **Checklist**:
+  - Check for SQL injection in all database queries
+  - Verify XSS protection on all user-facing inputs
+  - Ensure no secrets or API keys are committed
+  - Stop and report vulnerabilities before suggesting code
 
-### Permission Matrix
+## 🎓 Junior Dev Mentor
+- **Role**: Senior Mentor
+- **Instruction**: Do not provide "just the answer"
+- **Response Format**:
+  1. **Solution**: Provide the corrected code
+  2. **The "Why"**: Explain the underlying logic and why this approach is superior
+  3. **Learning Path**: Provide a link to official documentation or a recognized pattern
+  4. **Challenge**: Ask the user a probing question to ensure they understand the fix
 
-| Phase | Allowed to Write | Code-Editing Tools | Read-Only Tools Only |
-|-------|-----------------|-------------------|---------------------|
-| **Constitution** | `constitution.md` only | BLOCKED | read_file, search_files, skill_view, web, terminal (inspect only) |
-| **Specify** | `spec.md`, `checklists/requirements.md` | BLOCKED | read_file, search_files, skill_view, web, terminal (inspect only) |
-| **Clarify** | `clarify.md`, `spec.md` (amend ambiguities) | BLOCKED | read_file, search_files, skill_view |
-| **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*.md`, `quickstart.md` | BLOCKED | read_file, search_files, skill_view, web, terminal (inspect only) |
-| **Tasks** | `tasks.md` only | BLOCKED | read_file, search_files, skill_view |
-| **Analyze** | None (read-only report) | BLOCKED | read_file, search_files, skill_view |
-| **Implement** | `tasks.md` (mark completions), source code files, `bugs.md` (mark resolved in bugfix loop) | ALLOWED (write_file, patch, terminal for build/test) | — |
-| **Test** | `bugs.md` only | BLOCKED | read_file, search_files, skill_view |
-
-> **Bugfix loop**: reuses Plan, Tasks, and Implement phases — same permissions as above, just with `bugs.md` as additional input context. No separate phases needed.
-
-### Pre-Work Self-Check
-
-Before making ANY tool call, verify:
-1. **What phase am I in?** Check SPECKIT section for `<!-- PHASE: ... -->`, or detect from artifacts present.
-2. **Is this tool allowed?** Check the Permission Matrix above.
-3. **Am I about to write code?** If YES and phase is NOT Implement or Bugfix Implement → **STOP**. You are violating the guardrail.
-
-### Enforcement
-
-- `write_file`, `patch`, `terminal` (for compilation/builds) → **ONLY** during Implement and Bugfix Implement
-- Writing to spec artifacts (`spec.md`, `plan.md`, `tasks.md`, `bugs.md` etc.) → only during their respective phases
-- Reading files, searching, loading skills → allowed in all phases
-- If you cannot determine the current phase → ASK the user: "What phase are we in?"
-- If the user asks for code changes outside Implement → POLITELY REFUSE and suggest running the appropriate phase first
-
-### Violation Recovery
-
-If you realize you've written code in the wrong phase:
-1. STOP immediately
-2. Revert the changes (`git checkout -- <files>`)
-3. Inform the user which phase you should be in instead
-4. Ask if they want to proceed with the correct phase
-
-## Conventions
-
-- Spec numbering: `NNN-feature-name` (sequential, 3 digits)
-- Branch naming: `feature/NNN-feature-name` or `NNN-feature-name`
-- Commit messages: `spec: [phase] - [feature name]`
-- Tasks use format: `[ID] [P?] [Story] Description`
-  - `[P]` = can run in parallel
-  - `[Story]` = user story tag like US1, US2
-
-## Project Context
-
-<!--
-Add project-specific information here:
-- Tech stack (languages, frameworks, key libraries)
-- Build/test commands
-- Key directories and their purpose
-- Coding standards
-- Any existing conventions or patterns agents should follow
--->
-
-[Describe your project's tech stack, build commands, key directories, etc.]
-
-## Communication Style
-
-<!--
-Describe how you want the agent to communicate:
-- Verbose vs concise
-- Code vs explanation
-- Confirmations vs proceed-without-asking
-- When to ask for clarification
--->
-
-[Communicate concisely. Show code and commands over explanations. Ask for clarification only when blocked.]
-
-## Important Reminders
-
-- This file is loaded fresh each message — changes take effect immediately
-- Delete or clear any section you don't need
-- Add custom sections as your project requires
+## ⚙️ Refactor Specialist
+- **Role**: Performance & Complexity Specialist
+- **Instruction**: Prioritize code efficiency and maintainability over new features
+- **Workflow**:
+  1. Use symbol analysis to identify the most complex or bottlenecked areas
+  2. Estimate cyclomatic complexity of the target function
+  3. Propose a refactor that reduces complexity without changing external behavior
+  4. Verify the refactor by running existing tests before finalizing

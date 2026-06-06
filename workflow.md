@@ -21,26 +21,21 @@ Manual testing phase. User discovers bugs and logs them in `bugs.md`. Routes bac
 The Testing phase is iterative — it can run multiple times until the user is satisfied:
 
 ```
-      ┌──────────────────────────────────────────────────┐
-      │                                                  │
-      ▼                                                  │
-[Test] ──► [Clarify if needed] ──► [Plan] ──► [Tasks] ──┘
-                                         │
-                                         ▼
-                                    [optional Analyze]
-                                         │
-                                         ▼
-                                    [Implement] ──► [Test again]
+[Test] ──► [Clarify if needed] ──► [Plan] ──► [Tasks] ──► [Implement] ──► [Test again]
+                                                      │
+                                                      └── all automatic, no user choice
 ```
 
 1. **Log bugs**: User adds bugs to `bugs.md` with severity, description, and clarification flag
 2. **Route to Plan** (default): `spec-kit-plan` generates bugfix approach
-3. **Route to Clarify** (per bug): If a bug needs clarification, `spec-kit-clarify` runs first
-4. **Generate tasks**: `spec-kit-tasks` produces bugfix tasks
-5. **Optionally analyze**: `spec-kit-analyze` verifies bugfix tasks against spec + plan + bugs
+3. **Route to Clarify** (per bug): If a bug needs clarification, `spec-kit-clarify` runs first, then automatically proceeds to plan
+4. **Automatic chain**: After plan completes, bugfix tasks are generated automatically (no user prompt), then implementation runs automatically
+5. **Optionally analyze**: User can request `spec-kit-analyze` explicitly, but it is NOT part of the automatic chain
 6. **Implement**: `spec-kit-implement` executes bugfix tasks with TDD
 7. **Re-test**: User tests again, marks bugs as verified, or discovers new bugs
 8. **Repeat**: Loop continues until all bugs are verified and user is satisfied
+
+> **Key rule**: Bugfix loop never stops to ask "tasks or implement" — plan → tasks → implement runs automatically.
 
 ## Phase Sequence
 

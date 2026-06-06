@@ -72,7 +72,7 @@ Create internal representations:
 
 **B. Ambiguity Detection**
 - Flag vague adjectives (fast, scalable, secure, intuitive, robust)
-- Flag unresolved placeholders (TODO, TKTK, ???, <placeholder>)
+- Flag unresolved placeholders (TODO, TKTK, ???, &lt;placeholder&gt;)
 
 **C. Underspecification**
 - Requirements with verbs but missing object or measurable outcome
@@ -124,7 +124,7 @@ OUTPUT:
 | Requirement | Has Task? | Task IDs | Notes |
 |-------------|-----------|----------|-------|
 | FR-001 | Yes | T001, T002 | |
-| FR-002 | No | — | Missing coverage |
+| FR-002 | No | --- | Missing coverage |
 ...
 
 ## Constitution Alignment Issues
@@ -159,7 +159,7 @@ IF only LOW/MEDIUM:
 - User may proceed
 - Provide improvement suggestions
 
-### Step 8: Complete
+## Completion
 
 Report:
 - Findings count by severity
@@ -192,19 +192,3 @@ Report:
 ## Key Constraint
 
 **STRICTLY READ-ONLY** — This skill does NOT modify any files. It only outputs a report.
-
-## Completion
-
-Report:
-- Findings count by severity
-- Coverage percentage
-- Explicit remediation commands
-- Recommend whether to proceed to `spec-kit-implement`
-
-## Next Skills
-
-- Run `spec-kit-specify` to fix spec issues
-- Run `spec-kit-plan` to fix plan issues
-- Run `spec-kit-tasks` to fix coverage gaps
-- Run `spec-kit-implement` when all CRITICAL issues resolved
-- In bugfix mode: Run `spec-kit-tasks` to add missing bugfix tasks

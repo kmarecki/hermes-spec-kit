@@ -24,6 +24,17 @@ This is the master orchestrator that routes user requests to the appropriate pha
 
 ## Routing Logic
 
+Each skill BLOCKS if prerequisites are not met:
+- `spec-kit-constitution`: No prerequisites (phase 0)
+- `spec-kit-specify`: Requires `constitution.md`
+- `spec-kit-clarify`: Requires `spec.md`
+- `spec-kit-plan`: Requires `spec.md` + `constitution.md`
+- `spec-kit-tasks`: Requires `plan.md` + `spec.md`
+- `spec-kit-analyze`: Requires `tasks.md` + `plan.md` + `spec.md`
+- `spec-kit-implement`: Requires `tasks.md`
+- `spec-kit-test`: Requires `spec.md` (or existing implementation)
+  Bugfix prerequisite: `bugs.md` with at least one open bug
+
 ### New Feature
 - User says: "Create a spec for [description]"
 - Route to: `spec-kit-specify`
@@ -69,60 +80,23 @@ Check for artifacts to determine current phase:
 || `bugs.md` all verified | Testing complete |
 || All tasks complete + all bugs verified | Complete |
 
-## Skill Routing
-
-### New Feature
-- User says: "Create a spec for [description]"
-- Route to: `spec-kit-specify`
-
-### Existing Feature
-- User says: "What phase is [feature] in?"
-- Check `specs/[feature]/` directory structure
-- Report current phase
-
-### Advance Phase
-- User says: "Plan [feature]"
-- Route to: `spec-kit-plan`
-
-### Clarify Ambiguities
-- User says: "Clarify [feature]"
-- Route to: `spec-kit-clarify`
-
-### Constitution
-- User says: "Create constitution"
-- Route to: `spec-kit-constitution`
-
-### Analyze
-- User says: "Analyze [feature]"
-- Route to: `spec-kit-analyze`
-
-### Implement
-- User says: "Implement [feature]"
-- Route to: `spec-kit-implement`
-
-Each skill BLOCKS if prerequisites are not met:
-- `spec-kit-constitution`: No prerequisites (phase 0)
-- `spec-kit-specify`: Requires `constitution.md`
-- `spec-kit-clarify`: Requires `spec.md`
-- `spec-kit-plan`: Requires `spec.md` + `constitution.md`
-- `spec-kit-tasks`: Requires `plan.md` + `spec.md`
-- `spec-kit-analyze`: Requires `tasks.md` + `plan.md` + `spec.md`
-- `spec-kit-implement`: Requires `tasks.md`
-- `spec-kit-test`: Requires `spec.md` (or existing implementation)<br>  Bugfix prerequisite: `bugs.md` with at least one open bug
-
 ## Bugfix Routing
 
 ### Start bugfix loop
 - User says: "bugfix [feature]" or "fix bugs in [feature]"
 - LOAD `specs/[feature]/bugs.md`
 - FOR each bug with Status: open or in-progress:
-  - IF Requires Clarification == yes: ROUTE to `spec-kit-clarify` first, then `spec-kit-plan`
+  - IF Requires Clarification checkbox "yes" is checked: ROUTE to `spec-kit-clarify` first, then automatically chain to plan → tasks → implement
   - ELSE: ROUTE to `spec-kit-plan` directly
-- DEFAULT route: `spec-kit-plan` (when no bugs need clarification)
+- AFTER plan → AUTOMATICALLY route to `spec-kit-tasks`
+- AFTER tasks → AUTOMATICALLY route to `spec-kit-implement`
+- DEFAULT route: `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement` (automatic chain, no user choice)
+- NOTE: Analyze is optional — only run if user explicitly asks for it
 
 ### Test phase
 - User says: "Test [feature]"
 - Route to: `spec-kit-test`
+- NOTE: When user reports a bug during testing, `spec-kit-test` always logs it to `bugs.md` — never implement directly
 
 ### Verify bug
 - User says: "Verify [BUG-ID] in [feature]"

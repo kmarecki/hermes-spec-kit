@@ -284,12 +284,13 @@ User: "bugfix [feature]"
 Agent:
 1. Load spec-kit-workflow skill
 2. Read bugs.md
-3. For bugs needing clarification: route to spec-kit-clarify
+3. For bugs needing clarification: route to spec-kit-clarify, then automatically chain to plan → tasks → implement
 4. Route to spec-kit-plan (with bugfix context)
-5. Route to spec-kit-tasks (generate bugfix tasks)
-6. Optional: route to spec-kit-analyze
-7. Route to spec-kit-implement (execute bugfixes)
-8. Report: "Bugfix cycle complete — please test and update bugs.md"
+5. AFTER plan → AUTOMATICALLY route to spec-kit-tasks (no user prompt)
+6. AFTER tasks → AUTOMATICALLY route to spec-kit-implement (no user prompt)
+7. Report: "Bugfix cycle complete — please test and update bugs.md"
+
+NOTE: The bugfix loop never asks "tasks or implement". Plan → Tasks → Implement runs automatically.
 ```
 
 ## Maintenance Automation

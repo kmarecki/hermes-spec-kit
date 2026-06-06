@@ -24,7 +24,7 @@ IF specs/constitution.md EXISTS:
   LOAD existing constitution
   READ current version from header
 ELSE:
-  COPY templates/constitution.md → specs/constitution.md
+  COPY spec-kit/templates/constitution-template.md → specs/constitution.md
   SET version to 0.1.0
 ```
 
@@ -54,10 +54,9 @@ Increment version based on change type:
 - **PATCH** (x.x.1 → x.x.2): Clarifications, wording fixes
 
 ### Step 6: Propagate changes
-Read and update references in:
-- `src/templates/plan-template.md` — Constitution Check section
-- `src/templates/spec-template.md` — mandatory sections
-- `src/templates/tasks-template.md` — principle-driven task types
+After updating constitution, re-run skills that depend on it:
+- `spec-kit-specify` — re-validate spec against updated principles
+- `spec-kit-plan` — re-validate gates against updated constitution
 
 ## Completion
 
@@ -80,15 +79,3 @@ Run `spec-kit-specify` to create the first feature specification.
 ## Prerequisite Enforcement
 
 **No prerequisites** — this is Phase 0.
-
-## Completion
-
-Report:
-- New version and bump rationale
-- List of modified principles
-- Files requiring manual follow-up
-- Suggested commit message
-
-## Next Skill
-
-Run `spec-kit-specify` to create the first feature specification.
