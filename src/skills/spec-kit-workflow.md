@@ -27,8 +27,9 @@ This is the master orchestrator that routes user requests to the appropriate pha
 || 3.5 | `spec-kit-analyze` | Quality gate (optional) | Tasks |
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
-|| 6 | `spec-kit-summarize` | Implementation summary | Implement + Test |
-|| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test | bugs.md with open bugs |
+| 6 | `spec-kit-summarize` | Implementation summary | Implement + Test |
+| — | **Explore mode** | Parallel branches for N variants, each runs independent phase sequence | User provides variants |
+| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test | bugs.md with open bugs |
 
 ## Routing Logic
 
@@ -79,6 +80,17 @@ Each skill BLOCKS if prerequisites are not met:
 - User says: "Summarize [feature]" or "Implementation summary for [feature]"
 - Propose routing to: `spec-kit-summarize`
 
+### Creative Exploration
+- User says: "Explore [feature] with [variants]" or "Creative exploration for [feature]"
+- Route to: `spec-kit-explore`
+- When: User wants to compare N different approaches in parallel
+- After explore: Propose running `spec-kit-compare`
+
+### Compare Variants
+- User says: "Compare [feature]" or "Compare variants for [feature]"
+- Route to: `spec-kit-compare`
+- Prerequisites: `specs/[feature]/variants/` must exist with at least 2 variants
+
 ## Phase Detection
 
 Check for artifacts to determine current phase:
@@ -95,6 +107,8 @@ Check for artifacts to determine current phase:
 || `bugs.md` all verified | Testing complete |
 || `implementation-summary.md` exists | Summarized — complete |
 || All tasks complete + all bugs verified | Complete |
+|| `variants/` directory exists with ≥2 entries | Exploring (creative mode) |
+|| `comparison.md` exists | Compared — decision made |
 
 ## Bugfix Routing
 
@@ -132,6 +146,8 @@ Check for artifacts to determine current phase:
 - "Verify BUG-001 in 003-user-auth"
 - "Bug status 003-user-auth"
 - "Summarize 003-user-auth"
+- "Explore 003-user-auth with React, Vue, and Svelte frontends"
+- "Compare 003-user-auth"
 
 ## Phase Guardrails — STRICT
 
@@ -147,6 +163,8 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Analyze** | None (read-only) | BLOCKED | User says "analyze" |
 | **Implement** | source code, `tasks.md` (completions), `bugs.md` (mark resolved) | ALLOWED | `tasks.md` with pending tasks |
 | **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
+| **Explore** | `specs/[feature]/variants/*/` | ALLOWED (delegate_task subagents) | User provides variants |
+| **Compare** | `comparison.md` only | BLOCKED | `variants/` directory exists |
 | **Summarize** | `implementation-summary.md`, `tasks.md` (finalize), `bugs.md` (finalize) | BLOCKED | `implementation-summary.md` missing |
 
 > **Bugfix loop**: reuses Plan, Tasks, and Implement — same permissions, just with `bugs.md` as additional input context.
