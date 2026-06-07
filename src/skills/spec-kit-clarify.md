@@ -29,7 +29,7 @@ metadata:
 ### Step 1: Validate prerequisites
 ```
 IF specs/constitution.md NOT EXISTS:
-  ERROR: "Run spec-kit-constitution first"
+  WARN: "No constitution found — proceeding without constitutional gates. Constitution is optional."
 IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first to create the feature specification"
 ```

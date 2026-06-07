@@ -28,7 +28,7 @@ metadata:
 ### Step 1: Validate prerequisites
 ```
 IF specs/constitution.md NOT EXISTS:
-  ERROR: "Run spec-kit-constitution first to establish project principles"
+  WARN: "No constitution found — proceeding without constitutional gates. Constitution is optional; run `spec-kit-constitution` later to add principles."
 ```
 
 ### Step 2: Parse user description

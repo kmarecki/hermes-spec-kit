@@ -32,7 +32,7 @@ IF specs/[feature]/plan.md NOT EXISTS:
 IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
 IF specs/constitution.md NOT EXISTS:
-  ERROR: "Run spec-kit-constitution first"
+  WARN: "No constitution found — proceeding without constitutional gates. Constitution is optional."
 ```
 
 ### Step 2: Load context
