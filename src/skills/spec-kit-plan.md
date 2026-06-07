@@ -116,6 +116,7 @@ Report:
 - Generated artifacts (research.md, data-model.md, contracts/)
 - Gate status (pass/fail with justifications)
 - Suggest next command
+- **Propose to the user**: Commit plan artifacts: `git add specs/[feature]/plan.md specs/[feature]/research.md specs/[feature]/data-model.md 2>/dev/null; git commit -m "spec(phase-2): [feature] implementation plan"`
 
 ### Auto-Chaining (Bugfix Mode)
 

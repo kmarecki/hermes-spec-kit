@@ -64,6 +64,7 @@ Report:
 - New version and bump rationale
 - List of modified principles
 - Suggested commit message
+- **Propose to the user**: Commit constitution: `git add specs/constitution.md && git commit -m "spec(phase-0): constitution for [PROJECT]"`
 
 ## Next Skill
 

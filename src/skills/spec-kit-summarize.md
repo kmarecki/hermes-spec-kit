@@ -219,6 +219,7 @@ After this skill completes, the feature enters **Complete** state:
 - [ ] All bugs marked verified in bugs.md
 - [ ] ❌ Not Done gaps converted to new bug entries in bugs.md (if any)
 - [ ] Report delivered to user with spec state recommendations
+- **Propose to the user**: Commit summary: `git add specs/[feature]/implementation-summary.md && git commit -m "spec(phase-6): [feature] implementation summary"`
 
 ## Next Skills
 

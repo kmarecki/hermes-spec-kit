@@ -100,6 +100,7 @@ Report:
 - Sections updated in spec
 - Checklist status (before → after)
 - Suggest next command
+- **Propose to the user**: Commit clarifications: `git add specs/[feature]/clarify.md && git commit -m "spec(phase-1.5): [feature] clarifications"`
 
 ## Next Skills
 

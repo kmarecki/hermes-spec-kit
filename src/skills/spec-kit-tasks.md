@@ -117,6 +117,7 @@ Report:
 - Parallelizable task count
 - Requirement coverage percentage
 - Suggest next command
+- **Propose to the user**: Commit tasks: `git add specs/[feature]/tasks.md && git commit -m "spec(phase-3): [feature] task breakdown"`
 
 ### Auto-Chaining (Bugfix Mode)
 

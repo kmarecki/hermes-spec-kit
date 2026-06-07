@@ -152,6 +152,7 @@ Report:
 - Tasks completed vs total
 - Tests passing
 - Summary of completed work
+- **Propose to the user**: Commit implementation: `git add -A && git commit -m "feat: [feature] T### - task description"` after each task
 
 ## Done When
 

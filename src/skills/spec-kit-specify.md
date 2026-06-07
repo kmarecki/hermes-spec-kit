@@ -78,6 +78,7 @@ Report:
 - Spec file path
 - Checklist status
 - List readiness for next phase
+- **Propose to the user**: Commit spec: `git add specs/[feature]/spec.md && git commit -m "spec(phase-1): [feature] specification"`
 
 ## Next Skills
 

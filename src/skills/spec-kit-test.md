@@ -212,6 +212,7 @@ ELSE:
 - [ ] All bugs logged in bugs.md have Status: verified
 - [ ] No remaining open bugs
 - [ ] User confirms feature is complete
+- **Propose to the user**: Commit bug log: `git add specs/[feature]/bugs.md && git commit -m "spec(phase-5): [feature] bug log"`
 
 ## Next Skills
 
