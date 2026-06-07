@@ -20,6 +20,7 @@ This is the master orchestrator that routes user requests to the appropriate pha
 || 3.5 | `spec-kit-analyze` | Quality gate (optional) | Tasks |
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
+|| 6 | `spec-kit-summarize` | Implementation summary | Implement + Test |
 || — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test | bugs.md with open bugs |
 
 ## Routing Logic
@@ -34,6 +35,7 @@ Each skill BLOCKS if prerequisites are not met:
 - `spec-kit-implement`: Requires `tasks.md`
 - `spec-kit-test`: Requires `spec.md` (or existing implementation)
   Bugfix prerequisite: `bugs.md` with at least one open bug
+- `spec-kit-summarize`: Requires `tasks.md`
 
 ### New Feature
 - User says: "Create a spec for [description]"
@@ -64,6 +66,10 @@ Each skill BLOCKS if prerequisites are not met:
 - User says: "Implement [feature]"
 - Route to: `spec-kit-implement`
 
+### Summarize
+- User says: "Summarize [feature]" or "Implementation summary for [feature]"
+- Route to: `spec-kit-summarize`
+
 ## Phase Detection
 
 Check for artifacts to determine current phase:
@@ -78,6 +84,7 @@ Check for artifacts to determine current phase:
 || `tasks.md` with completions | Implementing |
 || `bugs.md` with open bugs | Testing (bugfix loop) |
 || `bugs.md` all verified | Testing complete |
+|| `implementation-summary.md` exists | Summarized — complete |
 || All tasks complete + all bugs verified | Complete |
 
 ## Bugfix Routing
@@ -115,6 +122,7 @@ Check for artifacts to determine current phase:
 - "bugfix 003-user-auth"
 - "Verify BUG-001 in 003-user-auth"
 - "Bug status 003-user-auth"
+- "Summarize 003-user-auth"
 
 ## Phase Guardrails — STRICT
 
@@ -130,6 +138,7 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Analyze** | None (read-only) | BLOCKED | User says "analyze" |
 | **Implement** | source code, `tasks.md` (completions), `bugs.md` (mark resolved) | ALLOWED | `tasks.md` with pending tasks |
 | **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
+| **Summarize** | `implementation-summary.md`, `tasks.md` (finalize), `bugs.md` (finalize) | BLOCKED | `implementation-summary.md` missing |
 
 > **Bugfix loop**: reuses Plan, Tasks, and Implement — same permissions, just with `bugs.md` as additional input context.
 

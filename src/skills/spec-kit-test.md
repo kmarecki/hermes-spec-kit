@@ -39,7 +39,7 @@ IF specs/[feature]/bugs.md EXISTS:
   REPORT current bug summary (open/in-progress/resolved/verified counts)
   ASK: "Add new bugs, continue bugfixing, or mark bugs as verified?"
 ELSE:
-  COPY templates/bugs.md → specs/[feature]/bugs.md
+  COPY `spec-kit/templates/bugs-template.md` → `specs/[feature]/bugs.md`
   REPORT: "Created specs/[feature]/bugs.md — add bugs manually using the template format"
   INSTRUCT: Each bug needs: ID, Severity, Area, Description, Steps to Reproduce,
             Actual Result, Expected Result, Requires Clarification flag, Status

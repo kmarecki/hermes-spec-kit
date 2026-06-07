@@ -40,7 +40,7 @@ The Testing phase is iterative — it can run multiple times until the user is s
 ## Phase Sequence
 
 ```
-Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
+Constitution → Specify → Clarify → Plan → Tasks → Implement → Test → Summarize
                                                               │
                                                               └── bugfix loop ──┐
                                                         ┌──────────────────────┘
@@ -49,8 +49,15 @@ Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
 ```
 
 The workflow has two distinct paths:
-- **Initial path** (forward): Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
+- **Initial path** (forward): Constitution → Specify → Clarify → Plan → Tasks → Implement → Test → Summarize
 - **Bugfix loop** (iterative): Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test (repeat)
+
+### Phase 7: Summarize
+**Skill**: `spec-kit-summarize`
+
+Reads all artifacts and generates `implementation-summary.md`. Updates tasks.md (marks all complete) and bugs.md (marks all verified). Provides a final snapshot of what was implemented, what changed, test results, and remaining open items.
+
+**Artifacts**: `specs/NNN-feature-name/implementation-summary.md`
 
 ### Phase 0: Constitution
 **Skill**: `spec-kit-constitution`
@@ -115,14 +122,15 @@ You MUST determine the current phase before any tool call. Each phase has strict
 
 | Phase | Allowed to Write | Code-Editing Tools | Required Prerequisite Artifact |
 |-------|-----------------|-------------------|-------------------------------|
-| **Constitution** (0) | `constitution.md` only | BLOCKED | None |
-| **Specify** (1) | `spec.md`, `checklists/requirements.md` | BLOCKED | `constitution.md` |
-| **Clarify** (1.5) | `clarify.md`, `spec.md` (amend ambiguities) | BLOCKED | `spec.md` |
-| **Plan** (2) | `plan.md`, `research.md`, `data-model.md`, `contracts/*.md`, `quickstart.md` | BLOCKED | `spec.md` + `constitution.md` |
-| **Tasks** (3) | `tasks.md` only | BLOCKED | `plan.md` |
-| **Analyze** (3.5) | None (read-only report) | BLOCKED | `tasks.md` + `plan.md` + `spec.md` |
-| **Implement** (4) | source code files, `tasks.md` (mark completions), `bugs.md` (mark resolved in bugfix loop) | ALLOWED (write_file, patch, terminal for build/test) | `tasks.md` |
-| **Test** (5) | `bugs.md` only | BLOCKED | `spec.md` |
+| **Constitution** (0) | `constitution.md` only | **BLOCKED** | None |
+| **Specify** (1) | `spec.md`, `checklists/requirements.md` | **BLOCKED** | `constitution.md` |
+| **Clarify** (1.5) | `clarify.md`, `spec.md` (ammend) | **BLOCKED** | `spec.md` |
+| **Plan** (2) | `plan.md`, `research.md`, `data-model.md`, `contracts/*` | **BLOCKED** | `spec.md` + `constitution.md` |
+| **Tasks** (3) | `tasks.md` only | **BLOCKED** | `plan.md` |
+| **Analyze** (3.5) | None (read-only report) | **BLOCKED** | `tasks.md` |
+| **Implement** (4) | source code, `tasks.md` (completions) | **ALLOWED** | `tasks.md` |
+| **Test** (5) | `bugs.md` only | **BLOCKED** | `spec.md` (or implementation) |
+| **Summarize** (6) | `implementation-summary.md`, `tasks.md` (finalize), `bugs.md` (finalize) | **BLOCKED** | `tasks.md` |
 
 > **Bugfix loop**: reuses Plan, Tasks, and Implement — same permissions, just with `bugs.md` as additional input context. No separate bugfix phases.
 

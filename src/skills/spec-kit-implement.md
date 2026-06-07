@@ -28,8 +28,9 @@ IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
 ```
 
-### Step 2: Check checklists status
-```
+### Step 2: Check preconditions
+```bash
+# 2a. Checklist check (normal mode)
 SCAN specs/[feature]/checklists/ for checklist files
 FOR EACH checklist:
   COUNT total items: lines matching - [ ] or - [X]
@@ -41,6 +42,21 @@ IF any checklist has incomplete items:
   WAIT for user response
   IF "no": HALT
   IF "yes": CONTINUE
+
+# 2b. Bug Plan Ref check (bugfix mode only)
+IF `specs/[feature]/bugs.md` EXISTS:
+  LOAD bugs.md
+  SCAN each bug entry for a Plan Ref line
+  IDENTIFY bugs with Status: open or in-progress that have no Plan Ref
+  IF any bug lacks a Plan Ref:
+    REPORT: "The following bugs are missing a Plan Ref (no plan section addresses them):"
+    LIST: [BUG-IDs]
+    ASK: "Continue without Plan Ref for these bugs? (yes/no)"
+    WAIT for user response
+    IF "no":
+      HINT: "Run 'bugfix [feature]' again to route through spec-kit-plan first"
+      HALT
+    IF "yes": CONTINUE with warning that unplanned fixes may drift from spec
 ```
 
 ### Step 3: Load implementation context

@@ -117,11 +117,18 @@ Report:
 - Gate status (pass/fail with justifications)
 - Suggest next command
 
+### Auto-Chaining (Bugfix Mode)
+
+When running in bugfix mode (bugs.md exists):
+- After plan completes, **automatically route** to `spec-kit-tasks` without waiting for user input
+- Do NOT ask the user "run spec-kit-tasks now?" — the bugfix loop chains automatically
+- The user invoked bugfix mode, so the path is deterministic: plan → tasks → implement
+
 ## Next Skills
 
 - Run `spec-kit-tasks` to create task breakdown
 - Run `spec-kit-analyze` for optional quality gate before implementation
-- In bugfix mode: Run `spec-kit-tasks` for bugfix task breakdown
+- In bugfix mode: **automatically route** to `spec-kit-tasks` — no user choice needed
 
 **Re-running this skill**:
 1. LOAD existing plan, research, data-model

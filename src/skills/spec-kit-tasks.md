@@ -118,11 +118,18 @@ Report:
 - Requirement coverage percentage
 - Suggest next command
 
+### Auto-Chaining (Bugfix Mode)
+
+When running in bugfix mode (bugs.md exists):
+- After tasks completes, **automatically route** to `spec-kit-implement` without waiting for user input
+- Do NOT ask the user "run spec-kit-implement now?" — the bugfix loop chains automatically
+- The user invoked bugfix mode, so the path is deterministic: plan → tasks → implement
+
 ## Next Skills
 
 - Run `spec-kit-analyze` for optional quality gate before implementation
 - Run `spec-kit-implement` to execute tasks
-- In bugfix mode: Run `spec-kit-analyze` to verify bugfix tasks against bugs.md + spec + plan
+- In bugfix mode: **automatically route** to `spec-kit-implement` — no user choice needed
 
 **Re-running this skill**:
 1. LOAD existing tasks.md

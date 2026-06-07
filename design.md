@@ -13,7 +13,7 @@ The Hermes Spec Kit is built on three layers:
 ┌─────────────────────────────────────────────────────────────┐
 |                     Workflow Orchestration Layer             |
 |  spec-kit-workflow skill routes to phase-specific skills    |
-|  Constitution → Specify → Clarify → Plan → Tasks → Implement → Test
+|  Constitution → Specify → Clarify → Plan → Tasks → Implement → Test → Summarize
 |                                                          └── bugfix loop ──┐
 |                                                     ┌──────────────────────┘
 |                                                     ▼
@@ -54,6 +54,7 @@ Each workflow phase is implemented as a Hermes Agent skill:
 - `spec-kit-tasks`: Phase 4 — Task breakdown generation
 - `spec-kit-implement`: Phase 5 — Task execution with TDD
 - `spec-kit-test`: Phase 6 — Testing & bug tracking
+- `spec-kit-summarize`: Phase 7 — Implementation summary
 
 ### 2. Artifact Structure
 

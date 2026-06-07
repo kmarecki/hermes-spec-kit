@@ -7,7 +7,7 @@ This file provides project-level context for Hermes Agent when working on the sp
 Hermes Spec Kit is a **spec-driven development (SDD) workflow system** for Hermes Agent. It implements a structured, phase-based approach to software development:
 
 ```
-Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement
+Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test → Summarize
 ```
 
 Each phase produces documented markdown artifacts under `specs/NNN-feature-name/`. All phase transitions are manual.
@@ -42,6 +42,7 @@ Skills live in `src/skills/` and are installed to `~/.hermes/skills/`:
 - `spec-kit-checklist` — N: Quality checklists (optional)
 - `spec-kit-implement` — Phase 4: Task execution with TDD
 - `spec-kit-test` — Phase 5: Testing & bug tracking
+- `spec-kit-summarize` — Phase 6: Implementation summary
 
 ## Template Management
 
@@ -103,7 +104,8 @@ hermes bundles create speckit \
   --skill spec-kit-analyze \
   --skill spec-kit-checklist \
   --skill spec-kit-implement \
-  --skill spec-kit-test
+  --skill spec-kit-test \
+  --skill spec-kit-summarize
 ```
 
 ## Hermes Slash Command Limitation

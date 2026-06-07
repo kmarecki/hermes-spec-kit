@@ -14,19 +14,20 @@ Each workflow phase is implemented as a standalone skill file. Skills are instal
 || `spec-kit-tasks` | 3 | Task breakdown generation |
 || `spec-kit-analyze` | 3.5 | Quality gate review (optional) |
 || `spec-kit-checklist` | N | Checklists (optional, not a gate) |
-|| `spec-kit-implement` | 4 | Task execution |
+|| `spec-kit-implement` | 4 | Task execution with TDD |
 || `spec-kit-test` | 5 | Testing & bug tracking |
+|| `spec-kit-summarize` | 6 | Implementation summary |
 
 ## Workflow Phases
 
 ```
-Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
-                                                                      │
-                                                                      └── bugfix loop ──┐
-                                                                ┌──────────────────────┘
-                                                                ▼
-                                                          Clarify → Plan → Tasks → [Analyze] → Implement → Test
-
+Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test → Summarize
+                                                                              │
+                                                                              └── bugfix loop ──┐
+                                                                        ┌──────────────────────┘
+                                                                        ▼
+                                                                  Clarify → Plan → Tasks → [Analyze] → Implement → Test
+```
 All phase transitions are manual. Checklists are optional — they guide quality but do not block progression. The Testing phase routes back through the bugfix loop (Clarify → Plan → Tasks → [Analyze] → Implement) until all bugs are verified.
 
 ## Phase Routing
