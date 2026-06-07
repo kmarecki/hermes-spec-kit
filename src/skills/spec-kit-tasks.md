@@ -1,7 +1,14 @@
 ---
 name: spec-kit-tasks
 description: Generate executable task breakdown from implementation plan. Phase 3 - decomposes plan into ordered, traceable tasks.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, tasks, breakdown, tdd]
+    related_skills: [spec-kit-plan, spec-kit-implement]
 ---
 
 # spec-kit-tasks

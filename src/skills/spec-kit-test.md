@@ -1,7 +1,14 @@
 ---
 name: spec-kit-test
 description: Testing and bug tracking phase. Phase 5 - documents found bugs and routes back through the workflow for bugfixes.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, testing, bugs, qa]
+    related_skills: [spec-kit-implement, spec-kit-workflow]
 ---
 
 # spec-kit-test

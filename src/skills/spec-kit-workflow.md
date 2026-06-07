@@ -1,7 +1,14 @@
 ---
 name: spec-kit-workflow
 description: Master orchestrator for the spec-driven development workflow. Routes requests to appropriate phase skills and maintains workflow state.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, workflow, orchestrator, routing]
+    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-analyze, spec-kit-checklist, spec-kit-implement, spec-kit-test, spec-kit-summarize]
 ---
 
 # Spec Kit Workflow Orchestrator

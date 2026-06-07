@@ -1,7 +1,14 @@
 ---
 name: spec-kit-implement
 description: Execute implementation following the task plan. Phase 4 - runs tasks in order with TDD approach.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, implementation, tdd, coding]
+    related_skills: [spec-kit-tasks, spec-kit-test, writing-plans]
 ---
 
 # spec-kit-implement

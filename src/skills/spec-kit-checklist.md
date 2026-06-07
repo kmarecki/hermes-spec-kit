@@ -1,7 +1,14 @@
 ---
 name: spec-kit-checklist
 description: Generate targeted checklists for any phase of the SDD workflow.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, checklist, quality, validation]
+    related_skills: [spec-kit-analyze, spec-kit-implement]
 ---
 
 # spec-kit-checklist

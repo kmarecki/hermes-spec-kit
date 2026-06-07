@@ -1,7 +1,14 @@
 ---
 name: spec-kit-plan
 description: Create technical implementation plan from feature specification. Phase 2 - defines HOW with constitutional gates.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, planning, architecture, design]
+    related_skills: [spec-kit-specify, spec-kit-tasks]
 ---
 
 # spec-kit-plan

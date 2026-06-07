@@ -1,7 +1,14 @@
 ---
 name: spec-kit-clarify
 description: Iterative clarification dialog to resolve ambiguities. Phase 1.5 - between spec and plan.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, clarification, ambiguity, qa]
+    related_skills: [spec-kit-specify, spec-kit-plan]
 ---
 
 # spec-kit-clarify

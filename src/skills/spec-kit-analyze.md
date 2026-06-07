@@ -1,7 +1,14 @@
 ---
 name: spec-kit-analyze
 description: Cross-artifact consistency analysis across spec, plan, and tasks. Phase 3.5 - optional quality gate between tasks and implement.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, analysis, quality, consistency]
+    related_skills: [spec-kit-tasks, spec-kit-implement, spec-kit-workflow]
 ---
 
 # spec-kit-analyze

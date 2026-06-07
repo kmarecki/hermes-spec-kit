@@ -1,7 +1,14 @@
 ---
 name: spec-kit-constitution
 description: Create or update the project constitution. Phase 0 - establishes project-wide principles that govern all subsequent spec, plan, and task decisions.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, constitution, principles, project-setup]
+    related_skills: [spec-kit-specify]
 ---
 
 # spec-kit-constitution

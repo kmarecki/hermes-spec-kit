@@ -1,7 +1,14 @@
 ---
 name: spec-kit-summarize
 description: Generate implementation summary and compare actual code with spec and plan. Phase 6 - run after testing complete.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, summary, review, gap-analysis]
+    related_skills: [spec-kit-test, spec-kit-workflow]
 ---
 
 # spec-kit-summarize

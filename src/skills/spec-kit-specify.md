@@ -1,7 +1,14 @@
 ---
 name: spec-kit-specify
 description: Create or update a feature specification. Phase 1 - defines WHAT users need and WHY, without implementation details.
+version: 1.0.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec, specification, requirements, features]
+    related_skills: [spec-kit-constitution, spec-kit-clarify]
 ---
 
 # spec-kit-specify
