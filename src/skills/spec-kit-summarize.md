@@ -160,7 +160,7 @@ FOR each "❌ Not Done" gap:
 ```
 
 ### Step 9: Report completion
-```
+```bash
 REPORT:
   - Summary: specs/[feature]/implementation-summary.md
   - Task completion: N/Total
@@ -168,6 +168,18 @@ REPORT:
   - Gap analysis: N resolved, N acknowledged, N not done
   - New bugs created (if any gap was ❌ Not Done)
   - Spec state recommendations per artifact
+```
+
+### Step 10: Commit summary artifacts (auto)
+```bash
+IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  COMMIT_MSG="spec(phase-6): [feature] implementation summary"
+  git add specs/[feature]/implementation-summary.md specs/[feature]/tasks.md specs/[feature]/bugs.md
+  git commit -m "$COMMIT_MSG" --no-verify
+  COMMIT_HASH=$(git rev-parse HEAD)
+  NOTE: "Summary committed as $COMMIT_HASH"
+ELSE
+  NOTE: "Not a git repository — skipping automatic commit"
 ```
 
 ## Gap Analysis Detail
@@ -219,7 +231,7 @@ After this skill completes, the feature enters **Complete** state:
 - [ ] All bugs marked verified in bugs.md
 - [ ] ❌ Not Done gaps converted to new bug entries in bugs.md (if any)
 - [ ] Report delivered to user with spec state recommendations
-- **Propose to the user**: Commit summary: `git add specs/[feature]/implementation-summary.md && git commit -m "spec(phase-6): [feature] implementation summary"`
+- **Commit**: `$COMMIT_HASH` (auto — `git log` for details)
 
 ## Next Skills
 

@@ -93,6 +93,18 @@ RE-EVALUATE `specs/[feature]/checklists/requirements.md`:
 - TOGGLE `[ ]` to `[x]` for newly satisfied criteria
 - TOGGLE `[x]` to `[ ]` for regressed criteria
 
+### Step 9: Commit spec artifacts (auto)
+```bash
+IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  COMMIT_MSG="spec(phase-1.5): [feature] clarifications"
+  git add specs/[feature]/clarify.md
+  git commit -m "$COMMIT_MSG" --no-verify
+  COMMIT_HASH=$(git rev-parse HEAD)
+  NOTE: "Committed as $COMMIT_HASH"
+ELSE
+  NOTE: "Not a git repository — skipping automatic commit"
+```
+
 ## Completion
 
 Report:
@@ -100,7 +112,7 @@ Report:
 - Sections updated in spec
 - Checklist status (before → after)
 - Suggest next command
-- **Propose to the user**: Commit clarifications: `git add specs/[feature]/clarify.md && git commit -m "spec(phase-1.5): [feature] clarifications"`
+- **Commit**: `$COMMIT_HASH` (auto — `git log` for details)
 
 ## Next Skills
 

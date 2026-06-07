@@ -58,13 +58,25 @@ After updating constitution, re-run skills that depend on it:
 - `spec-kit-specify` — re-validate spec against updated principles
 - `spec-kit-plan` — re-validate gates against updated constitution
 
+### Step 7: Commit spec artifacts (auto)
+```bash
+IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  COMMIT_MSG="spec(phase-0): constitution for [PROJECT]"
+  git add specs/constitution.md
+  git commit -m "$COMMIT_MSG" --no-verify
+  COMMIT_HASH=$(git rev-parse HEAD)
+  NOTE: "Committed as $COMMIT_HASH"
+ELSE
+  NOTE: "Not a git repository — skipping automatic commit"
+```
+
 ## Completion
 
 Report:
 - New version and bump rationale
 - List of modified principles
 - Suggested commit message
-- **Propose to the user**: Commit constitution: `git add specs/constitution.md && git commit -m "spec(phase-0): constitution for [PROJECT]"`
+- **Commit**: `$COMMIT_HASH` (auto — see `git log` for details)
 
 ## Next Skill
 

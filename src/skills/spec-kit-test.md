@@ -127,7 +127,7 @@ REPORT: "[BUG-ID] marked as verified"
 ```
 
 ### Step 7: Completion check
-```
+```bash
 SCAN bugs.md:
   COUNT bugs with Status: open
   COUNT bugs with Status: in-progress
@@ -138,6 +138,18 @@ IF all bugs are verified:
   REPORT: "All bugs resolved and verified — feature is complete!"
 ELSE:
   REPORT summary and recommend next steps
+```
+
+### Step 8: Commit bug log (auto)
+```bash
+IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  COMMIT_MSG="spec(phase-5): [feature] bug log"
+  git add specs/[feature]/bugs.md
+  git commit -m "$COMMIT_MSG" --no-verify
+  COMMIT_HASH=$(git rev-parse HEAD)
+  NOTE: "Bug log committed as $COMMIT_HASH"
+ELSE
+  NOTE: "Not a git repository — skipping automatic commit"
 ```
 
 ## Bugfix Loop Flow
@@ -212,7 +224,7 @@ ELSE:
 - [ ] All bugs logged in bugs.md have Status: verified
 - [ ] No remaining open bugs
 - [ ] User confirms feature is complete
-- **Propose to the user**: Commit bug log: `git add specs/[feature]/bugs.md && git commit -m "spec(phase-5): [feature] bug log"`
+- **Commit**: `$COMMIT_HASH` (auto — `git log` for details)
 
 ## Next Skills
 

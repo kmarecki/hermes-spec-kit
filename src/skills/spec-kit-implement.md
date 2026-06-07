@@ -152,7 +152,7 @@ Report:
 - Tasks completed vs total
 - Tests passing
 - Summary of completed work
-- **Propose to the user**: Commit implementation: `git add -A && git commit -m "feat: [feature] T### - task description"` after each task
+- **Commit hash per task**: `git log --oneline --grep="T###"` for task-level commits
 
 ## Done When
 

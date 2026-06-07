@@ -109,6 +109,18 @@ IF `bugs.md` EXISTS:
 - **Verification**: [how to verify the fix]
 ```
 
+### Step 10: Commit spec artifacts (auto)
+```bash
+IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  COMMIT_MSG="spec(phase-2): [feature] implementation plan"
+  git add specs/[feature]/plan.md specs/[feature]/research.md specs/[feature]/data-model.md specs/[feature]/contracts/ specs/[feature]/quickstart.md 2>/dev/null || true
+  git commit -m "$COMMIT_MSG" --no-verify
+  COMMIT_HASH=$(git rev-parse HEAD)
+  NOTE: "Committed as $COMMIT_HASH"
+ELSE
+  NOTE: "Not a git repository — skipping automatic commit"
+```
+
 ## Completion
 
 Report:
@@ -116,7 +128,7 @@ Report:
 - Generated artifacts (research.md, data-model.md, contracts/)
 - Gate status (pass/fail with justifications)
 - Suggest next command
-- **Propose to the user**: Commit plan artifacts: `git add specs/[feature]/plan.md specs/[feature]/research.md specs/[feature]/data-model.md 2>/dev/null; git commit -m "spec(phase-2): [feature] implementation plan"`
+- **Commit**: `$COMMIT_HASH` (auto — `git log` for details)
 
 ### Auto-Chaining (Bugfix Mode)
 
