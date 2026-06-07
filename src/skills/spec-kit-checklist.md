@@ -96,9 +96,9 @@ Report:
 
 ## Next Skills
 
-- Run `spec-kit-analyze` to cross-check against all artifacts
-- Run `spec-kit-implement` after checklist validation
-- Run the relevant prerequisite skill to fix flagged issues
+- Propose to the user: Run `spec-kit-analyze` to cross-check against all artifacts
+- Propose to the user: Run `spec-kit-implement` after checklist validation
+- Propose to the user: Run the relevant prerequisite skill to fix flagged issues
 
 **Re-running this skill**:
 1. LOAD existing checklist (if one exists for this type/feature)
@@ -128,6 +128,6 @@ Report:
 
 ## Next Skills
 
-- Run `spec-kit-analyze` to cross-check against all artifacts
-- Run `spec-kit-implement` after checklist validation
-- Run the relevant prerequisite skill to fix flagged issues
+- Propose to the user: Run `spec-kit-analyze` to cross-check against all artifacts
+- Propose to the user: Run `spec-kit-implement` after checklist validation
+- Propose to the user: Run the relevant prerequisite skill to fix flagged issues

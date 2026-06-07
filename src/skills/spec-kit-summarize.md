@@ -222,7 +222,7 @@ After this skill completes, the feature enters **Complete** state:
 
 ## Next Skills
 
-- Run `spec-kit-workflow` to start a new feature cycle
-- Run `spec-kit-specify` to add new features
-- Run `bugfix [feature]` if new gaps were added as bugs
+- Propose to the user: Run `spec-kit-workflow` to start a new feature cycle
+- Propose to the user: Run `spec-kit-specify` to add new features
+- Propose to the user: Run `bugfix [feature]` if new gaps were added as bugs
 - No further phases needed for this feature

@@ -169,10 +169,10 @@ Report:
 
 ## Next Skills
 
-- Run `spec-kit-specify` to fix spec issues
-- Run `spec-kit-plan` to fix plan issues
-- Run `spec-kit-tasks` to fix coverage gaps
-- Run `spec-kit-implement` when all CRITICAL issues resolved
+- Propose to the user: Run `spec-kit-specify` to fix spec issues
+- Propose to the user: Run `spec-kit-plan` to fix plan issues
+- Propose to the user: Run `spec-kit-tasks` to fix coverage gaps
+- Propose to the user: Run `spec-kit-implement` when all CRITICAL issues resolved
 - In bugfix mode: Run `spec-kit-tasks` to add missing bugfix tasks
 
 **Re-running this skill**:

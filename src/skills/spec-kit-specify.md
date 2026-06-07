@@ -81,8 +81,8 @@ Report:
 
 ## Next Skills
 
-- Run `spec-kit-clarify` for iterative clarification (optional but recommended)
-- Run `spec-kit-plan` when ready for technical planning
+- Propose to the user: Run `spec-kit-clarify` for iterative clarification (optional but recommended)
+- Propose to the user: Run `spec-kit-plan` when ready for technical planning
 
 **Re-running this skill**:
 1. LOAD existing `specs/[feature]/spec.md`

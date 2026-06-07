@@ -39,36 +39,38 @@ Each skill BLOCKS if prerequisites are not met:
 
 ### New Feature
 - User says: "Create a spec for [description]"
-- Route to: `spec-kit-specify`
+- Propose routing to: `spec-kit-specify`
 
 ### Existing Feature
 - User says: "What phase is [feature] in?"
 - Check `specs/[feature]/` directory structure
-- Report current phase
+- Report current phase and propose next available action
 
 ### Advance Phase
 - User says: "Plan [feature]"
-- Route to: `spec-kit-plan`
+- Propose routing to: `spec-kit-plan`
 
-### Clarify Ambiguities
+### Clarify Ambiguities (Optional)
 - User says: "Clarify [feature]"
-- Route to: `spec-kit-clarify`
+- When: Only if spec has ambiguities or user explicitly asks
+- Propose routing to: `spec-kit-clarify`
 
 ### Constitution
 - User says: "Create constitution"
-- Route to: `spec-kit-constitution`
+- Propose routing to: `spec-kit-constitution`
 
-### Analyze
+### Analyze (Optional)
 - User says: "Analyze [feature]"
-- Route to: `spec-kit-analyze`
+- When: Only if user explicitly asks for quality review
+- Propose routing to: `spec-kit-analyze`
 
 ### Implement
 - User says: "Implement [feature]"
-- Route to: `spec-kit-implement`
+- Propose routing to: `spec-kit-implement`
 
 ### Summarize
 - User says: "Summarize [feature]" or "Implementation summary for [feature]"
-- Route to: `spec-kit-summarize`
+- Propose routing to: `spec-kit-summarize`
 
 ## Phase Detection
 
@@ -102,12 +104,12 @@ Check for artifacts to determine current phase:
 
 ### Test phase
 - User says: "Test [feature]"
-- Route to: `spec-kit-test`
-- NOTE: When user reports a bug during testing, `spec-kit-test` always logs it to `bugs.md` — never implement directly
+- Propose routing to: `spec-kit-test`
+- NOTE: `spec-kit-test` logs bugs to `bugs.md` then STOPS. It does NOT auto-chain to implement. User must say "bugfix [feature]" to start the fix loop.
 
 ### Verify bug
 - User says: "Verify [BUG-ID] in [feature]"
-- Route to: `spec-kit-test` (mark bug as verified)
+- Propose routing to: `spec-kit-test` (to mark bug as verified)
 
 ## Usage Examples
 

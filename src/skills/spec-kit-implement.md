@@ -16,6 +16,17 @@ category: software-development
 
 **Artifacts**: Updated `specs/[feature]/tasks.md` (with completion markers)
 
+## 🔒 BUGFIX MODE GATE — READ BEFORE PROCEEDING
+
+This skill has a **procedural lock** when bugs.md exists. It prevents implementation without proper bugfix planning.
+
+**Rule**: If `specs/[feature]/bugs.md` has any bug with Status: open, this skill will:
+1. Check every open bug for a **Plan Ref** entry
+2. **REFUSE to run** if any open bug lacks a Plan Ref
+3. Guide you back to run "bugfix [feature]" → spec-kit-plan first
+
+**Why this exists**: Skipping plan→tasks before implementation causes workflow corruption. A fix without a plan section can conflict with spec requirements. Plan Refs provide traceability.
+
 ## Execution
 
 ### Step 1: Validate prerequisites

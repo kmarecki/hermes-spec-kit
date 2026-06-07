@@ -126,8 +126,8 @@ When running in bugfix mode (bugs.md exists):
 
 ## Next Skills
 
-- Run `spec-kit-tasks` to create task breakdown
-- Run `spec-kit-analyze` for optional quality gate before implementation
+- Propose to the user: Run `spec-kit-tasks` to create task breakdown
+- Propose to the user: Run `spec-kit-analyze` for optional quality gate before implementation
 - In bugfix mode: **automatically route** to `spec-kit-tasks` — no user choice needed
 
 **Re-running this skill**:

@@ -67,7 +67,7 @@ Report:
 
 ## Next Skill
 
-Run `spec-kit-specify` to create the first feature specification.
+Propose to the user: Run `spec-kit-specify` to create the first feature specification.
 
 **Re-running this skill**:
 1. LOAD existing constitution

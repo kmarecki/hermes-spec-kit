@@ -103,8 +103,8 @@ Report:
 
 ## Next Skills
 
-- Run `spec-kit-specify` again to make additional changes
-- Run `spec-kit-plan` when all critical ambiguities are resolved
+- Propose to the user: Run `spec-kit-specify` again to make additional changes
+- Propose to the user: Run `spec-kit-plan` when all critical ambiguities are resolved
 
 **Re-running this skill**:
 1. LOAD current spec

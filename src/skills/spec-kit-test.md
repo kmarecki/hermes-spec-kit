@@ -10,14 +10,35 @@ category: software-development
 
 **Purpose**: Document discovered bugs in `specs/[feature]/bugs.md` and orchestrate the bugfix loop. Testing is manual — the user discovers and reports bugs. This skill creates the bug tracking document and routes bugs back through Clarify → Plan → Tasks → Analyze → Implement as needed.
 
-## Hard Rule: Bugs Always Go to bugs.md First
+## 🔒 SAFETY BLOCK: Bugs Must Be Logged Before Fixing
 
-When the user reports a bug or unexpected behavior:
+This is a **procedural lock**, not a suggestion. Violating it causes workflow corruption.
+
+### The Rule
 1. ALWAYS write the bug to `bugs.md` with Status: open
-2. NEVER implement a fix directly — not even for "trivial" or "obvious" bugs
-3. The fix must follow the full bugfix loop: plan → tasks → implement
-4. Trigger the loop with "bugfix [feature]" — never skip straight to implementation
-5. Exception: User can always edit, change, or iterate over any markdown artifact (spec.md, plan.md, tasks.md, bugs.md, etc.) directly — that is NOT a code bugfix, just documentation.
+2. **HALT after logging.** Do NOT proceed to fix, plan, diagnose source code, or load implement/plan skills.
+3. Only proceed when the user says **"bugfix [feature]"** — this is the trigger word.
+4. Exception: User can edit bugs.md directly (that's documentation, not a code fix).
+
+### Do NOT (after logging a bug)
+- Load spec-kit-plan
+- Load spec-kit-implement
+- Read source files to understand the bug
+- Propose a fix approach
+- Apply any code change
+- Chain to any other skill
+
+Your only output after logging bugs is: a summary table and the phrase:
+> "N open bugs found. Run 'bugfix [feature]' to begin the bugfix loop."
+
+### Pre-flight Self-Check
+Before any tool call in this skill:
+```
+IF I already wrote to bugs.md:
+  CHECK: Am I about to read source code or edit files?
+  IF YES: STOP. You are violating the safety block.
+  Your job is done. Return control to the user.
+```
 
 **Prerequisites**: `spec-kit-implement` must have been run (or artifacts exist from prior phases)
 
@@ -194,8 +215,8 @@ ELSE:
 
 ## Next Skills
 
-- Run `spec-kit-specify` to add new features
-- Run `spec-kit-workflow` to start a new feature cycle
+- Propose to the user: Run `spec-kit-specify` to add new features
+- Propose to the user: Run `spec-kit-workflow` to start a new feature cycle
 
 **Re-running this skill**:
 1. LOAD existing bugs.md
