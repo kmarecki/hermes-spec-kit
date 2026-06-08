@@ -3,6 +3,22 @@
 **Feature**: specs/[###-feature-name]/
 **Created**: [DATE]
 **Status**: [Complete / In Progress]
+**Spec Health**: N%
+
+## Spec Health Scoring
+
+| Category | Count |
+|----------|-------|
+| ✅ Resolved (implemented or intentionally deviated with rationale) | N |
+| ⚠️ Acknowledged (deferred with documented reason) | N |
+| ❌ Not Done (missing without documented reason) | N |
+| **Spec Health** | **N%** |
+
+> Formula: `(resolved + acknowledged) / (resolved + acknowledged + not_done) * 100`
+> - **100%**: Artifacts fully aligned with code — no action needed
+> - **80-99%**: Minor gaps tracked but not blocking — acceptable
+> - **50-79%**: Significant drift — recommend running `spec-kit-refresh` before refactoring
+> - **<50%**: Artifacts are misleading — run `spec-kit-refresh` before proceeding
 
 ## Overview
 
@@ -66,6 +82,18 @@ This section compares what was specified/planned with what was actually implemen
 ### Acknowledged Gaps (Deferred)
 - **[Aspect]**: Planned X, not built. Reason: [scope cut, ran out of time, not needed]. Track as future work.
 - ...
+
+## Spec Artifact Refresh
+
+The following spec artifacts were **automatically updated** to reflect intentional deviations found during gap analysis:
+
+| Artifact | Change | Rationale |
+|----------|--------|-----------|
+| `spec.md` | [FR-XXX: updated requirement wording to match actual behavior] | Code intentionally deviated from spec — spec brought in line |
+| `plan.md` | [architecture section updated] | Implementation used a different data structure than planned |
+| *(none)* | *All artifacts already aligned* | *No changes needed* |
+
+> If artifacts show `⚠️ needs review` or `❌ outdated`, they were NOT auto-updated because the drift requires user judgment. Run `spec-kit-refresh` to reconcile them manually.
 
 ## Decisions Made
 

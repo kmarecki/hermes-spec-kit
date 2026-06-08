@@ -142,7 +142,10 @@ SCAN bugs.md:
   COUNT bugs with Status: verified
 
 IF all bugs are verified:
-  REPORT: "All bugs resolved and verified — feature is complete!"
+  REPORT: "All bugs resolved and verified — feature is almost complete!"
+  REPORT: "Phase 6 (Close/Summarize) is mandatory to finalize the feature."
+  REPORT: "Run 'close [feature]' for a lightweight close, or 'summarize [feature]' for a full summary with gap analysis."
+  NOTE: "The workflow will block marking this feature complete without Phase 6."
 ELSE:
   REPORT summary and recommend next steps
 ```

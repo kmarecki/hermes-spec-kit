@@ -1,32 +1,55 @@
 ---
 name: spec-kit-summarize
 description: Generate implementation summary and compare actual code with spec and plan. Phase 6 - run after testing complete.
-version: 1.0.0
+version: 1.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
 metadata:
   hermes:
-    tags: [spec, summary, review, gap-analysis]
-    related_skills: [spec-kit-test, spec-kit-workflow]
+    tags: [spec, summary, review, gap-analysis, close]
+    related_skills: [spec-kit-test, spec-kit-workflow, spec-kit-refresh]
 ---
 
 # spec-kit-summarize
 
-**Phase**: 6 (Summary)
+**Phase**: 6 (Summary / Close)
 
-**Purpose**: When implementation is complete and no more testing is needed, read all artifacts, compare actual code changes against the spec and plan, and produce a comprehensive `implementation-summary.md`. All gaps between what was planned vs what was built are either **resolved** (intentional deviation, acknowledged) or **tracked** (deferred for later bugs in bugs.md).
+**Purpose**: When implementation is complete and no more testing is needed, read all artifacts, compare actual code changes against the spec and plan, and produce either a full `implementation-summary.md` or a lightweight `close.md`. All gaps between what was planned vs what was built are either **resolved** (intentional deviation, documented) or **tracked** (deferred for later bugs in bugs.md). **Intentional deviations update spec.md and plan.md automatically** — no separate refresh phase needed.
 
 **When to run**:
-- After testing is complete (all bugs verified)
+- **After bugfix loop completes** (all bugs verified) — runs automatically as mandatory close
+- User says: "Summarize [feature]" — full gap analysis with implementation-summary.md
+- User says: "Close [feature]" — lightweight close with close.md (for simple features)
 - Or at any point to get a snapshot of current implementation state
-- User says: "Summarize [feature]" or "implementation summary for [feature]"
 
 **Prerequisites**: `spec-kit-implement` must have been run (tasks.md exists)
 **Artifacts**:
-- `specs/[feature]/implementation-summary.md` (primary artifact — generated report)
+- `specs/[feature]/implementation-summary.md` (full gap analysis report)
+- `specs/[feature]/close.md` (lightweight close document)
+- `specs/[feature]/spec.md` (auto-updated to reflect intentional deviations)
+- `specs/[feature]/plan.md` (auto-updated to reflect intentional deviations)
 
 ## Execution
+
+### Determine Mode
+
+```
+IF user says "close [feature]":
+  USE lightweight close mode → close-template.md
+  SKIP steps 4-6 (no deep gap analysis needed)
+  GO TO Step 2 (lighter artifact check)
+
+IF user says "summarize [feature]":
+  USE full mode → implementation-summary-template.md
+  RUN all steps below
+
+IF auto-triggered after bugfix loop (all bugs verified):
+  CHECK feature complexity:
+    - Small feature (≤5 tasks, no complex plan.md): lightweight close mode
+    - Large feature (>5 tasks or complex plan.md): full summary mode
+  USE appropriate mode
+```
 
 ### Step 1: Validate and load all artifacts
 ```
@@ -70,6 +93,7 @@ IF bugs.md EXISTS:
 ```
 
 ### Step 4: Compare code against spec and plan (git diff analysis)
+*Skip in lightweight close mode*
 ```
 RUN: git diff main --name-status
   OR: git log --oneline --name-only HEAD..main
@@ -88,6 +112,7 @@ IDENTIFY:
 ```
 
 ### Step 5: Build gap analysis
+*Skip in lightweight close mode*
 ```
 FOR EACH requirement/story/entity/contract in spec.md and plan.md:
   VERDICT:
@@ -104,7 +129,54 @@ FOR each gap marked "⚠️ Acknowledged":
   NOTE: Reason for deferral, who decided, under what constraint
 ```
 
-### Step 6: Collect implementation details
+### Step 6: Compute Spec Health Score
+*Skip in lightweight close mode*
+```
+COUNT resolved: number of items with verdict ✅ Resolved
+COUNT acknowledged: number of items with verdict ⚠️ Acknowledged
+COUNT not_done: number of items with verdict ❌ Not Done
+COUNT total = resolved + acknowledged + not_done
+
+IF total == 0:
+  SET spec_health = 100  (no requirements to compare — trivially aligned)
+ELSE:
+  spec_health = round((resolved + acknowledged) / total * 100)
+
+INTERPRET:
+  100%: Artifacts fully aligned — no action needed
+  80-99%: Minor gaps tracked — acceptable
+  50-79%: Significant drift — recommend spec-kit-refresh before refactoring
+  <50%: Artifacts are misleading — run spec-kit-refresh before proceeding
+```
+
+### Step 7: Patch spec artifacts for intentional deviations
+
+For each gap marked `✅ Resolved — intentional deviation`:
+```
+IDENTIFY the section of spec.md or plan.md that no longer reflects reality
+  
+CASE: FR requirement wording differs from implementation
+  → patch spec.md: update requirement text to match actual behavior, keeping original intent
+  → ADD note: "(Updated by implementation summary — see close.md or implementation-summary.md)"
+
+CASE: Architecture/design detail differs from implementation
+  → patch plan.md: update the relevant section to reflect what was built
+  → ADD note: "(Updated by implementation summary — see close.md or implementation-summary.md)"
+
+CASE: Data model entity or contract differs
+  → patch plan.md or data-model.md: reflect current schema/contract
+  → ADD note: "(Updated by implementation summary — see close.md or implementation-summary.md)"
+```
+
+**User confirmation**: Present each proposed patch as:
+```
+PROPOSE: "Update spec.md FR-XXX from [old] to [new]? (reason: [rationale])"
+WAIT for user approval before applying.
+```
+
+If user rejects a proposed patch → mark that artifact as `⚠️ needs review` in the Spec State table (not auto-updated).
+
+### Step 8: Collect implementation details
 ```
 IDENTIFY:
   - Files changed (from plan file paths, tasks, and git diff)
@@ -115,44 +187,34 @@ IDENTIFY:
   - Known limitations or deferred work
 ```
 
-### Step 7: Generate implementation-summary.md
+### Step 9: Generate output document
+
+**Full mode** (summarize):
+```
 COPY `spec-kit/templates/implementation-summary-template.md` → `specs/[feature]/implementation-summary.md`
 
 Populate with:
-```
-## Overview
-[2-3 sentence summary]
-
-## What Was Implemented
-| Requirement | Status | Notes |
-
-## Gap Analysis — Plan vs Implementation
-| Category | Planned | Actual | Verdict | Notes |
-|----------|---------|--------|---------|-------|
-| FR-001   | ...     | ...    | ✅ Resolved | ...
-| US-002   | ...     | ...    | ⚠️ Acknowledged | deferred, scope cut
-| Entity X | ...     | —      | ❌ Not Done | missing, file never created
-
-### Resolved Deviations
-- list of intentional changes with rationale
-
-### Acknowledged Gaps (Deferred)
-- list of things cut/deferred
-
-## Files Changed
-| File | Type | Description |
-
-## Known Issues & Bugs
-| Bug ID | Severity | Status | Summary |
-
-## Decisions Made
-| Decision | Rationale | Alternatives |
-
-## Spec State
-| Artifact | Status | Action Needed |
+- Spec Health Score at top (from Step 6)
+- Spec Health Scoring table
+- All gap analysis sections
+- Spec Artifact Refresh section listing what was patched (from Step 7)
+- Spec State table
 ```
 
-### Step 8: Update or create bugs from gaps
+**Lightweight mode** (close):
+```
+COPY `spec-kit/templates/close-template.md` → `specs/[feature]/close.md`
+
+Populate with:
+- Spec Health Score (from Step 6, or simplified "100%" if skipped)
+- Intent Alignment: Yes/Partially/No
+- Artifact State: quick status of each artifact
+- Key Decisions: notable decisions made
+- Spec Health Calculation breakdown (if available)
+```
+
+### Step 10: Update or create bugs from gaps
+*Skip in lightweight close mode*
 ```
 FOR each "❌ Not Done" gap:
   IF bugs.md EXISTS:
@@ -166,22 +228,30 @@ FOR each "❌ Not Done" gap:
   PROMPT user: "N gaps found with ❌ Not Done — bugs added to bugs.md. Run 'bugfix [feature]' when ready."
 ```
 
-### Step 9: Report completion
+### Step 11: Report completion
 ```bash
 REPORT:
-  - Summary: specs/[feature]/implementation-summary.md
+  - Mode: Full summary / Lightweight close
+  - Output: specs/[feature]/implementation-summary.md or specs/[feature]/close.md
+  - Spec Health: N%
   - Task completion: N/Total
   - Bug resolution: verified/total
-  - Gap analysis: N resolved, N acknowledged, N not done
+  - Artifacts patched: spec.md [yes/no], plan.md [yes/no]
+  - Gap analysis (full mode): N resolved, N acknowledged, N not done
   - New bugs created (if any gap was ❌ Not Done)
-  - Spec state recommendations per artifact
 ```
 
-### Step 10: Commit summary artifacts (auto)
+### Step 12: Commit summary artifacts (auto)
 ```bash
 IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
-  COMMIT_MSG="spec(phase-6): [feature] implementation summary"
-  git add specs/[feature]/implementation-summary.md specs/[feature]/tasks.md specs/[feature]/bugs.md
+  COMMIT_MSG="spec(phase-6): [feature] implementation summary (health: N%)"
+  git add specs/[feature]/implementation-summary.md  \
+         specs/[feature]/close.md                    \
+         specs/[feature]/tasks.md                     \
+         specs/[feature]/bugs.md                      \
+         specs/[feature]/spec.md                      \
+         specs/[feature]/plan.md                      \
+         specs/[feature]/data-model.md
   git commit -m "$COMMIT_MSG" --no-verify
   COMMIT_HASH=$(git rev-parse HEAD)
   NOTE: "Summary committed as $COMMIT_HASH"
@@ -202,7 +272,7 @@ Sources for comparison:
 Verdict definitions:
 | Verdict | Meaning | Follow-up |
 |---------|---------|-----------|
-| ✅ Resolved | Implemented as planned, OR intentionally different with documented rationale | No action needed |
+| ✅ Resolved | Implemented as planned, OR intentionally different with documented rationale | No action needed (spec/plan auto-updated in Step 7) |
 | ⚠️ Acknowledged | Deferred by user; not implemented but tracked | Record reason; revisit if needed |
 | ❌ Not Done | Missing with no documented reason | Create bug entry in bugs.md |
 
@@ -212,7 +282,8 @@ After this skill completes, the feature enters **Complete** state:
 - All tasks marked [X]
 - All bugs marked verified
 - Unknown gaps resolved or acknowledged via gap analysis
-- Implementation-summary.md captures final state including any deviations
+- Spec/plan artifacts patched to reflect intentional deviations
+- Summary (full or close) captures final state
 - Bugs created for ❌ Not Done gaps (if any)
 - No further phases required unless user initiates a new cycle
 
@@ -220,29 +291,58 @@ After this skill completes, the feature enters **Complete** state:
 
 | Artifacts Present | Interpretation |
 |:-----------------|:-------------|
-| `implementation-summary.md` exists | Feature complete — summary generated |
-| `implementation-summary.md` + all bugs verified | Feature complete and verified |
+| `implementation-summary.md` exists | Feature complete — full summary generated |
+| `close.md` exists | Feature closed — lightweight close document |
+| `implementation-summary.md` or `close.md` + all bugs verified | Feature complete and verified |
+| `spec.md` or `plan.md` patched (diff from prior commit) | Artifacts reconciled with code |
 | `implementation-summary.md` with open gaps (❌) | Summary generated but gaps remain — new bugs created |
 | `implementation-summary.md` with open tasks | Partial summary (run again after completion) |
 
 ## Routing Commands
 
-- "Summarize [feature]" — loads this skill, generates implementation summary
-- "Implementation summary for [feature]" — same
+- "Summarize [feature]" — loads this skill, generates full implementation summary
+- "Close [feature]" — loads this skill, generates lightweight close document
+- "Implementation summary for [feature]" — same as summarize
 - "Status of [feature]" — checks if summary exists, reports state
+
+## Mandatory Close (Auto-Trigger)
+
+After the bugfix loop completes (all bugs in bugs.md marked Status: verified), the workflow MUST auto-trigger Phase 6 (Summarize/Close):
+
+```
+TRIGGER: All bugs in bugs.md have Status: verified
+
+ACTION:
+  1. Load spec-kit-summarize (this skill)
+  2. Determine mode from feature complexity:
+     - ≤5 tasks, no complex plan → lightweight close
+     - >5 tasks or complex plan → full summary
+  3. Run appropriate mode
+  4. Present output to user
+
+BLOCKER: A feature CANNOT enter Complete state without Phase 6 completing.
+  - User says "feature is done" or tries to start a new feature
+  - CHECK: implementation-summary.md or close.md exists?
+  - IF NOT: Block with "Complete Phase 6 first: run 'summarize [feature]' or 'close [feature]'"
+```
+
+**Note**: The mandatory close is enforced by the workflow orchestrator (`spec-kit-workflow`). When `spec-kit-test` marks the last bug as verified, it should suggest "All bugs verified — run 'close [feature]' to complete."
 
 ## Done When
 
-- [ ] implementation-summary.md generated with gap analysis
+- [ ] Output generated: implementation-summary.md (full) or close.md (lightweight)
+- [ ] Spec health score computed and included
 - [ ] All tasks marked complete in tasks.md
 - [ ] All bugs marked verified in bugs.md
-- [ ] ❌ Not Done gaps converted to new bug entries in bugs.md (if any)
-- [ ] Report delivered to user with spec state recommendations
+- [ ] ✅ Resolved deviations patched into spec.md and plan.md (with user approval)
+- [ ] ❌ Not Done gaps converted to new bug entries in bugs.md (if any, full mode only)
+- [ ] Report delivered to user with spec health score and artifact state
 - **Commit**: `$COMMIT_HASH` (auto — `git log` for details)
 
 ## Next Skills
 
+- Feature is now **Complete** — no further phases needed
 - Propose to the user: Run `spec-kit-workflow` to start a new feature cycle
 - Propose to the user: Run `spec-kit-specify` to add new features
+- Propose to the user: Run `spec-kit-refresh` if artifacts show drift (for manual code changes)
 - Propose to the user: Run `bugfix [feature]` if new gaps were added as bugs
-- No further phases needed for this feature

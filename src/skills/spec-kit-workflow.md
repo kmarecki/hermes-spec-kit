@@ -1,14 +1,14 @@
 ---
 name: spec-kit-workflow
 description: Master orchestrator for the spec-driven development workflow. Routes requests to appropriate phase skills and maintains workflow state.
-version: 1.0.0
+version: 1.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
 metadata:
   hermes:
     tags: [spec, workflow, orchestrator, routing]
-    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-analyze, spec-kit-checklist, spec-kit-implement, spec-kit-test, spec-kit-summarize]
+    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-analyze, spec-kit-checklist, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
 ---
 
 # Spec Kit Workflow Orchestrator
@@ -27,9 +27,12 @@ This is the master orchestrator that routes user requests to the appropriate pha
 || 3.5 | `spec-kit-analyze` | Quality gate (optional) | Tasks |
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
-| 6 | `spec-kit-summarize` | Implementation summary | Implement + Test |
+| **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
+| — | **`spec-kit-refresh`** | **Lightweight artifact refresh** | **Any (standalone)** |
 | — | **Explore mode** | Parallel branches for N variants, each runs independent phase sequence | User provides variants |
-| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test | bugs.md with open bugs |
+| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test → **Close** | bugs.md with open bugs |
+
+> **Important**: Phase 6 (Close/Summarize) is **mandatory** before a feature can enter Complete state. After the bugfix loop finishes (all bugs verified), the workflow auto-chains to Phase 6.
 
 ## Routing Logic
 
@@ -44,6 +47,7 @@ Each skill BLOCKS if prerequisites are not met:
 - `spec-kit-test`: Requires `spec.md` (or existing implementation)
   Bugfix prerequisite: `bugs.md` with at least one open bug
 - `spec-kit-summarize`: Requires `tasks.md`
+- `spec-kit-refresh`: No prerequisites (standalone)
 
 ### New Feature
 - User says: "Create a spec for [description]"
@@ -52,6 +56,7 @@ Each skill BLOCKS if prerequisites are not met:
 ### Existing Feature
 - User says: "What phase is [feature] in?"
 - Check `specs/[feature]/` directory structure
+- **Drift detection**: If `implementation-summary.md` or `close.md` exists, check its Spec State table. If any artifact shows ⚠️ or ❌ status, warn: "Artifact drift detected — run 'refresh [feature]' before proceeding."
 - Report current phase and propose next available action
 
 ### Advance Phase
@@ -76,9 +81,28 @@ Each skill BLOCKS if prerequisites are not met:
 - User says: "Implement [feature]"
 - Propose routing to: `spec-kit-implement`
 
-### Summarize
+### Summarize / Close (Phase 6 — Mandatory)
 - User says: "Summarize [feature]" or "Implementation summary for [feature]"
-- Propose routing to: `spec-kit-summarize`
+- Route to: `spec-kit-summarize` (full mode)
+- User says: "Close [feature]" or "Complete [feature]"
+- Route to: `spec-kit-summarize` (lightweight close mode)
+- **Auto-trigger**: After bugfix loop completes (all bugs verified), auto-route to `spec-kit-summarize`
+
+### Block: Feature cannot be done without Phase 6
+```
+WHEN user says "[feature] is done" or tries to start a new feature for the same project:
+  IF implementation-summary.md or close.md does NOT exist:
+    BLOCK: "Cannot mark [feature] complete — Phase 6 (Close/Summarize) is mandatory."
+    PROMPT: "Run 'close [feature]' or 'summarize [feature]' first."
+  ELSE:
+    ALLOW: Feature is Complete
+```
+
+### Refresh Artifacts
+- User says: "Refresh [feature]" or "Sync spec for [feature]" or "Align artifacts for [feature]"
+- Route to: `spec-kit-refresh`
+- When: Manual code changes, mid-stream alignment, or artifacts flagged as outdated
+- Standalone — no prerequisites
 
 ### Creative Exploration
 - User says: "Explore [feature] with [variants]" or "Creative exploration for [feature]"
@@ -104,11 +128,14 @@ Check for artifacts to determine current phase:
 || `tasks.md` exists | Tasking/Tasked |
 || `tasks.md` with completions | Implementing |
 || `bugs.md` with open bugs | Testing (bugfix loop) |
-|| `bugs.md` all verified | Testing complete |
+|| `bugs.md` all verified | Testing complete — **must close** |
 || `implementation-summary.md` exists | Summarized — complete |
-|| All tasks complete + all bugs verified | Complete |
+|| `close.md` exists | Closed — complete |
+|| All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
 || `variants/` directory exists with ≥2 entries | Exploring (creative mode) |
 || `comparison.md` exists | Compared — decision made |
+
+> **Drift detection**: When entering any phase for an existing feature that has `implementation-summary.md` or `close.md`, read its Spec State / Artifact State table. If any artifact is `⚠️ needs review` or `❌ outdated`, emit a warning: "Artifact drift detected — spec/plan may not reflect current code. Run 'refresh [feature]' to reconcile."
 
 ## Bugfix Routing
 
@@ -122,6 +149,15 @@ Check for artifacts to determine current phase:
 - AFTER tasks → AUTOMATICALLY route to `spec-kit-implement`
 - DEFAULT route: `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement` (automatic chain, no user choice)
 - NOTE: Analyze is optional — only run if user explicitly asks for it
+
+### Bugfix loop completion → Mandatory Close
+```
+AFTER all bugs in bugs.md have Status: verified:
+  AUTO-TRIGGER: spec-kit-summarize (Phase 6)
+    - If feature is simple (≤5 tasks): lightweight close mode
+    - If feature is complex (>5 tasks or elaborate plan.md): full summary mode
+  This is MANDATORY — the feature cannot be marked done without Phase 6.
+```
 
 ### Test phase
 - User says: "Test [feature]"
@@ -145,7 +181,9 @@ Check for artifacts to determine current phase:
 - "bugfix 003-user-auth"
 - "Verify BUG-001 in 003-user-auth"
 - "Bug status 003-user-auth"
-- "Summarize 003-user-auth"
+- "Summarize 003-user-auth" (full summary)
+- "Close 003-user-auth" (lightweight close)
+- "Refresh 003-user-auth" (artifact alignment only)
 - "Explore 003-user-auth with React, Vue, and Svelte frontends"
 - "Compare 003-user-auth"
 
@@ -165,12 +203,28 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
 | **Explore** | `specs/[feature]/variants/*/` | ALLOWED (delegate_task subagents) | User provides variants |
 | **Compare** | `comparison.md` only | BLOCKED | `variants/` directory exists |
-| **Summarize** | `implementation-summary.md`, `tasks.md` (finalize), `bugs.md` (finalize) | BLOCKED | `implementation-summary.md` missing |
+| **Summarize / Close** | `implementation-summary.md`, `close.md`, `spec.md` (patch deviations), `plan.md` (patch deviations), `tasks.md` (finalize), `bugs.md` (finalize) | BLOCKED | `implementation-summary.md` and `close.md` both missing |
+| **Refresh** | `spec.md`, `plan.md`, `data-model.md`, `contracts/*` (per-item approval) | BLOCKED | User says "refresh" |
 
 > **Bugfix loop**: reuses Plan, Tasks, and Implement — same permissions, just with `bugs.md` as additional input context.
+> **Summarize/Close** gains `spec.md` and `plan.md` write access to patch intentional deviations.
+> **Refresh** is read-only on code but can update spec artifacts with per-item user approval.
 
 ### Enforcement Rules
 - `write_file`/`patch`/`terminal` for builds → **ONLY** during Implement (including bugfix loop implementations)
 - Writing to spec artifacts (`spec.md`, `plan.md`, `tasks.md`, `bugs.md`) → only during their respective phase
+- **Summarize/Close exception**: May patch `spec.md` and `plan.md` to reconcile intentional deviations (with user approval per change)
+- **Refresh exception**: May patch `spec.md`, `plan.md`, `data-model.md`, `contracts/*` with per-item user approval
 - Unknown phase → ASK the user
 - User asks for code outside Implement → REFUSE, suggest correct phase
+
+### Mandatory Close Enforcement
+
+```
+Pre-Work Self-Check addition:
+  5. Am I starting a NEW feature or marking an existing one complete?
+     IF yes → Does specs/[feature]/contain either implementation-summary.md or close.md?
+       IF no → Is bugs.md all verified?
+         IF yes → BLOCK: Phase 6 required. Run 'close [feature]' first.
+         IF no → OK, feature not ready for close yet.
+```

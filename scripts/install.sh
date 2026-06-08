@@ -21,6 +21,15 @@ for skill in "$PROJECT_DIR"/src/skills/*.md; do
   fi
 done
 
+# Copy umbrella SKILL.md to spec-kit/ directory
+UMBRELLA_SRC="$PROJECT_DIR/src/skills/spec-kit/SKILL.md"
+UMBRELLA_DST="$SKILLS_DIR/spec-kit/SKILL.md"
+if [ -f "$UMBRELLA_SRC" ]; then
+  mkdir -p "$(dirname "$UMBRELLA_DST")"
+  echo "  Installing umbrella SKILL.md"
+  cp "$UMBRELLA_SRC" "$UMBRELLA_DST"
+fi
+
 # Copy templates to spec-kit/templates/
 TEMPLATES_DIR="$SKILLS_DIR/spec-kit/templates"
 mkdir -p "$TEMPLATES_DIR"
@@ -38,6 +47,11 @@ echo "Done. Installed to $SKILLS_DIR"
 echo ""
 echo "Skills:"
 ls -1 "$SKILLS_DIR"/*.md 2>/dev/null | xargs -I{} basename {} || echo "  (none)"
+echo ""
+echo "Umbrella SKILL.md:"
+if [ -f "$UMBRELLA_DST" ]; then
+  echo "  $UMBRELLA_DST"
+fi
 echo ""
 echo "Templates:"
 ls -1 "$TEMPLATES_DIR"/*.md 2>/dev/null | xargs -I{} basename {} || echo "  (none)"
