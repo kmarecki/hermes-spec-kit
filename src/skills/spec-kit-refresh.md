@@ -1,6 +1,6 @@
 ---
 name: spec-kit-refresh
-description: Use when reconciling spec/plan artifacts with actual code after manual changes or mid-stream alignment. Standalone - no phase.
+description: Use when the user says 'refresh [feature]' or 'sync spec for [feature]' — standalone artifact reconciliation.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -17,7 +17,10 @@ metadata:
 
 **Purpose**: Reconcile spec/plan artifacts with actual code without generating a summary or close document. For manual code changes or mid-stream alignment.
 
-**When NOT to use**: To close a feature — use `spec-kit-summarize` instead. To verify fresh implementation — the implement skill's batch commit already captures the design.
+**When NOT to use**: To close a feature — use `spec-kit-summarize` instead.
+
+**Routing**: Load this skill when the user says "refresh [feature]" or "sync spec for [feature]". Standalone — no prerequisite routing needed.
+ To verify fresh implementation — the implement skill's batch commit already captures the design.
 
 **Prerequisites**: `specs/[feature]/spec.md` must exist.
 

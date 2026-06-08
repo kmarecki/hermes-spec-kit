@@ -1,6 +1,6 @@
 ---
 name: spec-kit-explore
-description: Use when exploring N parallel implementation approaches for a feature. Spawns delegate_task subagents, each on its own branch.
+description: Use when the user says 'explore [feature] with [variants]' — spawns parallel subagents for creative exploration.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -18,6 +18,9 @@ metadata:
 **Purpose**: Spawn N parallel `delegate_task` subagents, each on its own branch (`explore/NNN-feature-<variant>`), running independent specify → clarify → plan → tasks → [implement] cycles. User compares variants with `spec-kit-compare`.
 
 **When NOT to use**: For bounded, well-understood features with a single obvious approach — just implement directly.
+
+**Routing**: Load this skill when the user says "explore [feature] with [variants]". Spawns parallel subagents — runs independently.
+
 
 ## Execution
 

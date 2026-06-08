@@ -1,6 +1,6 @@
 ---
 name: spec-kit-checklist
-description: Use when generating targeted validation checklists for any SDD phase. Guides quality review without blocking advancement.
+description: Use when the user says 'generate checklist for [aspect]' or 'validation checklist' — any phase auxiliary.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -17,7 +17,10 @@ metadata:
 
 **Purpose**: Generate or update targeted checklists at `specs/[feature]/checklists/[name].md` for validating specific aspects of the workflow.
 
-**When NOT to use**: Checklist items are advisory and never block phase advancement. If the user wants to proceed without checking items, let them.
+**When NOT to use**: Checklist items are advisory and never block phase advancement.
+
+**Routing**: Load this skill when the user says "generate checklist" or "validation checklist". Standalone — no prerequisite routing needed.
+ If the user wants to proceed without checking items, let them.
 
 ## Execution
 

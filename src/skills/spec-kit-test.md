@@ -1,6 +1,6 @@
 ---
 name: spec-kit-test
-description: Use when testing an implemented feature — runs automated tests, logs user-discovered bugs, orchestrates the bugfix loop. Phase 5.
+description: Use when the user says 'test [feature]' — Phase 5 bug tracking and manual testing.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -18,6 +18,9 @@ metadata:
 **Purpose**: Log user-discovered bugs in `bugs.md` and orchestrate the bugfix loop. User reports bugs in natural language; agent formats them into structured entries.
 
 **When NOT to use**: During implementation or before the final automated test run (Step 9 of implement) completes.
+
+**Routing**: Load this skill when the user says "test [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+
 
 **Artifacts**: `specs/[feature]/bugs.md`
 

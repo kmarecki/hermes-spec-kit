@@ -1,6 +1,6 @@
 ---
 name: spec-kit-constitution
-description: Use when creating project-wide principles for a new spec-driven project, or updating an existing constitution.
+description: Use when the user says 'create constitution' or 'create project principles' — Phase 0 project setup.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -22,6 +22,9 @@ metadata:
 **Prerequisites**: None. This is the first skill — run first for a new project.
 
 **Artifacts**: `specs/constitution.md`
+
+**Routing**: Load this skill when the user says "create constitution" or "create project principles". If loaded directly (not via spec-kit-workflow), consider loading the workflow first for prerequisite checks.
+
 
 ## Execution
 

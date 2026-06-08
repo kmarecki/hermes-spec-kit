@@ -1,6 +1,6 @@
 ---
 name: spec-kit-summarize
-description: Use when closing a feature — generates implementation summary or lightweight close document with spec health score. Phase 6 - mandatory before feature complete.
+description: Use when the user says 'summarize [feature]' or 'close [feature]' — Phase 6 mandatory close with spec health score.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -18,6 +18,9 @@ metadata:
 **Purpose**: When implementation is complete and testing is done, produce either a full `implementation-summary.md` or a lightweight `close.md`. Computes spec health score (0-100%), patches spec.md/plan.md for intentional deviations. **Mandatory** before a feature can be marked complete.
 
 **When NOT to use**: For mid-stream alignment — use `spec-kit-refresh` instead.
+
+**Routing**: Load this skill when the user says "summarize [feature]" or "close [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+
 
 **When to run**:
 - **After bugfix loop completes** (all bugs verified) — auto-triggered as mandatory close

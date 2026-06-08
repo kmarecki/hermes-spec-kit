@@ -1,6 +1,6 @@
 ---
 name: spec-kit-compare
-description: Use after creative exploration to compare N variant implementations and select a winner. Supports cherry-picking from rejected variants.
+description: Use when the user says 'compare [feature]' or 'compare variants' — post-exploration decision matrix.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -18,6 +18,9 @@ metadata:
 **Purpose**: Load all variant artifacts from creative exploration, build a structured comparison matrix, guide the user to select a winning variant, and optionally cherry-pick features from rejected variants.
 
 **When NOT to use**: When there's only one implementation path — just implement it directly.
+
+**Routing**: Load this skill when the user says "compare [feature]" or "compare variants". Runs after explore mode completes.
+
 
 **Prerequisites**: `specs/[feature]/variants/` must contain at least 2 variant directories.
 

@@ -1,6 +1,6 @@
 ---
 name: spec-kit-analyze
-description: Cross-artifact consistency analysis across spec, plan, and tasks. Phase 3.5 - optional quality gate between tasks and implement.
+description: Use when the user says 'analyze [feature]' or 'quality check [feature]' — Phase 3.5 optional consistency check.
 version: 1.0.0
 author: Hermes Agent
 license: MIT
@@ -20,6 +20,8 @@ metadata:
 **Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` must be run first (at minimum). More artifacts (plan.md, tasks.md) produce richer analysis but are not required.
 
 **Artifacts**: None (read-only analysis)
+
+**Routing**: Load this skill when the user says "analyze [feature]" or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
 ## Execution
 

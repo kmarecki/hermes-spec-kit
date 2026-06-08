@@ -1,6 +1,6 @@
 ---
 name: spec-kit-tasks
-description: Use when breaking down an implementation plan into executable, ordered tasks. Phase 3 - decomposes plan into traceable tasks with test-first ordering.
+description: Use when the user says 'generate tasks for [feature]' or 'break down [feature]' — Phase 3 task breakdown.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -18,6 +18,9 @@ metadata:
 **Purpose**: Create `specs/[feature]/tasks.md` — an executable task list. Tests generated first, then implementation tasks. No mandatory 1:1 mapping between tests and tasks. User may explicitly bypass TDD.
 
 **When NOT to use**: For one-step changes (single file edit) — just implement directly.
+
+**Routing**: Load this skill when the user says "generate tasks for [feature]" or "break down [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+
 
 **Artifacts**: `specs/[feature]/tasks.md`
 

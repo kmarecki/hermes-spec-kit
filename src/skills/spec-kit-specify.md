@@ -1,6 +1,6 @@
 ---
 name: spec-kit-specify
-description: Use when creating a new feature specification from a natural language description. Phase 1 - defines WHAT users need and WHY.
+description: Use when the user says 'create a spec for [feature]' or 'specify [feature]' — Phase 1 feature specification.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -18,6 +18,9 @@ metadata:
 **Purpose**: Create or update a feature specification at `specs/[feature]/spec.md`. Defines WHAT users need and WHY, not HOW to implement.
 
 **When NOT to use**: For tiny unambiguous changes (typo fix, rename), skip straight to implementation.
+
+**Routing**: Load this skill when the user says "create a spec for [feature]" or "specify [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+
 
 **Artifacts**:
 - `specs/[feature]/spec.md`

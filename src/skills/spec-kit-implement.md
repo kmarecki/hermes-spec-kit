@@ -1,6 +1,6 @@
 ---
 name: spec-kit-implement
-description: Use when executing planned tasks after spec, plan, and tasks are finalized. Phase 4 - runs phase-level TDD (RED all tests, GREEN all code, then commit).
+description: Use when the user says 'implement [feature]' or 'start implementation' — Phase 4 phase-level TDD execution.
 version: 1.2.0
 author: Hermes Agent
 license: MIT
@@ -18,6 +18,9 @@ metadata:
 **Purpose**: Execute implementation following `specs/[feature]/tasks.md`. Phase-level TDD: all tests for a phase written RED first, then all code written GREEN, then phase committed.
 
 **When NOT to use**: For spec-only changes (design iteration) — use `spec-kit-specify` or `spec-kit-plan`.
+
+**Routing**: Load this skill when the user says "implement [feature]" or "start implementation". If loaded directly, load spec-kit-workflow first to check prerequisites.
+
 
 **Bugfix mode**: When tasks.md contains bugfix tasks (prefixed with BF-###), executes them alongside regular tasks.
 

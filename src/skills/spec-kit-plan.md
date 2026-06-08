@@ -1,6 +1,6 @@
 ---
 name: spec-kit-plan
-description: Use when creating a technical implementation plan from a feature specification. Phase 2 - defines HOW with optional constitutional gates.
+description: Use when the user says 'plan [feature]' or 'create plan for [feature]' — Phase 2 technical planning.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -18,6 +18,9 @@ metadata:
 **Purpose**: Create or update the implementation plan at `specs/[feature]/plan.md`. Defines architecture, resolves constitutional gates, generates design artifacts.
 
 **When NOT to use**: For trivial changes (typo fix, config change) — skip planning and go directly to implementation.
+
+**Routing**: Load this skill when the user says "plan [feature]" or "create plan for [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+
 
 **Artifacts**:
 - `specs/[feature]/plan.md`

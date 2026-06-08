@@ -1,6 +1,6 @@
 ---
 name: spec-kit-clarify
-description: Use when resolving ambiguities in a feature spec through structured Q&A. Phase 1.5 - between spec and plan.
+description: Use when the user says 'clarify [feature]' or 'resolve ambiguities in [feature]' — Phase 1.5 optional.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -17,7 +17,10 @@ metadata:
 
 **Purpose**: Identify and resolve underspecified areas in the current feature spec through a structured Q&A dialog.
 
-**When NOT to use**: For straightforward specs with no ambiguities — proceed to Plan directly. Do NOT ask questions for the sake of process.
+**When NOT to use**: For straightforward specs with no ambiguities — proceed to Plan directly.
+
+**Routing**: Load this skill when the user says "clarify [feature]" or "resolve ambiguities". If loaded directly, load spec-kit-workflow first to check prerequisites.
+ Do NOT ask questions for the sake of process.
 
 **Artifacts**:
 - `specs/[feature]/clarify.md`
