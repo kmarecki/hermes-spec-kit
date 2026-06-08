@@ -116,16 +116,12 @@ IF `bugs.md` EXISTS:
 - **Verification**: [how to verify the fix]
 ```
 
-### Step 10: Commit spec artifacts (auto)
+### Step 10: No auto-commit (batched at implementation)
 ```bash
-IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
-  COMMIT_MSG="spec(phase-2): [feature] implementation plan"
-  git add specs/[feature]/plan.md specs/[feature]/research.md specs/[feature]/data-model.md specs/[feature]/contracts/ specs/[feature]/quickstart.md 2>/dev/null || true
-  git commit -m "$COMMIT_MSG" --no-verify
-  COMMIT_HASH=$(git rev-parse HEAD)
-  NOTE: "Committed as $COMMIT_HASH"
-ELSE
-  NOTE: "Not a git repository — skipping automatic commit"
+NOTE: "Spec artifacts are NOT committed individually during design phases.
+      All spec/plan/task artifacts will be committed as a batch when
+      implementation begins (Phase 4). This lets you move freely between
+      Specify, Clarify, Plan, and Tasks without creating git checkpoints."
 ```
 
 ## Completion

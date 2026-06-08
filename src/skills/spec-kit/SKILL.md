@@ -406,25 +406,30 @@ The commit hash is captured and written to `workflow.md` for traceability. No us
 
 ### Per-Phase Commit Convention
 
+Design phases (0-3) do NOT auto-commit individually. All spec artifacts are committed as a single batch when Phase 4 (Implement) begins. This lets the user move freely between Specify, Clarify, Plan, and Tasks without creating git checkpoints at every step.
+
 | Phase | Scope | Commit Message | Automatic? |
 |-------|-------|----------------|------------|
-| 0 — Constitution | `specs/constitution.md` | `spec(phase-0): constitution for [project]` | Yes |
-| 1 — Specify | `specs/NNN-name/spec.md` | `spec(phase-1): [NNN-name] specification` | Yes |
-| 1.5 — Clarify | `specs/NNN-name/clarify.md` | `spec(phase-1.5): [NNN-name] clarifications` | Yes |
-| 2 — Plan | `specs/NNN-name/plan.md`, `research.md`, etc. | `spec(phase-2): [NNN-name] implementation plan` | Yes |
-| 3 — Tasks | `specs/NNN-name/tasks.md` | `spec(phase-3): [NNN-name] task breakdown` | Yes |
-| 4 — Implement | Source code per task | `feat: [NNN-name] T### - description` | Yes (per task) |
+| 0 — Constitution | `specs/constitution.md` | `spec(phase-0): constitution for [project]` | **No** — batched |
+| 1 — Specify | `specs/NNN-name/spec.md` | (no separate commit) | **No** — batched |
+| 1.5 — Clarify | `specs/NNN-name/clarify.md` | (no separate commit) | **No** — batched |
+| 2 — Plan | `specs/NNN-name/plan.md`, `research.md`, etc. | (no separate commit) | **No** — batched |
+| 3 — Tasks | `specs/NNN-name/tasks.md` | (no separate commit) | **No** — batched |
+| **Batch** | all spec artifacts for the feature | `spec: [NNN-name] spec artifacts (spec, plan, tasks)` | **Yes** — at start of Phase 4 (Implement) |
+| 4 — Implement | Source code per phase | `feat: [NNN-name] Phase N - [Phase Name]` | Yes (per phase commit) |
 | 5 — Test / Bugs | `specs/NNN-name/bugs.md` | `spec(phase-5): [NNN-name] bug log` | Yes |
 | 5 — Bugfix fix | Source code per bugfix task | `fix: [NNN-name] BF-### - description` | Yes (per fix) |
+| 5 — Regression umbrella | Source code for regressions | `fix: [NNN-name] BF-REGRESSION-001 - fix regressions` | Yes (once) |
 | 6 — Summarize | `specs/NNN-name/implementation-summary.md` or `close.md`, + patched spec/plan | `spec(phase-6): [NNN-name] implementation summary (health: N%)` | Yes |
 | — Refresh | Patched spec/plan artifacts | `spec(refresh): [NNN-name] reconcile spec artifacts with code` | Yes |
 
 ### Commit Granularity Rules
 
-- **Spec artifacts** (phases 0-3, 5-log, 6): One automatic commit per phase transition. The commit happens at the end of the skill's execution.
-- **Phase 6 also commits spec.md and plan.md patches** (`git add specs/[feature]/spec.md specs/[feature]/plan.md`) alongside the summary/close document.
-- **Implementation** (phase 4): Commit after each task (T###). Already handled by the TDD loop in `spec-kit-implement` / `writing-plans`. Each commit = one task's code + its tests.
-- **Bugfix** (bugfix loop): Commit after each bugfix task (BF-###). Message references the BUG-ID.
+- **Design phases** (0-3): No individual commits. All spec artifacts are committed as a single batch when Phase 4 begins. This lets the user iterate freely between Specify, Clarify, Plan, and Tasks without creating checkpoints.
+- **Batch commit** (start of Phase 4): One commit capturing all spec artifacts (`specs/[feature]/spec.md`, `plan.md`, `tasks.md`, `clarify.md`, `research.md`, `data-model.md`, `contracts/`, `checklists/`). This freezes the design before implementation begins.
+- **Implementation** (Phase 4): Commit per phase (not per task). Each phase boundary produces one commit covering all tests and code for that phase.
+- **Bugfix** (bugfix loop): Commit per bugfix task (BF-###). Message references the BUG-ID.
+- **Regression umbrella** (Phase 4 Step 9): One commit for BF-REGRESSION-001 covering all regression fixes.
 - **Refresh**: Commit after all approved patches.
 - **Never commit broken state**: Tests must pass before commit during Implement. Spec artifacts are always safe to commit (documentation, not code).
 - **If not in a git repo**: The commit step is skipped silently. Phase transition logging to `workflow.md` still happens.
@@ -437,11 +442,11 @@ Because every commit follows the `spec(phase-N)` or `feat/fix: [NNN-name]` conve
 # Show all spec commits for a feature
 git log --oneline --grep="003-user-auth" --all
 
-# Show only phase boundaries (not implementation detail)
-git log --oneline --grep="spec(phase-" --all
+# Show only phase boundaries and the batch commit (not implementation detail)
+git log --oneline --grep="spec(phase-\|spec:.*spec artifacts" --all
 
-# Show when a feature entered implementation
-git log --oneline --grep="spec(phase-3): 003-user-auth"
+# Show when a feature batch commit was made (just before implementation)
+git log --oneline --grep="spec artifacts.*spec, plan, tasks" --all
 
 # Show all bugfixes for a feature
 git log --oneline --grep="BF-" --all

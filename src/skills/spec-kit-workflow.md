@@ -68,7 +68,7 @@ Each skill BLOCKS if prerequisites are not met:
 - `spec-kit-clarify`: Requires `spec.md`
 - `spec-kit-plan`: Requires `spec.md` + `constitution.md`
 - `spec-kit-tasks`: Requires `plan.md` + `spec.md`
-- `spec-kit-analyze`: Requires `tasks.md` + `plan.md` + `spec.md`
+- `spec-kit-analyze`: Requires `spec.md` (at minimum — richer analysis if plan.md/tasks.md also exist)
 - `spec-kit-implement`: Requires `tasks.md`
 - `spec-kit-test`: Requires `spec.md` (or existing implementation)
   Bugfix prerequisite: `bugs.md` with at least one open bug

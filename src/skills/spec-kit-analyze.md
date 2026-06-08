@@ -15,10 +15,9 @@ metadata:
 
 **Phase**: 3.5 (Optional Quality Gate)
 
-**Purpose**: Perform a non-destructive consistency and quality analysis across the three core artifacts. **READ-ONLY** — outputs a report, does not modify files.
-**Bugfix mode**: When bugs.md exists, also validates bugfix tasks against spec + plan + bugs.
+**Purpose**: Perform a non-destructive consistency and quality analysis across spec, plan, and tasks. **READ-ONLY** — outputs a report, does not modify files. Can be run at any point after spec.md exists (even before plan or tasks are generated).
 
-**Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` + `spec-kit-tasks` must be run first
+**Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` must be run first (at minimum). More artifacts (plan.md, tasks.md) produce richer analysis but are not required.
 
 **Artifacts**: None (read-only analysis)
 
@@ -28,10 +27,8 @@ metadata:
 ```
 IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
-IF specs/[feature]/plan.md NOT EXISTS:
-  ERROR: "Run spec-kit-plan first"
-IF specs/[feature]/tasks.md NOT EXISTS:
-  ERROR: "Run spec-kit-tasks first"
+ELSE:
+  NOTE: "Analyze can run with just spec.md. If plan.md or tasks.md exist, they'll be included in the analysis."
 ```
 
 ### Step 2: Load artifacts
@@ -41,24 +38,24 @@ From **spec.md**:
 - User Stories
 - Edge Cases
 
-From **plan.md**:
+From **plan.md** (IF EXISTS):
 - Architecture/Stack choices
 - Data Model references
 - Constitutional Gates
 - Technical constraints
 
-From **tasks.md**:
+From **tasks.md** (IF EXISTS):
 - Task IDs
 - Descriptions
 - Phase grouping
 - Parallel markers [P]
 - File path references
 
-From **constitution.md**:
+From **constitution.md** (IF EXISTS):
 - Principle names
 - MUST/SHOULD statements
 
-From **bugs.md** (bugfix mode only):
+From **bugs.md** (bugfix mode only, IF EXISTS):
 - Bug IDs (BUG-###)
 - Bugfix tasks (BF-###)
 - Severity levels
@@ -90,7 +87,7 @@ Create internal representations:
 - Any requirement or plan element conflicting with MUST principles
 - Missing mandated sections or quality gates
 
-**E. Coverage Gaps**
+**E. Coverage Gaps** (only if tasks.md exists)
 - Requirements with zero associated tasks
 - Tasks with no mapped requirement/story
 - Success Criteria requiring buildable work not in tasks
@@ -190,11 +187,9 @@ Report:
 
 ## Prerequisite Enforcement
 
-**BLOCKED** if:
-- `spec-kit-constitution` has not been run
-- `spec-kit-specify` has not been run
-- `spec-kit-plan` has not been run
-- `spec-kit-tasks` has not been run
+**WARN** (not BLOCKED) — analyze produces useful results with just spec.md:
+- `spec-kit-specify` must have been run (spec.md required)
+- `spec-kit-plan` and `spec-kit-tasks`: If missing, analysis covers only what exists
 
 ## Key Constraint
 

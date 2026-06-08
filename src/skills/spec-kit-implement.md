@@ -46,7 +46,32 @@ DETECT TDD mode from tasks.md:
       NOTE: "TDD mode active — phase-level RED-GREEN cycle will be enforced."
 ```
 
-### Step 1: Validate prerequisites
+### Step 1: Commit spec artifacts (batch — all design phases)
+
+Before starting implementation, commit all spec artifacts created during design phases as a single batch:
+
+```bash
+IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  COMMIT_MSG="spec: [feature] spec artifacts (spec, plan, tasks)"
+  git add specs/[feature]/spec.md       \
+         specs/[feature]/clarify.md      \
+         specs/[feature]/plan.md         \
+         specs/[feature]/research.md     \
+         specs/[feature]/data-model.md   \
+         specs/[feature]/contracts/      \
+         specs/[feature]/quickstart.md   \
+         specs/[feature]/tasks.md        \
+         specs/[feature]/checklists/
+  git commit -m "$COMMIT_MSG" --no-verify
+  COMMIT_HASH=$(git rev-parse HEAD)
+  NOTE: "Spec artifacts committed as $COMMIT_HASH — design phase is frozen."
+  NOTE: "Implementation begins from this checkpoint. If you need to change the spec,"
+        "commit a spec amendment separately or start a new feature branch."
+ELSE
+  NOTE: "Not a git repository — skipping batch commit. No design checkpoint created."
+```
+
+### Step 2: Validate prerequisites
 ```
 IF specs/[feature]/tasks.md NOT EXISTS:
   ERROR: "Run spec-kit-tasks first to generate task breakdown"
@@ -56,7 +81,7 @@ IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
 ```
 
-### Step 2: Check preconditions
+### Step 3: Check preconditions
 ```bash
 # Checklist check — advisory only
 SCAN specs/[feature]/checklists/ for checklist files
@@ -69,7 +94,7 @@ IF any checklist has incomplete items:
   NOTE: "Checklists are advisory — they do not block implementation."
 ```
 
-### Step 3: Load implementation context
+### Step 4: Load implementation context
 - LOAD `specs/[feature]/tasks.md` (REQUIRED)
 - LOAD `specs/[feature]/plan.md` (REQUIRED)
 - LOAD `specs/[feature]/data-model.md` (IF EXISTS)
@@ -79,7 +104,7 @@ IF any checklist has incomplete items:
 - LOAD `specs/[feature]/quickstart.md` (IF EXISTS)
 - IF `specs/[feature]/bugs.md` EXISTS: LOAD bugs.md for bugfix task context
 
-### Step 4: Parse tasks.md
+### Step 5: Parse tasks.md
 Extract:
 - Task phases: Setup, Foundational, Core, Integration, Polish
 - Task dependencies: Sequential vs parallel execution rules
@@ -87,7 +112,7 @@ Extract:
 - Execution flow: Phase order and dependency requirements
 - TDD bypass header (if present)
 
-### Step 5: Phase-level TDD execution
+### Step 6: Phase-level TDD execution
 
 For each phase (Setup → Foundational → Core → Integration → Polish):
 Execute the entire phase as a batch, not task-by-task:
@@ -161,20 +186,20 @@ IF tdd_bypassed:
       git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify
 ```
 
-### Step 6: Progress reporting
+### Step 7: Progress reporting
 After each phase:
 - Report phase completed: N/Total phases
 - Report tasks completed: N/Total
 - Report tests passing: Yes/No
 - In bugfix mode: Also report bugfix task progress (BF-### completed/total)
 
-### Step 7: Handle errors
+### Step 8: Handle errors
 - HALT execution if a non-parallel task cannot be completed
 - FOR parallel tasks [P]: continue with working tasks, report failed
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
-### Step 8: Full regression run — all existing tests
+### Step 9: Full regression run — all existing tests
 
 After ALL phases are complete and committed, run the ENTIRE test suite:
 
@@ -229,7 +254,7 @@ IF any tests fail:
         RETURN to fix remaining failures
 ```
 
-### Step 9: Build verification (if applicable)
+### Step 10: Build verification (if applicable)
 ```bash
 IF npm run build / tsc --noEmit / go build / cargo build is available:
   terminal("[build command]")
