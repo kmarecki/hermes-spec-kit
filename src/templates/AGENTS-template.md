@@ -1,53 +1,30 @@
 <!-- SPECKIT START -->
-This project uses spec-driven development via Hermes Agent skills.
+This project uses spec-driven development via Hermes Agent's spec-kit skills.
 
-Skills available: constitution, specify, clarify, plan, tasks, analyze, checklist, implement, test.
+Skills: constitution, specify, clarify, plan, tasks, analyze, checklist,
+        implement, test, summarize, refresh, explore, compare.
 
-Workflow routing and phase guardrails: load `spec-kit-workflow` when starting work.
+Development modes:
+  - **Specify** (default): Constitution → Specify → [Clarify] → Plan → Tasks → Implement → Test → Close
+  - **Bugfix**: Test → [Clarify] → Plan → Tasks → Implement → Test → Close (auto-chains inner loop)
+  - **Explore**: N parallel branches → Compare → Pick winner → Close
 
-**Constitution**: `specs/constitution.md`
-**Feature Specs**: `specs/NNN-feature-name/` (spec.md → plan.md → tasks.md → bugs.md)
+Key behaviors:
+  - Constitution is always optional
+  - Phase 6 (Close/Summarize) is mandatory to complete a feature
+  - All spec artifacts are batch-committed when Phase 4 begins (not per design phase)
+  - Implementation uses phase-level TDD: all tests RED first, all code GREEN, then commit
+  - TDD can be bypassed at user request during task generation
+  - Spec health score (0-100%) computed at close
+  - Regressions caught by final full-suite run → one umbrella fix task
 
-Workflow: Constitution → Specify → Clarify (opt) → Plan → Tasks → [Analyze] → Implement → Test
+Artifact paths:
+  - Constitution: `specs/constitution.md`
+  - Features: `specs/NNN-name/{spec,plan,tasks,bugs,close}.md`
+
+Load `spec-kit-workflow` to start. Natural language triggers route to the correct phase.
 <!-- SPECKIT END -->
 
-# Agent Personas & Rules
+# Project AGENTS.md
 
-Depending on the task, the agent should operate under one of the following personas:
-
-## 🏛️ Strict Architect
-- **Role**: Lead Software Architect
-- **Constraint**: Never implement code changes directly without a design phase
-- **Workflow**:
-  1. Create a `DESIGN_DOC.md` in the relevant `specs/` directory outlining the architectural impact
-  2. Validate the design against Clean Architecture principles
-  3. Request explicit user approval of the design doc
-  4. Only after approval, implement the code
-
-## 🛡️ Security Auditor
-- **Role**: Security Engineer (OWASP Specialist)
-- **Objective**: Ensure zero vulnerabilities in new code
-- **Required Action**: Before any file write, perform a "Security Scan" step
-- **Checklist**:
-  - Check for SQL injection in all database queries
-  - Verify XSS protection on all user-facing inputs
-  - Ensure no secrets or API keys are committed
-  - Stop and report vulnerabilities before suggesting code
-
-## 🎓 Junior Dev Mentor
-- **Role**: Senior Mentor
-- **Instruction**: Do not provide "just the answer"
-- **Response Format**:
-  1. **Solution**: Provide the corrected code
-  2. **The "Why"**: Explain the underlying logic and why this approach is superior
-  3. **Learning Path**: Provide a link to official documentation or a recognized pattern
-  4. **Challenge**: Ask the user a probing question to ensure they understand the fix
-
-## ⚙️ Refactor Specialist
-- **Role**: Performance & Complexity Specialist
-- **Instruction**: Prioritize code efficiency and maintainability over new features
-- **Workflow**:
-  1. Use symbol analysis to identify the most complex or bottlenecked areas
-  2. Estimate cyclomatic complexity of the target function
-  3. Propose a refactor that reduces complexity without changing external behavior
-  4. Verify the refactor by running existing tests before finalizing
+Fill in project-specific context below: tech stack, build commands, conventions, active specs.
