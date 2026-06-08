@@ -147,7 +147,7 @@ When running in bugfix mode (bugs.md exists):
 
 ## Next Skills
 
-- Propose to the user: Run an inline quality analysis (or ask "analyze [feature]") before implementation
+- Propose to the user: Run `spec-kit-analyze` for optional quality gate before implementation
 - Propose to the user: Run `spec-kit-implement` to execute tasks
 - In bugfix mode: **automatically route** to `spec-kit-implement` — no user choice needed
 

@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, workflow, orchestrator, routing]
-    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
+    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-analyze, spec-kit-checklist, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
 ---
 
 # Spec Kit Workflow Orchestrator
@@ -50,7 +50,7 @@ IF feature name is provided (e.g., "003-user-auth"):
 || 1.5 | `spec-kit-clarify` | Iterative clarification | Spec |
 || 2 | `spec-kit-plan` | Technical plan | Spec + Constitution |
 || 3 | `spec-kit-tasks` | Task breakdown | Plan |
-|| 3.5 | **Inline (optional)** | Quality gate — analyze or checklist | Tasks |
+|| 3.5 | `spec-kit-analyze` | Quality gate (optional) | Tasks |
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
 | **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
@@ -68,7 +68,7 @@ Each skill BLOCKS if prerequisites are not met:
 - `spec-kit-clarify`: Requires `spec.md`
 - `spec-kit-plan`: Requires `spec.md` + `constitution.md`
 - `spec-kit-tasks`: Requires `plan.md` + `spec.md`
-- **Inline Analyze**: Requires `tasks.md` + `plan.md` + `spec.md`
+- `spec-kit-analyze`: Requires `tasks.md` + `plan.md` + `spec.md`
 - `spec-kit-implement`: Requires `tasks.md`
 - `spec-kit-test`: Requires `spec.md` (or existing implementation)
   Bugfix prerequisite: `bugs.md` with at least one open bug
@@ -98,40 +98,10 @@ Each skill BLOCKS if prerequisites are not met:
 - User says: "Create constitution"
 - Propose routing to: `spec-kit-constitution`
 
-### Analyze (Optional — Inline Step)
-
+### Analyze (Optional)
 - User says: "Analyze [feature]" or "Quality check [feature]"
 - When: Only if user explicitly asks for quality review before implementing
-- **Inline step** — no separate skill file. Run the following analysis directly:
-
-The analysis is READ-ONLY. Load all artifacts (spec.md, plan.md, tasks.md, optionally constitution.md and bugs.md) and check for:
-
-1. **Duplication**: Near-duplicate requirements across artifacts
-2. **Ambiguity**: Vague adjectives (fast, scalable, secure), unresolved placeholders (TODO, TKTK, ???)
-3. **Coverage gaps**: Requirements with zero associated tasks; tasks with no mapped requirement
-4. **Constitution alignment**: Requirements conflicting with constitution MUST/SHOULD statements
-5. **Inconsistency**: Terminology drift, data entities in plan but absent in spec, task ordering contradictions
-6. **Bugfix coverage** (if bugs.md exists): Bugs with no BF-### tasks; BF-### tasks not referencing a plan section
-
-Present findings as a table:
-
-```
-| ID | Category | Severity | Location | Summary | Recommendation |
-```
-
-Severity: CRITICAL / HIGH / MEDIUM / LOW. Only CRITICAL warrants a recommendation to block implementation.
-
-### Checklists (Optional — Inline Step)
-
-- User says: "Generate checklist for [feature]" or "Validation checklist for [aspect]"
-- When: Only if user explicitly asks for a targeted validation checklist
-- **Inline step** — no separate skill file. Generate the checklist directly:
-
-Copy `spec-kit/templates/checklist-template.md` → `specs/[feature]/checklists/[name].md`
-
-Common checklist types: requirements.md, test.md, security.md, implementation.md, architecture.md.
-
-Format uses CHK### prefixed items grouped by category. Each item is one checkable action. Checklists never block phase advancement — they're advisory.
+- Propose routing to: `spec-kit-analyze`
 
 ### Implement
 - User says: "Implement [feature]"
