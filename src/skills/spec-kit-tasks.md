@@ -41,7 +41,6 @@ IF specs/constitution.md NOT EXISTS:
 - LOAD `specs/[feature]/data-model.md` — for entities
 - LOAD `specs/[feature]/contracts/` — for API specs
 - LOAD `spec-kit/templates/tasks-template.md`
-- LOAD `test-driven-development` skill — for RED-GREEN-REFACTOR cycle rules and Iron Law enforcement
 - IF `specs/[feature]/bugs.md` EXISTS (bugfix mode):
   - LOAD bugs.md for bug context
   - LOAD plan.md bugfix sections for fix approaches

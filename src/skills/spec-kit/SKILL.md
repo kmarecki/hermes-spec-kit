@@ -294,7 +294,7 @@ The canonical constitution path is `specs/constitution.md`. All Hermes spec-kit 
 ## Anti-Patterns to Avoid
 
 - **Do NOT block on checklists.** If a user wants to advance, let them.
-- **TDD is the default, not optional.** Test-first is enforced. The Iron Law says: NO production code without a failing test first. If you wrote code before the test, delete it and start over. The only exceptions require explicit user permission: throwaway prototypes, generated code, and configuration files. Without user permission, TDD is not optional — the agent cannot unilaterally skip it. This is consistent with the `test-driven-development` skill loaded during Phase 3 (Tasks) and Phase 4 (Implement).
+- **TDD is the default, not optional.** Test-first is enforced. The Iron Law says: NO production code without a failing test first. If you wrote code before the test, delete it and start over. The only exceptions require explicit user permission: throwaway prototypes, generated code, and configuration files. Without user permission, TDD is not optional — the agent cannot unilaterally skip it. See spec-kit-implement's Iron Law table for common rationalizations.
 - **Do NOT demand all artifacts exist before advancing.** Small features may skip Clarify or Plan entirely.
 - **Do NOT use Cline/OpenCode command syntax** (e.g. `/speckit.specify`). Use natural language with skill names instead.
 - **Do NOT fix bugs before logging them.** Bug reports always go into `bugs.md` first. Making code changes without a bug entry skips the workflow and causes user frustration. "Stop" / "stop fixing" means pause and follow the proper loop — never interpret it as permission to give up permanently.

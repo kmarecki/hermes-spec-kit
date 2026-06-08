@@ -30,20 +30,15 @@ Bugfix tasks (prefixed with BF-###) are executed alongside regular tasks. Plan R
 
 ## Execution
 
-### Step 0: Load TDD skill and detect mode
+### TDD Mode Detection
 ```
-LOAD `test-driven-development` skill — RED-GREEN-REFACTOR cycle rules
-  (Reference for Iron Law enforcement.)
-
-DETECT TDD mode from tasks.md:
-  SCAN tasks.md for `> **TDD**: Bypassed by user request`
-    IF found:
-      SET tdd_bypassed = true
-      NOTE: "TDD was bypassed by user request — proceeding with implementation-only tasks."
-      (No test tasks exist. Run implementation tasks directly without RED-GREEN cycle.)
-    IF not found:
-      SET tdd_bypassed = false
-      NOTE: "TDD mode active — phase-level RED-GREEN cycle will be enforced."
+SCAN tasks.md for `> **TDD**: Bypassed by user request`
+  IF found:
+    SET tdd_bypassed = true
+    NOTE: "TDD bypassed by user — implementation-only tasks, no test cycle."
+  IF not found:
+    SET tdd_bypassed = false
+    NOTE: "TDD active — phase-level RED-GREEN cycle enforced."
 ```
 
 ### Step 1: Commit spec artifacts (batch — all design phases)
@@ -264,14 +259,31 @@ IF npm run build / tsc --noEmit / go build / cargo build is available:
 ## Implementation Rules (TDD Enforcement)
 
 - **Phase-level TDD**: All tests for a phase are written and verified RED first, then all code is written and verified GREEN. One commit per phase.
-- **RED verification is mandatory** (TDD mode): Every test must be run and confirmed failing before any implementation code is written. Without RED, the test proves nothing.
-- **GREEN verification at phase level**: After all implementation code is written, run the phase's tests to confirm green.
+- **RED verification is mandatory**: Every test must run and fail before implementation code is written. Without RED, the test proves nothing.
+- **GREEN verification at phase level**: After all implementation code, run the phase's tests to confirm green.
 - **No per-task commits**: Commit once per phase boundary, not after each individual test or task.
 - **No per-task regression runs**: Only run relevant tests for the current phase. Full suite runs once after all phases.
 - **Regression umbrella**: All post-implementation regressions are captured in one umbrella bugfix task (BF-REGRESSION-001), not individual bugs.
 - **TDD bypass**: If the user explicitly bypassed TDD, skip all automated test steps. The summary will note the bypass.
-- **Build after GREEN**: TypeScript projects MUST build. Vitest/Jest swallow type errors that crash at runtime.
-- In bugfix mode: Update bugs.md Status after fixing a bug (set to "resolved")
+- **Build after GREEN**: TypeScript projects MUST build — Vitest/Jest swallow type errors.
+- If code was written test-last and needs redoing, see the `test-driven-development` skill for the TDD Recovery workflow (reset to spec commit).
+
+### Iron Law: Why Tests Must Come First
+
+**If you wrote code before the test → delete it. Start over.** No exceptions without user permission.
+
+```
+Excuse                      | Reality
+----------------------------|-------------------------------------------
+"Too simple to test"        | Simple code breaks. Test takes 30s.
+"I'll test after"           | Tests-after pass immediately → prove nothing.
+"Already manually tested"   | Ad-hoc ≠ systematic. No record, can't re-run.
+"Deleting X hours wasteful" | Sunk cost. Keep unverified code = tech debt.
+"TDD is dogmatic"           | TDD finds bugs pre-commit, prevents regressions.
+"Tests after same goal"     | Tests-after = "what does it do?" Tests-first = "what should it do?"
+```
+
+In bugfix mode: Update bugs.md Status after fixing a bug (set to "resolved")
 
 ## Phase Guardrail — STRICT
 
