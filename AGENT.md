@@ -1,85 +1,84 @@
 # Hermes Spec Kit — Agent Instructions
 
-This file provides project-level context for Hermes Agent when working on the spec-kit repository itself. Always read these guidelines before making changes.
+Project-level context for Hermes Agent when working on the spec-kit repository. Read before making changes.
 
 ## Project Overview
 
-Hermes Spec Kit is a **spec-driven development (SDD) workflow system** for Hermes Agent. It implements a structured, phase-based approach to software development:
+A **spec-driven development (SDD) workflow system** for Hermes Agent. 14 skills implementing three development modes:
 
-```
-Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test → Summarize
-```
-
-Each phase produces documented markdown artifacts under `specs/NNN-feature-name/`. All phase transitions are manual.
+- **Specify** (default): Constitution → Specify → [Clarify] → Plan → Tasks → Implement → Test → Close
+- **Bugfix**: Test → [Clarify] → Plan → Tasks → Implement → Test → Close (auto-chain inner loop)
+- **Explore**: N parallel branches → Compare → Pick winner → Close
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `README.md` | Project overview, usage, quick start |
-| `design.md` | System architecture and design decisions |
-| `workflow.md` | Phase-by-phase workflow reference |
-| `skills.md` | Skill file reference and routing |
-| `automation.md` | Cron jobs, delegation, and automation patterns |
-| `migration.md` | Migration from OpenCode/Cline spec kit |
+| `user-guide.md` | Complete workflow documentation |
+| `README.md` | Project overview and quick start |
 | `AGENT.md` | This file — agent project context |
-| `src/skills/*.md` | Source skill files (installed via install.sh) |
-| `src/templates/` | Template files for spec artifacts |
-| `scripts/install.sh` | Installs skills + templates to ~/.hermes/skills/ |
-| `templates/` | Auto-generated copies (do NOT edit directly) |
+| `src/skills/*.md` | 14 source skill files (installed via install.sh) |
+| `src/skills/spec-kit/SKILL.md` | Umbrella skill overview |
+| `src/templates/` | 14 template files |
+| `src/references/` | Reference files (auto-commit.md) |
+| `scripts/install.sh` | Installs skills + templates + references |
 
-## Skill Map
+## Skills (14)
 
-Skills live in `src/skills/` and are installed to `~/.hermes/skills/`:
+| Skill | Phase | Purpose |
+|-------|-------|---------|
+| spec-kit-workflow | — | Orchestrator — routes requests to phases |
+| spec-kit-constitution | 0 | Project principles (always optional) |
+| spec-kit-specify | 1 | Feature specification |
+| spec-kit-clarify | 1.5 | Ambiguity resolution (optional) |
+| spec-kit-plan | 2 | Implementation planning |
+| spec-kit-tasks | 3 | Task breakdown (asks user about TDD) |
+| spec-kit-analyze | 3.5 | Quality check (inline in workflow) |
+| spec-kit-checklist | Any | Validation checklists (advisory) |
+| spec-kit-implement | 4 | Phase-level TDD execution |
+| spec-kit-test | 5 | Bug tracking (manual) |
+| spec-kit-summarize | 6 | Close/summary (mandatory) |
+| spec-kit-refresh | — | Artifact alignment |
+| spec-kit-explore | — | Parallel variant branches |
+| spec-kit-compare | — | Variant comparison |
 
-- `spec-kit-workflow` — Master orchestrator, routes requests to phase skills
-- `spec-kit-constitution` — Phase 0: Project principles and constraints
-- `spec-kit-specify` — Phase 1: Feature specification creation
-- `spec-kit-clarify` — Phase 1.5: Ambiguity resolution (optional)
-- `spec-kit-plan` — Phase 2: Implementation planning
-- `spec-kit-tasks` — Phase 3: Task breakdown generation
-- `spec-kit-analyze` — Phase 3.5: Quality gate review (optional)
-- `spec-kit-checklist` — N: Quality checklists (optional)
-- `spec-kit-implement` — Phase 4: Task execution with TDD
-- `spec-kit-test` — Phase 5: Testing & bug tracking
-- `spec-kit-summarize` — Phase 6: Implementation summary
+## Key Behaviors
+
+- **Constitution is always optional** — warn, don't block
+- **Design phases (0-3) do not auto-commit** — batch commit at start of Phase 4
+- **Phase-level TDD** — all tests RED first, all code GREEN, one commit per phase
+- **TDD bypass** — user asked at task generation, tracked in tasks.md header
+- **Umbrella regression** — one BF-REGRESSION-001 task, not individual bugs
+- **Phase 6 mandatory** — feature cannot complete without close or summary
+- **Spec health score** — computed at close: (resolved + acknowledged) / total * 100
+- **Analyze works from spec.md alone** — plan/tasks optional for richer analysis
 
 ## Template Management
 
-Templates live in `src/templates/`. They get installed to `~/.hermes/skills/spec-kit/templates/` by `./scripts/install.sh`.
-
-- **Do NOT** edit files in `templates/` directly — that directory mirrors installed copies.
-- Edit source files in `src/templates/` instead.
-- After editing source templates, run `./scripts/install.sh` to update the installed copies.
-
-The `AGENTS-template.md` is meant to be copied to a project root as a starting `AGENTS.md` for projects *using* spec-kit. It is **not** the AGENT.md for this repo.
+Templates in `src/templates/` installed to `~/.hermes/skills/spec-kit/templates/`.
+Edit source files in `src/templates/`, run `./scripts/install.sh` to deploy.
 
 ## Phase State Detection
 
-To determine a feature's current phase, check which artifacts exist:
-
-| Artifacts Present | Interpretation |
+| Artifacts Present | Phase |
 |---|---|
 | constitution.md only | Ready to Specify |
 | spec.md exists | Specified |
-| clarify.md exists | Clarifying/Clarified |
-| plan.md exists | Planning/Planned |
-| tasks.md exists | Tasking/Tasked |
+| clarify.md exists | Clarified |
+| plan.md exists | Planned |
+| tasks.md exists | Tasked |
 | tasks.md with completions | Implementing |
-| All tasks complete | Complete |
-| bugs.md with open bugs | Testing (bugfix loop) |
-| bugs.md all verified | Testing complete |
-| All tasks complete + all bugs verified | Complete |
+| bugs.md with open bugs | Testing |
+| bugs.md all verified | Testing complete — must close |
+| implementation-summary.md or close.md exists | Complete |
 
 ## Conventions
 
 - Spec numbering: `NNN-feature-name` (sequential, 3 digits)
-- Branch naming: `feature/NNN-feature-name` or `NNN-feature-name`
-- Commit messages: `spec: [phase] - [feature name]`
-- Tasks format: `[ID] [P?] [Story] Description`
-  - `[P]` = can run in parallel
-  - `[Story]` = user story tag like US1, US2
-- Each skill is self-contained and idempotent — re-running updates its artifact without affecting downstream phases
+- Branch naming: `feature/NNN-feature-name`, `fix/NNN-name`, `explore/NNN-feature-<variant>`
+- Commit messages: see `src/references/auto-commit.md`
+- Design phases: NO individual commits (batch at Phase 4)
+- Implementation: one commit per phase
 
 ## Installation
 
@@ -87,37 +86,10 @@ To determine a feature's current phase, check which artifacts exist:
 ./scripts/install.sh
 ```
 
-After installation, reload skills in Hermes:
-```
-/reload-skills
-```
-
-Or create a skill bundle:
-```bash
-hermes bundles create speckit \
-  --skill spec-kit-workflow \
-  --skill spec-kit-constitution \
-  --skill spec-kit-specify \
-  --skill spec-kit-clarify \
-  --skill spec-kit-plan \
-  --skill spec-kit-tasks \
-  --skill spec-kit-analyze \
-  --skill spec-kit-checklist \
-  --skill spec-kit-implement \
-  --skill spec-kit-test \
-  --skill spec-kit-summarize
-```
-
-## Hermes Slash Command Limitation
-
-Hermes Agent does **not** support user-extensible slash commands with argument parsing. Skills are exposed as `/skill-name` but only inject markdown text into context. Natural language routing is the intended workflow.
-
-## Related Projects
-
-- [JRedeker/cline-spec-kit-workflows](https://github.com/JRedeker/cline-spec-kit-workflows) — Original Cline workflow files
-- [juanklagos/spec-driven-development-template](https://github.com/juanklagos/spec-driven-development-template) — SDD framework with MCP support
-- [Hermes Agent Docs](https://hermes-agent.nousresearch.com/docs) — Hermes Agent documentation
+Then `/reload-skills` in Hermes.
 
 ## Communication Style
 
-Concise. Show commands over explanations. Confirm before pushing or merging. Ask for clarification when blocked.
+Concise. Show commands over explanations. Confirm before destructive operations. Ask for clarification when blocked.
+
+**Never restructure existing working skills without explicit user consent.** One new file = one new file.
