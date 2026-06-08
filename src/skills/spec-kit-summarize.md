@@ -21,6 +21,14 @@ metadata:
 
 **Routing**: Load this skill when the user says "summarize [feature]" or "close [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
+## Git Commit Guidelines
+
+| Situation | Commit message |
+|-----------|---------------|
+| Close/Summary (Phase 6) | `spec(phase-6): [feature] summary (health: N%)` |
+
+See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`.
+
 
 **When to run**:
 - **After bugfix loop completes** (all bugs verified) — auto-triggered as mandatory close

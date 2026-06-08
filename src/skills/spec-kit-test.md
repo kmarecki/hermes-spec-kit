@@ -21,6 +21,14 @@ metadata:
 
 **Routing**: Load this skill when the user says "test [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
+## Git Commit Guidelines
+
+| Situation | Commit message |
+|-----------|---------------|
+| Bug log (Phase 5) | `spec(phase-5): [feature] bug log` |
+
+See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`.
+
 
 **Artifacts**: `specs/[feature]/bugs.md`
 

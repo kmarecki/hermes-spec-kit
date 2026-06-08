@@ -21,6 +21,20 @@ metadata:
 
 **Routing**: Load this skill when the user says "implement [feature]" or "start implementation". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
+## Git Commit Guidelines
+
+Every phase boundary and regression fix produces a commit. Do NOT skip commits — they create recoverable checkpoints and link code changes to spec artifacts.
+
+| Situation | Commit message |
+|-----------|---------------|
+| Phase boundary (TDD or bypass) | `feat: [feature] Phase N - [Phase Name]` |
+| Regression umbrella fix | `fix: [feature] BF-REGRESSION-001 - fix regressions` |
+| Bugfix loop (per BF-### task) | `fix: [feature] BF-### - description` |
+
+See `spec-kit/references/auto-commit.md` for the standard pattern. Commits use `--no-verify` to bypass pre-commit hooks.
+
+Note: design artifacts (spec.md, plan.md, tasks.md) were already batch-committed at implementation start. Do NOT re-commit them.
+
 
 **Bugfix mode**: When tasks.md contains bugfix tasks (prefixed with BF-###), executes them alongside regular tasks.
 
