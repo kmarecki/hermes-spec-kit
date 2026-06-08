@@ -73,23 +73,25 @@ ELSE:
             Actual Result, Expected Result, Requires Clarification flag, Status
 ```
 
-### Step 3: User adds bugs manually
-The user adds bugs to `bugs.md` in the following format:
+### Step 3: User reports bugs — agent formats them
+The user describes each bug in natural language (what they saw, what they expected, how to reproduce). The agent formats each report into a structured bug entry:
 
-```
-### BUG-001: [Short title]
+```markdown
+### BUG-001: [Agent summarizes short title]
 
-- **Severity**: [critical/major/minor/trivial]
-- **Area**: [component or spec area affected]
-- **Description**: [observed vs expected behavior]
+- **Severity**: [Agent infers: critical/major/minor/trivial]
+- **Area**: [Agent identifies from user description: component or spec area]
+- **Description**: [User's description, condensed into observed vs expected behavior]
 - **Steps to Reproduce**:
-  1. ...
-- **Actual Result**: [what happens]
-- **Expected Result**: [what should happen]
+  [User describes how to reproduce; agent lists as numbered steps]
+- **Actual Result**: [What happened — from user's report]
+- **Expected Result**: [What should happen — from user's report]
 - **Requires Clarification**: [ ] no / [ ] yes
 - **Plan Ref**:
 - **Status**: open
 ```
+
+The user provides the raw information. The agent structures it into the template format. After each bug, confirm with the user: "Logged BUG-001: [summary] — correct?"
 
 ### Step 4: Bug status validation
 When user says they've finished logging bugs:

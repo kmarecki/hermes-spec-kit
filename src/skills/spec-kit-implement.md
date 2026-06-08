@@ -86,7 +86,7 @@ Extract:
 
 For each task, follow the strict TDD cycle. Every result must be **verified by running tests**, not assumed.
 
-#### Cycle: Test task → RED (verify failure)
+#### Cycle: Test task → RED (verify failure — expected, NOT a bug)
 For each task marked [TEST] (or any test-writing task):
 ```
 a. WRITE one minimal test for the next behavior
@@ -102,6 +102,10 @@ b. RUN the specific test to verify RED:
    - Test fails (not errors from typos)
    - Failure message is expected and descriptive
    - Test fails because the feature is missing
+   
+   ⚠️ This RED failure is EXPECTED and PROVES the test is valid.
+   It is NOT a bug — it's the first step of TDD.
+   Do NOT log it in bugs.md.
    
    Test passes immediately? You tested existing behavior. Fix the test.
    Test errors? Fix the error, re-run until it fails correctly.
@@ -182,7 +186,7 @@ After each task:
 
 ### Step 9: Final verification — automated test run
 
-After all tasks are complete, run the full automated test suite one final time to catch any inter-task regressions that individual per-task runs might have missed:
+After all tasks are complete, run the full automated test suite one final time. **Note**: RED test failures during the per-task TDD cycle (Step 5) are EXPECTED — they prove the test is valid. Only failures at this final stage indicate real problems.
 
 ```bash
 DETECT test framework:

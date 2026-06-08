@@ -34,21 +34,20 @@ metadata:
 
 ### Determine Mode
 
+### Determine Mode
 ```
-IF user says "close [feature]":
+IF user explicitly says "close [feature]":
   USE lightweight close mode → close-template.md
   SKIP steps 4-6 (no deep gap analysis needed)
-  GO TO Step 2 (lighter artifact check)
 
-IF user says "summarize [feature]":
-  USE full mode → implementation-summary-template.md
+IF user explicitly says "summarize [feature]":
+  USE full summary mode → implementation-summary-template.md
   RUN all steps below
 
 IF auto-triggered after bugfix loop (all bugs verified):
-  CHECK feature complexity:
-    - Small feature (≤5 tasks, no complex plan.md): lightweight close mode
-    - Large feature (>5 tasks or complex plan.md): full summary mode
-  USE appropriate mode
+  ASK user: "Generate a full implementation summary with gap analysis, or a lightweight close document?"
+  WAIT for user response
+  USE the mode they selected
 ```
 
 ### Step 1: Validate and load all artifacts

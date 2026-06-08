@@ -186,8 +186,8 @@ Check for artifacts to determine current phase:
 ```
 AFTER all bugs in bugs.md have Status: verified:
   AUTO-TRIGGER: spec-kit-summarize (Phase 6)
-    - If feature is simple (≤5 tasks): lightweight close mode
-    - If feature is complex (>5 tasks or elaborate plan.md): full summary mode
+    - ASK user: "Generate a full implementation summary or lightweight close?"
+    - Use the mode the user selects
   This is MANDATORY — the feature cannot be marked done without Phase 6.
 ```
 

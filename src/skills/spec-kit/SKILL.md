@@ -488,6 +488,7 @@ Installed via `./scripts/install.sh`:
 - `close-template.md` — Lightweight close document (Phase 6 close mode, via `spec-kit-summarize`)
 - `workflow-template.md` — Transition log template (appended by every phase skill on completion)
 - `comparison-template.md` — Creative exploration comparison matrix template
+- `gitignore-template.md` — Project .gitignore starter (copy to project root after `git init`)
 
 ## References
 

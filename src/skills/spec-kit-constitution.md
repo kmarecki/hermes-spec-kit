@@ -24,6 +24,16 @@ metadata:
 
 ## Execution
 
+### Step 0: Check git availability
+```bash
+IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  NOTE: "Git repository detected — spec artifacts will be committed automatically."
+ELSE:
+  WARN: "No git repository detected. Spec artifacts will be created but NOT versioned.
+         Run 'git init' and optionally copy spec-kit/templates/gitignore-template.md → .gitignore
+         to enable automatic commits on phase transitions."
+```
+
 ### Step 1: Check for existing constitution
 ```
 IF specs/constitution.md EXISTS:

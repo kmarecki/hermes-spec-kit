@@ -114,11 +114,11 @@ Report:
 
 ## Prerequisite Enforcement
 
-**BLOCKED** if `spec-kit-constitution` has not been run:
+**WARN** if `spec-kit-constitution` has not been run:
 ```
 CHECK: specs/constitution.md EXISTS
 IF NOT:
-  ERROR: "Run spec-kit-constitution first to establish project principles"
+  WARN: "No constitution found — proceeding without constitutional gates. Constitution is optional; run `spec-kit-constitution` later to add principles."
 ```
 
 ## Re-run Enforcement
