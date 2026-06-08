@@ -1,7 +1,7 @@
 ---
 name: spec-kit-clarify
-description: Iterative clarification dialog to resolve ambiguities. Phase 1.5 - between spec and plan.
-version: 1.0.0
+description: Use when resolving ambiguities in a feature spec through structured Q&A. Phase 1.5 - between spec and plan.
+version: 1.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -16,127 +16,60 @@ metadata:
 **Phase**: 1.5
 
 **Purpose**: Identify and resolve underspecified areas in the current feature spec through a structured Q&A dialog.
-**Bugfix mode**: When run from the bugfix loop, resolves ambiguities about specific bugs in bugs.md.
 
-**Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` must be run first
+**When NOT to use**: For straightforward specs with no ambiguities — proceed to Plan directly. Do NOT ask questions for the sake of process.
 
 **Artifacts**:
-- `specs/[feature]/clarify.md` (clarification log)
+- `specs/[feature]/clarify.md`
 - Updated `specs/[feature]/spec.md` (with resolved ambiguities)
 
 ## Execution
 
-### Step 1: Validate prerequisites
+### Validate prerequisites
 ```
-IF specs/constitution.md NOT EXISTS:
-  WARN: "No constitution found — proceeding without constitutional gates. Constitution is optional."
 IF specs/[feature]/spec.md NOT EXISTS:
-  ERROR: "Run spec-kit-specify first to create the feature specification"
+  ERROR: "Run spec-kit-specify first"
 ```
 
-### Step 2: Load spec
+### Load spec
 ```
-LOAD `specs/[feature]/spec.md`
-IF `specs/[feature]/bugs.md` EXISTS (bugfix mode):
-  LOAD bugs.md
-  FILTER bugs where Requires Clarification "yes" checkbox is checked
-  USE bug descriptions as the basis for clarification questions
+LOAD specs/[feature]/spec.md
+IF bugfix mode: LOAD bugs.md, filter for bugs needing clarification
 ```
 
-### Step 3: Ambiguity scan
-Analyze these categories for gaps:
-- **Functional Scope**: Core user goals, out-of-scope declarations
-- **Domain & Data Model**: Entities, attributes, relationships, lifecycle
-- **Interaction & UX Flow**: Critical journeys, error/empty states
-- **Non-Functional Attributes**: Performance, scalability, security, observability
-- **Integration & Dependencies**: External APIs, data formats, failure modes
-- **Edge Cases**: Negative scenarios, rate limiting, conflict resolution
-- **Terminology**: Canonical glossary, avoided synonyms
+### Ambiguity scan
+Check: Functional scope, domain model, UX flow, non-functional attributes, integrations, edge cases, terminology.
 
-### Step 4: Generate questions (max 5)
-For each gap found, create candidate question:
-- **Maximum 5 questions** total per session
-- One question at a time
-- Each answerable with either:
-  - Multiple choice (2-5 options)
-  - Short answer (<=5 words)
+### Generate questions (max 5 per session)
+One question at a time. Each answerable via multiple choice (2-5 options) or short answer.
 
-### Step 5: Sequential questioning loop
-For each question:
-1. Present question with recommended option + reasoning
-2. Include markdown table of all options
-3. Wait for user response
-4. Validate response (option letter, "yes", or short answer)
-5. Record answer
+### Sequential questioning loop
+For each question: present → wait → validate → record.
+After each answer: UPDATE spec.md, replace `[NEEDS CLARIFICATION]` markers.
 
-### Step 6: Integrate answers
-After each accepted answer:
-- UPDATE `specs/[feature]/spec.md` with the resolved value
-- REPLACE [NEEDS CLARIFICATION] marker with resolved answer
-- WRITE spec file after each integration
-- In bugfix mode: Also UPDATE the bug's Requires Clarification checkboxes: tick "[x] yes" → "[x] no" and add clarification notes
-
-### Step 7: Generate clarify.md
-CREATE `specs/[feature]/clarify.md`:
-```
+### Generate clarify.md
+```markdown
 # Clarification Log: [Feature]
-
-**Feature**: specs/[feature]/spec.md
-**Created**: [DATE]
-**Questions Asked**: N
-**Questions Resolved**: N
-**Bugfix mode**: [yes/no — if yes, lists which BUG-IDs were clarified]
-
 ## Q1: [Question]
-**Context**: [Relevant spec section]
-**Options**:
-| Option | Answer | Implications |
 **Answer**: [Selected]
-**Resolution**: [How it was applied to spec]
+**Resolution**: [How applied to spec]
 ```
 
-### Step 8: Update requirements checklist
-RE-EVALUATE `specs/[feature]/checklists/requirements.md`:
-- TOGGLE `[ ]` to `[x]` for newly satisfied criteria
-- TOGGLE `[x]` to `[ ]` for regressed criteria
+### Update checklist
+Re-evaluate `specs/[feature]/checklists/requirements.md`.
 
-### Step 9: No auto-commit (batched at implementation)
-```bash
-NOTE: "Spec artifacts are NOT committed individually during design phases.
-      All spec/plan/task artifacts will be committed as a batch when
-      implementation begins (Phase 4). This lets you move freely between
-      Specify, Clarify, Plan, and Tasks without creating git checkpoints."
-```
+### Note on commits
+Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
 
 ## Completion
-
-Report:
-- Number of questions asked and answered
+- Questions asked/answered
 - Sections updated in spec
-- Checklist status (before → after)
-- Suggest next command
-- **Commit**: `$COMMIT_HASH` (auto — `git log` for details)
+- Propose: `spec-kit-plan`
 
-## Next Skills
-
-- Propose to the user: Run `spec-kit-specify` again to make additional changes
-- Propose to the user: Run `spec-kit-plan` when all critical ambiguities are resolved
-
-**Re-running this skill**:
-1. LOAD current spec
-2. IDENTIFY which clarifications were previously resolved
-3. ASK only about remaining ambiguities
-4. DO NOT re-ask already-answered questions
-5. UPDATE clarify.md with new session
+## Common Pitfalls
+1. **Asking unnecessary questions**: If the answer is obvious from context, don't ask. The user's time is valuable.
+2. **More than 5 questions**: Keep sessions focused. Unanswered questions can be addressed in a second session.
+3. **Not updating the spec**: After each answer, immediately update spec.md. The clarify.md is a log; spec.md is the source of truth.
 
 ## Prerequisite Enforcement
-
-**BLOCKED** if:
-- `spec-kit-constitution` has not been run
-- `spec-kit-specify` has not been run
-
-## Re-run Enforcement
-
-After re-running `spec-kit-specify`:
-1. RE-SCAN for new ambiguities introduced by spec changes
-2. FLAG any previously-clarified items that are now contradictory
+**BLOCKED** if: spec.md does not exist (run `spec-kit-specify` first).

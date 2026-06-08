@@ -42,6 +42,18 @@ for tmpl in "$PROJECT_DIR"/src/templates/*-template.md; do
   fi
 done
 
+# Copy references to spec-kit/references/
+REFERENCES_DIR="$SKILLS_DIR/spec-kit/references"
+mkdir -p "$REFERENCES_DIR"
+
+for ref in "$PROJECT_DIR"/src/references/*.md; do
+  if [ -f "$ref" ]; then
+    ref_name=$(basename "$ref")
+    echo "  Installing reference: $ref_name"
+    cp "$ref" "$REFERENCES_DIR/$ref_name"
+  fi
+done
+
 echo ""
 echo "Done. Installed to $SKILLS_DIR"
 echo ""

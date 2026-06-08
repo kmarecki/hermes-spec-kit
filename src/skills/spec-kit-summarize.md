@@ -1,6 +1,6 @@
 ---
 name: spec-kit-summarize
-description: Generate implementation summary and compare actual code with spec and plan. Phase 6 - run after testing complete.
+description: Use when closing a feature — generates implementation summary or lightweight close document with spec health score. Phase 6 - mandatory before feature complete.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -13,15 +13,16 @@ metadata:
 
 # spec-kit-summarize
 
-**Phase**: 6 (Summary / Close)
+**Phase**: 6 (Summary / Close — Mandatory)
 
-**Purpose**: When implementation is complete and no more testing is needed, read all artifacts, compare actual code changes against the spec and plan, and produce either a full `implementation-summary.md` or a lightweight `close.md`. All gaps between what was planned vs what was built are either **resolved** (intentional deviation, documented) or **tracked** (deferred for later bugs in bugs.md). **Intentional deviations update spec.md and plan.md automatically** — no separate refresh phase needed.
+**Purpose**: When implementation is complete and testing is done, produce either a full `implementation-summary.md` or a lightweight `close.md`. Computes spec health score (0-100%), patches spec.md/plan.md for intentional deviations. **Mandatory** before a feature can be marked complete.
+
+**When NOT to use**: For mid-stream alignment — use `spec-kit-refresh` instead.
 
 **When to run**:
-- **After bugfix loop completes** (all bugs verified) — runs automatically as mandatory close
-- User says: "Summarize [feature]" — full gap analysis with implementation-summary.md
-- User says: "Close [feature]" — lightweight close with close.md (for simple features)
-- Or at any point to get a snapshot of current implementation state
+- **After bugfix loop completes** (all bugs verified) — auto-triggered as mandatory close
+- User says: "Summarize [feature]" — full gap analysis
+- User says: "Close [feature]" — lightweight close
 
 **Prerequisites**: `spec-kit-implement` must have been run (tasks.md exists)
 **Artifacts**:
@@ -50,33 +51,18 @@ IF auto-triggered after bugfix loop (all bugs verified):
   USE the mode they selected
 ```
 
-### Step 1: Validate and load all artifacts
+### Load artifacts and detect TDD mode
 ```
-LOAD specs/[feature]/spec.md
-LOAD specs/[feature]/plan.md
-LOAD specs/[feature]/tasks.md
-LOAD specs/[feature]/data-model.md          (IF EXISTS)
-LOAD specs/[feature]/contracts/             (IF EXISTS)
-LOAD specs/[feature]/research.md            (IF EXISTS)
-LOAD specs/[feature]/quickstart.md          (IF EXISTS)
-LOAD specs/[feature]/clarify.md             (IF EXISTS)
-LOAD specs/[feature]/bugs.md               (IF EXISTS)
-LOAD specs/constitution.md                  (IF EXISTS)
-```
+LOAD specs/[feature]/spec.md, plan.md, tasks.md
+LOAD data-model.md, contracts/, research.md, quickstart.md, clarify.md (IF EXISTS)
+LOAD bugs.md (IF EXISTS), constitution.md (IF EXISTS)
 
-### Step 1.5: Detect TDD mode
-```
 SCAN tasks.md for `> **TDD**: Bypassed by user request`
-  IF found:
-    SET tdd_bypassed = true
-    NOTE: "TDD was bypassed by user request during task generation."
-    ADD to summary: "TDD was explicitly bypassed by the user — no test tasks were generated."
-  IF not found:
-    SET tdd_bypassed = false
-    NOTE: "TDD mode was active — tests were generated and executed."
+  IF found: SET tdd_bypassed = true
+  IF not found: SET tdd_bypassed = false
 ```
 
-### Step 2: Analyze tasks.md status
+### Analyze tasks.md completion
 ```
 SCAN all tasks:
   COUNT total tasks
@@ -89,7 +75,7 @@ IF all tasks are complete:
   WRITE updated tasks.md
 ```
 
-### Step 3: Analyze bugs.md status
+### Analyze bugs.md status
 ```
 IF bugs.md EXISTS:
   SCAN all bugs:
@@ -103,7 +89,7 @@ IF bugs.md EXISTS:
     WRITE updated bugs.md
 ```
 
-### Step 4: Compare code against spec and plan (git diff analysis)
+### Compare code against spec and plan (git diff)
 *Skip in lightweight close mode*
 ```
 RUN: git diff main --name-status
@@ -122,7 +108,7 @@ IDENTIFY:
   - Plan sections (data-model entities, contracts) with no corresponding code → flag as "gap — deferred"
 ```
 
-### Step 5: Build gap analysis
+### Build gap analysis
 *Skip in lightweight close mode*
 ```
 FOR EACH requirement/story/entity/contract in spec.md and plan.md:
@@ -253,23 +239,10 @@ REPORT:
   - New bugs created (if any gap was ❌ Not Done)
 ```
 
-### Step 12: Commit summary artifacts (auto)
-```bash
-IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
-  COMMIT_MSG="spec(phase-6): [feature] implementation summary (health: N%)"
-  git add specs/[feature]/implementation-summary.md  \
-         specs/[feature]/close.md                    \
-         specs/[feature]/tasks.md                     \
-         specs/[feature]/bugs.md                      \
-         specs/[feature]/spec.md                      \
-         specs/[feature]/plan.md                      \
-         specs/[feature]/data-model.md
-  git commit -m "$COMMIT_MSG" --no-verify
-  COMMIT_HASH=$(git rev-parse HEAD)
-  NOTE: "Summary committed as $COMMIT_HASH"
-ELSE
-  NOTE: "Not a git repository — skipping automatic commit"
-```
+### Commit
+Follow `spec-kit/references/auto-commit.md`:
+- Scope: `implementation-summary.md` or `close.md`, plus patched `spec.md`, `plan.md`, `data-model.md`
+- Message: `"spec(phase-6): [feature] summary (health: N%)"`
 
 ## Gap Analysis Detail
 

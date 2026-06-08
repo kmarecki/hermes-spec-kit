@@ -55,68 +55,22 @@ Explore [feature] ────┼── Variant B (branch: explore/NNN-feature-b
 
 ## Phase Reference
 
-### Phase 0: Constitution
-**Skill**: `spec-kit-constitution`
-**When**: User says "create constitution" or "update constitution"
+See `spec-kit-workflow` for the complete phase table and routing. Quick reference:
 
-Establish project-level principles and constraints. Create once per project.
-
-### Phase 1: Specification
-**Skill**: `spec-kit-specify`
-**When**: User says "create a spec for [description]" or "specify [feature]"
-
-Define the WHAT and WHY — no implementation details.
-
-### Phase 1.5: Clarify (Optional)
-**Skill**: `spec-kit-clarify`
-**When**: User says "clarify [feature]" or "resolve ambiguities in [feature]"
-
-Resolve spec ambiguities. Run as many times as needed.
-
-### Phase 2: Plan
-**Skill**: `spec-kit-plan`
-**When**: User says "plan [feature]" or "create plan for [feature]"
-
-Define the HOW — research, data models, contracts, plan document.
-
-### Phase 3: Tasks
-**Skill**: `spec-kit-tasks`
-**When**: User says "generate tasks for [feature]" or "break down [feature]"
-
-Executable roadmap. Tests written before implementation (TDD approach).
-
-### Phase 3.5: Analyze (Optional)
-**Skill**: `spec-kit-analyze`
-**When**: User says "analyze [feature]"
-
-Non-destructive consistency and quality check.
-
-### Phase 4: Implement
-**Skill**: `spec-kit-implement`
-**When**: User says "implement [feature]" or "start implementation"
-
-Execute tasks by **phase-level TDD**: all tests for a phase are written and verified RED first, then all code is written and verified GREEN, then the phase is committed. No per-task commits or regression runs. After all phases, full suite runs and any regressions are captured in a single umbrella bugfix task. TDD can be bypassed at user request during task generation.
-
-### Phase 5: Test
-**Skill**: `spec-kit-test`
-**When**: User says "test [feature]" after implementation
-
-Manual bug tracking. Creates `bugs.md` in the feature directory. User discovers and logs bugs.
-
-### Phase 6: Summarize / Close (Mandatory)
-**Skill**: `spec-kit-summarize`
-**When**: 
-- **Summarize**: User says "summarize [feature]" or "implementation summary" — full gap analysis
-- **Close**: User says "close [feature]" — lightweight close document
-- **Auto-trigger**: After bugfix loop completes (all bugs verified) — chains automatically
-
-Post-implementation review and documentation of deviations. **Computes spec health score** (0-100%) and patches spec.md/plan.md to reconcile intentional deviations with user approval.
-
-### Refresh (Standalone)
-**Skill**: `spec-kit-refresh`
-**When**: User says "refresh [feature]" or "sync spec for [feature]"
-
-Lightweight artifact alignment for manual code changes or mid-stream reconciliation. Per-item user approval for each discrepancy. No close document generated.
+| Phase | Skill | When |
+|-------|-------|------|
+| 0 — Constitution | `spec-kit-constitution` | "create constitution" |
+| 1 — Specify | `spec-kit-specify` | "create a spec for [...]" |
+| 1.5 — Clarify (opt) | `spec-kit-clarify` | "clarify [feature]" |
+| 2 — Plan | `spec-kit-plan` | "plan [feature]" |
+| 3 — Tasks | `spec-kit-tasks` | "generate tasks for [feature]" |
+| 3.5 — Analyze (opt) | Inline in workflow | "analyze [feature]" |
+| 4 — Implement | `spec-kit-implement` | "implement [feature]" |
+| 5 — Test | `spec-kit-test` | "test [feature]" |
+| 6 — Summarize/Close | `spec-kit-summarize` | "summarize [feature]" / "close [feature]" |
+| Explore | `spec-kit-explore` | "explore [feature] with [variants]" |
+| Compare | `spec-kit-compare` | "compare [feature]" |
+| Refresh | `spec-kit-refresh` | "refresh [feature]" |
 
 ### Explore Mode (Parallel)
 **Skill**: `spec-kit-explore`
@@ -240,34 +194,13 @@ Phase transitions are **manual** but gated by artifact presence. Each phase skil
 
 ## Phase Guardrails (Permission Matrix)
 
-You MUST determine the current phase before any tool call. Each phase has strict limits on what files and tools are allowed:
+See `spec-kit-workflow` for the full permission matrix (12 rows, one per phase). Quick summary:
 
-| Phase | Allowed to Write | Code-Editing Tools (write_file/patch/terminal for build) |
-|-------|-----------------|----------------------------------------------------------|
-| **Constitution** | `constitution.md` only | **BLOCKED** |
-| **Specify** | `spec.md`, `checklists/requirements.md` | **BLOCKED** |
-| **Clarify** | `clarify.md`, `spec.md` (amend ambiguities) | **BLOCKED** |
-| **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*.md`, `quickstart.md` | **BLOCKED** |
-| **Tasks** | `tasks.md` only | **BLOCKED** |
-| **Analyze** | None (read-only report) | **BLOCKED** |
-| **Implement** | source code files, `tasks.md` (completions → per-phase), `bugs.md` (mark resolved in bugfix loop), `tasks.md` (umbrella BF-REGRESSION task) | **ALLOWED** | `tasks.md` with pending tasks |
-| **Test** | `bugs.md` only | **BLOCKED** |
-| **Explore** | `specs/[feature]/variants/*/` (variant artifacts) | ALLOWED (via delegate_task subagents) |
-| **Compare** | `comparison.md` only | **BLOCKED** |
-| **Summarize / Close** | `implementation-summary.md`, `close.md`, `spec.md` (patch deviations), `plan.md` (patch deviations), `tasks.md` (finalize), `bugs.md` (finalize) | **BLOCKED** |
-| **Refresh** | `spec.md`, `plan.md`, `data-model.md`, `contracts/*.md` (per-item user approval) | **BLOCKED** |
-
-**Bugfix loop**: reuses Plan, Tasks, and Implement — same permissions, just with `bugs.md` as additional input context.
-**Summarize/Close exception**: May patch `spec.md` and `plan.md` to reconcile intentional deviations (with user approval per change).
-**Refresh exception**: May patch spec artifacts with per-item user approval — code-editing tools remain BLOCKED.
-
-### Enforcement Rules
-- `write_file` / `patch` / `terminal` for compilation/builds → **ONLY** during Implement (including bugfix loop)
-- Writing to spec artifacts → only during their respective phase
-- **`workflow.md` (transition log)** — All phases may append to `workflow.md` on completion. This is the only file writable across all phases.
-- Reading files, searching, loading skills → allowed in all phases
-- If you cannot determine the phase → ASK the user
-- If the user asks for code changes outside Implement → politely refuse and suggest the correct phase first
+- **Code-editing tools** (write_file/patch/terminal for builds): ALLOWED only during **Implement** (Phase 4) and bugfix loop implementations
+- **Spec artifact writes**: Only during their respective phase
+- **`workflow.md`**: All phases may append to the transition log
+- **Summarize/Close exception**: May patch `spec.md` and `plan.md` to reconcile intentional deviations
+- **Refresh exception**: May patch spec artifacts with per-item user approval
 
 ### Pre-Work Self-Check
 Before ANY tool call:
@@ -392,21 +325,11 @@ Git links phase progress to version history. Every phase transition automaticall
 
 ### Automatic Commit on Phase Completion
 
-Every phase skill runs `git commit` as its final execution step. The commit captures all spec artifacts created during that phase:
-
-```bash
-# Automatically run by the phase skill on completion:
-git add specs/[feature]/<artifacts>
-git commit -m "spec(phase-N): [feature] description" --no-verify
-
-# If not in a git repo, the step is silently skipped
-```
-
-The commit hash is captured and written to `workflow.md` for traceability. No user approval needed — the commit is part of the phase transition.
+See `spec-kit/references/auto-commit.md` for the standard commit pattern. Each skill simply references the auto-commit pattern with its scope and message.
 
 ### Per-Phase Commit Convention
 
-Design phases (0-3) do NOT auto-commit individually. All spec artifacts are committed as a single batch when Phase 4 (Implement) begins. This lets the user move freely between Specify, Clarify, Plan, and Tasks without creating git checkpoints at every step.
+Design phases (0-3) do NOT auto-commit individually. All spec artifacts are committed as a single batch when Phase 4 (Implement) begins.
 
 | Phase | Scope | Commit Message | Automatic? |
 |-------|-------|----------------|------------|

@@ -1,6 +1,6 @@
 ---
 name: spec-kit-implement
-description: Execute implementation following the task plan. Phase 4 - runs tasks by phase with phase-level TDD (RED all tests, GREEN all code, then commit).
+description: Use when executing planned tasks after spec, plan, and tasks are finalized. Phase 4 - runs phase-level TDD (RED all tests, GREEN all code, then commit).
 version: 1.2.0
 author: Hermes Agent
 license: MIT
@@ -8,14 +8,16 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, implementation, tdd, coding]
-    related_skills: [spec-kit-tasks, spec-kit-test, test-driven-development, writing-plans]
+    related_skills: [spec-kit-tasks, spec-kit-test, writing-plans]
 ---
 
 # spec-kit-implement
 
 **Phase**: 4
 
-**Purpose**: Execute implementation following `specs/[feature]/tasks.md`. Tasks run in **phase-level TDD**: all tests for a phase are written and verified RED first, then all implementation code is written and verified GREEN, then the phase is committed. No per-task commits or per-task regression runs.
+**Purpose**: Execute implementation following `specs/[feature]/tasks.md`. Phase-level TDD: all tests for a phase written RED first, then all code written GREEN, then phase committed.
+
+**When NOT to use**: For spec-only changes (design iteration) — use `spec-kit-specify` or `spec-kit-plan`.
 
 **Bugfix mode**: When tasks.md contains bugfix tasks (prefixed with BF-###), executes them alongside regular tasks.
 
@@ -239,10 +241,11 @@ IF any tests fail:
       d. DO NOT run full suite again yet
     
     After all regressions fixed:
-      RUN full suite again: terminal("pytest tests/ -q --tb=short")
+      RUN full suite again
       IF all pass:
-        git add -A
-        git commit -m "fix: [feature] BF-REGRESSION-001 - fix regressions" --no-verify
+        Follow `spec-kit/references/auto-commit.md`:
+        - Scope: source code changes
+        - Message: `"fix: [feature] BF-REGRESSION-001 - fix regressions"`
         MARK BF-REGRESSION-001 as [X] in tasks.md
         REPORT: "All regressions fixed. All N tests pass."
       IF any still fail:

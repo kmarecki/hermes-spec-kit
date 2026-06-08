@@ -1,6 +1,6 @@
 ---
 name: spec-kit-workflow
-description: Master orchestrator for the spec-driven development workflow. Routes requests to appropriate phase skills and maintains workflow state.
+description: Use when orchestrating the spec-driven development workflow — routes user requests to the appropriate phase skill and maintains workflow state.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
