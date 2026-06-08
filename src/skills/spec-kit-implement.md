@@ -180,6 +180,44 @@ After each task:
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
+### Step 9: Final verification — automated test run
+
+After all tasks are complete, run the full automated test suite one final time to catch any inter-task regressions that individual per-task runs might have missed:
+
+```bash
+DETECT test framework:
+  IF pytest is available:        terminal("pytest tests/ -q --tb=short")
+  ELSE IF go test is available:  terminal("go test ./...")
+  ELSE IF npm test is available: terminal("npm test")
+  ELSE:                          NOTE "No automated test framework detected — skipping."
+
+IF tests run successfully:
+  REPORT: "All N tests pass. Feature implementation verified."
+  NOTE: "Ready for Phase 5 (manual testing) or Phase 6 (close/summarize)."
+
+IF tests fail:
+  REPORT failures:
+    | Test | File | Failure |
+    |------|------|---------|
+  NOTE: "N test failures found after implementation. These must be resolved."
+  REVIEW each failure:
+    - IF the failure is from a test task written during this phase:
+      The implementation is incomplete. RETURN to fix the failing code.
+    - IF the failure is from a pre-existing test unrelated to this feature:
+      The change introduced a regression. RETURN to fix.
+    - IF the failure is from a test that the user will verify manually:
+      LOG as bug in bugs.md (Status: open, Severity: determined by failure)
+  
+  REPEAT Step 9 after fixes until all tests pass.
+```
+
+Also run the project build if applicable:
+```bash
+IF npm run build / tsc --noEmit / go build / cargo build is available:
+  terminal("[build command]")
+  IF build fails: RETURN to fix compilation errors, re-run tests, re-run build
+```
+
 ## Implementation Rules (TDD Enforcement)
 
 - **Iron Law**: NO production code without a failing test first. If you wrote code before the test, delete it and start over.
@@ -227,6 +265,7 @@ Report:
 - [ ] Every test was verified RED (watched it fail) before implementation
 - [ ] Every implementation was verified GREEN (watched it pass)
 - [ ] Full test suite passes after each task — no regressions
+- [ ] Final automated test suite passes (Step 9) — all tests green
 - [ ] Build passes (if applicable)
 - [ ] Implementation validated against spec and plan
 - [ ] Implementation complete
