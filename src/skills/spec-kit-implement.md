@@ -19,20 +19,13 @@ metadata:
 **Bugfix mode**: When tasks.md contains bugfix tasks (prefixed with BF-###), executes them alongside regular tasks.
 
 **Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` + `spec-kit-tasks` must be run first
-**Bugfix mode**: When bugs.md exists, load it for bugfix task context
+**Bugfix mode**: When bugs.md exists, load it for bugfix task context. Plan Ref validation is handled by the workflow orchestrator before routing to this skill — if you reached Implement, all bugs have valid Plan Refs.
 
 **Artifacts**: Updated `specs/[feature]/tasks.md` (with completion markers)
 
-## 🔒 BUGFIX MODE GATE — READ BEFORE PROCEEDING
+## Bugfix Mode
 
-This skill has a **procedural lock** when bugs.md exists. It prevents implementation without proper bugfix planning.
-
-**Rule**: If `specs/[feature]/bugs.md` has any bug with Status: open, this skill will:
-1. Check every open bug for a **Plan Ref** entry
-2. **REFUSE to run** if any open bug lacks a Plan Ref
-3. Guide you back to run "bugfix [feature]" → spec-kit-plan first
-
-**Why this exists**: Skipping plan→tasks before implementation causes workflow corruption. A fix without a plan section can conflict with spec requirements. Plan Refs provide traceability.
+Bugfix tasks (prefixed with BF-###) are executed alongside regular tasks. Plan Ref validation and the bugfix routing decision (clarify vs direct plan) happen in the workflow orchestrator — this skill assumes all routing prerequisites are met.
 
 ## Execution
 
@@ -48,7 +41,7 @@ IF specs/[feature]/spec.md NOT EXISTS:
 
 ### Step 2: Check preconditions
 ```bash
-# 2a. Checklist check (normal mode)
+# Checklist check — advisory only
 SCAN specs/[feature]/checklists/ for checklist files
 FOR EACH checklist:
   COUNT total items: lines matching - [ ] or - [X]
@@ -56,25 +49,8 @@ FOR EACH checklist:
   COUNT incomplete: lines matching - [ ]
 IF any checklist has incomplete items:
   DISPLAY status table
-  ASK: "Some checklists are incomplete. Proceed with implementation? (yes/no)"
-  WAIT for user response
-  IF "no": HALT
-  IF "yes": CONTINUE
-
-# 2b. Bug Plan Ref check (bugfix mode only)
-IF `specs/[feature]/bugs.md` EXISTS:
-  LOAD bugs.md
-  SCAN each bug entry for a Plan Ref line
-  IDENTIFY bugs with Status: open or in-progress that have no Plan Ref
-  IF any bug lacks a Plan Ref:
-    REPORT: "The following bugs are missing a Plan Ref (no plan section addresses them):"
-    LIST: [BUG-IDs]
-    ASK: "Continue without Plan Ref for these bugs? (yes/no)"
-    WAIT for user response
-    IF "no":
-      HINT: "Run 'bugfix [feature]' again to route through spec-kit-plan first"
-      HALT
-    IF "yes": CONTINUE with warning that unplanned fixes may drift from spec
+  NOTE: "Checklists are advisory — they do not block implementation."
+  (No confirmation needed; user may proceed directly)
 ```
 
 ### Step 3: Load implementation context
@@ -178,7 +154,9 @@ Report:
 ## Prerequisite Enforcement
 
 **BLOCKED** if:
-- `spec-kit-constitution` has not been run
 - `spec-kit-specify` has not been run
 - `spec-kit-plan` has not been run
 - `spec-kit-tasks` has not been run
+
+**WARN** if:
+- `spec-kit-constitution` has not been run — proceeding without constitutional gates

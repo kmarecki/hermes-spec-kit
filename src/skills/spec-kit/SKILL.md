@@ -85,11 +85,10 @@ Define the HOW — research, data models, contracts, plan document.
 
 Executable roadmap. Tests written before implementation (TDD approach).
 
-### Phase 3.5: Analyze (Optional)
-**Skill**: `spec-kit-analyze`
+### Phase 3.5: Analyze (Optional — Inline)
 **When**: User says "analyze [feature]"
 
-Non-destructive consistency and quality check.
+Non-destructive consistency and quality check. No separate skill — run directly as an inline step (see `spec-kit-workflow`).
 
 ### Phase 4: Implement
 **Skill**: `spec-kit-implement`

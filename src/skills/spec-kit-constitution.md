@@ -21,7 +21,6 @@ metadata:
 
 **Artifacts**:
 - `specs/constitution.md` (primary artifact)
-- `.specify/memory/constitution.version` (version tracking)
 
 ## Execution
 
