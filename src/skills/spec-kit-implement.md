@@ -266,7 +266,6 @@ IF npm run build / tsc --noEmit / go build / cargo build is available:
 - **Regression umbrella**: All post-implementation regressions are captured in one umbrella bugfix task (BF-REGRESSION-001), not individual bugs.
 - **TDD bypass**: If the user explicitly bypassed TDD, skip all automated test steps. The summary will note the bypass.
 - **Build after GREEN**: TypeScript projects MUST build — Vitest/Jest swallow type errors.
-- If code was written test-last and needs redoing, see the `test-driven-development` skill for the TDD Recovery workflow (reset to spec commit).
 
 ### Iron Law: Why Tests Must Come First
 
