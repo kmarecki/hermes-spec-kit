@@ -15,11 +15,37 @@ metadata:
 
 **Phase**: 5 (Testing)
 
-**Purpose**: Document discovered bugs in `specs/[feature]/bugs.md` and orchestrate the bugfix loop. Testing is manual — the user discovers and reports bugs. This skill creates the bug tracking document and routes bugs back through Clarify → Plan → Tasks → Analyze → Implement as needed.
+**Purpose**: Run automated tests, document discovered bugs in `specs/[feature]/bugs.md`, and orchestrate the bugfix loop. Automated tests run first to catch regressions; the user then discovers and reports additional bugs. This skill creates the bug tracking document and routes bugs back through Clarify → Plan → Tasks → Analyze → Implement as needed.
 
 ## 🔒 SAFETY BLOCK: Bugs Must Be Logged Before Fixing
 
 This is a **procedural lock**, not a suggestion. Violating it causes workflow corruption.
+
+## Automated Test Run
+
+Before user testing, run the automated test suite to catch regressions first:
+
+```bash
+DETECT test framework:
+  IF pytest is available:        terminal("pytest tests/ -q --tb=short")
+  ELSE IF go test is available:  terminal("go test ./...")
+  ELSE IF npm test is available: terminal("npm test")
+  ELSE:                          NOTE "No automated test framework detected — relying on manual testing."
+
+IF tests run successfully:
+  REPORT passing test count
+  NOTE: "All automated tests pass. Feature is ready for user verification."
+  PROCEED to manual bug tracking
+
+IF tests fail:
+  REPORT failures:
+    | Test | File | Failure |
+    |------|------|---------|
+  FOR EACH unexpected failure (not a pre-existing known issue):
+    LOG as new bug in bugs.md (Status: open, Severity: determined by failure type)
+  NOTE: "N automated test failures logged as bugs."
+  PROCEED to manual bug tracking (user may discover additional bugs)
+```
 
 ### The Rule
 1. ALWAYS write the bug to `bugs.md` with Status: open

@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, implementation, tdd, coding]
-    related_skills: [spec-kit-tasks, spec-kit-test, writing-plans]
+    related_skills: [spec-kit-tasks, spec-kit-test, test-driven-development, writing-plans]
 ---
 
 # spec-kit-implement
@@ -28,6 +28,18 @@ metadata:
 Bugfix tasks (prefixed with BF-###) are executed alongside regular tasks. Plan Ref validation and the bugfix routing decision (clarify vs direct plan) happen in the workflow orchestrator — this skill assumes all routing prerequisites are met.
 
 ## Execution
+
+### Step 0: Load TDD skill
+```
+LOAD `test-driven-development` skill — RED-GREEN-REFACTOR cycle rules:
+  - Iron Law: NO production code without a failing test first
+  - RED: Write failing test, run to verify it fails for the right reason
+  - GREEN: Write minimal code to pass, run to verify pass
+  - REFACTOR: Clean up while keeping tests green
+  - Full suite: Run all tests after each GREEN
+  - Build: Run build (npm run build / tsc --noEmit / go build) after each GREEN for compiled projects
+  (See the skill for full Iron Law enforcement and common rationalizations guide.)
+```
 
 ### Step 1: Validate prerequisites
 ```
@@ -70,20 +82,89 @@ Extract:
 - Task details: ID, description, file paths, parallel markers [P]
 - Execution flow: Order and dependency requirements
 
-### Step 5: Execute implementation
-Execute tasks following rules:
-- **Phase-by-phase execution**: Complete each phase before moving to next
-- **Respect dependencies**: Sequential tasks in order, parallel [P] can run together
-- **TDD approach**: Execute test tasks before their corresponding implementation tasks
-- **File-based coordination**: Tasks affecting same files must run sequentially
-- **Validation checkpoints**: Verify each phase before proceeding
+### Step 5: Execute tasks via RED-GREEN-REFACTOR
 
-### Step 6: For each task:
-a. READ task description and file path
-b. IF test task: write failing test first
-c. IF implementation task: implement to make test pass
-d. VERIFY task completion
+For each task, follow the strict TDD cycle. Every result must be **verified by running tests**, not assumed.
+
+#### Cycle: Test task → RED (verify failure)
+For each task marked [TEST] (or any test-writing task):
+```
+a. WRITE one minimal test for the next behavior
+   - One behavior per test
+   - Clear descriptive name (if name has "and", split it)
+   - Real code, not mocks (unless truly unavoidable)
+   - Test behavior, not implementation
+
+b. RUN the specific test to verify RED:
+   terminal("pytest tests/test_file.py::test_name -v")
+   
+   CONFIRM:
+   - Test fails (not errors from typos)
+   - Failure message is expected and descriptive
+   - Test fails because the feature is missing
+   
+   Test passes immediately? You tested existing behavior. Fix the test.
+   Test errors? Fix the error, re-run until it fails correctly.
+   
+   ⚠️ SKIP THIS STEP? The test proves NOTHING. You never saw it catch a failure.
+```
+
+#### Cycle: Implementation task → GREEN (verify pass)
+```
+a. WRITE the simplest code to pass the test
+   - Minimal — nothing more than needed
+   - Cheating is OK in GREEN (hardcode, copy-paste, duplicate)
+   - Don't add features, refactor, or "improve" beyond the test
+
+b. RUN the specific test to verify GREEN:
+   terminal("pytest tests/test_file.py::test_name -v")
+   
+   CONFIRM:
+   - Test passes
+   - Output pristine (no errors, warnings)
+
+c. RUN the full test suite to check for regressions:
+   terminal("pytest tests/ -q")
+   
+   CONFIRM:
+   - All tests still pass
+   - No regressions introduced
+   
+   Other tests fail? Fix regressions now.
+
+d. RUN the project build (if applicable):
+   terminal("npm run build") OR terminal("tsc --noEmit") OR terminal("go build")
+   
+   NOTE: Skip this if project has no build step. TypeScript projects MUST build —
+   Vitest/Jest swallow type errors that crash at runtime.
+   
+   Build fails? Fix compilation errors, re-run tests, re-run build.
+
 e. UPDATE tasks.md with [X] completion marker
+
+f. COMMIT the task:
+   git add -A
+   git commit -m "feat: [feature] T### - description" --no-verify
+   (Or "fix: [feature] BF-### - description" for bugfix tasks)
+```
+
+#### Cycle: REFACTOR (optional, after GREEN)
+```
+After GREEN is verified and committed:
+  - Remove duplication
+  - Improve names
+  - Extract helpers
+  - Simplify expressions
+  
+  Keep tests green throughout. Run full suite after each change.
+  If tests fail during refactor → undo immediately. Take smaller steps.
+```
+
+#### Task execution order rules
+- **Test tasks before implementation tasks** — always. Every T### has a T###-test predecessor.
+- Phase-by-phase: Complete each phase before moving to next
+- Sequential tasks in order; parallel [P] can run together if they affect different files
+- File-based coordination: Tasks affecting same files must run sequentially
 
 ### Step 7: Progress reporting
 After each task:
@@ -99,14 +180,17 @@ After each task:
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
-## Implementation Rules
+## Implementation Rules (TDD Enforcement)
 
-- NEVER skip test tasks
-- NEVER implement without understanding the requirement
-- ALWAYS verify file paths exist or create them
-- ALWAYS run tests after implementation
-- STOP on test failures and report
-- UPDATE tasks.md immediately after completion
+- **Iron Law**: NO production code without a failing test first. If you wrote code before the test, delete it and start over.
+- **RED verification is mandatory**: Every test must be run and confirmed failing before implementation begins. Without RED verification, the test proves nothing.
+- **GREEN verification is mandatory**: After implementation, run the specific test AND the full suite.
+- **Test before implement**: Test tasks always precede their corresponding implementation tasks.
+- **One behavior per test**: If a test name has "and", split it into two tests.
+- **Real code over mocks**: Use real implementations unless truly unavoidable (external APIs, hardware).
+- **Build after GREEN**: TypeScript projects MUST build — Vitest/Jest swallow type errors.
+- **Regressions block**: If the full suite fails after GREEN, fix regressions before moving to the next task.
+- **Commit per task**: Each RED-GREEN cycle produces one commit.
 - In bugfix mode: Update bugs.md Status after fixing a bug (set to "resolved")
 
 ## Phase Guardrail — STRICT
@@ -140,8 +224,11 @@ Report:
 ## Done When
 
 - [ ] All tasks in tasks.md completed and marked [X]
+- [ ] Every test was verified RED (watched it fail) before implementation
+- [ ] Every implementation was verified GREEN (watched it pass)
+- [ ] Full test suite passes after each task — no regressions
+- [ ] Build passes (if applicable)
 - [ ] Implementation validated against spec and plan
-- [ ] All tests passing
 - [ ] Implementation complete
 - [ ] In bugfix mode: All bugfix tasks completed and verified
 

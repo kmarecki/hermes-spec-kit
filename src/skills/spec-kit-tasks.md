@@ -8,14 +8,14 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, tasks, breakdown, tdd]
-    related_skills: [spec-kit-plan, spec-kit-implement]
+    related_skills: [spec-kit-plan, spec-kit-implement, test-driven-development]
 ---
 
 # spec-kit-tasks
 
 **Phase**: 3
 
-**Purpose**: Create or update `specs/[feature]/tasks.md` — an executable task list derived from the plan.
+**Purpose**: Create or update `specs/[feature]/tasks.md` — an executable task list derived from the plan, with **test-first ordering** enforced.
 **Bugfix mode**: When run from the bugfix loop, generates bugfix tasks from bugs.md + plan.md.
 
 **Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` must be run first
@@ -41,9 +41,28 @@ IF specs/constitution.md NOT EXISTS:
 - LOAD `specs/[feature]/data-model.md` — for entities
 - LOAD `specs/[feature]/contracts/` — for API specs
 - LOAD `spec-kit/templates/tasks-template.md`
+- LOAD `test-driven-development` skill — for RED-GREEN-REFACTOR cycle rules and Iron Law enforcement
 - IF `specs/[feature]/bugs.md` EXISTS (bugfix mode):
   - LOAD bugs.md for bug context
   - LOAD plan.md bugfix sections for fix approaches
+
+### Step 2.5: Enforce test-first task ordering
+
+For every implementation task, generate a **companion test task** that must precede it:
+
+```
+T001 [US1] Write failing test for user login       — tests/test_auth.py
+T002 [US1] Implement user login to pass test       — src/auth.py (depends on T001)
+T003 [US1] Write failing test for token refresh    — tests/test_auth.py
+T004 [US1] Implement token refresh to pass test    — src/auth.py (depends on T003)
+```
+
+Rules:
+- Every T### (implementation) must have a T###-test predecessor
+- The test task writes the test FIRST, following TDD Iron Law (NO production code without a failing test first)
+- Mark test tasks with tag `[TEST]` for easy identification
+- The implement skill will enforce: test must fail RED before GREEN implementation
+- For bugfix tasks: BF-### must have a companion BF-###-test that reproduces the bug before fixing
 
 ### Step 3: Map requirements to tasks
 For each Functional Requirement (FR-###):
