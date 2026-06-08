@@ -184,17 +184,20 @@ Check for artifacts to determine current phase:
 - DEFAULT route: `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement` (automatic chain, no user choice)
 - NOTE: Analyze is optional — only run if user explicitly asks for it
 
-### Bugfix loop completion → Mandatory Close
+### Bugfix loop completion — user decides when to close
 ```
 AFTER all bugs in bugs.md have Status: verified:
   NOTE: Check for BF-REGRESSION tasks in tasks.md — these are auto-created
         regression fixes from Step 8 of implement. They are NOT user bugs
         and do NOT need manual verification.
   
-  AUTO-TRIGGER: spec-kit-summarize (Phase 6)
-    - ASK user: "Generate a full implementation summary or lightweight close?"
-    - Use the mode the user selects
-  This is MANDATORY — the feature cannot be marked done without Phase 6.
+  SUGGEST: "All N bugs verified. Ready to close? Say 'close [feature]' to
+            generate a close document, or 'add bug' to log more bugs."
+  
+  DO NOT auto-trigger close. The user decides when to advance.
+  
+  The close is MANDATORY before the feature can be marked complete —
+  enforced at the Block section below, not automatically here.
 ```
 
 ### Test phase
