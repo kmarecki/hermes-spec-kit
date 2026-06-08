@@ -15,7 +15,7 @@ metadata:
 
 **Phase**: 3
 
-**Purpose**: Create or update `specs/[feature]/tasks.md` — an executable task list derived from the plan, with **test-first ordering** enforced.
+**Purpose**: Create or update `specs/[feature]/tasks.md` — an executable task list derived from the plan. Tests are generated first, then implementation tasks. No mandatory 1:1 mapping between tests and tasks (a test can cover multiple tasks, a task can have multiple tests). User may explicitly bypass TDD.
 **Bugfix mode**: When run from the bugfix loop, generates bugfix tasks from bugs.md + plan.md.
 
 **Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` must be run first
@@ -46,23 +46,39 @@ IF specs/constitution.md NOT EXISTS:
   - LOAD bugs.md for bug context
   - LOAD plan.md bugfix sections for fix approaches
 
-### Step 2.5: Enforce test-first task ordering
+### Step 2.5: Determine TDD mode — ask user first
+```
+ASK user: "Generate test tasks for this feature? (TDD) Or skip tests and go straight to implementation?"
+  IF user says skip/no tests:
+    SET tdd_bypassed = true
+    NOTE: "TDD bypassed by user request — no test tasks will be generated."
+    PROCEED to Step 3 (implementation tasks only)
+  IF user says yes/TDD:
+    SET tdd_bypassed = false
+    PROCEED to generate test tasks
+```
 
-For every implementation task, generate a **companion test task** that must precede it:
+### Step 2.6: Generate test tasks first (TDD mode)
+
+For each phase, generate test tasks BEFORE implementation tasks. Tests are grouped by phase:
 
 ```
-T001 [US1] Write failing test for user login       — tests/test_auth.py
-T002 [US1] Implement user login to pass test       — src/auth.py (depends on T001)
-T003 [US1] Write failing test for token refresh    — tests/test_auth.py
-T004 [US1] Implement token refresh to pass test    — src/auth.py (depends on T003)
+Phase N: [Phase Name]
+  T001 [TEST] Write tests for user login           — tests/test_auth.py
+  T002 [TEST] Write tests for token refresh         — tests/test_auth.py
+  T003        Implement user login                   — src/auth.py
+  T004        Implement token refresh                — src/auth.py
 ```
 
 Rules:
-- Every T### (implementation) must have a T###-test predecessor
-- The test task writes the test FIRST, following TDD Iron Law (NO production code without a failing test first)
+- ALL test tasks for a phase come first, before any implementation tasks in that phase
+- Test IDs come before implementation IDs (T001-T00N = tests, T00N+1+ = implementation)
+- No mandatory 1:1 mapping:
+  - One test can cover multiple implementation tasks (e.g., an integration test)
+  - One task can have multiple tests (e.g., edge cases in separate test functions)
+  - Group tests by phase boundary, not by implementation granularity
 - Mark test tasks with tag `[TEST]` for easy identification
-- The implement skill will enforce: test must fail RED before GREEN implementation
-- For bugfix tasks: BF-### must have a companion BF-###-test that reproduces the bug before fixing
+- The implement skill runs ALL tests for a phase RED first, then ALL implementations GREEN, then commits the phase
 
 ### Step 3: Map requirements to tasks
 For each Functional Requirement (FR-###):
@@ -84,6 +100,10 @@ IF bugs.md EXISTS:
     - INCLUDE regression test task if needed
 
 ### Step 5: Generate task breakdown
+
+IF tdd_bypassed:
+  ADD header to tasks.md: `> **TDD**: Bypassed by user request — no test tasks generated.`
+
 Organize tasks by phase:
 
 **Phase 1: Setup (Shared Infrastructure)**

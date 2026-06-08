@@ -185,6 +185,10 @@ Check for artifacts to determine current phase:
 ### Bugfix loop completion → Mandatory Close
 ```
 AFTER all bugs in bugs.md have Status: verified:
+  NOTE: Check for BF-REGRESSION tasks in tasks.md — these are auto-created
+        regression fixes from Step 8 of implement. They are NOT user bugs
+        and do NOT need manual verification.
+  
   AUTO-TRIGGER: spec-kit-summarize (Phase 6)
     - ASK user: "Generate a full implementation summary or lightweight close?"
     - Use the mode the user selects

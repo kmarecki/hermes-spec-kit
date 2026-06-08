@@ -1,7 +1,7 @@
 ---
 name: spec-kit-implement
-description: Execute implementation following the task plan. Phase 4 - runs tasks in order with TDD approach.
-version: 1.0.0
+description: Execute implementation following the task plan. Phase 4 - runs tasks by phase with phase-level TDD (RED all tests, GREEN all code, then commit).
+version: 1.2.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -15,7 +15,8 @@ metadata:
 
 **Phase**: 4
 
-**Purpose**: Execute implementation following `specs/[feature]/tasks.md`. Runs tasks in order with TDD approach.
+**Purpose**: Execute implementation following `specs/[feature]/tasks.md`. Tasks run in **phase-level TDD**: all tests for a phase are written and verified RED first, then all implementation code is written and verified GREEN, then the phase is committed. No per-task commits or per-task regression runs.
+
 **Bugfix mode**: When tasks.md contains bugfix tasks (prefixed with BF-###), executes them alongside regular tasks.
 
 **Prerequisites**: `spec-kit-constitution` + `spec-kit-specify` + `spec-kit-plan` + `spec-kit-tasks` must be run first
@@ -29,16 +30,20 @@ Bugfix tasks (prefixed with BF-###) are executed alongside regular tasks. Plan R
 
 ## Execution
 
-### Step 0: Load TDD skill
+### Step 0: Load TDD skill and detect mode
 ```
-LOAD `test-driven-development` skill — RED-GREEN-REFACTOR cycle rules:
-  - Iron Law: NO production code without a failing test first
-  - RED: Write failing test, run to verify it fails for the right reason
-  - GREEN: Write minimal code to pass, run to verify pass
-  - REFACTOR: Clean up while keeping tests green
-  - Full suite: Run all tests after each GREEN
-  - Build: Run build (npm run build / tsc --noEmit / go build) after each GREEN for compiled projects
-  (See the skill for full Iron Law enforcement and common rationalizations guide.)
+LOAD `test-driven-development` skill — RED-GREEN-REFACTOR cycle rules
+  (Reference for Iron Law enforcement.)
+
+DETECT TDD mode from tasks.md:
+  SCAN tasks.md for `> **TDD**: Bypassed by user request`
+    IF found:
+      SET tdd_bypassed = true
+      NOTE: "TDD was bypassed by user request — proceeding with implementation-only tasks."
+      (No test tasks exist. Run implementation tasks directly without RED-GREEN cycle.)
+    IF not found:
+      SET tdd_bypassed = false
+      NOTE: "TDD mode active — phase-level RED-GREEN cycle will be enforced."
 ```
 
 ### Step 1: Validate prerequisites
@@ -62,7 +67,6 @@ FOR EACH checklist:
 IF any checklist has incomplete items:
   DISPLAY status table
   NOTE: "Checklists are advisory — they do not block implementation."
-  (No confirmation needed; user may proceed directly)
 ```
 
 ### Step 3: Load implementation context
@@ -79,160 +83,169 @@ IF any checklist has incomplete items:
 Extract:
 - Task phases: Setup, Foundational, Core, Integration, Polish
 - Task dependencies: Sequential vs parallel execution rules
-- Task details: ID, description, file paths, parallel markers [P]
-- Execution flow: Order and dependency requirements
+- Task details: ID, description, file paths, parallel markers [P], [TEST] tags
+- Execution flow: Phase order and dependency requirements
+- TDD bypass header (if present)
 
-### Step 5: Execute tasks via RED-GREEN-REFACTOR
+### Step 5: Phase-level TDD execution
 
-For each task, follow the strict TDD cycle. Every result must be **verified by running tests**, not assumed.
+For each phase (Setup → Foundational → Core → Integration → Polish):
+Execute the entire phase as a batch, not task-by-task:
 
-#### Cycle: Test task → RED (verify failure — expected, NOT a bug)
-For each task marked [TEST] (or any test-writing task):
 ```
-a. WRITE one minimal test for the next behavior
-   - One behavior per test
-   - Clear descriptive name (if name has "and", split it)
-   - Real code, not mocks (unless truly unavoidable)
-   - Test behavior, not implementation
-
-b. RUN the specific test to verify RED:
-   terminal("pytest tests/test_file.py::test_name -v")
-   
-   CONFIRM:
-   - Test fails (not errors from typos)
-   - Failure message is expected and descriptive
-   - Test fails because the feature is missing
-   
-   ⚠️ This RED failure is EXPECTED and PROVES the test is valid.
-   It is NOT a bug — it's the first step of TDD.
-   Do NOT log it in bugs.md.
-   
-   Test passes immediately? You tested existing behavior. Fix the test.
-   Test errors? Fix the error, re-run until it fails correctly.
-   
-   ⚠️ SKIP THIS STEP? The test proves NOTHING. You never saw it catch a failure.
-```
-
-#### Cycle: Implementation task → GREEN (verify pass)
-```
-a. WRITE the simplest code to pass the test
-   - Minimal — nothing more than needed
-   - Cheating is OK in GREEN (hardcode, copy-paste, duplicate)
-   - Don't add features, refactor, or "improve" beyond the test
-
-b. RUN the specific test to verify GREEN:
-   terminal("pytest tests/test_file.py::test_name -v")
-   
-   CONFIRM:
-   - Test passes
-   - Output pristine (no errors, warnings)
-
-c. RUN the full test suite to check for regressions:
-   terminal("pytest tests/ -q")
-   
-   CONFIRM:
-   - All tests still pass
-   - No regressions introduced
-   
-   Other tests fail? Fix regressions now.
-
-d. RUN the project build (if applicable):
-   terminal("npm run build") OR terminal("tsc --noEmit") OR terminal("go build")
-   
-   NOTE: Skip this if project has no build step. TypeScript projects MUST build —
-   Vitest/Jest swallow type errors that crash at runtime.
-   
-   Build fails? Fix compilation errors, re-run tests, re-run build.
-
-e. UPDATE tasks.md with [X] completion marker
-
-f. COMMIT the task:
-   git add -A
-   git commit -m "feat: [feature] T### - description" --no-verify
-   (Or "fix: [feature] BF-### - description" for bugfix tasks)
-```
-
-#### Cycle: REFACTOR (optional, after GREEN)
-```
-After GREEN is verified and committed:
-  - Remove duplication
-  - Improve names
-  - Extract helpers
-  - Simplify expressions
+  Phase N: [Phase Name]
   
-  Keep tests green throughout. Run full suite after each change.
-  If tests fail during refactor → undo immediately. Take smaller steps.
+  ═══ RED SUB-PHASE ═══
+  For EACH [TEST] task in this phase (in order):
+    a. WRITE the test(s)
+       - One behavior per test function
+       - Group related tests in the same file
+       - No mandatory 1:1 with implementation tasks:
+         * One test file can cover multiple implementation tasks
+         * One implementation task can have multiple test functions
+       - Real code, not mocks (unless truly unavoidable)
+       - Test behavior, not implementation
+    
+    b. RUN the specific test to verify RED:
+       terminal("pytest tests/test_file.py::test_name -v")
+       CONFIRM:
+         - Test fails (not errors from typos)
+         - Fails because the feature is missing
+         - ⚠️ This is EXPECTED — proves the test is valid. NOT a bug.
+         
+  ═══ GREEN SUB-PHASE ═══
+  For EACH implementation task in this phase (in order):
+    a. WRITE the simplest code to pass the test(s)
+       - Minimal — nothing more than needed
+       - Cheating is OK (hardcode, copy-paste — fix in refactor)
+    
+  After ALL implementation tasks in this phase are written:
+    b. RUN ONLY the tests relevant to this phase (NOT full suite):
+       terminal("pytest tests/test_auth.py -v")   # phase-specific test file(s)
+       CONFIRM:
+         - All tests for this phase pass ✓
+         - Do NOT run full test suite yet
+    
+    c. RUN the project build (if applicable):
+       terminal("npm run build") OR terminal("tsc --noEmit") OR terminal("go build")
+       NOTE: TypeScript projects MUST build — Vitest/Jest swallow type errors.
+    
+    d. UPDATE tasks.md — mark all tasks in this phase [X]
+    
+    e. COMMIT the full phase:
+       git add -A
+       git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify
+       COMMIT_HASH=$(git rev-parse HEAD)
+       NOTE: "Phase N committed as $COMMIT_HASH"
+
+  ═══ Done with this phase ═══
 ```
 
-#### Task execution order rules
-- **Test tasks before implementation tasks** — always. Every T### has a T###-test predecessor.
-- Phase-by-phase: Complete each phase before moving to next
-- Sequential tasks in order; parallel [P] can run together if they affect different files
-- File-based coordination: Tasks affecting same files must run sequentially
+**Execution rules:**
+- Test tasks always come before implementation tasks within a phase
+- All tests in a phase are written first (RED sub-phase), then all code (GREEN sub-phase)
+- No commits during RED sub-phase — commit happens once per phase at GREEN
+- No per-task regression runs — only run relevant tests for this phase
+- Parallel [P] tasks can be written in any order but still within RED/GREEN sub-phase boundaries
 
-### Step 7: Progress reporting
-After each task:
+#### TDD bypass mode (no test tasks)
+```
+IF tdd_bypassed:
+  For each phase:
+    For EACH task in the phase:
+      a. IMPLEMENT directly
+      b. VERIFY manually (no automated tests to run)
+    UPDATE tasks.md — mark all tasks in phase [X]
+    COMMIT the phase:
+      git add -A
+      git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify
+```
+
+### Step 6: Progress reporting
+After each phase:
+- Report phase completed: N/Total phases
 - Report tasks completed: N/Total
-- Report current phase
-- Report next task
 - Report tests passing: Yes/No
 - In bugfix mode: Also report bugfix task progress (BF-### completed/total)
 
-### Step 8: Handle errors
-- HALT execution if non-parallel task fails
-- FOR parallel tasks [P]: continue with successful, report failed
+### Step 7: Handle errors
+- HALT execution if a non-parallel task cannot be completed
+- FOR parallel tasks [P]: continue with working tasks, report failed
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
-### Step 9: Final verification — automated test run
+### Step 8: Full regression run — all existing tests
 
-After all tasks are complete, run the full automated test suite one final time. **Note**: RED test failures during the per-task TDD cycle (Step 5) are EXPECTED — they prove the test is valid. Only failures at this final stage indicate real problems.
+After ALL phases are complete and committed, run the ENTIRE test suite:
 
 ```bash
+IF tdd_bypassed:
+  NOTE: "TDD was bypassed — skipping automated test verification."
+  PROCEED to Step 9 (build)
+  STOP
+
 DETECT test framework:
   IF pytest is available:        terminal("pytest tests/ -q --tb=short")
   ELSE IF go test is available:  terminal("go test ./...")
   ELSE IF npm test is available: terminal("npm test")
   ELSE:                          NOTE "No automated test framework detected — skipping."
 
-IF tests run successfully:
+IF all tests pass:
   REPORT: "All N tests pass. Feature implementation verified."
-  NOTE: "Ready for Phase 5 (manual testing) or Phase 6 (close/summarize)."
+  PROCEED to Step 9 (build)
 
-IF tests fail:
-  REPORT failures:
-    | Test | File | Failure |
-    |------|------|---------|
-  NOTE: "N test failures found after implementation. These must be resolved."
-  REVIEW each failure:
-    - IF the failure is from a test task written during this phase:
-      The implementation is incomplete. RETURN to fix the failing code.
-    - IF the failure is from a pre-existing test unrelated to this feature:
-      The change introduced a regression. RETURN to fix.
-    - IF the failure is from a test that the user will verify manually:
-      LOG as bug in bugs.md (Status: open, Severity: determined by failure)
+IF any tests fail:
+  REPORT failing tests:
+    | Test | File | Failure Type |
+    |------|------|-------------|
   
-  REPEAT Step 9 after fixes until all tests pass.
+  CLASSIFY each failure:
+    - NEW failures (tests written during this implementation) → implementation is incomplete
+    - PRE-EXISTING failures (tests that existed before, now broken) → regression
+  
+  IF any failures:
+    CREATE one umbrella bugfix task appended to tasks.md:
+    ```
+    BF-REGRESSION-001 [BUGFIX] Fix regressions from [feature] implementation
+      — Fix all failing tests introduced by this implementation
+      — All N failures must be resolved
+    ```
+    NOTE: "Umbrella bugfix task BF-REGRESSION-001 created — fixing N regressions."
+    
+    For each regression:
+      a. DEBUG the root cause
+      b. FIX the code
+      c. RUN the specific failing test to verify GREEN
+      d. DO NOT run full suite again yet
+    
+    After all regressions fixed:
+      RUN full suite again: terminal("pytest tests/ -q --tb=short")
+      IF all pass:
+        git add -A
+        git commit -m "fix: [feature] BF-REGRESSION-001 - fix regressions" --no-verify
+        MARK BF-REGRESSION-001 as [X] in tasks.md
+        REPORT: "All regressions fixed. All N tests pass."
+      IF any still fail:
+        RETURN to fix remaining failures
 ```
 
-Also run the project build if applicable:
+### Step 9: Build verification (if applicable)
 ```bash
 IF npm run build / tsc --noEmit / go build / cargo build is available:
   terminal("[build command]")
-  IF build fails: RETURN to fix compilation errors, re-run tests, re-run build
+  IF build fails: RETURN to fix compilation errors, then repeat Step 8 (full suite) then Step 9
 ```
 
 ## Implementation Rules (TDD Enforcement)
 
-- **Iron Law**: NO production code without a failing test first. If you wrote code before the test, delete it and start over.
-- **RED verification is mandatory**: Every test must be run and confirmed failing before implementation begins. Without RED verification, the test proves nothing.
-- **GREEN verification is mandatory**: After implementation, run the specific test AND the full suite.
-- **Test before implement**: Test tasks always precede their corresponding implementation tasks.
-- **One behavior per test**: If a test name has "and", split it into two tests.
-- **Real code over mocks**: Use real implementations unless truly unavoidable (external APIs, hardware).
-- **Build after GREEN**: TypeScript projects MUST build — Vitest/Jest swallow type errors.
-- **Regressions block**: If the full suite fails after GREEN, fix regressions before moving to the next task.
-- **Commit per task**: Each RED-GREEN cycle produces one commit.
+- **Phase-level TDD**: All tests for a phase are written and verified RED first, then all code is written and verified GREEN. One commit per phase.
+- **RED verification is mandatory** (TDD mode): Every test must be run and confirmed failing before any implementation code is written. Without RED, the test proves nothing.
+- **GREEN verification at phase level**: After all implementation code is written, run the phase's tests to confirm green.
+- **No per-task commits**: Commit once per phase boundary, not after each individual test or task.
+- **No per-task regression runs**: Only run relevant tests for the current phase. Full suite runs once after all phases.
+- **Regression umbrella**: All post-implementation regressions are captured in one umbrella bugfix task (BF-REGRESSION-001), not individual bugs.
+- **TDD bypass**: If the user explicitly bypassed TDD, skip all automated test steps. The summary will note the bypass.
+- **Build after GREEN**: TypeScript projects MUST build. Vitest/Jest swallow type errors that crash at runtime.
 - In bugfix mode: Update bugs.md Status after fixing a bug (set to "resolved")
 
 ## Phase Guardrail — STRICT
@@ -258,28 +271,30 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Anal
 
 Report:
 - Final status
-- Tasks completed vs total
-- Tests passing
+- TDD mode: Active / Bypassed by user
+- Phases completed: N/Total
+- Tests passing (TDD mode)
+- Regressions found and fixed (if any)
+- Build status (if applicable)
 - Summary of completed work
-- **Commit hash per task**: `git log --oneline --grep="T###"` for task-level commits
+- **Commit hash per phase**: `git log --oneline --grep="Phase [0-9]"`
 
 ## Done When
 
-- [ ] All tasks in tasks.md completed and marked [X]
-- [ ] Every test was verified RED (watched it fail) before implementation
-- [ ] Every implementation was verified GREEN (watched it pass)
-- [ ] Full test suite passes after each task — no regressions
-- [ ] Final automated test suite passes (Step 9) — all tests green
+- [ ] All phases completed and committed
+- [ ] TDD mode (if active): Every test was verified RED before implementation
+- [ ] TDD mode (if active): Every phase's tests verified GREEN before commit
+- [ ] TDD mode (if active): Full regression suite passes — all tests green
+- [ ] TDD mode (if active): Regressions (if any) fixed via umbrella task
 - [ ] Build passes (if applicable)
-- [ ] Implementation validated against spec and plan
-- [ ] Implementation complete
+- [ ] All tasks in tasks.md marked [X]
 - [ ] In bugfix mode: All bugfix tasks completed and verified
 
 **Re-running this skill**:
-1. LOAD tasks.md and find next incomplete task
-2. RESUME from where execution stopped
-3. PRESERVE all [X] completion markers
-4. Only execute remaining incomplete tasks
+1. LOAD tasks.md and find the first incomplete phase
+2. RESUME from that phase's RED sub-phase
+3. PRESERVE all [X] completion markers from completed phases
+4. Only execute remaining incomplete phases
 
 ## Prerequisite Enforcement
 

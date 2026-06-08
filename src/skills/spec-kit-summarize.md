@@ -64,6 +64,18 @@ LOAD specs/[feature]/bugs.md               (IF EXISTS)
 LOAD specs/constitution.md                  (IF EXISTS)
 ```
 
+### Step 1.5: Detect TDD mode
+```
+SCAN tasks.md for `> **TDD**: Bypassed by user request`
+  IF found:
+    SET tdd_bypassed = true
+    NOTE: "TDD was bypassed by user request during task generation."
+    ADD to summary: "TDD was explicitly bypassed by the user — no test tasks were generated."
+  IF not found:
+    SET tdd_bypassed = false
+    NOTE: "TDD mode was active — tests were generated and executed."
+```
+
 ### Step 2: Analyze tasks.md status
 ```
 SCAN all tasks:
@@ -231,6 +243,7 @@ FOR each "❌ Not Done" gap:
 ```bash
 REPORT:
   - Mode: Full summary / Lightweight close
+  - TDD mode: Active / Bypassed by user
   - Output: specs/[feature]/implementation-summary.md or specs/[feature]/close.md
   - Spec Health: N%
   - Task completion: N/Total

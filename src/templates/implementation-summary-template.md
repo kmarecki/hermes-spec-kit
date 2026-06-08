@@ -4,6 +4,7 @@
 **Created**: [DATE]
 **Status**: [Complete / In Progress]
 **Spec Health**: N%
+**TDD Mode**: Active / Bypassed by user
 
 ## Spec Health Scoring
 

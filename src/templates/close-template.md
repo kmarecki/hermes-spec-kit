@@ -2,6 +2,7 @@
 
 **Feature**: specs/[###-feature-name]/
 **Spec Health**: N%
+**TDD Mode**: Active / Bypassed by user
 
 ## Intent Alignment
 - Code matches spec intent: Yes / Partially / No

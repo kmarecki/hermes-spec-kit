@@ -95,7 +95,7 @@ Non-destructive consistency and quality check.
 **Skill**: `spec-kit-implement`
 **When**: User says "implement [feature]" or "start implementation"
 
-Execute tasks from tasks.md. Update task status as completed.
+Execute tasks by **phase-level TDD**: all tests for a phase are written and verified RED first, then all code is written and verified GREEN, then the phase is committed. No per-task commits or regression runs. After all phases, full suite runs and any regressions are captured in a single umbrella bugfix task. TDD can be bypassed at user request during task generation.
 
 ### Phase 5: Test
 **Skill**: `spec-kit-test`
@@ -250,7 +250,7 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*.md`, `quickstart.md` | **BLOCKED** |
 | **Tasks** | `tasks.md` only | **BLOCKED** |
 | **Analyze** | None (read-only report) | **BLOCKED** |
-| **Implement** | source code files, `tasks.md` (completions), `bugs.md` (mark resolved in bugfix loop) | **ALLOWED** |
+| **Implement** | source code files, `tasks.md` (completions → per-phase), `bugs.md` (mark resolved in bugfix loop), `tasks.md` (umbrella BF-REGRESSION task) | **ALLOWED** | `tasks.md` with pending tasks |
 | **Test** | `bugs.md` only | **BLOCKED** |
 | **Explore** | `specs/[feature]/variants/*/` (variant artifacts) | ALLOWED (via delegate_task subagents) |
 | **Compare** | `comparison.md` only | **BLOCKED** |
