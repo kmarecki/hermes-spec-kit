@@ -8,6 +8,8 @@ category: software-development
 
 Spec-driven development for Hermes Agent. Specifications drive code, not the other way around.
 
+**This is the overview skill. For phase routing (including bugfix, implement, plan), load `spec-kit-workflow` instead.** The workflow skill handles all routing decisions based on artifact state and trigger phrases. This skill only documents the overall workflow and conventions.
+
 ## ⚠️ Critical Approach Rule: Read First, Build Second
 **ALWAYS read the source repository design documents before implementing a skill or template that mirrors an existing system.** This prevents creating simplified approximations instead of faithful implementations.
 

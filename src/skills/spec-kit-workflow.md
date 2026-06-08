@@ -1,19 +1,21 @@
 ---
 name: spec-kit-workflow
-description: Use when orchestrating the spec-driven development workflow — routes user requests to the appropriate phase skill and maintains workflow state.
+description: Use when orchestrating the spec-driven development workflow — routes user requests (including bugfix, implement, plan, specify, close) to the correct phase skill.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
 metadata:
   hermes:
-    tags: [spec, workflow, orchestrator, routing]
+    tags: [spec, workflow, orchestrator, routing, bugfix, close]
     related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-analyze, spec-kit-checklist, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
 ---
 
 # Spec Kit Workflow Orchestrator
 
-This is the master orchestrator that routes user requests to the appropriate phase skill.
+**Load this skill when the user says: "bugfix [feature]", "implement [feature]", "plan [feature]", "specify [feature]", "close [feature]", "create a spec", or any phase-routing command.**
+
+This skill does NOT execute phases itself. It routes requests to the correct phase skill based on artifact state and trigger phrases. If you loaded this skill because the user said "bugfix", read the "Bugfix Routing" section below — do NOT start with spec-kit-specify.
 
 ## Pre-flight: Project Readiness
 
