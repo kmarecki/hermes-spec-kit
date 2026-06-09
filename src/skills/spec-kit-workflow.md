@@ -19,10 +19,44 @@ This skill does NOT execute phases itself. It routes requests to the correct pha
 
 ## Pre-flight: Project Readiness
 
-Before routing any feature-level command, check that the project is initialized:
+Before routing any feature-level command, check that the project is initialized AND the branch is correct:
+
+### Branch Guard — STRICT
+
+Every feature, bugfix, or explore session MUST start on a branch named after the spec number. This prevents commits landing on `main`/`master`.
 
 ```
-IF user command targets specs/[feature]/ (any feature-level operation):
+BEFORE any route action (specify, plan, tasks, implement, bugfix, explore, close):
+  EXTRACT feature name from the user's command (e.g., "003-user-auth")
+
+  IF feature has a spec number prefix (NNN-):
+    DETECT current branch: $(git rev-parse --abbrev-ref HEAD)
+
+    CLASSIFY the operation:
+      bugfix → expected branch: NNN-feature-name-bugfix
+      explore → expected branch: explore/NNN-feature-name-<variant>
+      default (specify/plan/tasks/implement/close) → expected branch: NNN-feature-name
+
+    IF current branch == "main" or current branch == "master":
+      BLOCK: "Cannot work on feature [feature] while on [branch] branch."
+      PROMPT: "Run these commands to create the feature branch:
+        git checkout -b NNN-feature-name
+        git push -u origin NNN-feature-name"
+
+    IF current branch != expected branch AND current branch != "main"/"master":
+      WARN: "Currently on '[current]'. Expected branch is '[expected]'.
+             Proceed anyway? If not, abort and switch branches."
+
+  IF feature has NO spec number prefix:
+    NOTE: "Feature name has no NNN- prefix — cannot enforce branch naming.
+           Run spec-kit-specify first to create a numbered spec."
+    SUGGEST: "Create spec first, then continue."
+
+  IF NOT in a git repository:
+    NOTE: "Not a git repository — branch guardrail skipped."
+```
+
+```
   IF specs/ directory NOT EXISTS:
     IF user said "Create a spec for..." or "Create constitution":
       ALLOW — command creates the specs/ directory

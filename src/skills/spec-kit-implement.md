@@ -60,7 +60,26 @@ SCAN tasks.md for `> **TDD**: Bypassed by user request`
     NOTE: "TDD active — phase-level RED-GREEN cycle enforced."
 ```
 
-### Step 1: Commit spec artifacts (batch — all design phases)
+### Step 1: Branch guard — prevent main/master commits
+
+Before any file operation, verify the branch is NOT main/master:
+
+```bash
+IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  IF ["$CURRENT_BRANCH" = "main"] || ["$CURRENT_BRANCH" = "master"]; THEN
+    BLOCK: "On branch main/master — implementation must happen on a feature branch."
+    PROMPT: "Switch to a feature branch first:
+      git checkout -b NNN-feature-name
+      git push -u origin NNN-feature-name"
+    HALT
+  FI
+ELSE
+  NOTE: "Not a git repository — branch guardrail skipped."
+FI
+```
+
+### Step 2: Commit spec artifacts (batch — all design phases)
 
 Before starting implementation, commit all spec artifacts created during design phases as a single batch:
 
@@ -85,7 +104,7 @@ ELSE
   NOTE: "Not a git repository — skipping batch commit. No design checkpoint created."
 ```
 
-### Step 2: Validate prerequisites
+### Step 3: Validate prerequisites
 ```
 IF specs/[feature]/tasks.md NOT EXISTS:
   ERROR: "Run spec-kit-tasks first to generate task breakdown"
@@ -95,7 +114,7 @@ IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
 ```
 
-### Step 3: Check preconditions
+### Step 4: Check preconditions
 ```bash
 # Checklist check — advisory only
 SCAN specs/[feature]/checklists/ for checklist files
@@ -108,7 +127,7 @@ IF any checklist has incomplete items:
   NOTE: "Checklists are advisory — they do not block implementation."
 ```
 
-### Step 4: Load implementation context
+### Step 5: Load implementation context
 - LOAD `specs/[feature]/tasks.md` (REQUIRED)
 - LOAD `specs/[feature]/plan.md` (REQUIRED)
 - LOAD `specs/[feature]/data-model.md` (IF EXISTS)
@@ -118,7 +137,7 @@ IF any checklist has incomplete items:
 - LOAD `specs/[feature]/quickstart.md` (IF EXISTS)
 - IF `specs/[feature]/bugs.md` EXISTS: LOAD bugs.md for bugfix task context
 
-### Step 5: Parse tasks.md
+### Step 6: Parse tasks.md
 Extract:
 - Task phases: Setup, Foundational, Core, Integration, Polish
 - Task dependencies: Sequential vs parallel execution rules
@@ -126,7 +145,7 @@ Extract:
 - Execution flow: Phase order and dependency requirements
 - TDD bypass header (if present)
 
-### Step 6: Phase-level TDD execution
+### Step 7: Phase-level TDD execution
 
 For each phase (Setup → Foundational → Core → Integration → Polish):
 Execute the entire phase as a batch, not task-by-task:
@@ -200,27 +219,27 @@ IF tdd_bypassed:
       git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify
 ```
 
-### Step 7: Progress reporting
+### Step 8: Progress reporting
 After each phase:
 - Report phase completed: N/Total phases
 - Report tasks completed: N/Total
 - Report tests passing: Yes/No
 - In bugfix mode: Also report bugfix task progress (BF-### completed/total)
 
-### Step 8: Handle errors
+### Step 9: Handle errors
 - HALT execution if a non-parallel task cannot be completed
 - FOR parallel tasks [P]: continue with working tasks, report failed
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
-### Step 9: Full regression run — all existing tests
+### Step 10: Full regression run — all existing tests
 
 After ALL phases are complete and committed, run the ENTIRE test suite:
 
 ```bash
 IF tdd_bypassed:
   NOTE: "TDD was bypassed — skipping automated test verification."
-  PROCEED to Step 9 (build)
+  PROCEED to Step 10 (build)
   STOP
 
 DETECT test framework:
@@ -231,7 +250,7 @@ DETECT test framework:
 
 IF all tests pass:
   REPORT: "All N tests pass. Feature implementation verified."
-  PROCEED to Step 9 (build)
+  PROCEED to Step 10 (build)
 
 IF any tests fail:
   REPORT failing tests:
@@ -269,11 +288,11 @@ IF any tests fail:
         RETURN to fix remaining failures
 ```
 
-### Step 10: Build verification (if applicable)
+### Step 11: Build verification (if applicable)
 ```bash
 IF npm run build / tsc --noEmit / go build / cargo build is available:
   terminal("[build command]")
-  IF build fails: RETURN to fix compilation errors, then repeat Step 8 (full suite) then Step 9
+  IF build fails: RETURN to fix compilation errors, then repeat Step 9 (full suite) then Step 10
 ```
 
 ## Implementation Rules (TDD Enforcement)
