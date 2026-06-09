@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, implementation, tdd, coding]
-    related_skills: [spec-kit-tasks, spec-kit-test, writing-plans]
+    related_skills: [spec-kit-tasks, spec-kit-test, spec-kit-workflow, writing-plans]
 ---
 
 # spec-kit-implement

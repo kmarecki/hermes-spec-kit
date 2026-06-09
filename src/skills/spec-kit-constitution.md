@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, constitution, principles, project-setup]
-    related_skills: [spec-kit-specify]
+    related_skills: [spec-kit-specify, spec-kit-workflow]
 ---
 
 # spec-kit-constitution

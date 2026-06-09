@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, specification, requirements, features]
-    related_skills: [spec-kit-constitution, spec-kit-clarify]
+    related_skills: [spec-kit-constitution, spec-kit-clarify, spec-kit-workflow]
 ---
 
 # spec-kit-specify

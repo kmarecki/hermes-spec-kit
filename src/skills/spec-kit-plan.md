@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, planning, architecture, design]
-    related_skills: [spec-kit-specify, spec-kit-tasks]
+    related_skills: [spec-kit-specify, spec-kit-tasks, spec-kit-workflow]
 ---
 
 # spec-kit-plan

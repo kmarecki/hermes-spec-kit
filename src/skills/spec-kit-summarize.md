@@ -23,6 +23,11 @@ metadata:
 
 ## Git Commit Guidelines
 
+> **Branch Guard**: Before any git operation, verify you are NOT on `main`/`master`.
+> If on main/master, BLOCK and prompt: `git checkout -b feat/NNN-feature-name`
+> (or `bug/NNN-bugfix-name` for bugfix work). See `spec-kit-workflow` for the full
+> branch guard logic.
+
 | Situation | Commit message |
 |-----------|---------------|
 | Close/Summary (Phase 6) | `spec(phase-6): [feature] summary (health: N%)` |

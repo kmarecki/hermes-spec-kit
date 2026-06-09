@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, checklist, quality, validation]
-    related_skills: [spec-kit-analyze, spec-kit-implement]
+    related_skills: [spec-kit-analyze, spec-kit-implement, spec-kit-workflow]
 ---
 
 # spec-kit-checklist

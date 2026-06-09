@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, clarification, ambiguity, qa]
-    related_skills: [spec-kit-specify, spec-kit-plan]
+    related_skills: [spec-kit-specify, spec-kit-plan, spec-kit-workflow]
 ---
 
 # spec-kit-clarify
