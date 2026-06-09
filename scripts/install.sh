@@ -54,6 +54,42 @@ for ref in "$PROJECT_DIR"/src/references/*.md; do
   fi
 done
 
+# --- SOUL.md prompt ---
+SOUL_TEMPLATE="$TEMPLATES_DIR/soul-template.md"
+if [ -f "$SOUL_TEMPLATE" ]; then
+  echo ""
+  if [ -f "$HOME/.hermes/SOUL.md" ]; then
+    current_soul_size=$(wc -c < "$HOME/.hermes/SOUL.md" 2>/dev/null || echo 0)
+    if [ "$current_soul_size" -gt 100 ]; then
+      echo "  Note: ~/.hermes/SOUL.md exists and appears to have custom content ($current_soul_size bytes)."
+    fi
+  fi
+  printf "  spec-kit includes a SOUL.md persona template (neutral, multi-mode).\n"
+  printf "  Replace ~/.hermes/SOUL.md with the spec-kit version? [y/N] "
+  read -r answer
+  case "$answer" in
+    [yY]|[yY][eE][sS])
+      cp "$SOUL_TEMPLATE" "$HOME/.hermes/SOUL.md"
+      echo "  -> Installed spec-kit SOUL.md to ~/.hermes/SOUL.md"
+      # Also flip display.personality to none if it's currently a non-default value
+      if command -v hermes &>/dev/null; then
+        current_personality=$(hermes config show display.personality 2>/dev/null || echo "")
+        if [ -n "$current_personality" ] && [ "$current_personality" != "none" ] && [ "$current_personality" != "default" ]; then
+          printf "  Current display.personality is '%s'. Set it to 'none' to avoid personality overlay conflicts? [Y/n] " "$current_personality"
+          read -r p_answer
+          case "$p_answer" in
+            [nN]|[nN][oO]) echo "  -> Keeping display.personality as '$current_personality'" ;;
+            *) hermes config set display.personality none 2>/dev/null && echo "  -> Set display.personality to none" || echo "  -> (could not auto-set display.personality)" ;;
+          esac
+        fi
+      fi
+      ;;
+    *)
+      echo "  -> Skipping SOUL.md (left unchanged)"
+      ;;
+  esac
+fi
+
 echo ""
 echo "Done. Installed to $SKILLS_DIR"
 echo ""
