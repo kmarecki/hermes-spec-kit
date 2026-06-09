@@ -69,6 +69,11 @@ Re-evaluate `specs/[feature]/checklists/requirements.md`.
 ### Note on commits
 Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
 
+## Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Phase 1.5
+- Artifacts: `clarify.md`, `spec.md` (amended)
+
 ## Completion
 - Questions asked/answered
 - Sections updated in spec

@@ -92,6 +92,11 @@ NOTE: "Variants preserved at specs/[feature]/variants/ for reference.
       Delete this directory when no longer needed."
 ```
 
+## Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Compare
+- Artifacts: `comparison.md`
+
 ## Common Pitfalls
 1. **Cherry-picking without verifying compatibility**: Features from different variants may conflict. Verify the combined spec/plan is coherent.
 2. **Assuming the recommendation is correct**: Present the recommendation with rationale, then ask. The user may have priorities the agent doesn't know about.

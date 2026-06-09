@@ -47,6 +47,10 @@ for obsolete in $OBSOLETE_DIRS; do
   fi
 done
 
+# Remove obsolete template files
+mkdir -p "$TEMPLATES_DIR"
+rm -f "$TEMPLATES_DIR/checklist-template.md"
+
 # Copy each skill file from src/skills/ — install as <skill-name>/SKILL.md
 for skill in "$PROJECT_DIR"/src/skills/*.md; do
   if [ -f "$skill" ]; then

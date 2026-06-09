@@ -87,6 +87,11 @@ Phase dependencies, parallel execution opportunities.
 ### Note on commits
 Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
 
+## Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Phase 3
+- Artifact: `tasks.md`
+
 ## Completion
 - Task count by phase, parallelizable count, coverage %
 - Propose: `spec-kit-implement`

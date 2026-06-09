@@ -89,6 +89,11 @@ IF all bugs verified:
   REPORT: "All bugs verified — run 'close [feature]' to complete."
 ```
 
+### Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Phase 5
+- Artifact: `specs/[feature]/bugs.md`
+
 ### Commit
 See `spec-kit/references/auto-commit.md`:
 - Scope: `specs/[feature]/bugs.md`

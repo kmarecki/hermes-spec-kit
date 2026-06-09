@@ -64,7 +64,12 @@ Replace `[ALL_CAPS_PLACEHOLDER]` tokens with concrete text:
 - **MINOR** (x.1.x → x.2.0): New principles
 - **PATCH** (x.x.1 → x.x.2): Clarifications
 
-### Commit
+### Transition Log
+Append to `specs/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Phase 0
+- Artifact: `specs/constitution.md`
+
+## Commit
 Follow `spec-kit/references/auto-commit.md`:
 - Scope: `specs/constitution.md`
 - Message: `"spec(phase-0): constitution for [PROJECT]"`

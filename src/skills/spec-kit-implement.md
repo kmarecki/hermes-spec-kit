@@ -347,6 +347,11 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Anal
 - Bugfixes are NEVER implemented directly when a user mentions a bug
 - Bugfixes must follow: "bugfix [feature]" → plan → tasks → implement
 
+## Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Phase 4 (per-phase entries for each completed phase)
+- Artifacts: source code changes per phase
+
 ## Completion
 
 Report:

@@ -274,6 +274,11 @@ REPORT:
   - New bugs created (if any gap was ❌ Not Done)
 ```
 
+### Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Phase 6
+- Artifacts: `implementation-summary.md` or `close.md`, plus patched artifacts
+
 ### Commit
 Follow `spec-kit/references/auto-commit.md`:
 - Scope: `implementation-summary.md` or `close.md`, plus patched `spec.md`, `plan.md`, `data-model.md`

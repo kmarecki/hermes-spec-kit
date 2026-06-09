@@ -314,6 +314,11 @@ IF only LOW/MEDIUM:
   - Note improvement suggestions for future
 ```
 
+## Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Phase 3.5 or Phase 5.5 (mode-dependent)
+- Artifacts: None (read-only report)
+
 ## Completion
 
 Report:

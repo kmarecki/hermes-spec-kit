@@ -53,8 +53,13 @@ Classify: Match / Mismatch / Missing / Unplanned
 ### Refresh plan.md and data-model.md
 Same per-item approval for architecture, data model, and contract discrepancies.
 
-### Commit
-See `spec-kit/references/auto-commit.md`:
+## Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Refresh
+- Artifacts: patched `spec.md`, `plan.md`, `data-model.md` (as applicable)
+
+## Commit
+Follow `spec-kit/references/auto-commit.md`:
 - Scope: patched spec/plan/data-model files
 - Message: `"spec(refresh): [feature] reconcile artifacts"`
 

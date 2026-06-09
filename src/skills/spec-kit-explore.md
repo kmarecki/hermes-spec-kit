@@ -59,6 +59,9 @@ Each subagent receives:
 ### After completion
 ```
 NOTE: "All N variants completed. Run 'compare [feature]' to review and select."
+APPEND to specs/[feature]/workflow.md following spec-kit/references/workflow-tracking.md:
+- Phase: Explore
+- Artifacts: specs/[feature]/variants/*/
 ```
 
 ## Common Pitfalls

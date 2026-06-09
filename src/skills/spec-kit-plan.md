@@ -73,6 +73,11 @@ For each open bug: analyze root cause, add bugfix section to plan.md, set Plan R
 ### Note on commits
 Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
 
+## Transition Log
+Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+- Phase: Phase 2
+- Artifacts: `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md`
+
 ## Completion
 - Generated artifacts list
 - Gate status (pass/fail with justifications)
