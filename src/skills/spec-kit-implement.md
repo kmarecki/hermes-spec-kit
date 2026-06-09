@@ -70,8 +70,8 @@ IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
   IF ["$CURRENT_BRANCH" = "main"] || ["$CURRENT_BRANCH" = "master"]; THEN
     BLOCK: "On branch main/master — implementation must happen on a feature branch."
     PROMPT: "Switch to a feature branch first:
-      git checkout -b NNN-feature-name
-      git push -u origin NNN-feature-name"
+      git checkout -b feat/NNN-feature-name
+      git push -u origin feat/NNN-feature-name"
     HALT
   FI
 ELSE

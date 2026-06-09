@@ -33,15 +33,15 @@ BEFORE any route action (specify, plan, tasks, implement, bugfix, explore, close
     DETECT current branch: $(git rev-parse --abbrev-ref HEAD)
 
     CLASSIFY the operation:
-      bugfix → expected branch: NNN-feature-name-bugfix
+      bugfix → expected branch: bug/NNN-bugfix-name
       explore → expected branch: explore/NNN-feature-name-<variant>
-      default (specify/plan/tasks/implement/close) → expected branch: NNN-feature-name
+      default (specify/plan/tasks/implement/close) → expected branch: feat/NNN-feature-name
 
     IF current branch == "main" or current branch == "master":
       BLOCK: "Cannot work on feature [feature] while on [branch] branch."
       PROMPT: "Run these commands to create the feature branch:
-        git checkout -b NNN-feature-name
-        git push -u origin NNN-feature-name"
+        git checkout -b feat/NNN-feature-name
+        git push -u origin feat/NNN-feature-name"
 
     IF current branch != expected branch AND current branch != "main"/"master":
       WARN: "Currently on '[current]'. Expected branch is '[expected]'.
