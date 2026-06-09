@@ -26,6 +26,9 @@ metadata:
 - `specs/[feature]/clarify.md`
 - Updated `specs/[feature]/spec.md` (with resolved ambiguities)
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Validate prerequisites

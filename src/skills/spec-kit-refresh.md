@@ -24,6 +24,9 @@ metadata:
 
 **Prerequisites**: `specs/[feature]/spec.md` must exist.
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Load artifacts and code state

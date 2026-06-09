@@ -21,9 +21,12 @@ metadata:
 
 **Routing**: Load this skill when the user says "implement [feature]" or "start implementation". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Git Commit Guidelines
 
-Every phase boundary and regression fix produces a commit. Do NOT skip commits — they create recoverable checkpoints and link code changes to spec artifacts.
+> **Branch Guard**:
 
 | Situation | Commit message |
 |-----------|---------------|

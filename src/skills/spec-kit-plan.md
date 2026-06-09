@@ -29,6 +29,9 @@ metadata:
 - `specs/[feature]/quickstart.md`
 - `specs/[feature]/contracts/`
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Validate prerequisites

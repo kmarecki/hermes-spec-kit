@@ -24,6 +24,9 @@ metadata:
 
 **Prerequisites**: `specs/[feature]/variants/` must contain at least 2 variant directories.
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Load all variant artifacts

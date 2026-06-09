@@ -21,6 +21,9 @@ metadata:
 
 **Routing**: Load this skill when the user says "test [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Git Commit Guidelines
 
 > **Branch Guard**: Before any git operation, verify you are NOT on `main`/`master`.

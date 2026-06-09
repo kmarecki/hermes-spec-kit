@@ -26,6 +26,9 @@ metadata:
 - `specs/[feature]/spec.md`
 - `specs/[feature]/checklists/requirements.md`
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Validate prerequisites

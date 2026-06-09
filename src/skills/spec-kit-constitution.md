@@ -26,6 +26,9 @@ metadata:
 **Routing**: Load this skill when the user says "create constitution" or "create project principles". If loaded directly (not via spec-kit-workflow), consider loading the workflow first for prerequisite checks.
 
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Check git availability

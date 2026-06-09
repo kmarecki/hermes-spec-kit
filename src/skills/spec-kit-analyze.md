@@ -23,6 +23,9 @@ metadata:
 
 **Routing**: Load this skill when the user says "analyze [feature]" or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Step 1: Validate prerequisites

@@ -22,6 +22,9 @@ metadata:
 **Routing**: Load this skill when the user says "explore [feature] with [variants]". Spawns parallel subagents — runs independently.
 
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Validate and determine variants

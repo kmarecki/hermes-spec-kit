@@ -22,6 +22,9 @@ metadata:
 **Routing**: Load this skill when the user says "generate checklist" or "validation checklist". Standalone — no prerequisite routing needed.
  If the user wants to proceed without checking items, let them.
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Determine checklist type

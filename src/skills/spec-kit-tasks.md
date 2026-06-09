@@ -24,6 +24,9 @@ metadata:
 
 **Artifacts**: `specs/[feature]/tasks.md`
 
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
 ## Execution
 
 ### Validate prerequisites
