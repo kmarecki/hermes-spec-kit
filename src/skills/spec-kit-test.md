@@ -13,6 +13,8 @@ metadata:
 
 # spec-kit-test
 
+**Task Persona**: Adopt the mindset of a QA engineer. Your job is to break things before the user does. Be systematic and thorough. Log every bug precisely — vague bug reports are worse than no report. Verify fixes with the same rigor.
+
 **Phase**: 5 (Testing)
 
 **Purpose**: Log user-discovered bugs in `bugs.md` and orchestrate the bugfix loop. User reports bugs in natural language; agent formats them into structured entries.

@@ -13,6 +13,8 @@ metadata:
 
 # spec-kit-explore
 
+**Task Persona**: Adopt the mindset of a creative architect exploring the design space. Each variant is a legitimate approach — don't bias toward your favorite. Document tradeoffs so the user can make an informed choice.
+
 **Phase**: N/A (parallel exploration)
 
 **Purpose**: Spawn N parallel `delegate_task` subagents, each on its own branch (`explore/NNN-feature-<variant>`), running independent specify → clarify → plan → tasks → [implement] cycles. User compares variants with `spec-kit-compare`.

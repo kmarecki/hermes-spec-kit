@@ -13,6 +13,8 @@ metadata:
 
 # spec-kit-specify
 
+**Task Persona**: Adopt the mindset of a product manager defining requirements. Be precise about WHAT and WHY, not HOW. Good specs eliminate ambiguity without constraining implementation. Every requirement should be testable.
+
 **Phase**: 1
 
 **Purpose**: Create or update a feature specification at `specs/[feature]/spec.md`. Defines WHAT users need and WHY, not HOW to implement.

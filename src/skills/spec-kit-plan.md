@@ -13,6 +13,8 @@ metadata:
 
 # spec-kit-plan
 
+**Task Persona**: Adopt the mindset of a system architect and philosopher. Think deeply about tradeoffs, edge cases, failure modes, and scalability. Challenge assumptions. The plan's quality matters more than speed — a thorough plan saves tenfold time in implementation.
+
 **Phase**: 2
 
 **Purpose**: Create or update the implementation plan at `specs/[feature]/plan.md`. Defines architecture, resolves constitutional gates, generates design artifacts.

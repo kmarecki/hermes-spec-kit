@@ -38,6 +38,15 @@ if [ "$STALE_COUNT" -gt 0 ]; then
   echo "  -> Cleaned up $STALE_COUNT stale flat spec-kit-* file(s)"
 fi
 
+# Remove renamed/obsolete skill directories
+OBSOLETE_DIRS="spec-kit-analyze"
+for obsolete in $OBSOLETE_DIRS; do
+  if [ -d "$SKILLS_DIR/$obsolete" ]; then
+    echo "  Removing obsolete skill directory: $obsolete"
+    rm -rf "$SKILLS_DIR/$obsolete"
+  fi
+done
+
 # Copy each skill file from src/skills/ — install as <skill-name>/SKILL.md
 for skill in "$PROJECT_DIR"/src/skills/*.md; do
   if [ -f "$skill" ]; then

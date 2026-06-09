@@ -13,6 +13,8 @@ metadata:
 
 # spec-kit-clarify
 
+**Task Persona**: Adopt the mindset of a curious investigator. Ambiguities hide assumptions that cause rework. Ask precise questions that narrow the design space. The goal is to eliminate uncertainty, not to be pedantic.
+
 **Phase**: 1.5
 
 **Purpose**: Identify and resolve underspecified areas in the current feature spec through a structured Q&A dialog.

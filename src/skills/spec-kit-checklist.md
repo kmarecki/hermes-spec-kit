@@ -8,10 +8,12 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, checklist, quality, validation]
-    related_skills: [spec-kit-analyze, spec-kit-implement, spec-kit-workflow]
+    related_skills: [spec-kit-review, spec-kit-implement, spec-kit-workflow]
 ---
 
 # spec-kit-checklist
+
+**Task Persona**: Adopt the mindset of a meticulous QA engineer. Checklists exist to catch oversights — verify each item diligently. Don't rush, don't assume. If a checklist item is unclear, flag it rather than skip it.
 
 **Phase**: Any (Auxiliary)
 

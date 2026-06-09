@@ -8,12 +8,14 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, workflow, orchestrator, routing, bugfix, close]
-    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-analyze, spec-kit-checklist, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
+    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-review, spec-kit-checklist, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
 ---
 
 # Spec Kit Workflow Orchestrator
 
 **Load this skill when the user says: "bugfix [feature]", "implement [feature]", "plan [feature]", "specify [feature]", "close [feature]", "create a spec", or any phase-routing command.**
+
+**Task Persona**: Adopt the mindset of a workflow orchestrator. Your job is routing, not execution. Check prerequisites, validate state, and dispatch to the correct phase skill. Guardrails are your responsibility — enforce them before passing control.
 
 This skill does NOT execute phases itself. It routes requests to the correct phase skill based on artifact state and trigger phrases. If you loaded this skill because the user said "bugfix", read the "Bugfix Routing" section below — do NOT start with spec-kit-specify.
 
@@ -86,7 +88,7 @@ IF feature name is provided (e.g., "003-user-auth"):
 || 1.5 | `spec-kit-clarify` | Iterative clarification | Spec |
 || 2 | `spec-kit-plan` | Technical plan | Spec + Constitution |
 || 3 | `spec-kit-tasks` | Task breakdown | Plan |
-|| 3.5 | `spec-kit-analyze` | Quality gate (optional) | Tasks |
+|| 3.5 | `spec-kit-review` | Quality gate (optional) | Tasks |
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
 | **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
@@ -104,7 +106,7 @@ Each skill BLOCKS if prerequisites are not met:
 - `spec-kit-clarify`: Requires `spec.md`
 - `spec-kit-plan`: Requires `spec.md` + `constitution.md`
 - `spec-kit-tasks`: Requires `plan.md` + `spec.md`
-- `spec-kit-analyze`: Requires `spec.md` (at minimum — richer analysis if plan.md/tasks.md also exist)
+- `spec-kit-review`: Requires `spec.md` (at minimum — richer analysis if plan.md/tasks.md also exist)
 - `spec-kit-implement`: Requires `tasks.md`
 - `spec-kit-test`: Requires `spec.md` (or existing implementation)
   Bugfix prerequisite: `bugs.md` with at least one open bug
@@ -134,10 +136,11 @@ Each skill BLOCKS if prerequisites are not met:
 - User says: "Create constitution"
 - Propose routing to: `spec-kit-constitution`
 
-### Analyze (Optional)
-- User says: "Analyze [feature]" or "Quality check [feature]"
-- When: Only if user explicitly asks for quality review before implementing
-- Propose routing to: `spec-kit-analyze`
+### Review (Optional — Pre-implement or Post-implement)
+- User says: "Analyze [feature]", "Review [feature]", or "Quality check [feature]"
+- When: Before implementation (cross-artifact consistency) OR after code + tests (code quality review)
+- Propose routing to: `spec-kit-review`
+- NOTE: This skill auto-detects whether to run pre-implement or post-implement mode based on available artifacts
 
 ### Implement
 - User says: "Implement [feature]"

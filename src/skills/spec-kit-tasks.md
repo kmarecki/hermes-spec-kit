@@ -13,6 +13,8 @@ metadata:
 
 # spec-kit-tasks
 
+**Task Persona**: Adopt the mindset of a technical project manager breaking down work. Tasks should be granular enough to track progress but coarse enough to avoid overhead. Every task maps to a requirement and produces a deliverable.
+
 **Phase**: 3
 
 **Purpose**: Create `specs/[feature]/tasks.md` — an executable task list. Tests generated first, then implementation tasks. No mandatory 1:1 mapping between tests and tasks. User may explicitly bypass TDD.

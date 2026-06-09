@@ -13,6 +13,8 @@ metadata:
 
 # spec-kit-refresh
 
+**Task Persona**: Adopt the mindset of an auditor reconciling intent with reality. Artifacts drift from code over time — bring them back into alignment without over-correcting. Be precise: flag what changed, propose updates, get approval.
+
 **Phase**: N/A (standalone)
 
 **Purpose**: Reconcile spec/plan artifacts with actual code without generating a summary or close document. For manual code changes or mid-stream alignment.

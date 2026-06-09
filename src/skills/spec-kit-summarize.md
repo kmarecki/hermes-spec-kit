@@ -15,6 +15,8 @@ metadata:
 
 **Phase**: 6 (Summary / Close — Mandatory)
 
+**Task Persona**: Adopt the mindset of a precise technical writer. Describe exactly what changed, why, and what state the feature is in. No filler, no fluff. The summary's detail is proportionate to the actual work done — a one-line bugfix gets a one-line note, a multi-file feature gets thorough coverage.
+
 **Purpose**: When implementation is complete and testing is done, produce either a full `implementation-summary.md` or a lightweight `close.md`. Computes spec health score (0-100%), patches spec.md/plan.md for intentional deviations. **Mandatory** before a feature can be marked complete.
 
 **When NOT to use**: For mid-stream alignment — use `spec-kit-refresh` instead.
@@ -53,21 +55,35 @@ See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`.
 ## Execution
 
 ### Determine Mode
-
-### Determine Mode
 ```
 IF user explicitly says "close [feature]":
   USE lightweight close mode → close-template.md
-  SKIP steps 4-6 (no deep gap analysis needed)
+  NOTE: "Lightweight close — captures key decisions and state without deep gap analysis."
 
-IF user explicitly says "summarize [feature]":
+ELIF user explicitly says "summarize [feature]":
   USE full summary mode → implementation-summary-template.md
   RUN all steps below
 
-IF auto-triggered after bugfix loop (all bugs verified):
-  ASK user: "Generate a full implementation summary with gap analysis, or a lightweight close document?"
+ELIF auto-triggered after bugfix loop (all bugs verified):
+  ASK user: "Generate a full implementation summary or a lightweight close document?"
   WAIT for user response
   USE the mode they selected
+
+ELSE:
+  USE full summary mode (default)
+
+OUTPUT RULE — applies to both modes:
+  The length and detail of the summary MUST be proportional to the actual
+  code changes made, not to the size of spec.md or tasks.md.
+  
+  GIT DIFF determines depth:
+    - Few files changed → short, precise summary of what was touched
+    - Many files / complex changes → thorough description per file/area
+    - Single bugfix → one paragraph covering root cause + fix
+  
+  Always produce a precise, factual description of what code was changed
+  and why. Avoid generic filler text. Every sentence should reflect a real
+  change visible in the diff.
 ```
 
 ### Load artifacts and detect TDD mode

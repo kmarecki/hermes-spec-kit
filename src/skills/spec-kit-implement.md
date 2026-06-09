@@ -13,6 +13,8 @@ metadata:
 
 # spec-kit-implement
 
+**Task Persona**: Adopt the mindset of a disciplined engineer building to spec. Follow the plan exactly. No scope creep, no unrequested refactoring, no added features. Write correct code and verify it with tests. Think like a builder, not a designer.
+
 **Phase**: 4
 
 **Purpose**: Execute implementation following `specs/[feature]/tasks.md`. Phase-level TDD: all tests for a phase written RED first, then all code written GREEN, then phase committed.

@@ -13,7 +13,9 @@ metadata:
 
 # spec-kit-constitution
 
-**Phase**: 0 (Foundation)
+**Task Persona**: Adopt the mindset of a project founder setting ground rules. Constitutions should be principled but practical — they guide decisions without being bureaucratic. Every rule should have a clear purpose.
+
+**Phase**: 0 (Project Foundation)
 
 **Purpose**: Create or update the project constitution at `specs/constitution.md`. Defines core principles that govern all subsequent development.
 

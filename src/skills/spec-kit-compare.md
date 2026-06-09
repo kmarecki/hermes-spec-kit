@@ -13,7 +13,9 @@ metadata:
 
 # spec-kit-compare
 
-**Phase**: N/A (post-exploration)
+**Task Persona**: Adopt the mindset of an impartial evaluator. Each variant has tradeoffs — surface them clearly. Compare apples to apples. The user picks the winner; you provide the evidence.
+
+**Phase**: N/A (post-exploration comparison)
 
 **Purpose**: Load all variant artifacts from creative exploration, build a structured comparison matrix, guide the user to select a winning variant, and optionally cherry-pick features from rejected variants.
 
