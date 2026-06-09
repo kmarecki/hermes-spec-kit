@@ -13,18 +13,18 @@ Spec-driven development for Hermes Agent. 14 skills implementing a structured ph
 ## Documentation
 
 - **[user-guide.md](user-guide.md)** — Complete workflow description, all phases, TDD integration, artifact lifecycle
-- **src/skills/** — 14 skill files (installed to `~/.hermes/skills/`)
-- **src/templates/** — 14 templates (installed to `~/.hermes/skills/spec-kit/templates/`)
+- **src/skills/** — 13 skill files + 1 umbrella SKILL.md (installed to `~/.hermes/skills/`)
+- **src/templates/** — 13 templates (installed to `~/.hermes/skills/spec-kit/templates/`)
 - **src/references/** — Supporting reference files (installed to `~/.hermes/skills/spec-kit/references/`)
 
 ## Project Structure
 
 ```
 src/
-  skills/                # Skill source files (14 .md files)
+  skills/                # Skill source files (13 .md files)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
   templates/             # Template source files
-  references/            # Reference files (auto-commit.md, etc.)
+  references/            # Reference files (auto-commit.md, preflight.md)
 scripts/
   install.sh             # Installs to ~/.hermes/skills/
 ```
@@ -39,7 +39,7 @@ scripts/
 
 ## Skills (14)
 
-`constitution`, `specify`, `clarify`, `plan`, `tasks`, `analyze`, `checklist`, `implement`, `test`, `summarize`, `refresh`, `explore`, `compare`, `workflow`
+`workflow`, `constitution`, `specify`, `clarify`, `plan`, `tasks`, `review`, `implement`, `test`, `summarize`, `refresh`, `explore`, `compare`, `umbrella`
 
 ## Key Design Decisions
 
@@ -50,6 +50,6 @@ scripts/
 - One umbrella regression fix task, not individual bugs
 - Phase 6 (Close) is mandatory before feature completion
 - Spec health score computed at close (0-100%)
-- Analyze works from spec.md alone — needs no plan or tasks
-
-See [user-guide.md](user-guide.md) for the complete workflow description.
+- Review works at two points: pre-implement (cross-artifact) and post-implement (code quality)
+- Branch guardrails block git operations on main/master
+- Pre-action self-check in every skill (branch, mode, workflow)

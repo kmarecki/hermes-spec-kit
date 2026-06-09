@@ -1,23 +1,18 @@
 # Hermes Spec-Kit User Guide
 
-Spec-driven development for Hermes Agent. Specifications drive code, not the other way around.
-
-## Overview
-
-Spec-kit is a structured, phase-based development workflow. Every feature starts with a specification, then progresses through planning, task breakdown, implementation (with TDD), testing, and close. The workflow has **three development modes**: forward specification, bugfix loop, and creative exploration.
+Structured spec-driven development for Hermes Agent. Every feature starts with a specification and progresses through planning, task breakdown, TDD implementation, testing, and mandatory close.
 
 ## Installation
 
 ```bash
-# From the hermes-spec-kit repository:
 cd /path/to/hermes-spec-kit
 ./scripts/install.sh
 
-# In a Hermes session, reload skills:
+# In a Hermes session:
 /reload-skills
 ```
 
-This installs 14 skills and 14 templates to `~/.hermes/skills/`.
+Installation is global — one install covers all projects and sessions.
 
 ## Quick Start
 
@@ -38,257 +33,86 @@ User:  "Test 001-user-auth"
 Agent: Routes to spec-kit-test for manual bug tracking
 
 User:  "bugfix 001-user-auth"
-Agent: Routes through Plan → Tasks → Implement → verify → close
+Agent: Auto-chains Plan → Tasks → Implement → verify → mandatory close
 
 User:  "Close 001-user-auth"
 Agent: Routes to spec-kit-summarize, generates close.md or summary
 ```
 
-## Concrete Feature Walkthrough
+---
 
-Here's what a complete feature looks like on disk from start to finish:
+## Workflow Phases
 
-```
-specs/
-  constitution.md                          # Project principles (Phase 0)
-  001-user-auth/                           # Feature directory
-    spec.md                                # Specification (Phase 1)
-    clarify.md                             # Clarification log (Phase 1.5)
-    plan.md                                # Implementation plan (Phase 2)
-    research.md                            # Technical research (Phase 2)
-    data-model.md                          # Entity definitions (Phase 2)
-    contracts/                             # API contracts (Phase 2)
-      auth-api.md
-    quickstart.md                          # Integration guide (Phase 2)
-    tasks.md                               # Task breakdown (Phase 3)
-    checklists/                            # Quality checklists
-      requirements.md
-    bugs.md                                # Bug log (Phase 5)
-    implementation-summary.md              # Close document (Phase 6)
-    workflow.md                            # Transition log
-  002-oauth-refresh/
-    ...
-```
-
-### Example: tasks.md (TDD mode)
-
-```markdown
-# Tasks: 001-user-auth
-
-## Phase 1: Setup
-T001 [TEST] Write tests for auth middleware         — tests/auth/middleware_test.py
-T002        Implement auth middleware                — src/auth/middleware.py
-
-## Phase 2: Core
-T003 [TEST] Write tests for login endpoint           — tests/auth/login_test.py
-T004 [TEST] Write tests for token refresh            — tests/auth/refresh_test.py
-T005 [TEST] Write tests for logout                   — tests/auth/logout_test.py
-T006        Implement login endpoint                  — src/auth/login.py
-T007        Implement token refresh                   — src/auth/refresh.py
-T008        Implement logout                          — src/auth/logout.py
-
-## Dependencies
-- T002 depends on T001 (test first)
-- T006-T008 depend on T003-T005 (all tests written before implementation)
-- T006-T008 can run in parallel [P] (different files)
-```
-
-### Example: tasks.md (TDD bypassed)
-
-```markdown
-# Tasks: 001-user-auth
-
-> **TDD**: Bypassed by user request — no test tasks generated.
-
-## Phase 1: Setup
-T001        Implement auth middleware                — src/auth/middleware.py
-
-## Phase 2: Core
-T002        Implement login endpoint                  — src/auth/login.py
-T003        Implement token refresh                   — src/auth/refresh.py
-T004        Implement logout                          — src/auth/logout.py
-```
-
-### Example: bugs.md entry
-
-```markdown
-### BUG-001: Token refresh returns 500 on expired refresh token
-
-- **Severity**: critical
-- **Area**: auth/token
-- **Description**: When refresh token has been expired for >24h, the
-  endpoint crashes with a KeyError instead of returning 401.
-- **Steps to Reproduce**:
-  1. Obtain a refresh token
-  2. Wait 25 hours
-  3. POST /auth/refresh with the expired token
-- **Actual Result**: 500 Internal Server Error
-- **Expected Result**: 401 Unauthorized with "token expired" message
-- **Requires Clarification**: [ ] no / [x] yes
-- **Plan Ref**: Bugfix: BUG-001 (in plan.md)
-- **Status**: open
-```
-
-### Example: workflow.md (transition log)
-
-```markdown
-## 2026-06-08T10:00Z | Phase 1 → Specify → Complete
-- **Skill**: spec-kit-specify
-- **Artifacts**: specs/001-user-auth/spec.md
-- **Notes**: OAuth2 with JWT tokens, 3 user stories
-
-## 2026-06-08T11:30Z | Phase 3 → Tasks → Complete
-- **Skill**: spec-kit-tasks
-- **Artifacts**: specs/001-user-auth/tasks.md
-- **Notes**: TDD active, 8 tasks generated
-
-## 2026-06-08T12:00Z | Batch commit → Design frozen
-- **Commit**: a1b2c3d4
-- **Scope**: All spec artifacts for 001-user-auth
-
-## 2026-06-08T14:00Z | Phase 4 → Implement → Phase 1
-- **Commit**: e5f6g7h8
-- **Notes**: Auth middleware + tests complete
-
-## 2026-06-08T16:00Z | Phase 6 → Close → Complete
-- **Commit**: i9j0k1l2
-- **Spec Health**: 100%
-```
-
-## Three Development Modes
-
-Spec-kit has three modes designed for different development situations. Each mode changes how phases relate to each other — whether they're manual, auto-chained, or parallel.
-
-### 1. Specify Mode (Default)
-
-Use this for normal forward feature development. The user decides when to advance between phases.
+The workflow has 7 numbered phases plus 3 standalone skills. Each phase produces specific artifacts.
 
 ```
-Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test → Close
+ Constitution (Phase 0 — one-time)
+      ↓
+   Specify (Phase 1) — what and why
+      ↓
+   Clarify (Phase 1.5 — optional) — resolve ambiguities
+      ↓
+   Plan (Phase 2) — architecture and design
+      ↓
+   Tasks (Phase 3) — breakdown into executable work
+      ↓
+   [Review — optional pre-implement gate] ← cross-artifact check
+      ↓
+   Implement (Phase 4) — TDD or bypass, phase-level commits
+      ↓
+   Test (Phase 5) — manual bug tracking in bugs.md
+      ↓
+   [Review — optional post-implement gate] ← code quality check
+      ↓
+   Close (Phase 6 — mandatory) — summary + health score
 ```
 
-**Phase advancement rules:**
-- Each forward phase is **manual** — the user says "Plan [feature]", "Implement [feature]", etc.
-- Clarify and Analyze are **optional** — skip when the feature is straightforward
-- The agent proposes the next phase but never auto-advances without user consent
-- The user can jump back to any earlier phase at any time (e.g., from Tasks back to Clarify)
+### Phase 0: Constitution
+**Skill**: `spec-kit-constitution` · **Trigger**: "Create constitution" · **Artifact**: `specs/constitution.md`
 
-**When to use:** Any well-understood feature where the requirements are clear enough to specify upfront.
+Project-wide principles and MUST/SHOULD rules. Runs once per project. Always optional — all other phases warn but proceed without it.
 
-### 2. Bugfix Mode
+### Phase 1: Specify
+**Skill**: `spec-kit-specify` · **Trigger**: "Create a spec for [description]" · **Artifact**: `specs/NNN-name/spec.md`
 
-Use when bugs are discovered during testing. Once the user says "bugfix [feature]", the inner loop chains automatically:
+Defines WHAT and WHY — no implementation details. The agent adopts a **curious detail-gatherer** persona, asking clarifying questions to extract requirements. Captures functional requirements (FR-###), success criteria, user scenarios, entities, and edge cases.
 
-```
-Test → [Clarify if needed] → Plan → Tasks → Implement → Test → Close
-```
+### Phase 1.5: Clarify
+**Skill**: `spec-kit-clarify` · **Trigger**: "Clarify [feature]" · **Artifacts**: `clarify.md`, updated spec.md
 
-**Auto-chain behavior:**
-- After Plan completes → Tasks runs automatically (no prompt)
-- After Tasks completes → Implement runs automatically (no prompt)
-- The user committed to the fix path by invoking "bugfix" — no intermediate choices needed
-- After all bugs verified → the workflow prompts for Close
-
-**Plan Ref enforcement:**
-Each bug must have a Plan Ref line in bugs.md that links to a plan section. If a bug lacks a Plan Ref, the workflow blocks and routes through Plan first. This prevents unplanned fixes from conflicting with the spec.
-
-**When to use:** When automated tests or manual testing reveals regressions or incorrect behavior.
-
-### 3. Explore Mode
-
-Use for high-uncertainty features where the best approach isn't obvious. Spawns parallel subagents, each exploring a different approach:
-
-```
-User: "Explore 003-taskify with React, Vue, and Svelte frontends"
-         ↓
-   Spawn 3 subagents via delegate_task:
-         ↓
-  ┌── Variant A (React) ──┐
-  │   branch: explore/003-taskify-react  │
-  │   specs/003-taskify/variants/react/  │
-  │   spec.md → plan.md → tasks.md       │
-  └──────────────────────────────────────┘
-  ┌── Variant B (Vue) ────┐
-  │   branch: explore/003-taskify-vue   │
-  │   specs/003-taskify/variants/vue/   │
-  │   [independent cycle]               │
-  └──────────────────────────────────────┘
-  ┌── Variant C (Svelte) ─┐
-  │   branch: explore/003-taskify-svelte │
-  │   specs/003-taskify/variants/svelte/ │
-  │   [independent cycle]               │
-  └──────────────────────────────────────┘
-         ↓
-   Run spec-kit-compare:
-   Compare matrix → Pick winner → Cherry-pick → Close
-```
-
-**Key details:**
-- Each variant runs in its own `delegate_task` subagent with full tool access
-- Each gets its own git branch (`explore/NNN-feature-<variant>`)
-- All variants run in parallel (limited by `delegation.max_concurrent_children`)
-- After completion, `spec-kit-compare` loads all variant artifacts and builds a comparison matrix
-- The user can pick one winner or cherry-pick features from multiple variants
-- Rejected variants remain in `variants/` for reference (can be deleted later)
-
-**When to use:** Architectural decisions, technology choices, or when the user says "I'm not sure which approach is best."
-
-## Phase Details
-
-### Phase 0: Constitution (One-Time)
-
-**Skill**: `spec-kit-constitution`
-**Trigger**: "Create constitution"
-**Artifact**: `specs/constitution.md`
-
-Project-wide principles. Runs once per project. Constitution is always optional — all other phases warn but proceed without it.
-
-### Phase 1: Specification
-
-**Skill**: `spec-kit-specify`
-**Trigger**: "Create a spec for [description]" or "Specify [feature]"
-**Artifact**: `specs/NNN-name/spec.md`
-
-Defines WHAT and WHY — no implementation details. Captures user scenarios, functional requirements (FR-###), success criteria, entities, and edge cases.
-
-### Phase 1.5: Clarify (Optional)
-
-**Skill**: `spec-kit-clarify`
-**Trigger**: "Clarify [feature]"
-**Artifacts**: `specs/NNN-name/clarify.md`, updated spec.md
-
-Resolves ambiguities through structured Q&A (max 5 questions per session). Can be run multiple times.
+Resolves ambiguities through structured Q&A. Same **curious detail-gatherer** persona as specify — probes edge cases, constraints, and unstated expectations. Max 5 questions per session. Can be run multiple times.
 
 ### Phase 2: Plan
+**Skill**: `spec-kit-plan` · **Trigger**: "Plan [feature]" · **Artifacts**: `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md`
 
-**Skill**: `spec-kit-plan`
-**Trigger**: "Plan [feature]"
-**Artifacts**: `plan.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
-
-Defines HOW: architecture, data model, API contracts, technology choices. Sub-phases (research, data-model, contracts) can be skipped for simple features.
+Defines HOW: architecture, data model, API contracts, technology stack, constitutional gates. The agent adopts a **system architect + philosopher** persona — thinks deeply about tradeoffs, edge cases, failure modes, and scalability.
 
 ### Phase 3: Tasks
+**Skill**: `spec-kit-tasks` · **Trigger**: "Generate tasks for [feature]" · **Artifact**: `tasks.md`
 
-**Skill**: `spec-kit-tasks`
-**Trigger**: "Generate tasks for [feature]" or "Break down [feature]"
-**Artifact**: `specs/NNN-name/tasks.md`
+Breaks the design down into executable, ordered tasks. Same **system architect + philosopher** persona as planning — every requirement must become concrete work. The user is asked whether to use TDD (generate test tasks + implementation tasks) or bypass it. If TDD is active, `[TEST]` tasks come before implementation tasks within each phase.
 
-Generates an ordered task list. **The user is asked whether to use TDD** — if yes, test tasks are generated first (`[TEST]`), then implementation tasks. No mandatory 1:1 mapping between tests and tasks. If TDD is bypassed, the header `> **TDD**: Bypassed by user request` is added to tasks.md.
+### Phase 3.5: Review — Pre-Implement Gate (Optional)
+**Skill**: `spec-kit-review` · **Trigger**: "Review [feature]" or "Quality check [feature]"
 
-### Phase 3.5: Analyze (Optional)
+READ-ONLY cross-artifact consistency check. Verifies spec/plan/tasks are coherent before coding begins. The agent adopts a **thorough code auditor** persona and:
 
-**Skill**: Inline in workflow — no separate skill file
-**Trigger**: "Analyze [feature]"
+- Checks spec/plan/tasks coherence and coverage
+- Detects duplication, ambiguity, underspecification
+- Validates constitution alignment
+- Checks naming conventions across artifacts
+- Checks documentation completeness
+- Scans user-defined checklists if they exist
+- Can use web search to research best patterns
 
-READ-ONLY consistency check across artifacts. Can run with just spec.md — more artifacts produce richer analysis. Checks: duplication, ambiguity, coverage gaps, constitution alignment, inconsistency.
+No files are modified — only a report is produced.
 
 ### Phase 4: Implement
+**Skill**: `spec-kit-implement` · **Trigger**: "Implement [feature]" · **Artifact**: updated `tasks.md` with completion markers
 
-**Skill**: `spec-kit-implement`
-**Trigger**: "Implement [feature]"
-**Tasks**: Updated tasks.md with completion markers
+The core of the workflow. The agent adopts a **disciplined engineer** persona — follows the plan exactly, no scope creep.
 
-The core of the workflow. Before any code is written, **all spec artifacts are committed as a single batch** (spec.md, plan.md, tasks.md, clarify.md, etc.) — this freezes the design. Then execution proceeds phase-by-phase:
+**Before any code is written**, all spec artifacts are committed as a single batch (spec.md, plan.md, tasks.md, etc.) — this freezes the design. Then execution proceeds **phase-level TDD**:
 
 ```
 Phase N:
@@ -299,115 +123,195 @@ Phase N:
   For each implementation task: write code
   Run phase-relevant tests → confirm GREEN
   Run build (if applicable)
-  Commit: "feat: Phase N - [Name]"
+  Commit: "feat: [feature] Phase N - [Name]"
 ```
 
-**Key rules:**
-- No commits during RED — write all tests first
-- No per-task regression runs — only phase-relevant tests
-- One commit per phase boundary
+**Branch Guard**: Before any git operation, blocks if on `main`/`master` — you must be on a `feat/NNN-name` branch.
 
-**After all phases — Regression Run:**
-- Run FULL test suite (all existing tests)
-- If any regressions: create ONE umbrella task `BF-REGRESSION-001`, fix all, commit once
-- If all pass: ready for testing
+**After all phases — Regression Run**: Full test suite runs. Any regressions are captured in one umbrella fix task (BF-REGRESSION-001), fixed, and committed.
 
-**TDD bypass mode**: If the user opted out of TDD during task generation, the implement skill detects the header in tasks.md and runs implementation tasks directly without any test cycle.
+**TDD bypass**: If the user opted out during task generation, implementation runs directly without test tasks.
 
 ### Phase 5: Test
+**Skill**: `spec-kit-test` · **Trigger**: "Test [feature]" · **Artifact**: `bugs.md`
 
-**Skill**: `spec-kit-test`
-**Trigger**: "Test [feature]"
-**Artifact**: `specs/NNN-name/bugs.md`
+Manual bug tracking. The agent adopts a **QA engineer** persona — primary deliverable is a detailed, structured bugs.md. Every bug must have: steps to reproduce, expected vs actual behavior, severity, and context. Vague bug reports are blocked.
 
-Manual bug tracking. The user reports bugs in natural language; the agent formats them into structured entries (BUG-### with severity, description, reproduction steps). Bugs are NEVER fixed before being logged — the "bugfix [feature]" command starts the fix loop.
+**Safety lock**: Bugs are NEVER fixed before being logged. After logging, the user says "bugfix [feature]" to start the fix loop.
 
-### Phase 6: Summarize / Close (Mandatory)
+### Phase 5.5: Review — Post-Implement Gate (Optional)
+**Skill**: `spec-kit-review` · **Trigger**: "Review [feature]" after code + tests
 
-**Skill**: `spec-kit-summarize`
-**Trigger**: "Summarize [feature]" or "Close [feature]"
-**Artifacts**: `implementation-summary.md` or `close.md`
+READ-ONLY code quality review. The same `spec-kit-review` skill auto-detects whether to run pre-implement or post-implement mode. Post-implement checks:
 
-**Mandatory** before a feature can be marked complete. Two modes:
-- **Full summary**: Deep gap analysis comparing code against spec/plan. Computes spec health score. Patches spec.md/plan.md for intentional deviations.
-- **Lightweight close**: Quick health score, artifact state table, key decisions. For simple features.
+- Spec fulfillment (does code satisfy every FR-###?)
+- Constitution alignment
+- Architecture/design compliance with plan
+- Naming conventions in code
+- Documentation completeness (README, API docs, changelog)
+- Code quality (error handling, duplication, complexity, security)
+- Test quality
+- User-defined custom gates from checklists/
+- Can use web search to research best patterns and practices
 
-The auto-trigger (after all bugs verified) asks the user which mode to use.
+### Phase 6: Close/Summarize — Mandatory
+**Skill**: `spec-kit-summarize` · **Trigger**: "Close [feature]" or "Summarize [feature]" · **Artifact**: `close.md` or `implementation-summary.md`
+
+**Mandatory** before a feature can be marked complete. The agent adopts a **thorough code auditor** persona — verifies every claim against real code, spec, plan, and git diff.
+
+Two modes:
+- **Full summary**: Deep gap analysis comparing code against spec/plan. Computes spec health score. Patches spec.md/plan.md for intentional deviations (with per-change user approval).
+- **Lightweight close**: Quick health score, artifact state table, key decisions.
+
+**Output rule**: Length and detail are proportional to actual git changes, not spec/task size. A one-line bugfix gets a one-line note; a multi-file feature gets thorough per-file coverage. Always precise, factual descriptions — no filler.
+
+---
+
+## Three Development Modes
+
+### 1. Specify Mode (Default)
+
+Forward feature development. User decides when to advance between phases.
+
+```
+Constitution → Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close
+```
+
+- Each forward phase is manual — the agent proposes but never auto-advances without consent
+- Clarify and Review are optional
+- User can jump back to any earlier phase at any time
+
+### 2. Bugfix Mode
+
+When bugs are discovered during testing. Once user says "bugfix [feature]", the inner loop chains automatically:
+
+```
+Test → [Clarify if needed] → Plan → Tasks → Implement → Test → [Review] → Close
+```
+
+- Plan → Tasks → Implement runs automatically (no intermediate prompts — the user committed to the fix path)
+- Each bug must have a Plan Ref in bugs.md linking to a plan section. Missing Plan Refs block and route through Plan first.
+- After all bugs verified → prompts for Close (does not auto-close)
+- Close is mandatory before marking the feature complete
+
+### 3. Explore Mode
+
+For high-uncertainty features. Spawns parallel subagents, each on its own branch exploring a different approach:
+
+```
+User: "Explore 003-taskify with React, Vue, and Svelte"
+  → 3 parallel subagents via delegate_task
+  → Each on explore/003-taskify-<variant> branch
+  → Each runs independent specify → plan → tasks → implement cycle
+  → spec-kit-compare builds comparison matrix
+  → User picks winner or cherry-picks from variants
+```
+
+---
 
 ## Spec Health Score
 
-Computed during Phase 6 (Close/Summarize). Measures how well spec/plan artifacts align with actual code.
-
-### Formula
+Computed during Phase 6 (Close). Measures how well spec/plan artifacts align with actual code.
 
 ```
 spec_health = (resolved + acknowledged) / total * 100
 ```
 
-Where:
-- **resolved** = requirements implemented as planned OR intentionally deviated with documented rationale (spec/plan auto-updated)
-- **acknowledged** = requirements deferred with documented reason
-- **not_done** = requirements missing without documented reason
-- **total** = resolved + acknowledged + not_done
-
-### Concrete Example
-
-After implementing a login feature, the gap analysis finds:
-
-| Requirement | Verdict | Reason |
-|-------------|---------|--------|
-| FR-001: User can log in with email/password | ✅ Resolved | Implemented as specified |
-| FR-002: Rate limit to 5 attempts/min | ✅ Resolved | Implemented, but limit set to 10/min (intentional deviation, documented) |
-| FR-003: Password reset email | ⚠️ Acknowledged | Deferred to phase 2 (scope cut) |
-| FR-004: OAuth2 Google login | ❌ Not Done | Specified but not implemented (added to bugs.md) |
-
-Calculation: `(2 resolved + 1 acknowledged) / 4 total * 100 = 75%`
-
-### Interpretation
-
 | Score | Meaning | Action |
 |-------|---------|--------|
-| 100% | Artifacts fully aligned with code | No action needed |
-| 80-99% | Minor gaps tracked — acceptable | Review at leisure |
+| 100% | Fully aligned | No action needed |
+| 80-99% | Minor gaps | Review at leisure |
 | 50-79% | Significant drift | Run `refresh` before refactoring |
-| <50% | Artifacts are misleading | Run `refresh` before proceeding |
+| <50% | Misleading artifacts | Run `refresh` before proceeding |
 
-### Usage
-
-- **At feature close**: Written into `implementation-summary.md` or `close.md`
-- **On future feature load**: Read from the last close/summary. If <80%, warns about drift
-- **Drift detection**: Workflow reads the Artifact State table. If any artifact shows `⚠️ needs review` or `❌ outdated`, it suggests `refresh`
+---
 
 ## Artifact Lifecycle
 
 ```
-Design Phase Iteration (no commits):
+Design phases (no commits):
   Specify → Clarify → Plan → Tasks
-  (User jumps freely between these. No git checkpoints.)
+  (User jumps freely. No git checkpoints.)
 
-Phase Transition:
-  Tasks → [user says "implement"]
-         ↓
-       Batch commit: "spec: [feature] spec artifacts (spec, plan, tasks)"
-         ↓
-       Implementation begins (Phase 4)
-         ↓
-       Per-phase commits during coding
-         ↓
-       Regression run + umbrella fix (if needed)
-         ↓
-       Manual testing → bugfix loop
-         ↓
-       Close/Summarize commit
+Phase transition (start of Implement):
+  Batch commit: "spec: [feature] spec artifacts (...)"
+       ↓
+  Per-phase commits during implementation
+       ↓
+  Regression run + umbrella fix (if needed)
+       ↓
+  Manual testing → bugfix loop (per-bugfix commits)
+       ↓
+  Close/Summarize commit
 ```
+
+---
+
+## Branch Strategy
+
+| Operation | Branch |
+|-----------|--------|
+| Feature work | `feat/NNN-feature-name` |
+| Bugfix | `bug/NNN-bugfix-name` |
+| Explore variants | `explore/NNN-feature-name-<variant>` |
+
+The workflow blocks all git operations on `main`/`master`. Every skill that touches git has a branch guard check.
+
+---
+
+## Git Commit Messages
+
+| Situation | Message |
+|-----------|---------|
+| Batch commit (start of Implement) | `spec: [feature] spec artifacts (spec, plan, tasks)` |
+| Per-phase (Implement) | `feat: [feature] Phase N - [Name]` |
+| Regression umbrella fix | `fix: [feature] BF-REGRESSION-001 - fix regressions` |
+| Bugfix loop (per bug) | `fix: [feature] BF-### - description` |
+| Close/Summary | `spec(phase-6): [feature] summary (health: N%)` |
+| Refresh artifacts | `spec(refresh): [feature] reconcile artifacts` |
+
+---
 
 ## TDD Integration
 
-- **Default**: TDD is active. The user is asked at task generation time.
-- **Phase-level**: All tests for a phase are written and verified RED first, then all code is written GREEN. One commit per phase.
-- **RED is expected**: Test failures during RED prove the test is valid. NOT a bug.
-- **Iron Law**: NO production code without a failing test first. Exceptions require explicit user permission (prototypes, generated code, config).
-- **Bypass**: User can opt out entirely. Tracked in tasks.md header, detected by implement and summarize.
+- **Default**: TDD is active. User is asked at task generation time.
+- **Phase-level**: All tests for a phase written RED first, all code GREEN, one commit per phase.
+- **RED is expected**: Test failures during RED prove the test is valid — NOT a bug.
+- **Iron Law**: No production code without a failing test first. Exceptions require explicit user permission.
+- **Bypass**: User can opt out entirely at task generation. Tracked in tasks.md header.
+
+---
+
+## Pre-Action Self-Check
+
+Every skill includes a `## Pre-flight` section that references `spec-kit/references/preflight.md`. Before any action, the agent runs:
+
+1. **Branch check** — not on `main`/`master`
+2. **Mode detection** — if `bugs.md` has open entries, you're in bugfix mode
+3. **Workflow load check** — must load `spec-kit-workflow` before writing code
+
+---
+
+## Standalone Skills
+
+These don't belong to any numbered phase:
+
+### refresh
+**Trigger**: "Refresh [feature]" · **Skill**: `spec-kit-refresh`
+
+Reconciles spec/plan artifacts with code that was changed outside the workflow (manual edits, refactoring, third-party changes). READ-ONLY on code — patches spec artifacts with per-change user approval.
+
+### explore
+**Trigger**: "Explore [feature] with [variants]" · **Skill**: `spec-kit-explore`
+
+Spawns parallel subagents for creative exploration. Each variant runs its own independent specify→plan→tasks→implement cycle on a separate branch.
+
+### compare
+**Trigger**: "Compare [feature]" · **Skill**: `spec-kit-compare`
+
+Loads all variant artifacts from `specs/[feature]/variants/` and builds a comparison matrix. The agent adopts a **thorough code auditor** persona, using web search to research best practices for each approach. User picks the winner or cherry-picks features.
+
+---
 
 ## Templates
 
@@ -424,11 +328,13 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | bugs-template.md | Phase 5 | Bug tracking |
 | implementation-summary-template.md | Phase 6 | Full summary |
 | close-template.md | Phase 6 | Lightweight close |
-| checklist-template.md | Any | Quality checklists |
 | comparison-template.md | Compare | Variant comparison |
 | AGENTS-template.md | Project setup | Starting AGENTS.md |
 | workflow-template.md | Phase transition | Log entries |
 | gitignore-template.md | Project setup | .gitignore starter |
+| soul-template.md | Hermes setup | Neutral persona |
+
+---
 
 ## References
 
@@ -436,152 +342,28 @@ Installed to `~/.hermes/skills/spec-kit/references/`:
 
 | Reference | Content |
 |-----------|---------|
-| auto-commit.md | Standard commit pattern used across all skills |
-| phase-guardrails.md | Permission matrix and phase detection |
-| workflow-tracking.md | Transition log design |
-| workflow-enforcement.md | Three-layer enforcement architecture |
-| transition-design.md | Phase transition principles |
-| skill-consistency.md | Cross-skill consistency checks |
-| visual-bug-triage.md | Visual/layout bug diagnosis |
-| bugfix-css-debugging.md | CSS debugging workflow |
-| cluster-topology-validation.md | Cluster topology testing |
+| auto-commit.md | Standard commit pattern across all skills |
+| preflight.md | Pre-action self-check rules (branch, mode, workflow) |
+
+---
 
 ## Skill Reference
 
 All 14 skills installed to `~/.hermes/skills/`:
 
-| Skill | Phase | Purpose |
-|-------|-------|---------|
-| spec-kit-workflow | — | Orchestrator — routes requests |
-| spec-kit-constitution | 0 | Project principles |
-| spec-kit-specify | 1 | Feature spec |
-| spec-kit-clarify | 1.5 | Resolve ambiguities |
-| spec-kit-plan | 2 | Implementation plan |
-| spec-kit-tasks | 3 | Task breakdown |
-| spec-kit-analyze | 3.5 | Quality check (inline) |
-| spec-kit-checklist | Any | Validation checklists |
-| spec-kit-implement | 4 | Phase-level TDD execution |
-| spec-kit-test | 5 | Bug tracking |
-| spec-kit-summarize | 6 | Close/summary |
-| spec-kit-refresh | — | Artifact alignment |
-| spec-kit-explore | — | Parallel variants |
-| spec-kit-compare | — | Variant comparison |
-
-## Git Strategy
-
-- **Design phases** (0-3): No individual commits. Iterate freely.
-- **Batch commit** (start of Phase 4): `"spec: [feature] spec artifacts (spec, plan, tasks)"`
-- **Implementation** (Phase 4): One commit per phase: `"feat: [feature] Phase N - [Name]"`
-- **Regression fix**: `"fix: [feature] BF-REGRESSION-001 - fix regressions"`
-- **Bugfix loop**: `"fix: [feature] BF-### - description"`
-- **Close**: `"spec(phase-6): [feature] summary (health: N%)"`
-- **Refresh**: `"spec(refresh): [feature] reconcile artifacts"`
-
-## Refresh Skill
-
-When code has been changed outside the spec-kit workflow (manual edits, refactoring, or third-party changes), use `spec-kit-refresh` to reconcile spec/plan artifacts:
-
-```
-User:  "Refresh 001-user-auth"
-
-Agent loads spec-kit-refresh and:
-1. Compares spec.md and plan.md against actual code
-2. Identifies discrepancies (spec says X, code does Y)
-3. Presents each discrepancy with yes/no approval
-4. Patches spec.md/plan.md per user's decisions
-5. Commits: "spec(refresh): 001-user-auth reconcile artifacts"
-```
-
-**When to use refresh vs close:**
-
-| Situation | Use |
-|-----------|-----|
-| Feature is complete, all bugs verified | `close` or `summarize` |
-| Code changed outside workflow, mid-stream | `refresh` |
-| Summary detected drift during close | `refresh` |
-| Before starting a new feature on existing codebase | `refresh` |
-
-## Troubleshooting
-
-### "No specs/ directory found"
-
-The project hasn't been initialized with spec-kit. Start with:
-```
-User: "Create a constitution for this project"
-```
-This creates `specs/constitution.md` and the `specs/` directory.
-
-### "Feature [name] not found in specs/"
-
-The feature directory doesn't exist. Check available features:
-```
-User: "What specs exist?"
-```
-Then create a new one or use the exact name from the listing.
-
-### "This phase is BLOCKED — prerequisite missing"
-
-Each phase skill checks for prerequisite artifacts. Common causes:
-- Trying to Plan before Specifying: run `specify` first
-- Trying to Implement without Tasks: run `tasks` first
-- Workflow says "must close first": run `close [feature]` before starting a new feature
-
-### "Commit says 'not a git repository'"
-
-The auto-commit step runs `git rev-parse --git-dir` to detect git. If this fails:
-```bash
-git init
-# Optionally: cp ~/.hermes/skills/spec-kit/templates/gitignore-template.md .gitignore
-```
-Then re-run the phase. Silently skipped commits don't lose data — artifacts are still written to disk.
-
-### "Tests pass in Vitest but fail at runtime"
-
-Vitest/Jest use esbuild to transpile TypeScript, which is more lenient than `tsc`. If tests pass but the production build fails, the issue is likely:
-- Missing type annotation
-- Invalid import path
-- Incorrect generic constraint
-
-Fix: Run `npm run build` or `tsc --noEmit` after GREEN. Build-after-GREEN is mandatory for TypeScript projects.
-
-### "I accidentally skipped TDD during task generation"
-
-If the user opted out of TDD but now wants tests:
-1. Run `spec-kit-tasks` again
-2. Say "yes" when asked about TDD
-3. Regenerated tasks will have `[TEST]` markers
-4. Run `spec-kit-implement` to execute the updated tasks
-
-The old implementation tasks are preserved — new test tasks are added before them.
-
-### "The agent is stuck in the bugfix loop"
-
-The bugfix loop (Plan → Tasks → Implement) chains automatically. If you want to exit:
-- Say "stop fixing" — this halts the loop
-- Say "close [feature]" — this closes even with open bugs (marks them as acknowledged)
-- Say "verify BUG-NNN" — if all bugs are verified, the loop naturally ends
-
-### "Comparing files from explore mode variants"
-
-Variant artifacts are in `specs/[feature]/variants/<variant>/`. To inspect manually:
-```bash
-ls specs/003-taskify/variants/
-cat specs/003-taskify/variants/react/spec.md
-```
-
-### "Spec health score is low after close"
-
-A low spec health score (below 80%) means spec artifacts have drifted from the actual code. This is normal for complex features where requirements changed during implementation. The score isn't a judgment — it's a signal:
-- Use `refresh` before the next bugfix or feature that touches this area
-- The close document documents every deviation with rationale
-- ❌ Not Done items become bugs in bugs.md for future work
-
-## Anti-Patterns
-- Do NOT block on checklists — they are advisory
-- Do NOT fix bugs before logging them in bugs.md
-- Do NOT set bugs to verified preemptively — only the user
-- Do NOT commit during RED sub-phase — write all tests first
-- Do NOT run full suite per-task — only phase-relevant tests
-- Do NOT skip TDD without asking the user first
-- Do NOT allow features to complete without Phase 6 (Close)
-- Do NOT pollute AGENTS.md with workflow mechanics — keep in skills
+| Skill | Phase | Purpose | Persona |
+|-------|-------|---------|---------|
+| spec-kit | — | Umbrella overview | — |
+| spec-kit-workflow | — | Orchestrator — routes to correct phase | Workflow orchestrator |
+| spec-kit-constitution | 0 | Project principles | Project founder |
+| spec-kit-specify | 1 | Feature spec | Curious detail-gatherer |
+| spec-kit-clarify | 1.5 | Resolve ambiguities | Curious detail-gatherer |
+| spec-kit-plan | 2 | Technical plan | System architect + philosopher |
+| spec-kit-tasks | 3 | Task breakdown | System architect + philosopher |
+| spec-kit-review | 3.5 / 5.5 | Quality gate (pre- and post-implement) | Thorough code auditor |
+| spec-kit-implement | 4 | TDD implementation | Disciplined engineer |
+| spec-kit-test | 5 | Bug tracking | QA engineer |
+| spec-kit-summarize | 6 | Close/summary | Thorough code auditor |
+| spec-kit-refresh | — | Artifact reconciliation | Auditor |
+| spec-kit-explore | — | Parallel variant exploration | Creative architect |
+| spec-kit-compare | — | Variant comparison | Thorough code auditor |
