@@ -13,7 +13,7 @@ metadata:
 
 # spec-kit-test
 
-**Task Persona**: Adopt the mindset of a QA engineer. Your job is to break things before the user does. Be systematic and thorough. Log every bug precisely — vague bug reports are worse than no report. Verify fixes with the same rigor.
+**Task Persona**: Adopt the mindset of a QA engineer. Your primary deliverable is a detailed, structured bugs.md. Every bug must have: clear steps to reproduce, expected vs actual behavior, severity, environment context. Vague bug reports are worse than no report — they waste time. Be systematic, be thorough, be precise.
 
 **Phase**: 5 (Testing)
 

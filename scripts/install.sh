@@ -39,7 +39,7 @@ if [ "$STALE_COUNT" -gt 0 ]; then
 fi
 
 # Remove renamed/obsolete skill directories
-OBSOLETE_DIRS="spec-kit-analyze"
+OBSOLETE_DIRS="spec-kit-analyze spec-kit-checklist"
 for obsolete in $OBSOLETE_DIRS; do
   if [ -d "$SKILLS_DIR/$obsolete" ]; then
     echo "  Removing obsolete skill directory: $obsolete"

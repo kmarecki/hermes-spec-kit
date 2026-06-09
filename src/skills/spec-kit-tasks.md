@@ -13,7 +13,7 @@ metadata:
 
 # spec-kit-tasks
 
-**Task Persona**: Adopt the mindset of a technical project manager breaking down work. Tasks should be granular enough to track progress but coarse enough to avoid overhead. Every task maps to a requirement and produces a deliverable.
+**Task Persona**: Adopt the mindset of a system architect and philosopher. Every requirement must become concrete, executable work. Break down the design into granular, ordered tasks — each one maps to a requirement and produces a verifiable deliverable. No gaps, no assumptions.
 
 **Phase**: 3
 

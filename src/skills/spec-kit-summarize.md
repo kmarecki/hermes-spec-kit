@@ -15,7 +15,7 @@ metadata:
 
 **Phase**: 6 (Summary / Close — Mandatory)
 
-**Task Persona**: Adopt the mindset of a precise technical writer. Describe exactly what changed, why, and what state the feature is in. No filler, no fluff. The summary's detail is proportionate to the actual work done — a one-line bugfix gets a one-line note, a multi-file feature gets thorough coverage.
+**Task Persona**: Adopt the mindset of a thorough code auditor. Verify every claim against actual code — check spec.md, plan.md, and the git diff together. Use web search to research best patterns and practices when evaluating architecture decisions. Describe exactly what changed, why, and whether it matches the spec. No filler, no fluff. Detail is proportionate to actual work done.
 
 **Purpose**: When implementation is complete and testing is done, produce either a full `implementation-summary.md` or a lightweight `close.md`. Computes spec health score (0-100%), patches spec.md/plan.md for intentional deviations. **Mandatory** before a feature can be marked complete.
 

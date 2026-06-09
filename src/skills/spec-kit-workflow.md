@@ -8,7 +8,7 @@ category: software-development
 metadata:
   hermes:
     tags: [spec, workflow, orchestrator, routing, bugfix, close]
-    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-review, spec-kit-checklist, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
+    related_skills: [spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-review, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
 ---
 
 # Spec Kit Workflow Orchestrator
@@ -272,7 +272,7 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | Phase | Allowed to Write | Code-Editing Tools | Detect By |
 |-------|-----------------|-------------------|-----------|
 | **Constitution** | `constitution.md` only | BLOCKED | `specs/constitution.md` exists, no `spec.md` |
-| **Specify** | `spec.md`, `checklists/requirements.md` | BLOCKED | `specs/NNN-name/spec.md` exists, no `plan.md` |
+| **Specify** | `spec.md` only | BLOCKED | `specs/NNN-name/spec.md` exists, no `plan.md` |
 | **Clarify** | `clarify.md`, `spec.md` (amend) | BLOCKED | `clarify.md` exists |
 | **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md` | BLOCKED | `plan.md` exists, no `tasks.md` |
 | **Tasks** | `tasks.md` only | BLOCKED | `tasks.md` exists, no completions |

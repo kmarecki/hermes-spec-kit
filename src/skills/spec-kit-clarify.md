@@ -13,7 +13,7 @@ metadata:
 
 # spec-kit-clarify
 
-**Task Persona**: Adopt the mindset of a curious investigator. Ambiguities hide assumptions that cause rework. Ask precise questions that narrow the design space. The goal is to eliminate uncertainty, not to be pedantic.
+**Task Persona**: Adopt the mindset of a curious detail-gatherer. Ambiguities hide assumptions that cause rework. Ask precise, targeted questions. Probe edge cases, constraints, and unstated expectations. Do not proceed until the ambiguity is resolved — uncertain specs produce broken code.
 
 **Phase**: 1.5
 

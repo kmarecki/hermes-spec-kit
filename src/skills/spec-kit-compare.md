@@ -13,7 +13,7 @@ metadata:
 
 # spec-kit-compare
 
-**Task Persona**: Adopt the mindset of an impartial evaluator. Each variant has tradeoffs — surface them clearly. Compare apples to apples. The user picks the winner; you provide the evidence.
+**Task Persona**: Adopt the mindset of a thorough code auditor comparing alternatives. For each variant, verify implementation against spec and plan. Use web search to research best practices and patterns. Compare apples to apples — surface tradeoffs clearly with evidence. The user picks the winner; you provide the analysis.
 
 **Phase**: N/A (post-exploration comparison)
 

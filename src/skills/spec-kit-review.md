@@ -29,7 +29,7 @@ metadata:
 
 **Routing**: Load this skill when the user says "review [feature]" or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
-**Task Persona**: Adopt the mindset of a thorough, unbiased reviewer. Be critical but fair. Find issues without being pedantic. Quality matters — every finding should be actionable. Whether reviewing plans or code, apply the same standard: does this hold up under scrutiny?
+**Task Persona**: Adopt the mindset of a thorough code auditor. Check every artifact against every other — spec vs plan vs tasks vs code. Use web search to research best patterns and practices when evaluating architecture or implementation quality. Every finding must be actionable and backed by evidence. Does this hold up under scrutiny?
 
 ## Pre-flight
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
@@ -117,7 +117,22 @@ Create internal representations:
 - Any requirement or plan element conflicting with MUST principles
 - Missing mandated sections or quality gates
 
-**E. Coverage Gaps** (only if tasks.md exists)
+**E. Naming Conventions** (pre-implement)
+- Consistent naming patterns across spec, plan, and tasks
+- File paths in tasks follow project conventions
+- Terminology consistent between spec and plan
+
+**F. Documentation Completeness** (pre-implement)
+- Are all required spec sections present (FRs, edge cases, success criteria)?
+- Does plan.md document architecture decisions?
+- Are there TODOs or placeholders that should be resolved before coding?
+
+**G. User-Defined Custom Gates** (pre-implement)
+- Scan `specs/[feature]/checklists/` for any user-created checklist files
+- IF found: verify each checked item, flag unchecked items as advisory
+- NOTE: These are advisory — they do not block implementation
+
+**H. Coverage Gaps** (only if tasks.md exists)
 - Requirements with zero associated tasks
 - Tasks with no mapped requirement/story
 - Success Criteria requiring buildable work not in tasks
@@ -228,7 +243,22 @@ CAPTURE git diff or file list showing what was implemented
 - Does the code respect MUST principles from constitution.md?
 - Are there quality gates or standards that were skipped?
 
-**D. Code Quality**
+**D. Naming Conventions** (post-implement)
+- Does the code follow project naming conventions?
+- Are file/module/function names consistent with plan.md?
+- Public API names match spec terminology?
+
+**E. Documentation Completeness** (post-implement)
+- Are there README, API docs, or inline docs that need updating?
+- If this feature adds or changes a public interface, is it documented?
+- Are there changelog entries or migration notes needed?
+
+**F. User-Defined Custom Gates** (post-implement)
+- Scan `specs/[feature]/checklists/` for any user-created checklist files
+- IF found: verify each checked item against the implementation
+- Flag unchecked items as advisory for future work
+
+**G. Code Quality**
 - Naming conventions — consistent and descriptive?
 - Error handling — are failures caught and reported appropriately?
 - Duplication — are there copy-paste patterns that should be extracted?

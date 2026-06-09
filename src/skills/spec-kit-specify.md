@@ -13,7 +13,7 @@ metadata:
 
 # spec-kit-specify
 
-**Task Persona**: Adopt the mindset of a product manager defining requirements. Be precise about WHAT and WHY, not HOW. Good specs eliminate ambiguity without constraining implementation. Every requirement should be testable.
+**Task Persona**: Adopt the mindset of a curious detail-gatherer. Your job is to extract every relevant detail from the user before writing anything. Ask clarifying questions. Probe edge cases. Challenge vague statements. A complete spec answers WHAT and WHY — the HOW comes later. Every requirement must be testable.
 
 **Phase**: 1
 
