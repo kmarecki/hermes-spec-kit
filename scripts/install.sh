@@ -25,12 +25,27 @@ if [ "$OLD_SPECKIT_COUNT" -gt 0 ]; then
   echo "  -> Cleaned up $OLD_SPECKIT_COUNT old speckit-* skill(s)"
 fi
 
-# Copy each skill file from src/skills/
+# Remove stale flat spec-kit-*.md files (old install format, now replaced by directories)
+STALE_COUNT=0
+for stale in "$SKILLS_DIR"/spec-kit-*.md; do
+  if [ -f "$stale" ]; then
+    echo "  Removing stale flat file: $(basename "$stale")"
+    rm -f "$stale"
+    STALE_COUNT=$((STALE_COUNT + 1))
+  fi
+done
+if [ "$STALE_COUNT" -gt 0 ]; then
+  echo "  -> Cleaned up $STALE_COUNT stale flat spec-kit-* file(s)"
+fi
+
+# Copy each skill file from src/skills/ — install as <skill-name>/SKILL.md
 for skill in "$PROJECT_DIR"/src/skills/*.md; do
   if [ -f "$skill" ]; then
-    skill_name=$(basename "$skill")
+    skill_name=$(basename "$skill" .md)
+    skill_dir="$SKILLS_DIR/$skill_name"
+    mkdir -p "$skill_dir"
+    cp "$skill" "$skill_dir/SKILL.md"
     echo "  Installing skill: $skill_name"
-    cp "$skill" "$SKILLS_DIR/$skill_name"
   fi
 done
 
