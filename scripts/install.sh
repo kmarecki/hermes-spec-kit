@@ -12,6 +12,19 @@ echo "Installing spec-kit from $PROJECT_DIR to $SKILLS_DIR..."
 # Create skills directory if it doesn't exist
 mkdir -p "$SKILLS_DIR"
 
+# Remove old speckit-* directories (pre-rename format) to prevent conflicts
+OLD_SPECKIT_COUNT=0
+for old_dir in "$SKILLS_DIR"/speckit-*/; do
+  if [ -d "$old_dir" ]; then
+    echo "  Removing old skill directory: $(basename "$old_dir")"
+    rm -rf "$old_dir"
+    OLD_SPECKIT_COUNT=$((OLD_SPECKIT_COUNT + 1))
+  fi
+done
+if [ "$OLD_SPECKIT_COUNT" -gt 0 ]; then
+  echo "  -> Cleaned up $OLD_SPECKIT_COUNT old speckit-* skill(s)"
+fi
+
 # Copy each skill file from src/skills/
 for skill in "$PROJECT_DIR"/src/skills/*.md; do
   if [ -f "$skill" ]; then
