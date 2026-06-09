@@ -48,8 +48,7 @@ for obsolete in $OBSOLETE_DIRS; do
 done
 
 # Remove obsolete template files
-mkdir -p "$TEMPLATES_DIR"
-rm -f "$TEMPLATES_DIR/checklist-template.md"
+# (TEMPLATES_DIR is defined below; cleanup runs after it's set)
 
 # Copy each skill file from src/skills/ — install as <skill-name>/SKILL.md
 for skill in "$PROJECT_DIR"/src/skills/*.md; do
@@ -74,6 +73,9 @@ fi
 # Copy templates to spec-kit/templates/
 TEMPLATES_DIR="$SKILLS_DIR/spec-kit/templates"
 mkdir -p "$TEMPLATES_DIR"
+
+# Remove obsolete template files
+rm -f "$TEMPLATES_DIR/checklist-template.md"
 
 for tmpl in "$PROJECT_DIR"/src/templates/*-template.md; do
   if [ -f "$tmpl" ]; then
