@@ -3,6 +3,8 @@
 Spec-driven development for Hermes Agent. Every feature starts with a
 specification — not a line of code — and progresses through planning,
 task breakdown, TDD implementation, testing, and a mandatory close phase.
+Four development modes span the full feature lifecycle: forward development
+(specify), bugfix loop, parallel exploration, and reopen for closed features.
 
 Git conventions (branch naming, commit messages, merge behaviour) are
 defined in `specs/git-conventions.md`. Copy the template from
@@ -10,7 +12,8 @@ defined in `specs/git-conventions.md`. Copy the template from
 project.
 
 This guide covers installation, the core workflow, the explore-and-compare
-pattern for parallel variants, and day-to-day usage.
+pattern for parallel variants, the reopen flow for closed features, and
+day-to-day usage.
 
 ---
 
@@ -18,16 +21,17 @@ pattern for parallel variants, and day-to-day usage.
 
 1.  [What is Spec-Kit?](#what-is-spec-kit)
 2.  [Quick Start: Your First Feature](#quick-start-your-first-feature)
-3.  [Three Development Modes](#three-development-modes)
+3.  [Four Development Modes](#four-development-modes)
 4.  [Explore Mode: Parallel Variants (Deep Dive)](#explore-mode-parallel-variants-deep-dive)
     - [How Git Worktrees Keep Variants Apart](#how-git-worktrees-keep-variants-apart)
     - [Walkthrough: Explore → Compare → Promote](#walkthrough-explore--compare--promote)
-5.  [Phase Reference](#phase-reference)
-6.  [Branch Strategy](#branch-strategy)
-7.  [Git Commit Conventions](#git-commit-conventions)
-8.  [Spec Health Score](#spec-health-score)
-9.  [Troubleshooting](#troubleshooting)
-10. [Reference Tables](#reference-tables)
+5.  [Reopen Mode: Fixing Closed Features](#reopen-mode-fixing-closed-features)
+6.  [Phase Reference](#phase-reference)
+7.  [Branch Strategy](#branch-strategy)
+8.  [Git Commit Conventions](#git-commit-conventions)
+9.  [Spec Health Score](#spec-health-score)
+10. [Troubleshooting](#troubleshooting)
+11. [Reference Tables](#reference-tables)
 
 ---
 
@@ -36,7 +40,9 @@ pattern for parallel variants, and day-to-day usage.
 Spec-kit is a structured workflow for building features with an AI agent.
 Instead of saying "build a login system" and hoping the agent gets it right,
 you guide it through seven phases — from specification through close — with
-checkpoints, guardrails, and review gates.
+checkpoints, guardrails, and review gates. Four modes cover the full feature
+lifecycle: forward development (specify), bugfix loop, parallel exploration,
+and reopen for closed features.
 
 **Who is this for?**
 - Developers who want AI-written code they can trust
@@ -52,6 +58,7 @@ checkpoints, guardrails, and review gates.
 **What tools does it add?**
 - 14 spec-kit skills in `~/.hermes/skills/`
 - Templates in `~/.hermes/skills/spec-kit/templates/`
+- Reference files in `~/.hermes/skills/spec-kit/references/` (preflight checks, auto-commit patterns, history tracking)
 - A `specs/` directory in your project for feature artifacts
 
 ---
@@ -173,15 +180,16 @@ to closing commit.
 
 ---
 
-## Three Development Modes
+## Four Development Modes
 
-Spec-kit has three modes, each suited to a different level of uncertainty:
+Spec-kit has four modes, each suited to a different level of uncertainty:
 
 | Mode | When to use | How it runs | User involvement |
 |------|-------------|-------------|-----------------|
 | **Specify** (default) | You know what you want — low uncertainty | One linear path, user advances phase-by-phase | Manual — you say "plan", "implement", etc. |
 | **Bugfix** | You have a working feature with known bugs | Auto-chains Plan→Tasks→Implement→Test once you say "bugfix" | Minimal — inner loop is automatic |
 | **Explore** | You're unsure about the approach — high uncertainty | Spawns parallel agents, each trying a different approach on an isolated branch | Hands-off after launch; you compare results later |
+| **Reopen** | A closed feature needs more fixes | Creates bugfix branch from main, preserves original close data, routes through bugfix loop | Additive-only edits; must close again after fixes |
 
 ### Specify Mode (Default)
 
@@ -218,6 +226,19 @@ User says "explore [feature] with [variants]"
 ```
 
 - Best for: high-uncertainty features where you want to compare approaches
+
+### Reopen Mode (Detailed Below)
+
+```text
+User says "reopen [feature]"
+  → Creates bugfix branch: {prefix}/NNN-{name}{reopen_suffix}
+  → Additive-only edits to bugs.md/plan.md/tasks.md
+  → Routes through bugfix loop (Plan→Tasks→Implement)
+  → Must close again — original close data preserved
+```
+
+- Best for: fixing bugs or adding small changes to an already-closed feature
+- Preserves the original close.md — appends a new close entry instead of overwriting
 
 ---
 
@@ -428,6 +449,80 @@ will be produced.
 
 ---
 
+## Reopen Mode: Fixing Closed Features
+
+Reopen mode is for features that have already been closed (Phase 6 complete)
+but need additional bugfixes or small changes. Instead of editing the closed
+artifacts in place, reopen creates a fresh bugfix branch and preserves the
+original close data, appending a new close entry when fixes are done.
+
+**When to use reopening vs. a new feature:**
+- **Reopen** — The change is a bugfix or small add-on to an existing closed feature
+- **New feature** — The change is substantial enough to warrant its own spec number
+
+### Walkthrough: Reopen → Fix → Close Again
+
+#### Step 1: Reopen the feature
+
+```text
+You: "Reopen 001-user-auth"
+
+Agent:
+  - Detects close.md exists → confirms this is a reopen
+  - Reads specs/git-conventions.md for reopen_suffix and branch_source
+  - Creates branch from main: feat/001-user-auth-bugfixing
+    (or reuses existing branch if already created)
+  - Checks if bugs.md exists; if not, creates from template
+  - Adds entry to history.md: "Feature reopened from closed state"
+  - Routes to spec-kit-test so you can log bugs
+```
+
+#### Step 2: Log bugs
+
+```text
+You: "Add bugs to 001-user-auth — password reset token still expires too early"
+
+Agent:
+  - Opens bugs.md (additive only — preserves existing entries)
+  - Appends BUG-NNN entries for the new issues
+  - Reports: "Logged 2 bugs. Say 'bugfix 001-user-auth' to start the fix loop"
+```
+
+#### Step 3: Bugfix loop (same as normal bugfix mode)
+
+```text
+You: "bugfix 001-user-auth"
+
+Agent:
+  - Auto-chains Plan → Tasks → Implement
+  - All edits to plan.md and tasks.md are additive — no existing content removed
+  - If new content conflicts with existing content (same bug ID, conflicting spec change):
+    STOPS and asks how to resolve
+```
+
+#### Step 4: Close again
+
+```text
+You: "Close 001-user-auth"
+
+Agent:
+  - Appends a new close entry to close.md (preserving original)
+  - Compares new health score to original
+  - Flags any requirements that changed status (e.g., FR-XXX went from
+    ✅ Resolved to ❌ Not Done) and asks how to reflect the change
+  - Commits: spec(phase-6): 001-user-auth close (reopen)
+```
+
+### Key Rules for Reopen
+
+- **Additive-only**: Bugs, tasks, and plan sections are appended, never removed
+- **Conflict resolution**: If new content would overwrite existing entries, the agent stops and asks
+- **Original close preserved**: The prior close data remains intact — new entries are appended
+- **Must close again**: After fixes are verified, the feature must go through Phase 6 again
+- **Old branch rules**: Reopen branch uses `{feature_prefix}/NNN-{name}{reopen_suffix}` (default suffix: `-bugfixing`)
+
+---
+
 ## Phase Reference
 
 ### Phase 0: Constitution
@@ -514,11 +609,29 @@ blocked.
 **Safety lock**: Bugs are NEVER fixed before being logged. After logging,
 say "bugfix [feature]" to start the fix loop.
 
+**Bug format**: Each bug gets an ID (BUG-NNN), severity
+(critical/major/minor/trivial), area, steps to reproduce, expected vs actual
+result, Requires Clarification flag, and status
+(open/in-progress/resolved/verified).
+
+**Plan Ref enforcement**: During bugfix, each open bug must have a Plan Ref
+linking to the plan section that addresses it — no Plan Ref, no implementation.
+
+**BF-### task tracing**: Bugfix tasks use `BF-###` prefix. When a bugfix task
+supersedes specific original (buggy) tasks, append `[T###-fix]` to trace the
+relationship (e.g., `BF-001 [BUGFIX] [T051-fix] Fix validate_cluster_shape`).
+
 ### Phase 5.5: Review — Post-Implement Gate (Optional)
 **Skill**: `spec-kit-review` · **Trigger**: "Review [feature]" after
 code + tests
 
-Same skill as pre-implement, auto-detects mode. Post-implement checks:
+Same skill as pre-implement, auto-detects mode. Three modes total:
+- **Pre-implement** (Phase 3.5): Cross-artifact consistency check before coding
+- **Post-implement** (Phase 5.5): Code quality, spec fulfillment, test quality
+- **Closed-review**: Read-only audit of a closed feature — does not update history.md.
+  If issues found, offers to add refactoring tasks and reopen the feature.
+
+Post-implement checks:
 - Spec fulfillment (does code satisfy every FR-###?)
 - Constitution alignment
 - Architecture compliance with plan
@@ -536,15 +649,19 @@ auditor** persona verifies every claim against real code, spec, plan, and
 git diff.
 
 Two modes:
-- **Full summary**: Deep gap analysis comparing code against spec/plan.
-  Computes spec health score. Patches spec.md/plan.md for intentional
-  deviations (with per-change user approval).
-- **Lightweight close**: Quick health score, artifact state table, key
-  decisions.
+- **Full summary** ("summarize [feature]"): Deep gap analysis comparing code
+  against spec/plan. Computes spec health score. Patches spec.md/plan.md for
+  intentional deviations (with per-change user approval).
+- **Lightweight close** ("close [feature]"): Quick health score, artifact
+  state table, key decisions.
 
 **Output rule**: Length proportional to actual git changes, not spec size.
 A one-line bugfix gets one line; a multi-file feature gets thorough
 per-file coverage.
+
+**Reopen compatibility**: If the feature was reopened, close appends a new
+entry to close.md (preserving the original) and compares new vs. old health
+scores, flagging any requirement status changes for user resolution.
 
 ---
 
@@ -555,6 +672,10 @@ per-file coverage.
 | Feature work | `feat/NNN-feature-name` | User (before first skill call) |
 | Bugfix | `bug/NNN-bugfix-name` | User (before saying "bugfix") |
 | Explore variant | `explore/NNN-feature-<variant>` | Explore skill (automatically) |
+| Reopen | `feat/NNN-feature-name-bugfixing` | Reopen skill (automatically) |
+
+Actual prefix values come from `specs/git-conventions.md` — the table above
+shows defaults (`feat/`, `bug/`, `explore/`, suffix `-bugfixing`).
 
 **Always on a feature branch.** The workflow blocks all git operations on
 `main`/`master`. If you try to start work on main, the agent will refuse
@@ -565,7 +686,13 @@ implemented on — you don't create a separate branch for individual bugfix
 loop iterations.
 
 **Explore branches**: Created automatically by the explore skill when it
-creates worktrees. Branch naming convention: `explore/NNN-feature-<variant>`.
+creates worktrees. Branch naming convention follows the project's
+`explore_prefix` from git conventions.
+
+**Reopen branches**: Created automatically by the reopen flow from the
+project's `branch_source` (typically `main`). Branch name follows the
+pattern `{feature_prefix}/NNN-{name}{reopen_suffix}`. If the branch
+already exists from a prior reopen, it's checked out and reused.
 
 ---
 
@@ -581,6 +708,9 @@ creates worktrees. Branch naming convention: `explore/NNN-feature-<variant>`.
 | Explore cherry-pick | `feat: [feature] cherry-pick [features] from [variant]` |
 | Close/Summary | `spec(phase-6): [feature] summary (health: N%)` |
 | Refresh artifacts | `spec(refresh): [feature] reconcile artifacts` |
+| Reopen begin | `spec(reopen): [feature] reopen from closed state` |
+| Reopen close | `spec(phase-6): [feature] close (reopen, health: N%)` |
+| History entry capture | Automated via `git rev-parse HEAD` |
 
 Every commit message is traceable back to the spec number and feature name.
 This lets you query git for the full lifecycle of any feature:
@@ -604,24 +734,31 @@ Computed during Phase 6 (Close). Measures how well spec/plan artifacts
 align with actual code.
 
 ```
-spec_health = (resolved + acknowledged) / total * 100
+spec_health = (resolved + acknowledged) / (resolved + acknowledged + not_done) * 100
 ```
 
 - **resolved**: Requirements implemented as planned OR intentionally
-  deviated with documented rationale
+  deviated with documented rationale (spec/plan auto-updated)
 - **acknowledged**: Requirements deferred with documented reason
 - **not_done**: Requirements missing without documented reason
 
 | Score | Meaning | Action |
 |-------|---------|--------|
-| 100% | Fully aligned | No action needed |
-| 80-99% | Minor gaps | Review at leisure |
-| 50-79% | Significant drift | Run `refresh` before refactoring |
-| <50% | Misleading artifacts | Run `refresh` before proceeding |
+| 100% | Artifacts fully aligned with code | No action needed |
+| 80-99% | Minor gaps tracked but not blocking | Acceptable — review at leisure |
+| 50-79% | Significant drift | Run `spec-kit-refresh` before refactoring |
+| <50% | Artifacts are misleading | Run `spec-kit-refresh` before proceeding |
 
-When you load an existing feature with a close document, the agent checks
-the last recorded health score. If it's below 80%, you'll get a warning
-about artifact drift.
+When you load an existing feature with a close document, the agent reads
+the health score and checks the artifact state table in the close file.
+If any artifact is flagged as `⚠️ needs review` or `❌ outdated`, a warning
+is shown. If the score is below 80%, you'll be prompted to run refresh
+before proceeding.
+
+**Reopen comparison**: When a reopened feature is closed again, the new
+health score is compared against the original. Any requirements that
+changed status (e.g., from ✅ Resolved to ❌ Not Done) are flagged for
+user resolution.
 
 ---
 
@@ -638,6 +775,19 @@ hermes skills list | grep spec-kit
 
 # Start a new session with explicit skill loading
 hermes -s spec-kit-workflow
+```
+
+### "Feature [feature] is not closed"
+
+You tried to reopen a feature that has no close.md or
+implementation-summary.md. Only closed features can be reopened:
+
+```text
+If the feature has open bugs but was never closed:
+  Say: "bugfix [feature]" to start the fix loop
+
+If the feature is new or in progress:
+  Continue working through the normal workflow phases
 ```
 
 ### "Cannot work on feature while on main branch"
@@ -735,7 +885,7 @@ Fix:   Re-run explore for just that variant, or check the worktree directory
 | `spec-kit-clarify` | 1.5 | Resolve ambiguities | Curious detail-gatherer |
 | `spec-kit-plan` | 2 | Technical plan | System architect + philosopher |
 | `spec-kit-tasks` | 3 | Task breakdown | System architect + philosopher |
-| `spec-kit-review` | 3.5 / 5.5 | Quality gate (pre/post) | Thorough code auditor |
+| `spec-kit-review` | 3.5 / 5.5 / closed | Quality gate (pre/post/closed) | Thorough code auditor |
 | `spec-kit-implement` | 4 | TDD implementation | Disciplined engineer |
 | `spec-kit-test` | 5 | Bug tracking | QA engineer |
 | `spec-kit-summarize` | 6 | Close/summary | Thorough code auditor |
@@ -760,6 +910,7 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | close-template.md | Phase 6 | Lightweight close |
 | comparison-template.md | Compare | Variant comparison matrix |
 | history-template.md | Phase transitions | Append-only log entries |
+| git-conventions-template.md | Project setup | Git branch/commit conventions |
 | gitignore-template.md | Project setup | .gitignore starter |
 | AGENTS-template.md | Project setup | Starting AGENTS.md |
 | soul-template.md | Hermes setup | Neutral persona |
@@ -776,7 +927,9 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | `tasks.md` with completion markers | Implementing |
 | `bugs.md` with open bugs | Testing (bugfix loop) |
 | `bugs.md` all verified | Ready to Close |
-| `implementation-summary.md` or `close.md` exists | Complete |
+| `close.md` exists | Closed — complete |
+| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
+| `implementation-summary.md` exists | Summarized — complete |
 | `variants/` directory with ≥2 entries | Exploring |
 | `comparison.md` exists | Compared — decision made |
 | `history.md` last entry | Current phase (fastest lookup) |
@@ -811,9 +964,12 @@ Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → 
                                                                       │
                                     ┌─────────────────────────────────┘
                                     ▼
-                              [Clarify] → Plan → Tasks → Implement → Test → Close (mandatory)
-                                                                              
-                              Optional gates:
-                                [Review] ← pre-implement (before code)
-                                [Review] ← post-implement (after tests)
+                             ┌─→ [Clarify] → Plan → Tasks → Implement → Test → Close (mandatory)
+                             │
+                             └── Reopen ──→ bugfix loop → Close (append, preserve original)
+
+                             Optional gates:
+                               [Review] ← pre-implement (before code)
+                               [Review] ← post-implement (after tests)
+                               [Review] ← closed-review (read-only audit)
 ```

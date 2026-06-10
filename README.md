@@ -1,6 +1,6 @@
 # Hermes Spec-Kit
 
-Spec-driven development for Hermes Agent. 14 skills implementing a structured phase-based workflow with three development modes, phase-level TDD, and mandatory close with spec health scoring.
+Spec-driven development for Hermes Agent. 14 skills implementing a structured phase-based workflow with four development modes, phase-level TDD, mandatory close with spec health scoring, and a reopen flow for fixing closed features.
 
 ## Quick Start
 
@@ -57,8 +57,8 @@ mkdir specs/                       # spec-kit looks for specs/ at project root
 
 - **[user-guide.md](user-guide.md)** — Complete workflow description, all phases, TDD integration, artifact lifecycle
 - **src/skills/** — 13 skill files + 1 umbrella SKILL.md (installed to `~/.hermes/skills/`)
-- **src/templates/** — 13 templates (installed to `~/.hermes/skills/spec-kit/templates/`)
-- **src/references/** — Supporting reference files (installed to `~/.hermes/skills/spec-kit/references/`)
+- **src/templates/** — 15 templates (installed to `~/.hermes/skills/spec-kit/templates/`)
+- **src/references/** — Supporting reference files (preflight.md, auto-commit.md, history-tracking.md — installed to `~/.hermes/skills/spec-kit/references/`)
 
 ## Project Structure
 
@@ -66,19 +66,20 @@ mkdir specs/                       # spec-kit looks for specs/ at project root
 src/
   skills/                # Skill source files (13 .md files)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
-  templates/             # Template source files
-  references/            # Reference files (auto-commit.md, preflight.md)
+  templates/             # Template source files (15 templates)
+  references/            # Reference files (preflight.md, auto-commit.md, history-tracking.md)
 scripts/
   install.sh             # Installs to ~/.hermes/skills/
 ```
 
-## Three Development Modes
+## Four Development Modes
 
 | Mode | Trigger | Behavior |
 |------|---------|----------|
 | **Specify** (default) | "Create a spec for [feature]" | Full forward phase sequence, manual transitions |
 | **Bugfix** | "bugfix [feature]" | Auto-chain inner loop (Plan→Tasks→Implement), mandatory close |
 | **Explore** | "Explore [feature] with [variants]" | N parallel branches, compare, pick winner |
+| **Reopen** | "Reopen [feature]" | Reopens closed feature for bugfixing, additive-only edits, routes through bugfix loop |
 
 ## Skills (14)
 
@@ -93,6 +94,9 @@ scripts/
 - One umbrella regression fix task, not individual bugs
 - Phase 6 (Close) is mandatory before feature completion
 - Spec health score computed at close (0-100%)
-- Review works at two points: pre-implement (cross-artifact) and post-implement (code quality)
+- Review works at three points: pre-implement (cross-artifact), post-implement (code quality), and closed-review (read-only audit)
 - Branch guardrails block git operations on main/master
 - Pre-action self-check in every skill (branch, mode, workflow)
+- Git conventions are externalized to `specs/git-conventions.md` (copy template per project)
+- Reopen mode creates bugfix branch, additive-only edits, preserves original close data
+- `history.md` append-only transition log for phase detection and audit trail
