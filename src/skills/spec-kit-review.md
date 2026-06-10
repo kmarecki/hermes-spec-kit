@@ -342,7 +342,7 @@ IF mode == closed-review:
   NOTE: "Review on closed feature — history.md not updated."
   NOTE: "Run 'reopen [feature]' if issues need fixing."
 ELSE:
-  Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+  Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
   - Phase: Phase 3.5 or Phase 5.5 (mode-dependent)
   - Artifacts: None (read-only report)
 ```

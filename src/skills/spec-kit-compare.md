@@ -174,7 +174,7 @@ NOTE: "Worktrees preserved at ../<repo>-worktrees/ in case you need
 ```
 
 ## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Compare
 - Artifacts: `comparison.md`
 

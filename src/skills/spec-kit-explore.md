@@ -124,7 +124,7 @@ Subagent instructions for isolation:
 NOTE: "All N variants completed."
 NOTE: "Worktrees preserved at ../<repo>-worktrees/ for the compare phase."
 NOTE: "Run 'compare [feature]' to review and select a winner."
-Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Explore
 - Artifacts: specs/[feature]/variants/*/
 - Worktrees: ../<repo>-worktrees/explore-*/

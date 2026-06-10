@@ -90,7 +90,7 @@ IF all bugs verified:
 ```
 
 ### Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Phase 5
 - Artifact: `specs/[feature]/bugs.md`
 

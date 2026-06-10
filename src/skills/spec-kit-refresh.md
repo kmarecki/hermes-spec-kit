@@ -55,7 +55,7 @@ Classify: Match / Mismatch / Missing / Unplanned
 Same per-item approval for architecture, data model, and contract discrepancies.
 
 ## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Refresh
 - Artifacts: patched `spec.md`, `plan.md`, `data-model.md` (as applicable)
 

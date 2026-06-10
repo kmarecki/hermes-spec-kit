@@ -162,7 +162,7 @@ Every spec directory maintains `specs/NNN-name/history.md` — an append-only pr
 
 **Phase detection shortcut**: Instead of scanning the spec directory for artifact files, load `history.md` and read the last `→ Complete` line. The phase name before the arrow is the current phase. Cross-check against artifact presence as a sanity check.
 
-See `references/workflow-tracking.md` for full design rationale.
+See `references/history-tracking.md` for full design rationale.
 
 ## Phase Enforcement
 
@@ -410,12 +410,12 @@ Installed via `./scripts/install.sh`:
 - `plan-template.md`: Technical decomposition
 - `tasks-template.md`: Task breakdown with parallel `[P]` markers
 - `constitution-template.md`: Project principles template
-- `workflow-template.md`
+- `history-template.md`
 - `data-model-template.md` — Data model template
 - `bugs-template.md` — Bug tracking template (BUG-### format)
 - `implementation-summary-template.md` — Post-implementation review summary (Phase 6, via `spec-kit-summarize`)
 - `close-template.md` — Lightweight close document (Phase 6 close mode, via `spec-kit-summarize`)
-- `workflow-template.md` — Transition log template (appended by every phase skill on completion)
+- `history-template.md` — Transition log template (appended by every phase skill on completion)
 - `comparison-template.md`: Creative exploration comparison matrix template
 - `git-conventions-template.md`: Project-level git conventions (copy to specs/git-conventions.md)
 - `gitignore-template.md` — Project .gitignore starter (copy to project root after `git init`)
@@ -424,4 +424,4 @@ Installed via `./scripts/install.sh`:
 
 - `references/preflight.md` — Pre-action self-check rules (branch, mode, workflow)
 - `references/auto-commit.md` — Standard commit pattern across all skills
-- `references/workflow-tracking.md` — Process history design and rationale (append-only history.md)
+- `references/history-tracking.md` — Process history design and rationale (append-only history.md)

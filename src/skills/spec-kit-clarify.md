@@ -67,7 +67,7 @@ After each answer: UPDATE spec.md, replace `[NEEDS CLARIFICATION]` markers.
 Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
 
 ## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Phase 1.5
 - Artifacts: `clarify.md`, `spec.md` (amended)
 

@@ -341,7 +341,7 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Revi
 - Bugfixes must follow: "bugfix [feature]" → plan → tasks → implement
 
 ## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Phase 4 (per-phase entries for each completed phase)
 - Artifacts: source code changes per phase
 

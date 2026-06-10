@@ -319,7 +319,7 @@ REPORT:
 ```
 
 ### Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Phase 6
 - Artifacts: `implementation-summary.md` or `close.md`, plus patched artifacts
 

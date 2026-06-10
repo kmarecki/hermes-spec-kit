@@ -759,7 +759,7 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | implementation-summary-template.md | Phase 6 | Full summary |
 | close-template.md | Phase 6 | Lightweight close |
 | comparison-template.md | Compare | Variant comparison matrix |
-| workflow-template.md | Phase transitions | Append-only log entries |
+| history-template.md | Phase transitions | Append-only log entries |
 | gitignore-template.md | Project setup | .gitignore starter |
 | AGENTS-template.md | Project setup | Starting AGENTS.md |
 | soul-template.md | Hermes setup | Neutral persona |

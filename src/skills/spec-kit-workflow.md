@@ -202,7 +202,7 @@ Each skill BLOCKS if prerequisites are not met:
    - Existing verified bugs, completed tasks, and original plan sections must be preserved exactly
 
 6. WORKFLOW LOG:
-   APPEND to specs/[feature]/history.md following spec-kit/references/workflow-tracking.md:
+   APPEND to specs/[feature]/history.md following spec-kit/references/history-tracking.md:
    - **Phase**: Reopen
    - **Notes**: "Feature reopened from closed state. Previous close.md will become stale — must close again after fixes."
 

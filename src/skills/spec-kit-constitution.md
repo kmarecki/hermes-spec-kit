@@ -65,7 +65,7 @@ Replace `[ALL_CAPS_PLACEHOLDER]` tokens with concrete text:
 - **PATCH** (x.x.1 → x.x.2): Clarifications
 
 ### Transition Log
-Append to `specs/history.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Phase 0
 - Artifact: `specs/constitution.md`
 
