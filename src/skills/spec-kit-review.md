@@ -1,6 +1,6 @@
 ---
 name: spec-kit-review
-description: Load when the user says 'spec-kit review [feature]' or 'speckit review [feature]' — cross-artifact consistency check (pre-implement) and code quality review (post-implement).
+description: Load when the user says 'spec-kit review [feature]', 'speckit review [feature]', "review [feature]", "quality check [feature]", or "analyze [feature]" — cross-artifact consistency check (pre-implement) and code quality review (post-implement).
 version: 1.1.0
 author: Hermes Agent
 license: MIT

@@ -1,6 +1,6 @@
 ---
 name: spec-kit-clarify
-description: Load when the user says 'spec-kit clarify [feature]' or 'speckit clarify [feature]' — Phase 1.5 optional clarification of ambiguities in the spec.
+description: Load when the user says 'spec-kit clarify [feature]', 'speckit clarify [feature]', "clarify [feature]", or "resolve ambiguities in [feature]" — Phase 1.5 optional clarification of ambiguities in the spec.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

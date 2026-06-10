@@ -85,7 +85,8 @@ scripts/
 
 `workflow`, `constitution`, `specify`, `clarify`, `plan`, `tasks`, `review`, `implement`, `test`, `summarize`, `refresh`, `explore`, `compare`, `umbrella`
 
-Each skill responds to both `spec-kit` and `speckit` prefixes (e.g. `spec-kit plan` or `speckit plan`).
+Each skill responds to three trigger styles: `spec-kit` prefix, `speckit` prefix, and natural language
+(e.g. `spec-kit plan 001-user-auth`, `speckit plan 001-user-auth`, or `"plan the implementation for 001-user-auth"`).
 
 ## Key Design Decisions
 

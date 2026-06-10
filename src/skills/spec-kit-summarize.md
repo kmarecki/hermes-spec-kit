@@ -1,6 +1,6 @@
 ---
 name: spec-kit-summarize
-description: Load when the user says 'spec-kit summarize [feature]', 'speckit summarize [feature]', 'spec-kit close [feature]', or 'speckit close [feature]' — Phase 6 mandatory close with spec health score.
+description: Load when the user says 'spec-kit summarize [feature]', 'speckit summarize [feature]', 'spec-kit close [feature]', 'speckit close [feature]', "summarize [feature]", "close [feature]", or "implementation summary for [feature]" — Phase 6 mandatory close with spec health score.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

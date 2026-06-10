@@ -1,6 +1,6 @@
 ---
 name: spec-kit-compare
-description: Load when the user says 'spec-kit compare [feature]', 'speckit compare [feature]', 'spec-kit compare variants', or 'speckit compare variants' — post-exploration decision matrix.
+description: Load when the user says 'spec-kit compare [feature]', 'speckit compare [feature]', 'spec-kit compare variants', 'speckit compare variants', "compare variants for [feature]", or "compare approaches for [feature]" — post-exploration decision matrix.
 version: 1.2.0
 author: Hermes Agent
 license: MIT

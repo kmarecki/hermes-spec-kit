@@ -1,6 +1,6 @@
 ---
 name: spec-kit-tasks
-description: Load when the user says 'spec-kit tasks for [feature]', 'speckit tasks for [feature]', 'spec-kit break down [feature]', or 'speckit break down [feature]' — Phase 3 task breakdown.
+description: Load when the user says 'spec-kit tasks for [feature]', 'speckit tasks for [feature]', 'spec-kit break down [feature]', 'speckit break down [feature]', "generate tasks for [feature]", "break down [feature]", or "create tasks for [feature]" — Phase 3 task breakdown.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

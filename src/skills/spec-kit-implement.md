@@ -1,6 +1,6 @@
 ---
 name: spec-kit-implement
-description: Load when the user says 'spec-kit implement [feature]', 'speckit implement [feature]', 'spec-kit start [feature]', or 'speckit start [feature]' — Phase 4 phase-level TDD execution.
+description: Load when the user says 'spec-kit implement [feature]', 'speckit implement [feature]', 'spec-kit start [feature]', 'speckit start [feature]', "implement [feature]", or "start implementing [feature]" — Phase 4 phase-level TDD execution.
 version: 1.2.0
 author: Hermes Agent
 license: MIT
