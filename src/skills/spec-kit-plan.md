@@ -1,6 +1,6 @@
 ---
 name: spec-kit-plan
-description: Load when the user says 'spec-kit plan [feature]' — Phase 2 technical planning for the feature.
+description: Load when the user says 'spec-kit plan [feature]' or 'speckit plan [feature]' — Phase 2 technical planning for the feature.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

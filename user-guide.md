@@ -56,7 +56,8 @@ and reopen for closed features.
 - Without close, features accumulate half-finished
 
 **What tools does it add?**
-- 14 spec-kit skills in `~/.hermes/skills/`
+- 14 spec-kit skills in `~/.hermes/skills/` — respond to both `spec-kit` and `speckit` prefixes
+  (e.g. `"speckit plan 001-user-auth"` works the same as `"spec-kit plan 001-user-auth"`)
 - Templates in `~/.hermes/skills/spec-kit/templates/`
 - Reference files in `~/.hermes/skills/spec-kit/references/` (preflight checks, auto-commit patterns, history tracking)
 - A `specs/` directory in your project for feature artifacts
@@ -939,6 +940,8 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 ```bash
 # Start a session with spec-kit preloaded
 hermes -s spec-kit-workflow
+
+# Both prefixes work: "spec-kit plan" and "speckit plan" trigger the same skill
 
 # Start in isolated git worktree (for manual parallel variants)
 hermes -w -s spec-kit-workflow

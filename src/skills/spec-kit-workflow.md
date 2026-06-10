@@ -1,6 +1,6 @@
 ---
 name: spec-kit-workflow
-description: Load when the user says 'spec-kit bugfix [feature]', 'spec-kit fix [feature]', 'spec-kit reopen [feature]', 'spec-kit implement [feature]', 'spec-kit plan [feature]', 'spec-kit close [feature]', 'spec-kit specify [feature]', 'spec-kit status [feature]', or any 'spec-kit ...' workflow routing command. Routes to the correct phase skill.
+description: Load when the user says 'spec-kit bugfix [feature]', 'speckit bugfix [feature]', 'spec-kit fix [feature]', 'speckit fix [feature]', 'spec-kit reopen [feature]', 'speckit reopen [feature]', 'spec-kit implement [feature]', 'speckit implement [feature]', 'spec-kit plan [feature]', 'speckit plan [feature]', 'spec-kit close [feature]', 'speckit close [feature]', 'spec-kit specify [feature]', 'speckit specify [feature]', 'spec-kit status [feature]', 'speckit status [feature]', or any 'spec-kit ...' or 'speckit ...' workflow routing command. Routes to the correct phase skill.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

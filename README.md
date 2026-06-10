@@ -85,6 +85,8 @@ scripts/
 
 `workflow`, `constitution`, `specify`, `clarify`, `plan`, `tasks`, `review`, `implement`, `test`, `summarize`, `refresh`, `explore`, `compare`, `umbrella`
 
+Each skill responds to both `spec-kit` and `speckit` prefixes (e.g. `spec-kit plan` or `speckit plan`).
+
 ## Key Design Decisions
 
 - Constitution is always optional (warn, don't block)

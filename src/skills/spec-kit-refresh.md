@@ -1,6 +1,6 @@
 ---
 name: spec-kit-refresh
-description: Load when the user says 'spec-kit refresh [feature]' — standalone artifact reconciliation for outdated specs.
+description: Load when the user says 'spec-kit refresh [feature]' or 'speckit refresh [feature]' — standalone artifact reconciliation for outdated specs.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

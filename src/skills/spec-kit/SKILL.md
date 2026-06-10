@@ -1,6 +1,6 @@
 ---
 name: spec-kit
-description: Spec-Driven Development (SDD) workflow for Hermes Agent. Load via 'spec-kit' prefix commands (e.g. 'spec-kit bugfix [feature]', 'spec-kit implement [feature]').
+description: Spec-Driven Development (SDD) workflow for Hermes Agent. Load via 'spec-kit' or 'speckit' prefix commands (e.g. 'spec-kit bugfix [feature]', 'speckit bugfix [feature]', 'spec-kit implement [feature]', 'speckit implement [feature]').
 category: software-development
 ---
 

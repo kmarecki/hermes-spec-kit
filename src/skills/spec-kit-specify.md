@@ -1,6 +1,6 @@
 ---
 name: spec-kit-specify
-description: Load when the user says 'spec-kit specify [feature]' or 'spec-kit spec [feature]' — Phase 1 feature specification.
+description: Load when the user says 'spec-kit specify [feature]', 'speckit specify [feature]', 'spec-kit spec [feature]', or 'speckit spec [feature]' — Phase 1 feature specification.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

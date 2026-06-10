@@ -1,6 +1,6 @@
 ---
 name: spec-kit-test
-description: Load when the user says 'spec-kit test [feature]', 'spec-kit bug [feature]', or 'spec-kit log [feature]' — Phase 5 bug tracking and manual testing.
+description: Load when the user says 'spec-kit test [feature]', 'speckit test [feature]', 'spec-kit bug [feature]', 'speckit bug [feature]', 'spec-kit log [feature]', or 'speckit log [feature]' — Phase 5 bug tracking and manual testing.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

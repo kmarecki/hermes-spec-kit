@@ -1,6 +1,6 @@
 ---
 name: spec-kit-constitution
-description: Load when the user says 'spec-kit constitution' or 'spec-kit principles' — Phase 0 project setup.
+description: Load when the user says 'spec-kit constitution', 'speckit constitution', 'spec-kit principles', or 'speckit principles' — Phase 0 project setup.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
