@@ -1,4 +1,8 @@
 # Git Conventions for this project
+# Conventions version: 1
+#
+# When this version is incremented, projects with existing specs/git-conventions.md
+# will be prompted to re-copy. Skills check the version at startup.
 
 Copy this file to `specs/git-conventions.md` in your project and edit.
 Spec-kit skills load it automatically if it exists.
