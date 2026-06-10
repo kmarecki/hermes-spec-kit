@@ -40,9 +40,14 @@ IF specs/[feature]/spec.md NOT EXISTS: ERROR "Run spec-kit-specify first"
 ### Load context
 ```
 LOAD specs/[feature]/plan.md, spec.md, data-model.md, contracts/
-LOAD spec-kit/templates/tasks-template.md
-COPY spec-kit/templates/tasks-template.md → specs/[feature]/tasks.md
-IF bugfix mode: LOAD bugs.md, plan.md bugfix sections
+
+IF bugfix mode (reopened bugfix):
+  NOTE: "Bugfix mode — tasks.md already exists with completed tasks. Will append new bugfix tasks only."
+  LOAD existing specs/[feature]/tasks.md
+  LOAD bugs.md, plan.md bugfix sections
+ELSE:
+  LOAD spec-kit/templates/tasks-template.md
+  COPY spec-kit/templates/tasks-template.md → specs/[feature]/tasks.md
 ```
 
 ### Determine TDD mode
@@ -77,6 +82,8 @@ For each User Story: MAP scenarios to test tasks, entities to model tasks
 ```
 For each open bug: CREATE BF-### task, include test task to verify fix
 ```
+
+**Additive-only**: Append new bugfix tasks at the end of tasks.md. Never modify or remove existing completed tasks. If a new bugfix task has the same ID as an existing one, ask the user how to resolve.
 
 ### Generate task breakdown
 Organize by phase: Setup → Foundational → User Stories → Polish.

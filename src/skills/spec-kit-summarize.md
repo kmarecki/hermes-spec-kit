@@ -166,10 +166,13 @@ FOR each gap marked "⚠️ Acknowledged":
 ```
 IF specs/[feature]/close.md or specs/[feature]/implementation-summary.md EXISTS:
   LOAD previous health score from existing close document
-  NOTE: "Previous spec health was N%. This close will replace it."
+  NOTE: "Previous spec health was N%. This close will append a new section,
+         preserving the original close data."
   SET previous_health = N
+  SET reopen_mode = true
 ELSE:
   SET previous_health = None
+  SET reopen_mode = false
 ```
 
 ### Step 6: Compute Spec Health Score
@@ -234,11 +237,19 @@ IDENTIFY:
 
 **Full mode** (summarize):
 ```
-COPY `spec-kit/templates/implementation-summary-template.md` → `specs/[feature]/implementation-summary.md`
+IF reopen_mode AND specs/[feature]/implementation-summary.md EXISTS:
+  APPEND to existing specs/[feature]/implementation-summary.md:
+    - New section: "## Reopened Summary ([ISO date])"
+    - Updated Spec Health Score
+    - "Previous health: N% -> Current health: M%"
+    - New gap analysis entries (additive only)
+    - NOTE: "Original summary preserved above."
+ELSE:
+  COPY spec-kit/templates/implementation-summary-template.md -> specs/[feature]/implementation-summary.md
 
 Populate with:
 - Spec Health Score at top (from Step 6)
-- **Previous vs Current**: IF previous_health exists: "Previous health: N% → Current health: M%"
+- **Previous vs Current**: IF previous_health exists: "Previous health: N% -> Current health: M%"
 - Spec Health Scoring table
 - All gap analysis sections
 - Spec Artifact Refresh section listing what was patched (from Step 7)
@@ -247,7 +258,17 @@ Populate with:
 
 **Lightweight mode** (close):
 ```
-COPY `spec-kit/templates/close-template.md` → `specs/[feature]/close.md`
+IF reopen_mode:
+  APPEND to existing `specs/[feature]/close.md`:
+    - A new section header: "## Close (Reopened — [ISO date])"
+    - Updated Spec Health Score from Step 6
+    - "Previous health: N% → Current health: M%"
+    - Updated Artifact State for artifacts changed during reopen
+    - Key decisions made during reopen
+    - NOTE: "Original close preserved above. This section documents the reopened cycle only."
+
+ELSE (first close):
+  COPY `spec-kit/templates/close-template.md` → `specs/[feature]/close.md`
 
 Populate with:
 - Spec Health Score (from Step 6, or simplified "100%" if skipped)
@@ -255,6 +276,17 @@ Populate with:
 - Artifact State: quick status of each artifact
 - Key Decisions: notable decisions made
 - Spec Health Calculation breakdown (if available)
+```
+
+**Reopen conflict check** (before writing either mode):
+```
+IF reopen_mode AND any requirement status changed from ✅/⚠️ to a worse status:
+  For each changed requirement:
+    PROMPT user: "FR-XXX was [original status] in previous close, now [new status].
+                  This is a regression. How should I document it?
+                  1. Add as new entry (preserves original close — recommended)
+                  2. Update the original close entry (overwrite)"
+  WAIT for user response before writing.
 ```
 
 ### Step 10: Update or create bugs from gaps

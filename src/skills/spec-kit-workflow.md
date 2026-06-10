@@ -194,14 +194,31 @@ Each skill BLOCKS if prerequisites are not met:
 
 5. ROUTE: spec-kit-plan → spec-kit-tasks → spec-kit-implement (auto-chain)
 
+   **IMPORTANT — Additive-only rule for reopen:**
+   - All edits to bugs.md, plan.md, and tasks.md during reopen must be **additive only**
+   - Never remove or overwrite existing content — only append new sections, bugs, or tasks
+   - If new content conflicts with existing content (same bug ID, same task ID, conflicting spec change):
+     STOP and ask the user how to resolve before proceeding
+   - Existing verified bugs, completed tasks, and original plan sections must be preserved exactly
+
 6. WORKFLOW LOG:
    APPEND to specs/[feature]/history.md following spec-kit/references/workflow-tracking.md:
    - **Phase**: Reopen
    - **Notes**: "Feature reopened from closed state. Previous close.md will become stale — must close again after fixes."
 
 7. AFTER fixes:
-   User says "close [feature]" → regenerates close.md with new health score
+   User says "close [feature]" → updates close.md with new health score section
+   (appends a new close entry with the updated health, preserving the original close data)
    NOTE: Previous health score loaded and compared.
+   
+   **Conflict rule for close update:**
+   If the new close assessment contradicts the original close (e.g., same requirement
+   went from ✅ Resolved to ❌ Not Done):
+     PROMPT user: "Requirement FR-XXX was ✅ Resolved in the original close but
+                   is now ❌ Not Done. How should I reflect this?
+                   1. Mark as new ❌ Not Done (additive — original close preserved)
+                   2. Override the status (update the entry)
+                   3. Flag as ⚠️ Acknowledged instead"
 ```
 
 > **Important**: Reopen is for bugfixes on already-closed features. If the feature never went through close, use "bugfix [feature]" instead. If no bugs are logged yet, reopen auto-creates bugs.md — unlike bugfix mode which expects bugs.md to already exist.

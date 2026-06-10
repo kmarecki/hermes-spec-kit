@@ -45,9 +45,14 @@ IF specs/[feature]/spec.md NOT EXISTS:
 ### Load context
 ```
 LOAD specs/[feature]/spec.md, specs/constitution.md (IF EXISTS)
-LOAD spec-kit/templates/plan-template.md
-COPY spec-kit/templates/plan-template.md → specs/[feature]/plan.md
-IF bugfix mode: LOAD bugs.md for bug context
+
+IF bugfix mode (reopened bugfix):
+  NOTE: "Bugfix mode — plan.md already exists. Will append bugfix sections only."
+  LOAD existing specs/[feature]/plan.md
+  LOAD bugs.md for bug context
+ELSE:
+  LOAD spec-kit/templates/plan-template.md
+  COPY spec-kit/templates/plan-template.md → specs/[feature]/plan.md
 ```
 
 ### Fill Technical Context
@@ -69,7 +74,9 @@ Generate `quickstart.md`: key validation scenarios.
 Choose template: Single project (`src/`, `tests/`) / Web app / Mobile + API.
 
 ### Bugfix planning (bugfix mode)
-For each open bug: analyze root cause, add bugfix section to plan.md, set Plan Ref in bugs.md.
+For each open bug: analyze root cause, append bugfix section to plan.md (do NOT remove existing plan content), set Plan Ref in bugs.md.
+
+**Additive-only**: Append new bugfix sections at the end of plan.md. Never delete or modify existing plan sections. If a new fix contradicts an existing plan section, ask the user for guidance.
 
 ### Note on commits
 Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
