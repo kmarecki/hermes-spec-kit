@@ -2,6 +2,8 @@
 
 Skills that produce spec artifacts use a standard auto-commit pattern. Instead of repeating the 10-line `git rev-parse` block in every skill, reference this document.
 
+Project-specific overrides: Create `specs/git-conventions.md` in your project root to customise commit message templates, branch naming, and merge behaviour. If the file doesn't exist, the defaults below apply.
+
 ## Standard Pattern
 
 ```bash

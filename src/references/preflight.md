@@ -24,7 +24,12 @@ Run these checks in order. If any check fails, stop and report before proceeding
    ELSE:
      MODE = feature
 
-3. WORKFLOW LOAD CHECK — code-writing phase only
+3. GIT CONVENTIONS
+   IF specs/git-conventions.md EXISTS in the project root:
+     LOAD and apply for branch naming, commit messages, and merge behaviour.
+     NOTE: Conventions override the defaults shown in each skill.
+
+4. WORKFLOW LOAD CHECK — code-writing phase only
    IF you are about to call write_file, patch, or terminal(build/test):
      IF spec-kit-workflow is NOT loaded:
        BLOCK: "Must load spec-kit-workflow first for branch guardrails

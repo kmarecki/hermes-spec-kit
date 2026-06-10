@@ -4,6 +4,11 @@ Spec-driven development for Hermes Agent. Every feature starts with a
 specification — not a line of code — and progresses through planning,
 task breakdown, TDD implementation, testing, and a mandatory close phase.
 
+Git conventions (branch naming, commit messages, merge behaviour) are
+defined in `specs/git-conventions.md`. Copy the template from
+`spec-kit/templates/git-conventions-template.md` and customise per
+project.
+
 This guide covers installation, the core workflow, the explore-and-compare
 pattern for parallel variants, and day-to-day usage.
 

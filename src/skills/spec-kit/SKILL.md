@@ -298,9 +298,9 @@ Skills and templates are maintained in the project directory and installed via `
 Spec-kit produces feature directories like `specs/003-user-auth/`. The corresponding git branch should mirror the spec number and name for traceability:
 
 ```text
-feat/NNN-short-name            # Normal forward development (specify mode)
-bug/NNN-short-name                # Bugfix-only branch (standalone, not part of bugfix loop)
-explore/NNN-feature-<variant>     # Creative exploration (one per variant)
+feat/NNN-short-name            # Normal forward development (specify mode) — override in specs/git-conventions.md
+bug/NNN-short-name                # Bugfix-only branch (standalone, not part of bugfix loop) — override in specs/git-conventions.md
+explore/NNN-feature-<variant>     # Creative exploration (one per variant) — override in specs/git-conventions.md
 ```
 
 Examples:
@@ -411,7 +411,8 @@ Installed via `./scripts/install.sh`:
 - `implementation-summary-template.md` — Post-implementation review summary (Phase 6, via `spec-kit-summarize`)
 - `close-template.md` — Lightweight close document (Phase 6 close mode, via `spec-kit-summarize`)
 - `workflow-template.md` — Transition log template (appended by every phase skill on completion)
-- `comparison-template.md` — Creative exploration comparison matrix template
+- `comparison-template.md`: Creative exploration comparison matrix template
+- `git-conventions-template.md`: Project-level git conventions (copy to specs/git-conventions.md)
 - `gitignore-template.md` — Project .gitignore starter (copy to project root after `git init`)
 
 ## References
