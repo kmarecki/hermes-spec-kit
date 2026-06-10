@@ -1,6 +1,6 @@
 ---
 name: spec-kit-review
-description: Use when the user says 'review [feature]', 'analyze [feature]', or 'quality check [feature]' — cross-artifact consistency check (pre-implement) and code quality review (post-implement).
+description: Load when the user says 'spec-kit review [feature]' — cross-artifact consistency check (pre-implement) and code quality review (post-implement).
 version: 1.1.0
 author: Hermes Agent
 license: MIT

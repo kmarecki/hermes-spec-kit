@@ -1,6 +1,6 @@
 ---
 name: spec-kit-constitution
-description: Use when the user says 'create constitution' or 'create project principles' — Phase 0 project setup.
+description: Load when the user says 'spec-kit constitution' or 'spec-kit principles' — Phase 0 project setup.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

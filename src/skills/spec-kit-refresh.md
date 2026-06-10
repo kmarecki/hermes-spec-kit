@@ -1,6 +1,6 @@
 ---
 name: spec-kit-refresh
-description: Use when the user says 'refresh [feature]' or 'sync spec for [feature]' — standalone artifact reconciliation.
+description: Load when the user says 'spec-kit refresh [feature]' — standalone artifact reconciliation for outdated specs.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

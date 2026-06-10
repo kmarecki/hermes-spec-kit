@@ -1,6 +1,6 @@
 ---
 name: spec-kit
-description: Spec-Driven Development (SDD) workflow mirroring github/spec-kit.
+description: Spec-Driven Development (SDD) workflow for Hermes Agent. Load via 'spec-kit' prefix commands (e.g. 'spec-kit bugfix [feature]', 'spec-kit implement [feature]').
 category: software-development
 ---
 

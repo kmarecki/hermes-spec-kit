@@ -1,6 +1,6 @@
 ---
 name: spec-kit-explore
-description: Use when the user says 'explore [feature] with [variants]' — spawns parallel subagents for creative exploration.
+description: Load when the user says 'spec-kit explore [feature] with [variants]' — spawns parallel subagents for creative exploration.
 version: 1.2.0
 author: Hermes Agent
 license: MIT

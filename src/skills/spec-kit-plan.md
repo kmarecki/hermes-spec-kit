@@ -1,6 +1,6 @@
 ---
 name: spec-kit-plan
-description: Use when the user says 'plan [feature]' or 'create plan for [feature]' — Phase 2 technical planning.
+description: Load when the user says 'spec-kit plan [feature]' — Phase 2 technical planning for the feature.
 version: 1.1.0
 author: Hermes Agent
 license: MIT

@@ -1,13 +1,13 @@
 ---
 name: spec-kit-test
-description: Use when the user says 'test [feature]' — Phase 5 bug tracking and manual testing.
+description: Load when the user says 'spec-kit test [feature]', 'spec-kit bug [feature]', or 'spec-kit log [feature]' — Phase 5 bug tracking and manual testing.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
 metadata:
   hermes:
-    tags: [spec, testing, bugs, qa]
+    tags: [spec, testing, bugs, qa, bug, error, failure, issue, problem]
     related_skills: [spec-kit-implement, spec-kit-workflow]
 ---
 
