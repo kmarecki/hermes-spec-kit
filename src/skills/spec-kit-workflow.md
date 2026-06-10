@@ -13,7 +13,7 @@ metadata:
 
 # Spec Kit Workflow Orchestrator
 
-**Load this skill when the user says: "bugfix [feature]", "implement [feature]", "plan [feature]", "specify [feature]", "close [feature]", "create a spec", or any phase-routing command.**
+**Load this skill when the user says: "bugfix [feature]", "reopen [feature]", "implement [feature]", "plan [feature]", "specify [feature]", "close [feature]", "create a spec", or any phase-routing command.**
 
 **Task Persona**: Adopt the mindset of a workflow orchestrator. Your job is routing, not execution. Check prerequisites, validate state, and dispatch to the correct phase skill. Guardrails are your responsibility — enforce them before passing control.
 
@@ -36,14 +36,23 @@ BEFORE any route action (specify, plan, tasks, implement, bugfix, explore, close
 
     CLASSIFY the operation:
       bugfix → expected branch: bug/NNN-bugfix-name
+      reopen → expected branch: {original_prefix}/NNN-{short-name}-bugfixing (from closed feature)
       explore → expected branch: explore/NNN-feature-name-<variant>
       default (specify/plan/tasks/implement/close) → expected branch: feat/NNN-feature-name
 
     IF current branch == "main" or current branch == "master":
-      BLOCK: "Cannot work on feature [feature] while on [branch] branch."
-      PROMPT: "Run these commands to create the feature branch:
-        git checkout -b feat/NNN-feature-name
-        git push -u origin feat/NNN-feature-name"
+      IF operation == reopen:
+        DETECT original prefix from close.md or git log
+        SET reopen_branch = "${prefix}/${NNN}-${short_name}-bugfixing"
+        IF git branch --list "${reopen_branch}":
+          PROMPT: "git checkout ${reopen_branch}  (reusing existing branch)"
+        ELSE:
+          PROMPT: "git checkout -b ${reopen_branch} main && git push -u origin ${reopen_branch}"
+      ELSE:
+        BLOCK: "Cannot work on feature [feature] while on [branch] branch."
+        PROMPT: "Run these commands to create the feature branch:
+          git checkout -b feat/NNN-feature-name
+          git push -u origin feat/NNN-feature-name"
 
     IF current branch != expected branch AND current branch != "main"/"master":
       WARN: "Currently on '[current]'. Expected branch is '[expected]'.
@@ -146,6 +155,48 @@ Each skill BLOCKS if prerequisites are not met:
 - User says: "Implement [feature]"
 - Propose routing to: `spec-kit-implement`
 
+
+### Reopen (Closed Feature Bugfix)
+- User says: "Reopen [feature]" or "reopen [feature]"
+- **Purpose**: Fix bugs in a feature that was previously closed. Routes through bugfix flow, then regenerates close.md.
+- **Prerequisites**: `close.md` or `implementation-summary.md` must exist
+
+**Reopen flow:**
+```
+1. VALIDATE: close.md or implementation-summary.md EXISTS
+   IF not: "Feature [feature] is not closed — nothing to reopen.
+            Use 'bugfix [feature]' if bugs are already logged."
+
+2. DETECT original branch prefix from close.md header or git log
+   CONSTRUCT reopen_branch = {original_prefix}/NNN-{short-name}-bugfixing
+
+3. BRANCH:
+   IF on main/master:
+     CREATE reopen_branch from main
+   IF reopen_branch already exists:
+     CHECKOUT and reuse
+
+4. BUGS:
+   IF bugs.md NOT FOUND:
+     CREATE bugs.md from spec-kit/templates/bugs-template.md
+     NOTE: "bugs.md created. Describe the bugs you're reopening for."
+     ROUTE to: spec-kit-test (let user log bugs)
+   IF bugs.md EXISTS (all verified):
+     NOTE: "Existing bugs.md found with N verified bugs.
+            Add new bugs, then the fix loop will start."
+     ROUTE to: spec-kit-test (let user log new bugs)
+   IF bugs.md EXISTS (open bugs):
+     PROCEED to bugfix flow
+
+5. ROUTE: spec-kit-plan → spec-kit-tasks → spec-kit-implement (auto-chain)
+
+6. AFTER fixes:
+   User says "close [feature]" → regenerates close.md with new health score
+   NOTE: Previous health score loaded and compared.
+```
+
+> **Important**: Reopen is for bugfixes on already-closed features. If the feature never went through close, use "bugfix [feature]" instead. If no bugs are logged yet, reopen auto-creates bugs.md — unlike bugfix mode which expects bugs.md to already exist.
+
 ### Summarize / Close (Phase 6 — Mandatory)
 - User says: "Summarize [feature]" or "Implementation summary for [feature]"
 - Route to: `spec-kit-summarize` (full mode)
@@ -196,6 +247,7 @@ Check for artifacts to determine current phase:
 || `bugs.md` all verified | Testing complete — **must close** |
 || `implementation-summary.md` exists | Summarized — complete |
 || `close.md` exists | Closed — complete |
+|| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
 || All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
 || `variants/` directory exists with ≥2 entries | Exploring (creative mode) |
 || `comparison.md` exists | Compared — decision made |
@@ -207,6 +259,10 @@ Check for artifacts to determine current phase:
 ### Start bugfix loop
 - User says: "bugfix [feature]" or "fix bugs in [feature]"
 - LOAD `specs/[feature]/bugs.md`
+- IF `specs/[feature]/close.md` or `specs/[feature]/implementation-summary.md` EXISTS:
+    NOTE: "Feature [feature] was previously closed. Use 'reopen [feature]' to explicitly reopen it."
+    SUGGEST: "Reopen creates a bugfix branch from main and auto-creates bugs.md if needed."
+    ROUTE to: reopen flow (user said 'reopen [feature]' to continue)
 - **Plan Ref enforcement** — for each bug with Status: open or in-progress:
   - CHECK for a **Plan Ref** entry
   - IF any open bug lacks a Plan Ref:
@@ -257,6 +313,7 @@ AFTER all bugs in bugs.md have Status: verified:
 - "Implement 003-user-auth"
 - "Test 003-user-auth"
 - "bugfix 003-user-auth"
+- "reopen 003-user-auth" (for closed features)
 - "Verify BUG-001 in 003-user-auth"
 - "Bug status 003-user-auth"
 - "Summarize 003-user-auth" (full summary)
@@ -279,6 +336,7 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Review** | None (read-only) | BLOCKED | User says "review", "analyze", or "quality check" |
 | **Implement** | source code, `tasks.md` (completions), `bugs.md` (mark resolved) | ALLOWED | `tasks.md` with pending tasks |
 | **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
+| **Reopen** | `bugs.md` (create if missing), source code (fix loop) | ALLOWED (same as bugfix) | `close.md` exists, user says "reopen" |
 | **Explore** | `specs/[feature]/variants/*/` | ALLOWED (delegate_task subagents) | User provides variants |
 | **Compare** | `comparison.md` only | BLOCKED | `variants/` directory exists |
 | **Summarize / Close** | `implementation-summary.md`, `close.md`, `spec.md` (patch deviations), `plan.md` (patch deviations), `tasks.md` (finalize), `bugs.md` (finalize) | BLOCKED | `implementation-summary.md` and `close.md` both missing |

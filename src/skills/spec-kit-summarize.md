@@ -161,6 +161,16 @@ FOR each gap marked "⚠️ Acknowledged":
   NOTE: Reason for deferral, who decided, under what constraint
 ```
 
+### Step 5.5: Detect previous close (reopen scenario)
+```
+IF specs/[feature]/close.md or specs/[feature]/implementation-summary.md EXISTS:
+  LOAD previous health score from existing close document
+  NOTE: "Previous spec health was N%. This close will replace it."
+  SET previous_health = N
+ELSE:
+  SET previous_health = None
+```
+
 ### Step 6: Compute Spec Health Score
 *Skip in lightweight close mode*
 ```
@@ -227,6 +237,7 @@ COPY `spec-kit/templates/implementation-summary-template.md` → `specs/[feature
 
 Populate with:
 - Spec Health Score at top (from Step 6)
+- **Previous vs Current**: IF previous_health exists: "Previous health: N% → Current health: M%"
 - Spec Health Scoring table
 - All gap analysis sections
 - Spec Artifact Refresh section listing what was patched (from Step 7)

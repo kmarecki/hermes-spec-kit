@@ -40,6 +40,7 @@ The workflow has **three development modes**:
 | **specify** (default) | "Create a spec for [feature]" | Full forward phase sequence. Forward phases are manual; user decides when to advance. |
 | **bugfix** | "bugfix [feature]" | Reuses Plan → Tasks → Implement inner loop. Chains automatically — the user already committed by invoking bugfix mode. **Auto-chains to Close** when all bugs verified. |
 | **explore** | "Explore [feature] with [variants]" | Spawns N parallel branches, each running its own independent phase sequence. User compares variants with `spec-kit-compare` and chooses a winner. |
+| **reopen** | "Reopen [feature]" | Reopens a closed feature for bugfixing. Auto-creates bugs.md, creates a bugfix branch, and routes through the bugfix loop. Previous close.md becomes stale — must close again after fixes. |
 
 **Constitution is always optional** in every mode. If `specs/constitution.md` doesn't exist, phases run without constitutional gates.
 
@@ -181,6 +182,7 @@ Phase transitions are **manual** but gated by artifact presence. Each phase skil
 | `bugs.md` all verified | Testing complete — **must close** |
 | `implementation-summary.md` exists | Summarized — complete |
 | `close.md` exists | Closed — complete |
+| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
 | All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
 | `workflow.md` last entry | Current phase (fast lookup) |
 | `variants/` directory exists with ≥2 entries | Exploring (creative mode) |
