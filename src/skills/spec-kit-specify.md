@@ -74,7 +74,7 @@ Validate: no implementation leaks, all scenarios defined, criteria measurable.
 Design phase artifacts (spec.md, clarify.md, plan.md, tasks.md) are NOT committed individually. They are batch-committed when Phase 4 (Implement) begins. See `spec-kit/references/auto-commit.md`.
 
 ## Transition Log
-Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
 - Phase: Phase 1
 - Artifact: `spec.md`
 

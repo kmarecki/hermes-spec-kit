@@ -25,36 +25,39 @@ Before routing any feature-level command, check that the project is initialized 
 
 ### Branch Guard — STRICT
 
-Every feature, bugfix, or explore session MUST start on a branch named after the spec number. This prevents commits landing on `main`/`master`.
+Every feature, bugfix, or explore session MUST start on a branch named according to the project's git conventions. This prevents commits landing on blocked branches.
 
 ```
 BEFORE any route action (specify, plan, tasks, implement, bugfix, explore, close):
+  LOAD specs/git-conventions.md — read feature_prefix, bugfix_prefix, explore_prefix,
+    reopen_suffix, branch_source, and blocked_branches. (Preflight step 3 already does this.)
+
   EXTRACT feature name from the user's command (e.g., "003-user-auth")
 
   IF feature has a spec number prefix (NNN-):
     DETECT current branch: $(git rev-parse --abbrev-ref HEAD)
 
-    CLASSIFY the operation:
-      bugfix → expected branch: bug/NNN-bugfix-name
-      reopen → expected branch: {original_prefix}/NNN-{short-name}-bugfixing (from closed feature)
-      explore → expected branch: explore/NNN-feature-name-<variant>
-      default (specify/plan/tasks/implement/close) → expected branch: feat/NNN-feature-name
+    CLASSIFY the operation and construct expected branch from conventions:
+      bugfix → expected branch: {bugfix_prefix}/NNN-{short-name}
+      reopen → expected branch: {original_prefix}/NNN-{short-name}{reopen_suffix} (from closed feature)
+      explore → expected branch: {explore_prefix}/NNN-feature-name-<variant>
+      default (specify/plan/tasks/implement/close) → expected branch: {feature_prefix}/NNN-feature-name
 
-    IF current branch == "main" or current branch == "master":
+    IF current branch is in blocked_branches (from conventions):
       IF operation == reopen:
         DETECT original prefix from close.md or git log
-        SET reopen_branch = "${prefix}/${NNN}-${short_name}-bugfixing"
+        SET reopen_branch = "${prefix}/${NNN}-${short_name}${reopen_suffix}"
         IF git branch --list "${reopen_branch}":
           PROMPT: "git checkout ${reopen_branch}  (reusing existing branch)"
         ELSE:
-          PROMPT: "git checkout -b ${reopen_branch} main && git push -u origin ${reopen_branch}"
+          PROMPT: "git checkout -b ${reopen_branch} ${branch_source} && git push -u origin ${reopen_branch}"
       ELSE:
         BLOCK: "Cannot work on feature [feature] while on [branch] branch."
         PROMPT: "Run these commands to create the feature branch:
-          git checkout -b feat/NNN-feature-name
-          git push -u origin feat/NNN-feature-name"
+          git checkout -b {feature_prefix}/NNN-feature-name
+          git push -u origin {feature_prefix}/NNN-feature-name"
 
-    IF current branch != expected branch AND current branch != "main"/"master":
+    IF current branch != expected branch AND current branch NOT in blocked_branches:
       WARN: "Currently on '[current]'. Expected branch is '[expected]'.
              Proceed anyway? If not, abort and switch branches."
 
@@ -168,11 +171,12 @@ Each skill BLOCKS if prerequisites are not met:
             Use 'bugfix [feature]' if bugs are already logged."
 
 2. DETECT original branch prefix from close.md header or git log
-   CONSTRUCT reopen_branch = {original_prefix}/NNN-{short-name}-bugfixing
+   CONSTRUCT reopen_branch = {original_prefix}/NNN-{short-name}{reopen_suffix}
+     (reopen_suffix from specs/git-conventions.md, default: -bugfixing)
 
 3. BRANCH:
-   IF on main/master:
-     CREATE reopen_branch from main
+   IF on a blocked branch (from specs/git-conventions.md blocked_branches):
+     CREATE reopen_branch from branch_source (from conventions, default: main)
    IF reopen_branch already exists:
      CHECKOUT and reuse
 
@@ -190,7 +194,12 @@ Each skill BLOCKS if prerequisites are not met:
 
 5. ROUTE: spec-kit-plan → spec-kit-tasks → spec-kit-implement (auto-chain)
 
-6. AFTER fixes:
+6. WORKFLOW LOG:
+   APPEND to specs/[feature]/history.md following spec-kit/references/workflow-tracking.md:
+   - **Phase**: Reopen
+   - **Notes**: "Feature reopened from closed state. Previous close.md will become stale — must close again after fixes."
+
+7. AFTER fixes:
    User says "close [feature]" → regenerates close.md with new health score
    NOTE: Previous health score loaded and compared.
 ```
@@ -261,7 +270,7 @@ Check for artifacts to determine current phase:
 - LOAD `specs/[feature]/bugs.md`
 - IF `specs/[feature]/close.md` or `specs/[feature]/implementation-summary.md` EXISTS:
     NOTE: "Feature [feature] was previously closed. Use 'reopen [feature]' to explicitly reopen it."
-    SUGGEST: "Reopen creates a bugfix branch from main and auto-creates bugs.md if needed."
+    SUGGEST: "Reopen creates a bugfix branch from the project's branch_source (from conventions) and auto-creates bugs.md if needed."
     ROUTE to: reopen flow (user said 'reopen [feature]' to continue)
 - **Plan Ref enforcement** — for each bug with Status: open or in-progress:
   - CHECK for a **Plan Ref** entry

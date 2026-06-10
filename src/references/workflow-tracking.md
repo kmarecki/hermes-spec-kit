@@ -1,6 +1,6 @@
-# Workflow Transition Log
+# Process History
 
-Every spec feature directory maintains `specs/[feature]/workflow.md` — an append-only transition log. Each phase skill appends one entry when it completes.
+Every spec feature directory maintains `specs/[feature]/history.md` — an append-only process history. Each phase skill appends one entry when it completes.
 
 ## Standard Entry Format
 
@@ -24,13 +24,13 @@ Every spec feature directory maintains `specs/[feature]/workflow.md` — an appe
 
 ## How to Use
 
-At the end of any phase skill, after all artifacts are written and committed, append to workflow.md:
+At the end of any phase skill, after all artifacts are written and committed, append to history.md:
 
 ```
-FULL_PATH="specs/[feature]/workflow.md"
+FULL_PATH="specs/[feature]/history.md"
 
-CREATE workflow.md IF NOT EXISTS with header:
-  # Workflow Log: [Feature]
+CREATE history.md IF NOT EXISTS with header:
+  # Process History: [Feature]
 
 APPEND entry:
   ## [$(date -u +"%Y-%m-%dT%H:%M:%SZ")] | [Phase] → Complete
@@ -57,3 +57,4 @@ APPEND entry:
 | spec-kit-refresh | Refresh |
 | spec-kit-explore | Explore |
 | spec-kit-compare | Compare |
+| Reopen (workflow) | Reopen |

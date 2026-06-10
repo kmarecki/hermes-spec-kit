@@ -17,7 +17,7 @@ metadata:
 
 **Phase**: N/A (parallel exploration)
 
-**Purpose**: Spawn N parallel `delegate_task` subagents, each on its own branch (`explore/NNN-feature-<variant>`), running independent specify → clarify → plan → tasks → [implement] cycles. User compares variants with `spec-kit-compare`.
+**Purpose**: Spawn N parallel `delegate_task` subagents, each on its own branch (`{explore_prefix}/NNN-feature-<variant>`), running independent specify → clarify → plan → tasks → [implement] cycles. User compares variants with `spec-kit-compare`.
 
 **When NOT to use**: For bounded, well-understood features with a single obvious approach — just implement directly.
 
@@ -52,10 +52,10 @@ database but have independent working trees, indexes, and HEADs.
 WORKTREE_BASE = ../<repo>-worktrees/   (relative to project root, gitignored)
 
 FOR each variant (variant-a, variant-b, ...):
-  BRANCH = explore/NNN-feature-<variant>
+  BRANCH = {explore_prefix}/NNN-feature-<variant>
   WORKTREE_PATH = $WORKTREE_BASE/explore-<variant>
 
-  # Create branch from current HEAD (feat/NNN-name or explore/NNN-feature-<variant>)
+  # Create branch from conventions prefix (feature_prefix or explore_prefix)
   RUN: git branch $BRANCH  2>/dev/null || echo "branch exists"
 
   # Create worktree
@@ -74,7 +74,7 @@ FOR each variant (variant-a, variant-b, ...):
 Register each variant's worktree path:
 ```
 VARIANTS[<variant>] = {
-  "branch": "explore/NNN-feature-<variant>",
+  "branch": "{explore_prefix}/NNN-feature-<variant>",
   "worktree": "<absolute-worktree-path>",
   "artifacts": "specs/[feature]/variants/<variant>/"
 }
@@ -92,14 +92,14 @@ delegate_task(tasks=[
   {"goal": "Implement [feature] using [Variant A approach]",
    "context": "Spec: specs/[feature]/spec.md\n"
               "Worktree: <absolute-path-to-worktree-a>\n"
-              "Branch: explore/NNN-feature-a\n"
+              "Branch: {explore_prefix}/NNN-feature-a\n"
               "Artifacts dir: specs/[feature]/variants/a/\n"
               "All work happens inside the worktree path — cd there first.",
    "toolsets": ["file", "terminal"]},
   {"goal": "Implement [feature] using [Variant B approach]",
    "context": "Spec: specs/[feature]/spec.md\n"
               "Worktree: <absolute-path-to-worktree-b>\n"
-              "Branch: explore/NNN-feature-b\n"
+              "Branch: {explore_prefix}/NNN-feature-b\n"
               "Artifacts dir: specs/[feature]/variants/b/\n"
               "All work happens inside the worktree path — cd there first.",
    "toolsets": ["file", "terminal"]},
@@ -108,14 +108,14 @@ delegate_task(tasks=[
 
 Each subagent receives:
 - Feature spec and constitution for context
-- Branch name: `explore/NNN-feature-<variant>`
+- Branch name: `{explore_prefix}/NNN-feature-<variant>`
 - Worktree path: `<project>/../<repo>-worktrees/explore-<variant>/`
 - Independent spec-artifact directory: `specs/[feature]/variants/<variant>/`
 
 Subagent instructions for isolation:
 1. `cd <worktree-path>` immediately on start
 2. All file writes and git commands operate inside YOUR worktree only
-3. Push changes to the shared branch: `git push origin explore/NNN-feature-<variant>`
+3. Push changes to the shared branch: `git push origin {explore_prefix}/NNN-feature-<variant>`
 4. Do NOT read or write files from other worktrees
 5. Spec artifacts go to `specs/[feature]/variants/<variant>/` (in the main repo)
 
@@ -124,7 +124,7 @@ Subagent instructions for isolation:
 NOTE: "All N variants completed."
 NOTE: "Worktrees preserved at ../<repo>-worktrees/ for the compare phase."
 NOTE: "Run 'compare [feature]' to review and select a winner."
-APPEND to specs/[feature]/workflow.md following spec-kit/references/workflow-tracking.md:
+Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
 - Phase: Explore
 - Artifacts: specs/[feature]/variants/*/
 - Worktrees: ../<repo>-worktrees/explore-*/
@@ -136,4 +136,4 @@ APPEND to specs/[feature]/workflow.md following spec-kit/references/workflow-tra
 3. **Assuming subagents completed successfully**: Verify by checking variant worktree directories exist before running compare.
 4. **Branch must exist before `git worktree add`**: `git worktree add <path> <branch>` requires the branch to already exist. Always create the branch first with `git branch <branch>` then add the worktree. `git worktree add -b <branch> <path>` creates and checks out a new orphan-like branch but from HEAD — use explicit two-step to avoid ambiguity.
 5. **Worktree cleanup after compare**: After the winning variant is selected and promoted, remove all worktrees with `git worktree remove <path>` and prune with `git worktree prune`. Worktrees left behind cause git operations warnings.
-6. **Subagent pushes require remote**: Before subagents can push to the shared branch, the branch must exist on origin. Push the branch head before spawning: `git push origin explore/NNN-feature-<variant>` (after creation).
+6. **Subagent pushes require remote**: Before subagents can push to the shared branch, the branch must exist on origin. Push the branch head before spawning: `git push origin {explore_prefix}/NNN-feature-<variant>` (after creation).

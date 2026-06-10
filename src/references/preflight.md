@@ -9,11 +9,11 @@ Run these checks in order. If any check fails, stop and report before proceeding
 ```
 1. BRANCH CHECK
    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-   IF CURRENT_BRANCH == "main" OR CURRENT_BRANCH == "master":
-     BLOCK: "On branch main/master. All spec-kit work must be on a
+   IF CURRENT_BRANCH == blocked_branches (from git-conventions.md, step 3):
+     BLOCK: "On a blocked branch. All spec-kit work must be on a
              feature branch. Run:
-             git checkout -b feat/NNN-name
-             (or bug/NNN-name for bugfix, explore/NNN-name for explore)"
+             git checkout -b {feature_prefix}/NNN-name
+             (or {bugfix_prefix}/NNN-name for bugfix, {explore_prefix}/NNN-name for explore)"
      HALT
    
 2. MODE DETECTION

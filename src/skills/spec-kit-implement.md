@@ -30,11 +30,11 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 
 > **Branch Guard**:
 
-| Situation | Commit message |
-|-----------|---------------|
-| Phase boundary (TDD or bypass) | `feat: [feature] Phase N - [Phase Name]` |
-| Regression umbrella fix | `fix: [feature] BF-REGRESSION-001 - fix regressions` |
-| Bugfix loop (per BF-### task) | `fix: [feature] BF-### - description` |
+| Situation | Use commit template from specs/git-conventions.md |
+|-----------|--------------------------------------------------|
+| Phase boundary (TDD or bypass) | Implement template (default: `feat: [feature] Phase N - [Phase Name]`) |
+| Regression umbrella fix | Regression template (default: `fix: [feature] BF-REGRESSION-001 - fix regressions`) |
+| Bugfix loop (per BF-### task) | Bugfix template (default: `fix: [feature] BF-### - description`) |
 
 See `spec-kit/references/auto-commit.md` for the standard pattern. Commits use `--no-verify` to bypass pre-commit hooks.
 
@@ -65,18 +65,19 @@ SCAN tasks.md for `> **TDD**: Bypassed by user request`
     NOTE: "TDD active — phase-level RED-GREEN cycle enforced."
 ```
 
-### Step 1: Branch guard — prevent main/master commits
+### Step 1: Branch guard — prevent blocked branch commits
 
-Before any file operation, verify the branch is NOT main/master:
+Before any file operation, verify you are not on a blocked branch (from specs/git-conventions.md blocked_branches):
 
 ```bash
 IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
+  LOAD specs/git-conventions.md — read blocked_branches, feature_prefix
   CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-  IF ["$CURRENT_BRANCH" = "main"] || ["$CURRENT_BRANCH" = "master"]; THEN
-    BLOCK: "On branch main/master — implementation must happen on a feature branch."
+  IF current branch is in blocked_branches; THEN
+    BLOCK: "On a blocked branch — implementation must happen on a feature branch."
     PROMPT: "Switch to a feature branch first:
-      git checkout -b feat/NNN-feature-name
-      git push -u origin feat/NNN-feature-name"
+      git checkout -b {feature_prefix}/NNN-feature-name
+      git push -u origin {feature_prefix}/NNN-feature-name"
     HALT
   FI
 ELSE
@@ -86,11 +87,14 @@ FI
 
 ### Step 2: Commit spec artifacts (batch — all design phases)
 
-Before starting implementation, commit all spec artifacts created during design phases as a single batch:
+Before starting implementation, commit all spec artifacts created during design phases as a single batch.
+Use the batch commit template from specs/git-conventions.md (default: "spec: [feature] spec artifacts (spec, plan, tasks)"):
 
 ```bash
 IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
-  COMMIT_MSG="spec: [feature] spec artifacts (spec, plan, tasks)"
+  # Use the batch commit template from specs/git-conventions.md
+  # Default: "spec: [feature] spec artifacts (spec, plan, tasks)"
+  COMMIT_MSG="[batch commit message from conventions]"
   git add specs/[feature]/spec.md       \
          specs/[feature]/clarify.md      \
          specs/[feature]/plan.md         \
@@ -181,9 +185,10 @@ Execute the entire phase as a batch, not task-by-task:
     
     d. UPDATE tasks.md — mark all tasks in this phase [X]
     
-    e. COMMIT the full phase:
+    e. COMMIT the full phase using the implement commit template from specs/git-conventions.md:
+       (default: "feat: [feature] Phase N - [Phase Name]")
        git add -A
-       git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify
+       git commit -m "[commit message from conventions]" --no-verify
        COMMIT_HASH=$(git rev-parse HEAD)
        NOTE: "Phase N committed as $COMMIT_HASH"
 
@@ -205,9 +210,10 @@ IF tdd_bypassed:
       a. IMPLEMENT directly
       b. VERIFY manually (no automated tests to run)
     UPDATE tasks.md — mark all tasks in phase [X]
-    COMMIT the phase:
+    COMMIT the phase using the implement template from specs/git-conventions.md:
+      (default: "feat: [feature] Phase N - [Phase Name]")
       git add -A
-      git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify
+      git commit -m "[commit message from conventions]" --no-verify
 ```
 
 ### Step 8: Progress reporting
@@ -272,7 +278,8 @@ IF any tests fail:
       IF all pass:
         Follow `spec-kit/references/auto-commit.md`:
         - Scope: source code changes
-        - Message: `"fix: [feature] BF-REGRESSION-001 - fix regressions"`
+        - Message: Use the regression commit template from specs/git-conventions.md
+          (default: `"fix: [feature] BF-REGRESSION-001 - fix regressions"`)
         MARK BF-REGRESSION-001 as [X] in tasks.md
         REPORT: "All regressions fixed. All N tests pass."
       IF any still fail:
@@ -334,7 +341,7 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Revi
 - Bugfixes must follow: "bugfix [feature]" → plan → tasks → implement
 
 ## Transition Log
-Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
 - Phase: Phase 4 (per-phase entries for each completed phase)
 - Artifacts: source code changes per phase
 

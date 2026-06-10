@@ -1,4 +1,4 @@
-# Workflow Log: [Feature Name]
+# Process History: [Feature Name]
 
 ## [TIMESTAMP] | Phase N → [Phase Name] → Complete
 - **Skill**: [skill-name]

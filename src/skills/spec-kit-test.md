@@ -28,14 +28,14 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 
 ## Git Commit Guidelines
 
-> **Branch Guard**: Before any git operation, verify you are NOT on `main`/`master`.
-> If on main/master, BLOCK and prompt: `git checkout -b feat/NNN-feature-name`
-> (or `bug/NNN-bugfix-name` for bugfix work). See `spec-kit-workflow` for the full
+> **Branch Guard**: Before any git operation, verify you are NOT on a blocked branch (from specs/git-conventions.md blocked_branches).
+> If on a blocked branch, BLOCK and prompt: `git checkout -b {feature_prefix}/NNN-feature-name`
+> (or `{bugfix_prefix}/NNN-bugfix-name` for bugfix work). See `spec-kit-workflow` for the full
 > branch guard logic.
 
-| Situation | Commit message |
-|-----------|---------------|
-| Bug log (Phase 5) | `spec(phase-5): [feature] bug log` |
+| Situation | Use commit template from specs/git-conventions.md |
+|-----------|--------------------------------------------------|
+| Bug log (Phase 5) | Bug log template (default: `spec(phase-5): [feature] bug log`) |
 
 See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`.
 
@@ -90,7 +90,7 @@ IF all bugs verified:
 ```
 
 ### Transition Log
-Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
 - Phase: Phase 5
 - Artifact: `specs/[feature]/bugs.md`
 

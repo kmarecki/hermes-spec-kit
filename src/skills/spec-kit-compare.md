@@ -95,26 +95,28 @@ IF user rejects all variants:
 
 After the user picks a variant (or cherry-picks features), the winning
 variant's code lives in a separate git worktree on branch
-`explore/NNN-feature-<variant>`. It must be merged into the main feature
-branch `feat/NNN-name`.
+`{explore_prefix}/NNN-feature-<variant>`. It must be merged into the main feature
+branch `{feature_prefix}/NNN-name`.
 
-**Prerequisites**: The main feature branch `feat/NNN-name` must exist and
+**Prerequisites**: The main feature branch `{feature_prefix}/NNN-name` must exist and
 be up-to-date with the spec. Run this from the main repo (not the worktree).
 
 **Step 1: Merge or cherry-pick the code**
 
 ```
 IF user wants a full merge:
-  RUN: git checkout feat/NNN-name
-  RUN: git merge explore/NNN-feature-<winner> --no-ff
-  COMMIT: "feat: [NNN-name] merge winning variant [variant-name]"
+  RUN: git checkout {feature_prefix}/NNN-name
+  RUN: git merge {explore_prefix}/NNN-feature-<winner> --no-ff
+  COMMIT: Use the variant_promotion commit template from specs/git-conventions.md
+          (default: "feat: [NNN-name] merge winning variant [variant-name]")
 
 IF user wants selective cherry-pick (specific features only):
   For each cherry-picked feature:
-    FIND commit(s) on explore/NNN-feature-<source> that implement it
-    RUN: git checkout feat/NNN-name
+    FIND commit(s) on {explore_prefix}/NNN-feature-<source> that implement it
+    RUN: git checkout {feature_prefix}/NNN-name
     RUN: git cherry-pick <commit-hash>...
-  COMMIT: "feat: [NNN-name] cherry-pick [features] from [variant]"
+  COMMIT: Use the variant_promotion commit template from specs/git-conventions.md
+          (default: "feat: [NNN-name] cherry-pick [features] from [variant]")
 
 IF variants produced code in the main repo worktree but NOT on a separate branch:
   # Fallback: copy source files directly
@@ -130,11 +132,11 @@ IF spec/plan/tasks were copied from variant to specs/[feature]/:
   VERIFY: artifacts in specs/[feature]/ match what was merged
   UPDATE: any paths or references that changed during merge
 
-APPEND to specs/[feature]/workflow.md:
+APPEND to specs/[feature]/history.md:
 - Phase: Compare → Promote
 - Winner: [variant-name]
 - Promotion method: merge / cherry-pick / file-copy
-- Branch: feat/NNN-name (merged from explore/NNN-feature-<winner>)
+- Branch: {feature_prefix}/NNN-name (merged from {explore_prefix}/NNN-feature-<winner>)
 ```
 
 **Step 3: Handle conflicts (if merge has conflicts)**
@@ -153,10 +155,10 @@ is relative to the project root. Detect the project root with
 `git rev-parse --show-toplevel` and construct the full worktree path
 as `<project-root>/../<repo>-worktrees/explore-<variant>/`.
 
-**Branch name enforcement**: Both branches involved (`feat/NNN-name` and
-`explore/NNN-feature-<variant>`) must follow the spec-kit branch naming
-convention (see spec-kit umbrella skill). Verify with `git branch --list`
-before any git operation.
+**Branch name enforcement**: Both branches involved (`{feature_prefix}/NNN-name` and
+`{explore_prefix}/NNN-feature-<variant>`) must follow the convention from
+specs/git-conventions.md (read feature_prefix and explore_prefix).
+Verify with `git branch --list` before any git operation.
 
 ### Generate comparison.md
 Copy `spec-kit/templates/comparison-template.md` → `specs/[feature]/comparison.md`
@@ -172,7 +174,7 @@ NOTE: "Worktrees preserved at ../<repo>-worktrees/ in case you need
 ```
 
 ## Transition Log
-Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
 - Phase: Compare
 - Artifacts: `comparison.md`
 

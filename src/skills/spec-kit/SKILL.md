@@ -143,11 +143,11 @@ Routing logic, trigger phrases, and workflow mechanics belong in the skill files
 
 ## Workflow Tracking (Transition Log)
 
-Every spec directory maintains `specs/NNN-name/workflow.md` — an append-only transition log. Each phase skill appends one entry when it completes. This gives:
+Every spec directory maintains `specs/NNN-name/history.md` — an append-only process history. Each phase skill appends one entry when it completes. This gives:
 
 - **Transition history** — when and why phases changed, survives context compression
-- **Fast phase detection** — `grep '→ Complete' workflow.md | tail -1` is faster than scanning the directory
-- **User visibility** — `cat workflow.md` shows the full history
+- **Fast phase detection** — `grep '→ Complete' history.md | tail -1` is faster than scanning the directory
+- **User visibility** — `cat history.md` shows the full process history
 - **No sync drift** — append-only entries can never disagree with reality
 
 **Format** (appended by each phase skill on completion):
@@ -160,7 +160,7 @@ Every spec directory maintains `specs/NNN-name/workflow.md` — an append-only t
 
 **When created**: First transition (typically Phase 1: Specify) creates the file. If a user manually created `spec.md` before running a skill, the first skill run backfills entries for all completed phases.
 
-**Phase detection shortcut**: Instead of scanning the spec directory for artifact files, load `workflow.md` and read the last `→ Complete` line. The phase name before the arrow is the current phase. Cross-check against artifact presence as a sanity check.
+**Phase detection shortcut**: Instead of scanning the spec directory for artifact files, load `history.md` and read the last `→ Complete` line. The phase name before the arrow is the current phase. Cross-check against artifact presence as a sanity check.
 
 See `references/workflow-tracking.md` for full design rationale.
 
@@ -184,11 +184,11 @@ Phase transitions are **manual** but gated by artifact presence. Each phase skil
 | `close.md` exists | Closed — complete |
 | `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
 | All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
-| `workflow.md` last entry | Current phase (fast lookup) |
-| `variants/` directory exists with ≥2 entries | Exploring (creative mode) |
-| `comparison.md` exists | Compared — decision made |
+|| `history.md` last entry | Current phase (fast lookup) |
+|| `variants/` directory exists with ≥2 entries | Exploring (creative mode) |
+|| `comparison.md` exists | Compared — decision made |
 
-> **Tip**: `workflow.md` is the fastest phase detector. Read the last `→ Complete` line instead of scanning directory artifacts.
+> **Tip**: `history.md` is the fastest phase detector. Read the last `→ Complete` line instead of scanning directory artifacts.
 
 > **Drift detection**: When loading an existing feature that has `implementation-summary.md` or `close.md`, read its Spec State / Artifact State table. If any artifact is `⚠️ needs review` or `❌ outdated`, warn the user and suggest `spec-kit-refresh`.
 
@@ -198,7 +198,7 @@ See `spec-kit-workflow` for the full permission matrix (12 rows, one per phase).
 
 - **Code-editing tools** (write_file/patch/terminal for builds): ALLOWED only during **Implement** (Phase 4) and bugfix loop implementations
 - **Spec artifact writes**: Only during their respective phase
-- **`workflow.md`**: All phases may append to the transition log
+- **`history.md`**: All phases may append to the process history
 - **Summarize/Close exception**: May patch `spec.md` and `plan.md` to reconcile intentional deviations
 - **Refresh exception**: May patch spec artifacts with per-item user approval
 
@@ -297,22 +297,23 @@ Skills and templates are maintained in the project directory and installed via `
 
 ## Git Branch Naming Convention
 
-Spec-kit produces feature directories like `specs/003-user-auth/`. The corresponding git branch should mirror the spec number and name for traceability:
+Spec-kit produces feature directories like `specs/003-user-auth/`. The corresponding git branch should mirror the spec number and name for traceability. The authoritative rules live in `specs/git-conventions.md` (auto-created by preflight if missing). Default patterns:
 
 ```text
-feat/NNN-short-name            # Normal forward development (specify mode) — override in specs/git-conventions.md
-bug/NNN-short-name                # Bugfix-only branch (standalone, not part of bugfix loop) — override in specs/git-conventions.md
-explore/NNN-feature-<variant>     # Creative exploration (one per variant) — override in specs/git-conventions.md
+{feature_prefix}/NNN-short-name        # Normal forward development
+{bugfix_prefix}/NNN-short-name          # Bugfix-only branch (standalone)
+{explore_prefix}/NNN-feature-<variant>   # Creative exploration (one per variant)
 ```
 
-Examples:
+With default values (`feat/`, `bug/`, `explore/`), common examples are:
+
 | Spec Directory | Branch Name |
 |:---------------|:------------|
-| `specs/001-user-auth/` | `feature/001-user-auth` |
-| `specs/002-oauth2-api-integration/` | `feature/002-oauth2-api-integration` |
-| `specs/003-data-export/` | `fix/003-data-export` (standalone bugfix) |
-| `specs/004-taskify/variants/react/` | `explore/004-taskify-react` |
-| `specs/004-taskify/variants/vue/` | `explore/004-taskify-vue` |
+| `specs/001-user-auth/` | `feature/001-user-auth` if prefix is `feature` |
+| `specs/002-oauth2-api-integration/` | `feat/002-oauth2-api-integration` with default `feat` |
+| `specs/003-data-export/` | `{bugfix_prefix}/003-data-export` (standalone bugfix) |
+| `specs/004-taskify/variants/react/` | `{explore_prefix}/004-taskify-react` |
+| `specs/004-taskify/variants/vue/` | `{explore_prefix}/004-taskify-vue` |
 
 **During the bugfix loop**, the bugfix work happens on whatever branch the feature was implemented on. Do not create separate bugfix branches for individual bugfix loop iterations — the loop is part of the same feature branch.
 
@@ -330,20 +331,22 @@ See `spec-kit/references/auto-commit.md` for the standard commit pattern. Each s
 
 Design phases (0-3) do NOT auto-commit individually. All spec artifacts are committed as a single batch when Phase 4 (Implement) begins.
 
-| Phase | Scope | Commit Message | Automatic? |
-|-------|-------|----------------|------------|
-| 0 — Constitution | `specs/constitution.md` | `spec(phase-0): constitution for [project]` | **No** — batched |
+The authoritative commit templates live in `specs/git-conventions.md`. Defaults shown here for quick reference:
+
+| Phase | Scope | Commit Message (from conventions) | Automatic? |
+|-------|-------|------------------------------------|------------|
+| 0 — Constitution | `specs/constitution.md` | Constitution template: `spec(phase-0): constitution for [project]` | **No** — batched |
 | 1 — Specify | `specs/NNN-name/spec.md` | (no separate commit) | **No** — batched |
 | 1.5 — Clarify | `specs/NNN-name/clarify.md` | (no separate commit) | **No** — batched |
 | 2 — Plan | `specs/NNN-name/plan.md`, `research.md`, etc. | (no separate commit) | **No** — batched |
 | 3 — Tasks | `specs/NNN-name/tasks.md` | (no separate commit) | **No** — batched |
-| **Batch** | all spec artifacts for the feature | `spec: [NNN-name] spec artifacts (spec, plan, tasks)` | **Yes** — at start of Phase 4 (Implement) |
-| 4 — Implement | Source code per phase | `feat: [NNN-name] Phase N - [Phase Name]` | Yes (per phase commit) |
-| 5 — Test / Bugs | `specs/NNN-name/bugs.md` | `spec(phase-5): [NNN-name] bug log` | Yes |
-| 5 — Bugfix fix | Source code per bugfix task | `fix: [NNN-name] BF-### - description` | Yes (per fix) |
-| 5 — Regression umbrella | Source code for regressions | `fix: [NNN-name] BF-REGRESSION-001 - fix regressions` | Yes (once) |
-| 6 — Summarize | `specs/NNN-name/implementation-summary.md` or `close.md`, + patched spec/plan | `spec(phase-6): [NNN-name] implementation summary (health: N%)` | Yes |
-| — Refresh | Patched spec/plan artifacts | `spec(refresh): [NNN-name] reconcile spec artifacts with code` | Yes |
+| **Batch** | all spec artifacts for the feature | Batch template: `spec: [NNN-name] spec artifacts (spec, plan, tasks)` | **Yes** — at start of Phase 4 (Implement) |
+| 4 — Implement | Source code per phase | Implement template: `feat: [NNN-name] Phase N - [Phase Name]` | Yes (per phase commit) |
+| 5 — Test / Bugs | `specs/NNN-name/bugs.md` | Bug log template: `spec(phase-5): [NNN-name] bug log` | Yes |
+| 5 — Bugfix fix | Source code per bugfix task | Bugfix template: `fix: [NNN-name] BF-### - description` | Yes (per fix) |
+| 5 — Regression umbrella | Source code for regressions | Regression template: `fix: [NNN-name] BF-REGRESSION-001 - fix regressions` | Yes (once) |
+| 6 — Summarize | `specs/NNN-name/implementation-summary.md` or `close.md`, + patched spec/plan | Summary template: `spec(phase-6): [NNN-name] implementation summary (health: N%)` | Yes |
+| — Refresh | Patched spec/plan artifacts | Refresh template: `spec(refresh): [NNN-name] reconcile spec artifacts with code` | Yes |
 
 ### Commit Granularity Rules
 
@@ -354,7 +357,7 @@ Design phases (0-3) do NOT auto-commit individually. All spec artifacts are comm
 - **Regression umbrella** (Phase 4 Step 9): One commit for BF-REGRESSION-001 covering all regression fixes.
 - **Refresh**: Commit after all approved patches.
 - **Never commit broken state**: Tests must pass before commit during Implement. Spec artifacts are always safe to commit (documentation, not code).
-- **If not in a git repo**: The commit step is skipped silently. Phase transition logging to `workflow.md` still happens.
+- **If not in a git repo**: The commit step is skipped silently. Phase transition logging to `history.md` still happens.
 
 ### Traceability Through Git History
 
@@ -377,9 +380,9 @@ git log --oneline --grep="BF-" --all
 git log --oneline --grep="spec(phase-" --diff-filter=A --name-only --pretty=format: | sort -u
 ```
 
-### workflow.md → Git History Linking
+### history.md → Git History Linking
 
-The transition log (`workflow.md`) captures the commit hash automatically:
+The process history (`history.md`) captures the commit hash automatically:
 
 ```markdown
 ## 2026-06-07T12:00Z | Phase 6 → Summarize → Complete
@@ -389,7 +392,7 @@ The transition log (`workflow.md`) captures the commit hash automatically:
 - **Commit**: abc1234
 ```
 
-The agent runs `git rev-parse HEAD` after the commit and writes the hash into the workflow.md entry. No manual hash entry needed.
+The agent runs `git rev-parse HEAD` after the commit and writes the hash into the history.md entry. No manual hash entry needed.
 
 ### Git Rules Summary
 
@@ -398,7 +401,7 @@ The agent runs `git rev-parse HEAD` after the commit and writes the hash into th
 3. **One commit per bugfix** — message references BUG-ID
 4. **Phase 6 includes spec/plan patches** — the commit captures reconciled artifacts
 5. **Tests pass before commit** in Implement phase (silent skip if not in a git repo)
-6. **workflow.md captures commit hash** via `git rev-parse HEAD`
+6. **history.md captures commit hash** via `git rev-parse HEAD`
 
 ## Available Templates
 
@@ -421,4 +424,4 @@ Installed via `./scripts/install.sh`:
 
 - `references/preflight.md` — Pre-action self-check rules (branch, mode, workflow)
 - `references/auto-commit.md` — Standard commit pattern across all skills
-- `references/workflow-tracking.md` — Workflow transition log design and rationale (append-only workflow.md)
+- `references/workflow-tracking.md` — Process history design and rationale (append-only history.md)

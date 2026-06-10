@@ -28,14 +28,14 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 
 ## Git Commit Guidelines
 
-> **Branch Guard**: Before any git operation, verify you are NOT on `main`/`master`.
-> If on main/master, BLOCK and prompt: `git checkout -b feat/NNN-feature-name`
-> (or `bug/NNN-bugfix-name` for bugfix work). See `spec-kit-workflow` for the full
+> **Branch Guard**: Before any git operation, verify you are NOT on a blocked branch (from specs/git-conventions.md blocked_branches).
+> If on a blocked branch, BLOCK and prompt: `git checkout -b {feature_prefix}/NNN-feature-name`
+> (or `{bugfix_prefix}/NNN-bugfix-name` for bugfix work). See `spec-kit-workflow` for the full
 > branch guard logic.
 
-| Situation | Commit message |
-|-----------|---------------|
-| Close/Summary (Phase 6) | `spec(phase-6): [feature] summary (health: N%)` |
+| Situation | Use commit template from specs/git-conventions.md |
+|-----------|--------------------------------------------------|
+| Close/Summary (Phase 6) | Summary template (default: `spec(phase-6): [feature] summary (health: N%)`) |
 
 See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`.
 
@@ -127,8 +127,9 @@ IF bugs.md EXISTS:
 ### Compare code against spec and plan (git diff)
 *Skip in lightweight close mode*
 ```
-RUN: git diff main --name-status
-  OR: git log --oneline --name-only HEAD..main
+RUN: git diff {branch_source} --name-status
+  OR: git log --oneline --name-only HEAD..{branch_source}
+  (branch_source from specs/git-conventions.md, default: main)
   CAPTURE list of files changed, added, deleted
 
 FOR each file changed:
@@ -286,7 +287,7 @@ REPORT:
 ```
 
 ### Transition Log
-Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
 - Phase: Phase 6
 - Artifacts: `implementation-summary.md` or `close.md`, plus patched artifacts
 

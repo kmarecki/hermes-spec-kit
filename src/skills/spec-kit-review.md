@@ -15,11 +15,14 @@ metadata:
 
 **Phase**: 3.5 (Pre-implement optional gate) / 5.5 (Post-implement optional gate)
 
-**Purpose**: Provides quality checks at two points in the workflow:
+**Purpose**: Provides quality checks at two points in the workflow, plus a
+third mode for reviewing already-closed features without altering history:
 
 1. **Pre-implement** (after tasks.md, before code): Verify spec/plan/tasks are coherent and internally consistent. READ-ONLY — outputs a report, no file changes.
 
 2. **Post-implement** (after tests green, before close): Review code quality — does the implementation match the constitution? Does it fulfill the spec? Are there deviations, quality issues, or technical debt introduced?
+
+3. **Closed-review** (feature is already closed): Same checks as post-implement but does NOT update history.md. If issues are found, offers to add refactoring tasks to tasks.md and reopen the feature.|
 
 **Prerequisites**:
 - Pre-implement mode: `spec.md` + `plan.md` + `tasks.md` must exist
@@ -39,12 +42,21 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 ### Determine mode
 ```
 DETECT current artifacts:
+  IF close.md or implementation-summary.md EXISTS:
+    MODE = closed-review (post-close code quality check)
+    NOTE: "Feature [feature] is closed. Review will NOT update history.md."
+
   IF tasks.md exists AND no implementation code exists:
     MODE = pre-implement (cross-artifact consistency check)
-  IF tests have passed AND writeable source code exists:
+
+  IF tests have passed AND writeable source code exists AND no close.md:
     MODE = post-implement (code quality review)
-  IF both:
+
+  IF both pre-implement and post-implement conditions match:
     ASK user: "Run pre-implement review (spec/plan/tasks), post-implement review (code quality), or both?"
+
+  IF mode is still undetermined:
+    ASK user: "Cannot auto-detect mode. Which review? (pre-implement / post-implement / closed-review)"
 ```
 
 ---
@@ -294,22 +306,46 @@ Same heuristic as pre-implement mode.
 - Test coverage adequacy: Satisfactory / Needs improvement / Not assessed
 ```
 
-### Step 6: Next actions (post-implement)
+### Step 6: Next actions (post-implement / closed-review)
 ```
-IF CRITICAL issues exist:
-  - Block: Resolve before closing feature
-  - Recommend adding bugs to bugs.md
-  - Proceed to bugfix cycle
+IF mode == closed-review:
+  PRESENT findings to user
+  IF CRITICAL or HIGH issues exist:
+    PROMPT: "N issues found. Options:
+      1. Add refactoring tasks to tasks.md (no reopen)
+      2. Add tasks and reopen the feature (reopen [feature])
+      3. Note for future work, no changes"
+    IF user picks 1 or 2:
+      APPEND refactoring tasks to tasks.md for each issue
+      NOTE: "Refactoring tasks added to tasks.md."
+    IF user picks 2:
+      NOTE: "Feature needs reopening. Run 'reopen [feature]' to start the fix loop."
+    IF user picks 3:
+      NOTE: "Issues noted for future work. No changes made."
+  ELSE (only LOW/MEDIUM):
+    NOTE: "Minor issues found. No code changes needed."
 
-IF only LOW/MEDIUM:
-  - User may proceed to close
-  - Note improvement suggestions for future
+ELSE (normal pre/post-implement):
+  IF CRITICAL issues exist:
+    - Block: Resolve before closing feature
+    - Recommend adding bugs to bugs.md
+    - Proceed to bugfix cycle
+
+  IF only LOW/MEDIUM:
+    - User may proceed to close
+    - Note improvement suggestions for future
 ```
 
 ## Transition Log
-Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
-- Phase: Phase 3.5 or Phase 5.5 (mode-dependent)
-- Artifacts: None (read-only report)
+```
+IF mode == closed-review:
+  NOTE: "Review on closed feature — history.md not updated."
+  NOTE: "Run 'reopen [feature]' if issues need fixing."
+ELSE:
+  Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
+  - Phase: Phase 3.5 or Phase 5.5 (mode-dependent)
+  - Artifacts: None (read-only report)
+```
 
 ## Completion
 
@@ -324,6 +360,7 @@ Report:
 
 - Pre-implement mode: Propose `spec-kit-implement` when all CRITICAL issues resolved
 - Post-implement mode: Propose `spec-kit-summarize` to close the feature
+- Closed-review mode: Propose `reopen [feature]` if issues need fixing
 - Either mode: Propose `spec-kit-specify` or `spec-kit-plan` to fix issues found
 - In bugfix mode: Propose `spec-kit-tasks` to add missing bugfix tasks
 
@@ -344,6 +381,12 @@ Post-implement:
 - **BLOCKED** if: No implementation code detected
 - **WARN** if: constitution.md missing — cannot check constitutional alignment
 
+Closed-review:
+- **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)
+- **BLOCKED** if: No implementation code detected
+- **NOTE**: tasks.md will be modified only with user approval
+
 ## Key Constraint
 
-**READ-ONLY** — This skill does NOT modify any files. It only outputs a report.
+**READ-ONLY on source code** — This skill does NOT modify source code files. It only outputs a report.
+**Exception**: In closed-review mode, may append refactoring/remediation tasks to `tasks.md` with user approval.

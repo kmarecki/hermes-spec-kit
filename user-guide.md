@@ -384,7 +384,7 @@ Agent:
   → feat: 023-collab merge winning variant crdt
 
   - Copies specs/023-collab/variants/crdt/* → specs/023-collab/
-  - Appends to workflow.md: compare → promote record
+  - Appends to history.md: compare → promote record
   - Cleans up worktrees:
     git worktree remove ../editor-worktrees/explore-ot
     git worktree remove ../editor-worktrees/explore-crdt
@@ -779,7 +779,7 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | `implementation-summary.md` or `close.md` exists | Complete |
 | `variants/` directory with ≥2 entries | Exploring |
 | `comparison.md` exists | Compared — decision made |
-| `workflow.md` last entry | Current phase (fastest lookup) |
+| `history.md` last entry | Current phase (fastest lookup) |
 
 ### Quick CLI Reference
 

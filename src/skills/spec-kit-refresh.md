@@ -34,7 +34,8 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 ### Load artifacts and code state
 ```
 LOAD specs/[feature]/spec.md, plan.md (IF EXISTS), data-model.md, contracts/
-RUN: git diff main --name-status
+RUN: git diff {branch_source} --name-status
+  (branch_source from specs/git-conventions.md, default: main)
 ```
 
 ### Identify discrepancies
@@ -54,7 +55,7 @@ Classify: Match / Mismatch / Missing / Unplanned
 Same per-item approval for architecture, data model, and contract discrepancies.
 
 ## Transition Log
-Append to `specs/[feature]/workflow.md` following `spec-kit/references/workflow-tracking.md`:
+Append to `specs/[feature]/history.md` following `spec-kit/references/workflow-tracking.md`:
 - Phase: Refresh
 - Artifacts: patched `spec.md`, `plan.md`, `data-model.md` (as applicable)
 
