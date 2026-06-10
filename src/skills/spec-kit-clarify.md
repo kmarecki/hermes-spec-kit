@@ -63,9 +63,6 @@ After each answer: UPDATE spec.md, replace `[NEEDS CLARIFICATION]` markers.
 **Resolution**: [How applied to spec]
 ```
 
-### Update checklist
-Re-evaluate `specs/[feature]/checklists/requirements.md`.
-
 ### Note on commits
 Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
 

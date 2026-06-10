@@ -41,6 +41,7 @@ IF specs/[feature]/spec.md NOT EXISTS: ERROR "Run spec-kit-specify first"
 ```
 LOAD specs/[feature]/plan.md, spec.md, data-model.md, contracts/
 LOAD spec-kit/templates/tasks-template.md
+COPY spec-kit/templates/tasks-template.md → specs/[feature]/tasks.md
 IF bugfix mode: LOAD bugs.md, plan.md bugfix sections
 ```
 

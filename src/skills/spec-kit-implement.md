@@ -98,8 +98,7 @@ IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
          specs/[feature]/data-model.md   \
          specs/[feature]/contracts/      \
          specs/[feature]/quickstart.md   \
-         specs/[feature]/tasks.md        \
-         specs/[feature]/checklists/
+         specs/[feature]/tasks.md
   git commit -m "$COMMIT_MSG" --no-verify
   COMMIT_HASH=$(git rev-parse HEAD)
   NOTE: "Spec artifacts committed as $COMMIT_HASH — design phase is frozen."
@@ -117,19 +116,6 @@ IF specs/[feature]/plan.md NOT EXISTS:
   ERROR: "Run spec-kit-plan first"
 IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
-```
-
-### Step 4: Check preconditions
-```bash
-# Checklist check — advisory only
-SCAN specs/[feature]/checklists/ for checklist files
-FOR EACH checklist:
-  COUNT total items: lines matching - [ ] or - [X]
-  COUNT completed: lines matching - [X]
-  COUNT incomplete: lines matching - [ ]
-IF any checklist has incomplete items:
-  DISPLAY status table
-  NOTE: "Checklists are advisory — they do not block implementation."
 ```
 
 ### Step 5: Load implementation context
@@ -244,7 +230,7 @@ After ALL phases are complete and committed, run the ENTIRE test suite:
 ```bash
 IF tdd_bypassed:
   NOTE: "TDD was bypassed — skipping automated test verification."
-  PROCEED to Step 10 (build)
+  PROCEED to Step 11 (build verification)
   STOP
 
 DETECT test framework:
@@ -255,7 +241,7 @@ DETECT test framework:
 
 IF all tests pass:
   REPORT: "All N tests pass. Feature implementation verified."
-  PROCEED to Step 10 (build)
+  PROCEED to Step 11 (build verification)
 
 IF any tests fail:
   REPORT failing tests:
@@ -340,7 +326,7 @@ This is the **ONLY** phase where code-editing tools are permitted.
 | `write_file` (spec artifacts) | ALLOWED (tasks.md, bugs.md status) | Allowed (phase-specific only) |
 | `read_file`, `search_files`, `skill_view` | ALLOWED | ALLOWED |
 
-If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Analyze, Test), you MUST NOT call `write_file`, `patch`, or `terminal` for compilation/builds on source code files.
+If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Review, Test), you MUST NOT call `write_file`, `patch`, or `terminal` for compilation/builds on source code files.
 
 ### Bugfixing rule
 - Bug reports always go to `bugs.md` first (via `spec-kit-test`)

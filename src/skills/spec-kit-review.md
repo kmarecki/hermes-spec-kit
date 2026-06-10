@@ -1,6 +1,6 @@
 ---
 name: spec-kit-review
-description: Use when the user says 'review [feature]' or 'quality check [feature]' — cross-artifact consistency check (pre-implement) and code quality review (post-implement).
+description: Use when the user says 'review [feature]', 'analyze [feature]', or 'quality check [feature]' — cross-artifact consistency check (pre-implement) and code quality review (post-implement).
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -27,7 +27,7 @@ metadata:
 
 **Artifacts**: None (read-only analysis output)
 
-**Routing**: Load this skill when the user says "review [feature]" or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "review [feature]", "analyze [feature]", or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
 **Task Persona**: Adopt the mindset of a thorough code auditor. Check every artifact against every other — spec vs plan vs tasks vs code. Use web search to research best patterns and practices when evaluating architecture or implementation quality. Every finding must be actionable and backed by evidence. Does this hold up under scrutiny?
 
@@ -128,21 +128,17 @@ Create internal representations:
 - Are there TODOs or placeholders that should be resolved before coding?
 
 **G. User-Defined Custom Gates** (pre-implement)
-- Scan `specs/[feature]/checklists/` for any user-created checklist files
-- IF found: verify each checked item, flag unchecked items as advisory
-- NOTE: These are advisory — they do not block implementation
-
 **H. Coverage Gaps** (only if tasks.md exists)
 - Requirements with zero associated tasks
 - Tasks with no mapped requirement/story
 - Success Criteria requiring buildable work not in tasks
 
-**F. Inconsistency**
+**I. Inconsistency**
 - Terminology drift (same concept named differently)
 - Data entities in plan but absent in spec
 - Task ordering contradictions
 
-**G. Bugfix Coverage (bugfix mode only)**
+**J. Bugfix Coverage (bugfix mode only)**
 - Bugs with no corresponding bugfix task (BF-###)
 - Bugfix tasks not referencing a plan bugfix section
 - Bugfix tasks without verification/regression test tasks
@@ -254,10 +250,6 @@ CAPTURE git diff or file list showing what was implemented
 - Are there changelog entries or migration notes needed?
 
 **F. User-Defined Custom Gates** (post-implement)
-- Scan `specs/[feature]/checklists/` for any user-created checklist files
-- IF found: verify each checked item against the implementation
-- Flag unchecked items as advisory for future work
-
 **G. Code Quality**
 - Naming conventions — consistent and descriptive?
 - Error handling — are failures caught and reported appropriately?
@@ -265,7 +257,7 @@ CAPTURE git diff or file list showing what was implemented
 - Complexity — are there functions/modules that are too complex?
 - Security — obvious vulnerabilities (hardcoded secrets, injection vectors)?
 
-**E. Test Quality** (if tests exist)
+**H. Test Quality** (if tests exist)
 - Do tests actually test the behaviors described in spec.md?
 - Are there tests for edge cases from the spec?
 - Are tests meaningful (assert behavior, not implementation)?

@@ -46,6 +46,7 @@ IF specs/[feature]/spec.md NOT EXISTS:
 ```
 LOAD specs/[feature]/spec.md, specs/constitution.md (IF EXISTS)
 LOAD spec-kit/templates/plan-template.md
+COPY spec-kit/templates/plan-template.md → specs/[feature]/plan.md
 IF bugfix mode: LOAD bugs.md for bug context
 ```
 

@@ -59,7 +59,7 @@ IF bugs.md EXISTS:
   LOAD, report current summary
   ASK: "Add new bugs, continue bugfixing, or mark bugs as verified?"
 ELSE:
-  COPY bug-template → bugs.md
+  COPY spec-kit/templates/bugs-template.md → bugs.md
 ```
 
 ### User reports bugs — agent formats them

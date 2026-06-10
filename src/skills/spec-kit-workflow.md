@@ -94,7 +94,7 @@ IF feature name is provided (e.g., "003-user-auth"):
 | **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
 | — | **`spec-kit-refresh`** | **Lightweight artifact refresh** | **Any (standalone)** |
 | — | **Explore mode** | Parallel branches for N variants, each runs independent phase sequence | User provides variants |
-| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Analyze] → Implement → Test → **Close** | bugs.md with open bugs |
+| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Close** | bugs.md with open bugs |
 
 > **Important**: Phase 6 (Close/Summarize) is **mandatory** before a feature can enter Complete state. After the bugfix loop finishes (all bugs verified), the workflow auto-chains to Phase 6.
 
@@ -219,7 +219,7 @@ Check for artifacts to determine current phase:
 - AFTER plan → AUTOMATICALLY route to `spec-kit-tasks`
 - AFTER tasks → AUTOMATICALLY route to `spec-kit-implement`
 - DEFAULT route: `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement` (automatic chain, no user choice)
-- NOTE: Analyze is optional — only run if user explicitly asks for it
+- NOTE: Review is optional — only run if user explicitly asks for it
 
 ### Bugfix loop completion — user decides when to close
 ```
@@ -276,7 +276,7 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Clarify** | `clarify.md`, `spec.md` (amend) | BLOCKED | `clarify.md` exists |
 | **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md` | BLOCKED | `plan.md` exists, no `tasks.md` |
 | **Tasks** | `tasks.md` only | BLOCKED | `tasks.md` exists, no completions |
-| **Analyze** | None (read-only) | BLOCKED | User says "analyze" |
+| **Review** | None (read-only) | BLOCKED | User says "review", "analyze", or "quality check" |
 | **Implement** | source code, `tasks.md` (completions), `bugs.md` (mark resolved) | ALLOWED | `tasks.md` with pending tasks |
 | **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
 | **Explore** | `specs/[feature]/variants/*/` | ALLOWED (delegate_task subagents) | User provides variants |

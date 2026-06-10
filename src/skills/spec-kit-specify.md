@@ -26,7 +26,6 @@ metadata:
 
 **Artifacts**:
 - `specs/[feature]/spec.md`
-- `specs/[feature]/checklists/requirements.md`
 
 ## Pre-flight
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
@@ -67,8 +66,7 @@ Populate with:
 - NO implementation details (tech stack, frameworks, APIs)
 - Prioritize: scope > security > UX > technical
 
-### Generate checklist
-Copy `spec-kit/templates/checklist-template.md` → `specs/[feature]/checklists/requirements.md`
+
 
 Validate: no implementation leaks, all scenarios defined, criteria measurable.
 

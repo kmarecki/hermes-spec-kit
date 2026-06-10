@@ -30,7 +30,7 @@ Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → 
                                                                       └── bugfix loop ──┐
                                                                 ┌──────────────────────┘
                                                                 ▼
-                                                          [Clarify] → Plan → Tasks → [Analyze] → Implement → Test → Close (mandatory)
+                                                          [Clarify] → Plan → Tasks → [Review] → Implement → Test → Close (mandatory)
 ```
 
 The workflow has **three development modes**:
@@ -66,7 +66,7 @@ See `spec-kit-workflow` for the complete phase table and routing. Quick referenc
 | 1.5 — Clarify (opt) | `spec-kit-clarify` | "clarify [feature]" |
 | 2 — Plan | `spec-kit-plan` | "plan [feature]" |
 | 3 — Tasks | `spec-kit-tasks` | "generate tasks for [feature]" |
-| 3.5 — Analyze (opt) | Inline in workflow | "analyze [feature]" |
+| 3.5 — Review (opt) | `spec-kit-review` | "review [feature]" or "analyze [feature]" |
 | 4 — Implement | `spec-kit-implement` | "implement [feature]" |
 | 5 — Test | `spec-kit-test` | "test [feature]" |
 | 6 — Summarize/Close | `spec-kit-summarize` | "summarize [feature]" / "close [feature]" |
@@ -99,7 +99,7 @@ When the user reports a bug, the first action is **always** to create or update 
 After bugs are logged in `bugs.md`, the workflow routes back through earlier phases:
 
 ```text
-Test → [Clarify if needed] → Plan → Tasks → [Analyze] → Implement → Test (verify) → Close (mandatory)
+Test → [Clarify if needed] → Plan → Tasks → [Review] → Implement → Test (verify) → Close (mandatory)
 ```
 
 - **"bugfix [feature]"** starts the loop
@@ -110,7 +110,7 @@ Test → [Clarify if needed] → Plan → Tasks → [Analyze] → Implement → 
 - **Bugfix tasks**: Prefixed with `BF-###` and tagged `[BUGFIX]`
 - **Bugfix task tracing**: When a bugfix task supersedes specific original (buggy) tasks, append `[T###-fix]` to trace the relationship (e.g. `BF-001 [BUGFIX] [T051-fix] Fix validate_cluster_shape`). This connects bugfix work back to the original tasks that need rework, useful during post-implementation review.
 - **Verify**: User marks bug status as "verified" when fix is confirmed
-- **Auto-close**: When all bugs are verified, the workflow auto-chains to Phase 6 (spec-kit-summarize) — either full summary or lightweight close depending on feature complexity
+Auto-close: When all bugs are verified, suggest Phase 6 (spec-kit-summarize) — the user decides when to close. Do NOT auto-trigger.
 - **Repeat**: Loop until all bugs are verified and close is generated
 
 ### Phase 6 (Summarize/Close): Post-Implementation Review
@@ -139,10 +139,6 @@ AGENTS.md is **project-level context** — reference skills by name, don't repli
 - Any routing that already lives in a skill file
 
 Routing logic, trigger phrases, and workflow mechanics belong in the skill files. When you add a new phase or routing rule, update the relevant skill — not AGENTS.md. This keeps AGENTS.md stable and skills as the source of truth.
-
-## Checklists Are Optional
-
-Quality checklists exist in `checklist-template.md` as guides. They do NOT block phase advancement. Use them when helpful, skip them when not needed. The user is always in control of when to advance.
 
 ## Workflow Tracking (Transition Log)
 
@@ -228,7 +224,6 @@ The canonical constitution path is `specs/constitution.md`. All Hermes spec-kit 
 
 ## Anti-Patterns to Avoid
 
-- **Do NOT block on checklists.** If a user wants to advance, let them.
 - **TDD is the default, not optional.** Test-first is enforced. The Iron Law says: NO production code without a failing test first. If you wrote code before the test, delete it and start over. The only exceptions require explicit user permission: throwaway prototypes, generated code, and configuration files. Without user permission, TDD is not optional — the agent cannot unilaterally skip it. See spec-kit-implement's Iron Law table for common rationalizations.
 - **Do NOT demand all artifacts exist before advancing.** Small features may skip Clarify or Plan entirely.
 - **Do NOT use Cline/OpenCode command syntax** (e.g. `/speckit.specify`). Use natural language with skill names instead.
@@ -303,8 +298,8 @@ Skills and templates are maintained in the project directory and installed via `
 Spec-kit produces feature directories like `specs/003-user-auth/`. The corresponding git branch should mirror the spec number and name for traceability:
 
 ```text
-feature/NNN-short-name            # Normal forward development (specify mode)
-fix/NNN-short-name                # Bugfix-only branch (standalone, not part of bugfix loop)
+feat/NNN-short-name            # Normal forward development (specify mode)
+bug/NNN-short-name                # Bugfix-only branch (standalone, not part of bugfix loop)
 explore/NNN-feature-<variant>     # Creative exploration (one per variant)
 ```
 
@@ -351,7 +346,7 @@ Design phases (0-3) do NOT auto-commit individually. All spec artifacts are comm
 ### Commit Granularity Rules
 
 - **Design phases** (0-3): No individual commits. All spec artifacts are committed as a single batch when Phase 4 begins. This lets the user iterate freely between Specify, Clarify, Plan, and Tasks without creating checkpoints.
-- **Batch commit** (start of Phase 4): One commit capturing all spec artifacts (`specs/[feature]/spec.md`, `plan.md`, `tasks.md`, `clarify.md`, `research.md`, `data-model.md`, `contracts/`, `checklists/`). This freezes the design before implementation begins.
+- **Batch commit** (start of Phase 4): One commit capturing all spec artifacts (`specs/[feature]/spec.md`, `plan.md`, `tasks.md`, `clarify.md`, `research.md`, `data-model.md`, `contracts/`). This freezes the design before implementation begins.
 - **Implementation** (Phase 4): Commit per phase (not per task). Each phase boundary produces one commit covering all tests and code for that phase.
 - **Bugfix** (bugfix loop): Commit per bugfix task (BF-###). Message references the BUG-ID.
 - **Regression umbrella** (Phase 4 Step 9): One commit for BF-REGRESSION-001 covering all regression fixes.
@@ -410,8 +405,7 @@ Installed via `./scripts/install.sh`:
 - `plan-template.md`: Technical decomposition
 - `tasks-template.md`: Task breakdown with parallel `[P]` markers
 - `constitution-template.md`: Project principles template
-- `checklist-template.md`: Optional quality checklists (not blocking)
-- `research-template.md`: Technical research template
+- `workflow-template.md`
 - `data-model-template.md` — Data model template
 - `bugs-template.md` — Bug tracking template (BUG-### format)
 - `implementation-summary-template.md` — Post-implementation review summary (Phase 6, via `spec-kit-summarize`)
@@ -422,13 +416,6 @@ Installed via `./scripts/install.sh`:
 
 ## References
 
-- `references/migration-from-opencode.md` — Migration guide from OpenCode spec-kit to Hermes spec-kit
-- `references/spec-kit-commands.md` (if present): Command reference from github/spec-kit
-- `references/visual-bug-triage.md` — Triage process for visual/layout bug reports when the agent cannot view screenshots (pixel analysis, DOM checks, clarification triggers)
-- `references/phase-guardrails.md` — Quick-reference permission matrix and phase detection table
-- `references/bugfix-css-debugging.md` — CSS/layout bug diagnosis workflow for the bugfix loop: Tailwind v4 syntax trap, computed-style inspection via browser console, flex layout diagnostics, and scope-discipline during cleanup
-- `references/cluster-topology-validation.md` — Validating intra-cluster shape topology when cross-cluster transition edges exist: same-cluster filtering for degree computation, connectivity checks, and testing patterns
-- `references/skill-consistency.md` — Cross-skill consistency checklist: phase numbering, template paths, auto-chaining reciprocity, installed-vs-source drift prevention
+- `references/preflight.md` — Pre-action self-check rules (branch, mode, workflow)
+- `references/auto-commit.md` — Standard commit pattern across all skills
 - `references/workflow-tracking.md` — Workflow transition log design and rationale (append-only workflow.md)
-- `references/workflow-enforcement.md` — Three-layer bugfix enforcement architecture and propose-vs-execute semantics
-- `references/transition-design.md` — Workflow transition design principles: propose vs auto-chain vs dead stop, optional phase marking, three-layer redundancy

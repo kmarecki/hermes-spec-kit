@@ -27,6 +27,7 @@ ELSE
 | spec-kit-implement (phase) | Source code per phase | `feat: [feature] Phase N - [Phase Name]` |
 | spec-kit-implement (phase, bypass) | Source code per phase (no tests) | `feat: [feature] Phase N - [Phase Name]` |
 | spec-kit-implement (regression) | Source code for regression fixes | `fix: [feature] BF-REGRESSION-001 - fix regressions` |
+| spec-kit-implement (bugfix, per-task) | Source code per bugfix fix | `fix: [feature] BF-### - description` |
 | spec-kit-test | `specs/[feature]/bugs.md` | `spec(phase-5): [feature] bug log` |
 | spec-kit-summarize | Summary/close + patched spec/plan | `spec(phase-6): [feature] summary (health: N%)` |
 | spec-kit-refresh | Patched spec artifacts | `spec(refresh): [feature] reconcile artifacts` |

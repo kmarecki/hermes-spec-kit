@@ -50,7 +50,7 @@ APPEND entry:
 | spec-kit-plan | Phase 2 |
 | spec-kit-tasks | Phase 3 |
 | spec-kit-review (pre-implement) | Phase 3.5 |
-| spec-kit-implement | Phase 4 (per-phase: Phase N) |
+| spec-kit-implement | Phase 4 (each sub-phase logged as Phase N) |
 | spec-kit-test | Phase 5 |
 | spec-kit-review (post-implement) | Phase 5.5 |
 | spec-kit-summarize | Phase 6 |
