@@ -28,11 +28,11 @@ Run these checks in order. If any check fails, stop and report before proceeding
    IF specs/git-conventions.md EXISTS in the project root:
      LOAD and apply for branch naming, commit messages, and merge behaviour.
      CHECK version: read `Conventions version:` line from the file
-       IF version < 1: NOTE "Your git-conventions.md is outdated. Re-copy from template."
+       IF version < 1: NOTE "Your git-conventions.md is outdated. Re-copy from spec-kit/templates/git-conventions-template.md."
      NOTE: Conventions override the defaults shown in each skill.
    ELSE:
-     NOTE: "No specs/git-conventions.md found. Using built-in defaults.
-            Create one from spec-kit/templates/git-conventions-template.md to customise."
+     CREATE specs/git-conventions.md from spec-kit/templates/git-conventions-template.md
+     NOTE: "Created specs/git-conventions.md with default conventions. Edit to customise for this project."
 
 4. WORKFLOW LOAD CHECK — code-writing phase only
    IF you are about to call write_file, patch, or terminal(build/test):

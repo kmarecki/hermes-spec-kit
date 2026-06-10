@@ -148,30 +148,9 @@ echo "Templates:"
 ls -1 "$TEMPLATES_DIR"/*.md 2>/dev/null | xargs -I{} basename {} || echo "  (none)"
 echo ""
 
-# Auto-copy git-conventions.md to projects that don't have it yet
+# Auto-creation: when a spec-kit skill first runs in any project, preflight.md
+# creates specs/git-conventions.md from the template automatically.
+# No manual copy needed.
 echo "---"
-echo "Checking projects for git-conventions.md..."
-CONVENTIONS_SRC="$TEMPLATES_DIR/git-conventions-template.md"
-PROJECTS_COPIED=0
-PROJECTS_SKIPPED=0
-for project_dir in "$HOME"/projects/*/; do
-  specs_dir="${project_dir}specs"
-  if [ -d "$specs_dir" ]; then
-    target="$specs_dir/git-conventions.md"
-    if [ -f "$target" ]; then
-      echo "  [skip] $(basename "$project_dir") — already exists"
-      PROJECTS_SKIPPED=$((PROJECTS_SKIPPED + 1))
-    else
-      cp "$CONVENTIONS_SRC" "$target"
-      echo "  [create] $(basename "$project_dir")/specs/git-conventions.md"
-      PROJECTS_COPIED=$((PROJECTS_COPIED + 1))
-    fi
-  fi
-done
-if [ "$PROJECTS_COPIED" -eq 0 ] && [ "$PROJECTS_SKIPPED" -eq 0 ]; then
-  echo "  (no projects with specs/ directory found in ~/projects/)"
-  echo ""
-  echo "To add git-conventions.md to a project manually:"
-  echo "  cp $CONVENTIONS_SRC <project>/specs/git-conventions.md"
-fi
-echo "  → $PROJECTS_COPIED created, $PROJECTS_SKIPPED already exist"
+echo "git-conventions.md is auto-created per-project when spec-kit skills first run."
+echo "No manual copy needed — preflight.md handles it on demand."
