@@ -54,6 +54,12 @@ Bugfix tasks (prefixed with BF-###) follow the same RED→GREEN TDD cycle as reg
 
 ```text
 For each BF-### task:
+  0. READ — Confirm root cause understanding
+     - Read the relevant source code for the bug area
+     - Cross-check against the Plan Ref in bugs.md (created by spec-kit-plan)
+     - Verify the bug report description matches what the code actually does
+     - If the code contradicts the bug report or Plan Ref: STOP, flag the
+       discrepancy to the user before proceeding
   1. RED — Write a test that reproduces the bug
      - Focused test that demonstrates the faulty behaviour
      - Run it → confirm it fails (proves the bug exists)
@@ -63,7 +69,15 @@ For each BF-### task:
      (default: "fix: [feature] BF-### - description")
 ```
 
+This "read first" step prevents the common AI-agent trap where code is changed based on a bug report alone without verifying root cause against the actual code. The Plan Ref (from spec-kit-plan) gives the analysis; this step validates it against live code.
+
 Plan Ref validation and the bugfix routing decision (clarify vs direct plan) happen in the workflow orchestrator — this skill assumes all routing prerequisites are met.
+
+**New bugs discovered during fix**: If while fixing BF-### you discover new failures or edge cases not covered by the original bug report (reported by the user or found during code reading):
+- Log them as new entries in `bugs.md` (do NOT merge into the current BF-### task)
+- Each new bug must follow its own RED→GREEN cycle — do not fix it inline with the current task
+- Report to the user: "Found additional issue BUG-NNN — logged separately. Address it via 'bugfix [feature]' after this round completes."
+- Exception: trivial test-only fixes (missing assertion, wrong test fixture) can be fixed inline
 
 **What if a test cannot be written for a bug?** (e.g. visual layout issue, race condition, external dependency)
 - Note the reason in tasks.md next to the BF-### task
