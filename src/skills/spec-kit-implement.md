@@ -343,10 +343,10 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Revi
 - Bugfixes are NEVER implemented directly when a user mentions a bug
 - Bugfixes must follow: "bugfix [feature]" → plan → tasks → implement
 
-## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Phase 4 (per-phase entries for each completed phase)
-- Artifacts: source code changes per phase
+### Step 10: Append to history.md
+Append entry to `specs/[feature]/history.md` (create if missing) for each completed phase:
+- Phase: Phase 4 — [Phase Name] Complete
+- Artifact: source code changes
 
 ## Completion
 

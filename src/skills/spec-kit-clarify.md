@@ -63,16 +63,14 @@ After each answer: UPDATE spec.md, replace `[NEEDS CLARIFICATION]` markers.
 **Resolution**: [How applied to spec]
 ```
 
-### Note on commits
-Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
+### Repeat
+After answer, loop: next question → answer → update spec.md.
 
-## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Phase 1.5
-- Artifacts: `clarify.md`, `spec.md` (amended)
-
+### Append to history.md
+Append entry to `specs/[feature]/history.md` (create if missing):
+- Phase: Phase 1.5 — Complete
 ## Completion
-- Questions asked/answered
+- Report:
 - Sections updated in spec
 - Propose: `spec-kit-plan`
 

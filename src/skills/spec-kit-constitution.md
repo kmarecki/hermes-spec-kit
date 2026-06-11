@@ -56,7 +56,7 @@ Replace `[ALL_CAPS_PLACEHOLDER]` tokens with concrete text:
 - **MINOR** (x.1.x → x.2.0): New principles
 - **PATCH** (x.x.1 → x.x.2): Clarifications
 
-### Transition Log
+### Append to history.md
 Append to `specs/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Phase 0
 - Artifact: `specs/constitution.md`

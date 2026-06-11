@@ -308,12 +308,13 @@ REPORT:
   - New bugs created (if any gap was ❌ Not Done)
 ```
 
-### Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Phase 6
-- Artifacts: `implementation-summary.md` or `close.md`, plus patched artifacts
+### Step 12: Append to history.md
+Append to `specs/[feature]/history.md` (create if missing):
+- Phase: Phase 6 — Complete
+- Artifact: `implementation-summary.md` or `close.md`, plus patched artifacts
+- Spec Health: N%
 
-### Commit
+### Step 13: Commit
 Follow `spec-kit/references/auto-commit.md`:
 - Scope: `implementation-summary.md` or `close.md`, plus patched `spec.md`, `plan.md`, `data-model.md`
 - Message: `"spec(phase-6): [feature] summary (health: N%)"`

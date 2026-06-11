@@ -71,13 +71,13 @@ Populate with:
 
 Validate: no implementation leaks, all scenarios defined, criteria measurable.
 
+### Append to history.md
+Append entry to `specs/[feature]/history.md` (create if missing):
+- Phase: Phase 1 — Complete
+- Artifact: `spec.md`
+
 ### Note on commits
 Design phase artifacts (spec.md, clarify.md, plan.md, tasks.md) are NOT committed individually. They are batch-committed when Phase 4 (Implement) begins. See `spec-kit/references/auto-commit.md`.
-
-## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Phase 1
-- Artifact: `spec.md`
 
 ## Completion
 - Feature directory path, spec file path

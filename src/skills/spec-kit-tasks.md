@@ -93,13 +93,11 @@ Format: `T### [P] [US#] Description — file/path.ext`
 Phase dependencies, parallel execution opportunities.
 
 ### Note on commits
-Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
+Report: task count, phases, TDD mode, parallel tasks, bugfix tasks
 
-## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Phase 3
-- Artifact: `tasks.md`
-
+### Append to history.md
+Append entry to `specs/[feature]/history.md` (create if missing):
+- Phase: Phase 3 — Complete
 ## Completion
 - Task count by phase, parallelizable count, coverage %
 - Propose: `spec-kit-implement`

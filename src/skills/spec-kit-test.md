@@ -79,12 +79,12 @@ IF all bugs verified:
   REPORT: "All bugs verified — run 'close [feature]' to complete."
 ```
 
-### Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Phase 5
-- Artifact: `specs/[feature]/bugs.md`
+### Append to history.md
+Append entry to `specs/[feature]/history.md` (create if missing):
+- Phase: Phase 5 — Complete
+- Artifact: `bugs.md`
 
-### Commit
+### Done When
 See `spec-kit/references/auto-commit.md`:
 - Scope: `specs/[feature]/bugs.md`
 - Message: `"spec(phase-5): [feature] bug log"`

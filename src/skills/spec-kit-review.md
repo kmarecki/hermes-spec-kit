@@ -336,15 +336,15 @@ ELSE (normal pre/post-implement):
     - Note improvement suggestions for future
 ```
 
-## Transition Log
+### Append to history.md
 ```
 IF mode == closed-review:
   NOTE: "Review on closed feature — history.md not updated."
   NOTE: "Run 'reopen [feature]' if issues need fixing."
 ELSE:
-  Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-  - Phase: Phase 3.5 or Phase 5.5 (mode-dependent)
-  - Artifacts: None (read-only report)
+  Append to `specs/[feature]/history.md` (create if missing):
+  - Phase: Phase 3.5 or Phase 5.5 (mode-dependent) — Complete
+  - Artifact: review report
 ```
 
 ## Completion

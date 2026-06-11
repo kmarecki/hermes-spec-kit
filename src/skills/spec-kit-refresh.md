@@ -54,14 +54,14 @@ Classify: Match / Mismatch / Missing / Unplanned
 ### Refresh plan.md and data-model.md
 Same per-item approval for architecture, data model, and contract discrepancies.
 
-## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Refresh
-- Artifacts: patched `spec.md`, `plan.md`, `data-model.md` (as applicable)
+### Append to history.md
+Append entry to `specs/[feature]/history.md` (create if missing):
+- Phase: Refresh — Complete
+- Artifact: patched `spec.md`/`plan.md`
 
-## Commit
-Follow `spec-kit/references/auto-commit.md`:
-- Scope: patched spec/plan/data-model files
+## Completion
+
+## Common Pitfalls
 - Message: `"spec(refresh): [feature] reconcile artifacts"`
 
 ## Key Difference from Summary

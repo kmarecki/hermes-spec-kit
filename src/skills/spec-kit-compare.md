@@ -173,12 +173,12 @@ NOTE: "Worktrees preserved at ../<repo>-worktrees/ in case you need
       git worktree prune"
 ```
 
-## Transition Log
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Compare
-- Artifacts: `comparison.md`
+### Step 4: Append to history.md
+Append entry to `specs/[feature]/history.md` (create if missing):
+- Phase: Compare — Complete
+- Artifact: `comparison.md`
 
-## Common Pitfalls
+## Completion
 1. **Cherry-picking without verifying compatibility**: Features from different variants may conflict. Verify the combined spec/plan is coherent.
 2. **Assuming the recommendation is correct**: Present the recommendation with rationale, then ask. The user may have priorities the agent doesn't know about.
 3. **Deleting variants immediately**: Keep the variants/ directory until the implementation is well underway — the user might change their mind.
