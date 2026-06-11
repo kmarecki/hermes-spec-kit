@@ -24,8 +24,7 @@ ELSE
 
 | Skill | Scope | Commit Message (use template from specs/git-conventions.md) |
 |-------|-------|-------------------------------------------------------------|
-| spec-kit-constitution | `specs/constitution.md` | Constitution template: `spec(phase-0): constitution for [PROJECT]` |
-| spec-kit-implement (batch) | All spec artifacts for feature | Batch template: `spec: [feature] spec artifacts (spec, plan, tasks)` |
+|| spec-kit-implement (batch) | All spec artifacts for feature | Batch template: `spec: [feature] spec artifacts (spec, plan, tasks)` |
 | spec-kit-implement (phase) | Source code per phase | Implement template: `feat: [feature] Phase N - [Phase Name]` |
 | spec-kit-implement (phase, bypass) | Source code per phase (no tests) | Implement template: `feat: [feature] Phase N - [Phase Name]` |
 | spec-kit-implement (regression) | Source code for regression fixes | Regression template: `fix: [feature] BF-REGRESSION-001 - fix regressions` |

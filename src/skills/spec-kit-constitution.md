@@ -33,14 +33,6 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 
 ## Execution
 
-### Check git availability
-```bash
-IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
-  NOTE: "Git repository detected — spec artifacts will be committed automatically."
-ELSE:
-  WARN: "No git repository detected. Run 'git init' and optionally copy .gitignore-template to enable auto-commits."
-```
-
 ### Check for existing constitution
 ```
 IF specs/constitution.md EXISTS:
@@ -68,11 +60,7 @@ Replace `[ALL_CAPS_PLACEHOLDER]` tokens with concrete text:
 Append to `specs/history.md` following `spec-kit/references/history-tracking.md`:
 - Phase: Phase 0
 - Artifact: `specs/constitution.md`
-
-## Commit
-Follow `spec-kit/references/auto-commit.md`:
-- Scope: `specs/constitution.md`
-- Message: `"spec(phase-0): constitution for [PROJECT]"`
+- Note: Design phases are batch-committed at start of Phase 4 (Implement)
 
 ## Completion
 - Report new version and bump rationale

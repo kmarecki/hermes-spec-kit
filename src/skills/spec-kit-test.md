@@ -27,17 +27,7 @@ metadata:
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
 
 ## Git Commit Guidelines
-
-> **Branch Guard**: Before any git operation, verify you are NOT on a blocked branch (from specs/git-conventions.md blocked_branches).
-> If on a blocked branch, BLOCK and prompt: `git checkout -b {feature_prefix}/NNN-feature-name`
-> (or `{bugfix_prefix}/NNN-bugfix-name` for bugfix work). See `spec-kit-workflow` for the full
-> branch guard logic.
-
-| Situation | Use commit template from specs/git-conventions.md |
-|-----------|--------------------------------------------------|
-| Bug log (Phase 5) | Bug log template (default: `spec(phase-5): [feature] bug log`) |
-
-See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`.
+See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`. Branch guard handled by preflight.md.
 
 
 **Artifacts**: `specs/[feature]/bugs.md`

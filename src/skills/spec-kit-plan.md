@@ -40,6 +40,9 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 ```
 IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
+IF specs/constitution.md NOT EXISTS:
+  BLOCK: "No constitution found. Run spec-kit-constitution first."
+  HALT
 ```
 
 ### Load context
@@ -100,4 +103,4 @@ After plan → automatically route to `spec-kit-tasks` (no user choice).
 3. **Skipping bugfix Plan Ref**: In bugfix mode, always add a Plan Ref to bugs.md — it provides traceability.
 
 ## Prerequisite Enforcement
-**BLOCKED** if: spec.md does not exist.
+**BLOCKED** if: spec.md does not exist, or constitution.md does not exist.

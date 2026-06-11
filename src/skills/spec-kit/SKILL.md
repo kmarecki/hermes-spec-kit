@@ -42,7 +42,7 @@ The workflow has **three development modes**:
 | **explore** | "Explore [feature] with [variants]" | Spawns N parallel branches, each running its own independent phase sequence. User compares variants with `spec-kit-compare` and chooses a winner. |
 | **reopen** | "Reopen [feature]" | Reopens a closed feature for bugfixing. Auto-creates bugs.md, creates a bugfix branch, and routes through the bugfix loop. Previous close.md becomes stale — must close again after fixes. |
 
-**Constitution is always optional** in every mode. If `specs/constitution.md` doesn't exist, phases run without constitutional gates.
+**Constitution is mandatory** in every mode. If `specs/constitution.md` doesn't exist, specify and plan will block until it's created.
 
 **Phase 6 (Close) is mandatory** to mark a feature complete. After the bugfix loop finishes or the user requests close, `spec-kit-summarize` runs in either full summary or lightweight close mode, computes spec health, and patches spec/plan artifacts to reflect intentional deviations.
 

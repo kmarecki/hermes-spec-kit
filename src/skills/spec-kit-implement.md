@@ -27,16 +27,7 @@ metadata:
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
 
 ## Git Commit Guidelines
-
-> **Branch Guard**:
-
-| Situation | Use commit template from specs/git-conventions.md |
-|-----------|--------------------------------------------------|
-| Phase boundary (TDD or bypass) | Implement template (default: `feat: [feature] Phase N - [Phase Name]`) |
-| Regression umbrella fix | Regression template (default: `fix: [feature] BF-REGRESSION-001 - fix regressions`) |
-| Bugfix loop (per BF-### task) | Bugfix template (default: `fix: [feature] BF-### - description`) |
-
-See `spec-kit/references/auto-commit.md` for the standard pattern. Commits use `--no-verify` to bypass pre-commit hooks.
+See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`. Branch guard handled by preflight.md.
 
 Note: design artifacts (spec.md, plan.md, tasks.md) were already batch-committed at implementation start. Do NOT re-commit them.
 
@@ -97,27 +88,7 @@ SCAN tasks.md for `> **TDD**: Bypassed by user request`
     NOTE: "TDD active — phase-level RED-GREEN cycle enforced."
 ```
 
-### Step 1: Branch guard — prevent blocked branch commits
-
-Before any file operation, verify you are not on a blocked branch (from specs/git-conventions.md blocked_branches):
-
-```bash
-IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
-  LOAD specs/git-conventions.md — read blocked_branches, feature_prefix
-  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-  IF current branch is in blocked_branches; THEN
-    BLOCK: "On a blocked branch — implementation must happen on a feature branch."
-    PROMPT: "Switch to a feature branch first:
-      git checkout -b {feature_prefix}/NNN-feature-name
-      git push -u origin {feature_prefix}/NNN-feature-name"
-    HALT
-  FI
-ELSE
-  NOTE: "Not a git repository — branch guardrail skipped."
-FI
-```
-
-### Step 2: Commit spec artifacts (batch — all design phases)
+### Step 1: Commit spec artifacts (batch — all design phases)
 
 Before starting implementation, commit all spec artifacts created during design phases as a single batch.
 Use the batch commit template from specs/git-conventions.md (default: "spec: [feature] spec artifacts (spec, plan, tasks)"):
@@ -144,7 +115,7 @@ ELSE
   NOTE: "Not a git repository — skipping batch commit. No design checkpoint created."
 ```
 
-### Step 3: Validate prerequisites
+### Step 2: Validate prerequisites
 ```
 IF specs/[feature]/tasks.md NOT EXISTS:
   ERROR: "Run spec-kit-tasks first to generate task breakdown"
@@ -154,7 +125,7 @@ IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
 ```
 
-### Step 5: Load implementation context
+### Step 3: Load implementation context
 - LOAD `specs/[feature]/tasks.md` (REQUIRED)
 - LOAD `specs/[feature]/plan.md` (REQUIRED)
 - LOAD `specs/[feature]/data-model.md` (IF EXISTS)
@@ -164,7 +135,7 @@ IF specs/[feature]/spec.md NOT EXISTS:
 - LOAD `specs/[feature]/quickstart.md` (IF EXISTS)
 - IF `specs/[feature]/bugs.md` EXISTS: LOAD bugs.md for bugfix task context
 
-### Step 6: Parse tasks.md
+### Step 4: Parse tasks.md
 Extract:
 - Task phases: Setup, Foundational, Core, Integration, Polish
 - Task dependencies: Sequential vs parallel execution rules
@@ -172,7 +143,7 @@ Extract:
 - Execution flow: Phase order and dependency requirements
 - TDD bypass header (if present)
 
-### Step 7: Phase-level TDD execution
+### Step 5: Phase-level TDD execution
 
 For each phase (Setup → Foundational → Core → Integration → Polish):
 Execute the entire phase as a batch, not task-by-task:
@@ -248,20 +219,20 @@ IF tdd_bypassed:
       git commit -m "[commit message from conventions]" --no-verify
 ```
 
-### Step 8: Progress reporting
+### Step 6: Progress reporting
 After each phase:
 - Report phase completed: N/Total phases
 - Report tasks completed: N/Total
 - Report tests passing: Yes/No
 - In bugfix mode: Also report bugfix task progress (BF-### completed/total)
 
-### Step 9: Handle errors
+### Step 7: Handle errors
 - HALT execution if a non-parallel task cannot be completed
 - FOR parallel tasks [P]: continue with working tasks, report failed
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
-### Step 10: Full regression run — all existing tests
+### Step 8: Full regression run — all existing tests
 
 After ALL phases are complete and committed, run the ENTIRE test suite:
 
@@ -318,7 +289,7 @@ IF any tests fail:
         RETURN to fix remaining failures
 ```
 
-### Step 11: Build verification (if applicable)
+### Step 9: Build verification (if applicable)
 ```bash
 IF npm run build / tsc --noEmit / go build / cargo build is available:
   terminal("[build command]")

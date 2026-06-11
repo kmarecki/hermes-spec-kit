@@ -489,13 +489,12 @@ Agent:
 ---
 
 ## Phase Reference
-
 ### Phase 0: Constitution
 **Skill**: `spec-kit-constitution` · **Trigger**: "Create constitution"
 · **Artifact**: `specs/constitution.md`
 
 Project-wide principles and MUST/SHOULD rules. Runs once per project.
-Always optional — all other phases warn but proceed without it.
+Required before specify or plan can proceed — both will block without it.
 
 ### Phase 1: Specify
 **Skill**: `spec-kit-specify` · **Trigger**: "Create a spec for [description]"

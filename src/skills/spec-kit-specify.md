@@ -35,7 +35,8 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 ### Validate prerequisites
 ```
 IF specs/constitution.md NOT EXISTS:
-  WARN: "No constitution found — proceeding without constitutional gates."
+  BLOCK: "No constitution found. Project setup is mandatory — run spec-kit-constitution first."
+  HALT
 ```
 
 ### Parse user description
@@ -88,4 +89,4 @@ Append to `specs/[feature]/history.md` following `spec-kit/references/history-tr
 3. **Over-specifying**: For simple features, a single paragraph + 2-3 FRs is enough. Don't force full template on trivial changes.
 
 ## Prerequisite Enforcement
-**WARN** (not BLOCKED) if constitution missing — constitution is optional.
+**BLOCKED** if: constitution.md does not exist.
