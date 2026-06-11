@@ -50,7 +50,25 @@ Note: design artifacts (spec.md, plan.md, tasks.md) were already batch-committed
 
 ## Bugfix Mode
 
-Bugfix tasks (prefixed with BF-###) are executed alongside regular tasks. Plan Ref validation and the bugfix routing decision (clarify vs direct plan) happen in the workflow orchestrator — this skill assumes all routing prerequisites are met.
+Bugfix tasks (prefixed with BF-###) follow the same RED→GREEN TDD cycle as regular feature phases:
+
+```text
+For each BF-### task:
+  1. RED — Write a test that reproduces the bug
+     - Focused test that demonstrates the faulty behaviour
+     - Run it → confirm it fails (proves the bug exists)
+  2. GREEN — Apply the minimal fix
+     - Run the test → confirm it passes
+  3. COMMIT with the bugfix template from specs/git-conventions.md
+     (default: "fix: [feature] BF-### - description")
+```
+
+Plan Ref validation and the bugfix routing decision (clarify vs direct plan) happen in the workflow orchestrator — this skill assumes all routing prerequisites are met.
+
+**What if a test cannot be written for a bug?** (e.g. visual layout issue, race condition, external dependency)
+- Note the reason in tasks.md next to the BF-### task
+- Apply the fix, then verify manually
+- The summary/close will flag the untested fix as a risk
 
 ## Execution
 

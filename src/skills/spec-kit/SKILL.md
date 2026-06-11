@@ -110,6 +110,7 @@ Test → [Clarify if needed] → Plan → Tasks → [Review] → Implement → T
   - *Agent-initiated*: if a bug has `Requires Clarification: yes`, route through clarify step first.
 - **Bugfix tasks**: Prefixed with `BF-###` and tagged `[BUGFIX]`
 - **Bugfix task tracing**: When a bugfix task supersedes specific original (buggy) tasks, append `[T###-fix]` to trace the relationship (e.g. `BF-001 [BUGFIX] [T051-fix] Fix validate_cluster_shape`). This connects bugfix work back to the original tasks that need rework, useful during post-implementation review.
+- **TDD for bugfixes**: Each bugfix follows RED→GREEN — write a failing test that reproduces the bug, then apply the fix. If a test cannot be written (visual layout, race condition, external dep), note the reason in the task and verify manually.
 - **Verify**: User marks bug status as "verified" when fix is confirmed
 Auto-close: When all bugs are verified, suggest Phase 6 (spec-kit-summarize) — the user decides when to close. Do NOT auto-trigger.
 - **Repeat**: Loop until all bugs are verified and close is generated

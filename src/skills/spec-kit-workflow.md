@@ -302,6 +302,7 @@ Check for artifacts to determine current phase:
 - AFTER tasks → AUTOMATICALLY route to `spec-kit-implement`
 - DEFAULT route: `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement` (automatic chain, no user choice)
 - NOTE: Review is optional — only run if user explicitly asks for it
+- **TDD during bugfix**: `spec-kit-implement` enforces RED→GREEN per bugfix task — write a test reproducing the bug, then apply the fix. Plan Refs (above) ensure each bug has a plan section before implementation begins.
 
 ### Bugfix loop completion — user decides when to close
 ```
