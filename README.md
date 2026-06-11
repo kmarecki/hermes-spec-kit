@@ -5,46 +5,30 @@ Spec-driven development for Hermes Agent. 14 skills implementing a structured ph
 ## Quick Start
 
 ```bash
-# 1. Clone the repository anywhere on your machine
+# 1. Clone (if you haven't already) and install
 git clone https://github.com/kmarecki/hermes-spec-kit.git
 cd hermes-spec-kit
+./scripts/install.sh          # copies skills + templates to ~/.hermes/skills/
 
-# 2. Install skills + templates to ~/.hermes/skills/
-./scripts/install.sh
+# 2. Reload skills in your Hermes session
+/reload-skills                # or start a new session
 
-# 3. In your Hermes session, reload skills:
-/reload-skills
-# (or start a new Hermes session)
-
-# 4. Navigate to your project and start working:
+# 3. Go to your project, create a spec
 cd /path/to/your-project
-# Then in Hermes: "Create a spec for [feature]"
 ```
 
-## Installation From Scratch (New Project)
+Then in Hermes: `"Create a spec for [feature]"` or `"speckit specify [feature]"`.
 
-```
-# 1. Clone the spec-kit repository (anywhere — it's not tied to your project)
+**New project from scratch:**
+
+```bash
 git clone https://github.com/kmarecki/hermes-spec-kit.git ~/hermes-spec-kit
-
-# 2. Install globally (one-time)
 cd ~/hermes-spec-kit
 ./scripts/install.sh
-# This copies all skills and templates to ~/.hermes/skills/
-# Installation is global — one install covers all projects and sessions
-
-# 3. Initialize your project directory
 cd /path/to/my-new-project
-git init                           # or clone an existing repo
-mkdir specs/                       # spec-kit looks for specs/ at project root
-
-# 4. In a Hermes session, reload skills
-/reload-skills
-
-# 5. Create your first feature spec
-#    In Hermes, inside your project directory:
-"Create a constitution for my-project"
-"Create a spec for user authentication"
+git init
+mkdir specs
+# In Hermes: "Create a constitution for my-project"
 ```
 
 ## Prerequisites
@@ -53,12 +37,7 @@ mkdir specs/                       # spec-kit looks for specs/ at project root
 - **Git** repository in your project directory (spec-kit creates branches, commits, and workflow logs)
 - The project directory should have a `specs/` directory at the root (created automatically when you create the first spec)
 
-## Documentation
-
-- **[user-guide.md](user-guide.md)** — Complete workflow description, all phases, TDD integration, artifact lifecycle
-- **src/skills/** — 13 skill files + 1 umbrella SKILL.md (installed to `~/.hermes/skills/`)
-- **src/templates/** — 15 templates (installed to `~/.hermes/skills/spec-kit/templates/`)
-- **src/references/** — Supporting reference files (preflight.md, auto-commit.md, history-tracking.md — installed to `~/.hermes/skills/spec-kit/references/`)
+Full workflow documentation: **[user-guide.md](user-guide.md)**
 
 ## Project Structure
 
@@ -81,11 +60,12 @@ scripts/
 | **Explore** | "Explore [feature] with [variants]" | N parallel branches, compare, pick winner |
 | **Reopen** | "Reopen [feature]" | Reopens closed feature for bugfixing, additive-only edits, routes through bugfix loop |
 
-## Skills (14)
+## Skills
 
-`workflow`, `constitution`, `specify`, `clarify`, `plan`, `tasks`, `review`, `implement`, `test`, `summarize`, `refresh`, `explore`, `compare`, `umbrella`
+14 skills covering every phase + explore, compare, refresh, and workflow routing.
+See the [Phase Reference section](user-guide.md#phase-reference) in the user-guide for phases, purposes, and personas.
 
-Each skill responds to three trigger styles: `spec-kit` prefix, `speckit` prefix, and natural language
+All skills respond to three trigger styles: `spec-kit` prefix, `speckit` prefix, and natural language
 (e.g. `spec-kit plan 001-user-auth`, `speckit plan 001-user-auth`, or `"plan the implementation for 001-user-auth"`).
 
 ## Key Design Decisions
@@ -97,9 +77,5 @@ Each skill responds to three trigger styles: `spec-kit` prefix, `speckit` prefix
 - One umbrella regression fix task, not individual bugs
 - Phase 6 (Close) is mandatory before feature completion
 - Spec health score computed at close (0-100%)
-- Review works at three points: pre-implement (cross-artifact), post-implement (code quality), and closed-review (read-only audit)
 - Branch guardrails block git operations on main/master
 - Pre-action self-check in every skill (branch, mode, workflow)
-- Git conventions are externalized to `specs/git-conventions.md` (copy template per project)
-- Reopen mode creates bugfix branch, additive-only edits, preserves original close data
-- `history.md` append-only transition log for phase detection and audit trail

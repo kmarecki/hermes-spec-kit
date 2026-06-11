@@ -194,54 +194,16 @@ Spec-kit has four modes, each suited to a different level of uncertainty:
 | **Explore** | You're unsure about the approach — high uncertainty | Spawns parallel agents, each trying a different approach on an isolated branch | Hands-off after launch; you compare results later |
 | **Reopen** | A closed feature needs more fixes | Creates bugfix branch from main, preserves original close data, routes through bugfix loop | Additive-only edits; must close again after fixes |
 
-### Specify Mode (Default)
+Phase sequence for each mode:
 
-```text
-Constitution → Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close
-```
+| Mode | Sequence |
+|------|----------|
+| **Specify** | `Constitution → Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close` |
+| **Bugfix** | `Test → [Clarify if needed] → Plan → Tasks → Implement → Test → Close` |
+| **Explore** | Deep dive below → |
+| **Reopen** | Deep dive below → |
 
-- Each forward step is manual — the agent proposes but never advances without consent
-- Clarify and Review are optional
-- You can jump back to any earlier phase at any time
-- Best for: features where the requirements are clear
-
-### Bugfix Mode
-
-```text
-Test → [Clarify if needed] → Plan → Tasks → Implement → Test → Close
-```
-
-- Once you say "bugfix [feature]", the inner loop chains automatically
-- No intermediate prompts — you committed to the fix path
-- Each bug must have a plan section reference (Plan Ref)
-- After all bugs verified → you're prompted for Close
-- Close is mandatory before marking the feature complete
-- Best for: fixing known issues in an existing implementation
-
-### Explore Mode (Detailed Below)
-
-```text
-User says "explore [feature] with [variants]"
-  → Parallel subagents, each in its own git worktree
-  → Each runs independent specify → plan → tasks → implement
-  → User says "compare [feature]" → comparison matrix
-  → User picks winner → code promoted to main feature branch
-```
-
-- Best for: high-uncertainty features where you want to compare approaches
-
-### Reopen Mode (Detailed Below)
-
-```text
-User says "reopen [feature]"
-  → Creates bugfix branch: {prefix}/NNN-{name}{reopen_suffix}
-  → Additive-only edits to bugs.md/plan.md/tasks.md
-  → Routes through bugfix loop (Plan→Tasks→Implement)
-  → Must close again — original close data preserved
-```
-
-- Best for: fixing bugs or adding small changes to an already-closed feature
-- Preserves the original close.md — appends a new close entry instead of overwriting
+Explore and Reopen have full walkthroughs in dedicated sections below.
 
 ---
 
@@ -876,25 +838,6 @@ Fix:   Re-run explore for just that variant, or check the worktree directory
 ---
 
 ## Reference Tables
-
-### All Skills
-
-| Skill | Phase | Purpose | Persona |
-|-------|-------|---------|---------|
-| `spec-kit` | — | Umbrella overview | — |
-| `spec-kit-workflow` | — | Routes requests to correct phase | Workflow orchestrator |
-| `spec-kit-constitution` | 0 | Project principles | Project founder |
-| `spec-kit-specify` | 1 | Feature specification | Curious detail-gatherer |
-| `spec-kit-clarify` | 1.5 | Resolve ambiguities | Curious detail-gatherer |
-| `spec-kit-plan` | 2 | Technical plan | System architect + philosopher |
-| `spec-kit-tasks` | 3 | Task breakdown | System architect + philosopher |
-| `spec-kit-review` | 3.5 / 5.5 / closed | Quality gate (pre/post/closed) | Thorough code auditor |
-| `spec-kit-implement` | 4 | TDD implementation | Disciplined engineer |
-| `spec-kit-test` | 5 | Bug tracking | QA engineer |
-| `spec-kit-summarize` | 6 | Close/summary | Thorough code auditor |
-| `spec-kit-refresh` | — | Artifact reconciliation | Auditor |
-| `spec-kit-explore` | — | Parallel variant exploration | Creative architect |
-| `spec-kit-compare` | — | Variant comparison | Thorough code auditor |
 
 ### Templates
 
