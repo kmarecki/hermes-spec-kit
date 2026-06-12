@@ -316,19 +316,20 @@ language + framework are chosen.
 
 Ask the user: *"What is this project's primary purpose?"*
 
-Present these 5 options with their tradeoffs:
+Present these 6 options with their tradeoffs:
 
 | Option | Type | Examples | Testing impact | Arch impact | Docs impact | Deps impact |
 |--------|------|----------|---------------|-------------|-------------|-------------|
 | **A — User-Facing Application** | Web/mobile API, frontend, full-stack app | SaaS, e-commerce, social app, dashboard, CMS | Needs integration + E2E tests. TDD pays off. | Architecture matters — will need to scale. | API docs, user docs, setup guide critical. | Framework deps expected (React, Django, etc.) |
-| **B — Library / SDK / Package** | Reusable code for other developers | npm package, PyPI lib, Go module, crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal internal coupling. | API docs, README, examples, changelog mandatory. | Zero or minimal deps to avoid transitive bloat. |
-| **C — Infrastructure / CLI / DevOps** | Automation, ops tools, platform | CLI tool, Terraform module, CI pipeline, daemon | Integration tests with real infra. Manual testing common. | Simple, composable. No over-engineering. | README + --help. Code that IS the documentation. | Minimal. Static binaries preferred. |
-| **D — Game** | Interactive application with game loop, rendering, input | 2D platformer, 3D FPS, puzzle game, RPG, mobile game, WebGL game | Unit tests for game logic. Visual/playtest testing critical. Integration tests for netcode. | ECS, scene graph, component-based. Game loop, render pipeline, physics. | Design doc, mechanics doc, modding API docs. README + gameplay guide. | Engine dependency (Unity, Unreal, Godot, Bevy). Graphics, audio, physics libs. |
-| **E — IoT / Embedded** | Firmware, device software, real-time systems | Sensor firmware, motor controller, smart home device, drone flight controller, RTOS application | Hardware-in-the-loop testing. Simulation for CI. Manual device testing essential. | HAL, RTOS tasks, driver layer. Memory-constrained. Real-time constraints. | Pinout docs, protocol specs, register maps. Datasheet references. | Minimal or zero std. Vendor SDKs. No dynamic allocation. Cross-compilation toolchain. |
+| **B — Content Site / Marketing** | Static or lightly dynamic, no auth/DB | Portfolio, landing page, blog, documentation site, marketing site | Minimal. Visual checks + broken link checker. No business logic to test. | Simple — SSG, template-driven, or plain HTML/CSS. No backend needed. | Content IS the documentation. Readme for build/deploy. | SSG framework or plain HTML/CSS. Zero server deps. |
+| **C — Library / SDK / Package** | Reusable code for other developers | npm package, PyPI lib, Go module, crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal internal coupling. | API docs, README, examples, changelog mandatory. | Zero or minimal deps to avoid transitive bloat. |
+| **D — Infrastructure / CLI / DevOps** | Automation, ops tools, platform | CLI tool, Terraform module, CI pipeline, daemon | Integration tests with real infra. Manual testing common. | Simple, composable. No over-engineering. | README + --help. Code that IS the documentation. | Minimal. Static binaries preferred. |
+| **E — Game** | Interactive application with game loop, rendering, input | 2D platformer, 3D FPS, puzzle game, RPG, mobile game, WebGL game | Unit tests for game logic. Visual/playtest testing critical. Integration tests for netcode. | ECS, scene graph, component-based. Game loop, render pipeline, physics. | Design doc, mechanics doc, modding API docs. README + gameplay guide. | Engine dependency (Unity, Unreal, Godot, Bevy). Graphics, audio, physics libs. |
+| **F — IoT / Embedded** | Firmware, device software, real-time systems | Sensor firmware, motor controller, smart home device, drone flight controller, RTOS application | Hardware-in-the-loop testing. Simulation for CI. Manual device testing essential. | HAL, RTOS tasks, driver layer. Memory-constrained. Real-time constraints. | Pinout docs, protocol specs, register maps. Datasheet references. | Minimal or zero std. Vendor SDKs. No dynamic allocation. Cross-compilation toolchain. |
 
 ```
 ASK: "What kind of project are you building?"
-RECORD: purpose = [A | B | C | D | E]
+RECORD: purpose = [A | B | C | D | E | F]
 NOTE: purpose determines the weight of each principle below.
 ```
 
@@ -346,41 +347,49 @@ Based on the chosen purpose, present 3 architecture options:
 | **A2** | Modular Monolith | Bounded contexts in a shared runtime. Clear module boundaries. | Scales to medium teams, can extract services later, good separation | Requires discipline on boundaries | Growing teams, most web apps, medium complexity |
 | **A3** | Microservices | Independent services, separate deploys, own data stores. | Independent scaling, team autonomy, technology flexibility | Operational complexity, distributed debugging, data consistency | Large teams, high-scale apps, multiple domains |
 
-**If purpose = B (Library / SDK):**
+**If purpose = B (Content Site / Marketing):**
 
 | Option | Name | Description | Pros | Cons | Best for |
 |--------|------|-------------|------|------|----------|
-| **B1** | Zero-Dependency | Stdlib only. Minimal API surface. No runtime deps. | Maximum compatibility, no supply chain risk, builds instantly | More custom code, reinventing wheels | Core libraries, security-sensitive, polyfills |
-| **B2** | Curated | Few well-chosen deps with justification. Pin exact versions. | Faster delivery, standard patterns, community leverage | Transitive bloat, upgrade burden | Most libraries, SDKs for popular platforms |
-| **B3** | Umbrella | Multi-package monorepo. Independent versioning per sub-package. | Clean separation, consumers pick what they need | Build complexity, tooling overhead, version coordination | Large SDKs (like AWS, Google Cloud clients) |
+| **B1** | Static Site Generator | SSG (Astro, Hugo, 11ty, Jekyll, Next.js SSG). Build produces static HTML/CSS/JS. | Fastest possible hosting (CDN), no server costs, best SEO, instant load | No dynamic content without client JS, rebuild on content change | Portfolios, blogs, marketing sites, docs sites |
+| **B2** | Headless CMS + SSG | Content managed in headless CMS (Strapi, Sanity, Contentful). SSG fetches at build time. | Non-developers edit content, structured content, revalidation possible | CMS hosting cost, build-time coupling, preview complexity | Team-maintained content sites, multi-author blogs, company sites |
+| **B3** | Lightweight Backend | Simple server (Express, Flask, PHP) serving mostly static content with a few dynamic routes. | Easy dynamic features (forms, comments, auth), no SSG build step | Server costs, maintenance overhead, slower than CDN-hosted static | Sites needing a few dynamic features without full web-app complexity |
 
-**If purpose = C (Infrastructure / CLI / DevOps):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **C1** | Single Binary | Everything compiled into one binary. No runtime deps. | Zero friction for users, simple distribution, easy CI | Monolithic code, feature flag complexity | CLIs, single-purpose tools, Terraform providers |
-| **C2** | Multi-Binary | Separate binaries sharing common libs. | Independent releases, clear boundaries, composable | Distribution complexity, version coordination | Tool suites (like kubectl + plugins) |
-| **C3** | Plugin-Based | Core binary + plugin system. Users extend without forking. | Extensible by community, clean core, pluggable | Plugin API stability burden, discovery UX | Framework-like tools, extensible CLIs |
-
-**If purpose = D (Game):**
+**If purpose = C (Library / SDK):**
 
 | Option | Name | Description | Pros | Cons | Best for |
 |--------|------|-------------|------|------|----------|
-| **D1** | Engine-Centric | Built on existing engine (Unity, Unreal, Godot). Visual scripting + code. | Fastest prototyping, massive asset stores, mature tooling | Engine lock-in, license costs, bloated builds, hard to optimize | Most games, indie to AAA, cross-platform |
-| **D2** | Custom Engine | Hand-rolled engine with ECS or scene-graph architecture. | Full control, no license fees, optimized for specific game | Massive upfront investment, no asset pipeline, constant engine work | Unique mechanics, competitive edge, learning exercise |
-| **D3** | Web/Retro | Browser-based (WebGL, Canvas, Phaser) or retro-style (pixel art, 8-bit) | Zero install for players, nostalgic appeal, tiny asset sizes | Performance ceilings, limited complex rendering, browser compatibility | Casual games, jam games, mobile web, educational |
+| **C1** | Zero-Dependency | Stdlib only. Minimal API surface. No runtime deps. | Maximum compatibility, no supply chain risk, builds instantly | More custom code, reinventing wheels | Core libraries, security-sensitive, polyfills |
+| **C2** | Curated | Few well-chosen deps with justification. Pin exact versions. | Faster delivery, standard patterns, community leverage | Transitive bloat, upgrade burden | Most libraries, SDKs for popular platforms |
+| **C3** | Umbrella | Multi-package monorepo. Independent versioning per sub-package. | Clean separation, consumers pick what they need | Build complexity, tooling overhead, version coordination | Large SDKs (like AWS, Google Cloud clients) |
 
-**If purpose = E (IoT / Embedded):**
+**If purpose = D (Infrastructure / CLI / DevOps):**
 
 | Option | Name | Description | Pros | Cons | Best for |
 |--------|------|-------------|------|------|----------|
-| **E1** | Bare-Metal / RTOS | No OS or lightweight RTOS (FreeRTOS, Zephyr, Mbed). Direct hardware access. | Max performance, minimal latency, lowest power, no OS overhead | No memory protection, manual driver work, harder debugging, no standard libs | Sensor nodes, motor controllers, wearables, constrained devices |
-| **E2** | Linux-Based Embedded | Runs on Linux (Yocto, Buildroot, Raspberry Pi OS). User-space + kernel modules. | Rich ecosystem, standard tooling, debugging easy, networking built-in | Larger footprint, higher power, boot time, real-time challenges | Smart home hubs, drones, gateways, cameras, robots |
-| **E3** | MicroPython / Arduino | High-level firmware framework (Arduino, MicroPython, CircuitPython). Abstraction layer. | Fastest to prototype, huge community, beginner-friendly, extensive libraries | Limited performance, memory overhead, abstraction hides hardware issues | Prototypes, hobbyist, education, rapid IoT development |
+| **D1** | Single Binary | Everything compiled into one binary. No runtime deps. | Zero friction for users, simple distribution, easy CI | Monolithic code, feature flag complexity | CLIs, single-purpose tools, Terraform providers |
+| **D2** | Multi-Binary | Separate binaries sharing common libs. | Independent releases, clear boundaries, composable | Distribution complexity, version coordination | Tool suites (like kubectl + plugins) |
+| **D3** | Plugin-Based | Core binary + plugin system. Users extend without forking. | Extensible by community, clean core, pluggable | Plugin API stability burden, discovery UX | Framework-like tools, extensible CLIs |
+
+**If purpose = E (Game):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **E1** | Engine-Centric | Built on existing engine (Unity, Unreal, Godot). Visual scripting + code. | Fastest prototyping, massive asset stores, mature tooling | Engine lock-in, license costs, bloated builds, hard to optimize | Most games, indie to AAA, cross-platform |
+| **E2** | Custom Engine | Hand-rolled engine with ECS or scene-graph architecture. | Full control, no license fees, optimized for specific game | Massive upfront investment, no asset pipeline, constant engine work | Unique mechanics, competitive edge, learning exercise |
+| **E3** | Web/Retro | Browser-based (WebGL, Canvas, Phaser) or retro-style (pixel art, 8-bit) | Zero install for players, nostalgic appeal, tiny asset sizes | Performance ceilings, limited complex rendering, browser compatibility | Casual games, jam games, mobile web, educational |
+
+**If purpose = F (IoT / Embedded):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **F1** | Bare-Metal / RTOS | No OS or lightweight RTOS (FreeRTOS, Zephyr, Mbed). Direct hardware access. | Max performance, minimal latency, lowest power, no OS overhead | No memory protection, manual driver work, harder debugging, no standard libs | Sensor nodes, motor controllers, wearables, constrained devices |
+| **F2** | Linux-Based Embedded | Runs on Linux (Yocto, Buildroot, Raspberry Pi OS). User-space + kernel modules. | Rich ecosystem, standard tooling, debugging easy, networking built-in | Larger footprint, higher power, boot time, real-time challenges | Smart home hubs, drones, gateways, cameras, robots |
+| **F3** | MicroPython / Arduino | High-level firmware framework (Arduino, MicroPython, CircuitPython). Abstraction layer. | Fastest to prototype, huge community, beginner-friendly, extensive libraries | Limited performance, memory overhead, abstraction hides hardware issues | Prototypes, hobbyist, education, rapid IoT development |
 
 ```
-ASK: "Given your purpose [A|B|C|D|E], which architecture approach fits?"
-RECORD: architecture = [A1|A2|A3 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3 | E1|E2|E3]
+ASK: "Given your purpose [A|B|C|D|E|F], which architecture approach fits?"
+RECORD: architecture = [A1|A2|A3 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3 | E1|E2|E3 | F1|F2|F3]
 ```
 
 ---
@@ -403,37 +412,46 @@ IF purpose == A (User-Facing App):
     A2 (Modular): FastAPI, Express/Nest, Spring Boot, Phoenix — modular frameworks
     A3 (Microservices): Go, Rust, ASP.NET Minimal API, Fastify — lightweight, fast
 
-IF purpose == B (Library / SDK):
+IF purpose == B (Content Site / Marketing):
+  RECOMMEND: SSG-friendly or lightweight backend languages
+  BRACKET by architecture:
+    B1 (SSG): Astro, Hugo, 11ty, Jekyll, Next.js SSG — zero runtime JS if possible
+    B2 (Headless CMS + SSG): Astro + Strapi/Sanity, Next.js + Contentful,
+        Gatsby + WordPress headless — framework chosen by CMS ecosystem
+    B3 (Lightweight Backend): Express (Node), Flask (Python), PHP (no framework),
+        Sinatra (Ruby) — minimal server, mostly static responses
+
+IF purpose == C (Library / SDK):
   RECOMMEND: ecosystem-specific languages
   BRACKET by architecture:
-    B1 (Zero-Dep): Go stdlib, Rust no-std, Python stdlib, TypeScript with no deps
-    B2 (Curated): Pick target ecosystem (Python, JS, Go, Rust, Java)
-    B3 (Umbrella): TypeScript (monorepo with npm workspaces), Rust (workspaces)
+    C1 (Zero-Dep): Go stdlib, Rust no-std, Python stdlib, TypeScript with no deps
+    C2 (Curated): Pick target ecosystem (Python, JS, Go, Rust, Java)
+    C3 (Umbrella): TypeScript (monorepo with npm workspaces), Rust (workspaces)
 
-IF purpose == C (Infra / CLI):
+IF purpose == D (Infra / CLI):
   RECOMMEND: systems languages
   BRACKET by architecture:
-    C1 (Single bin): Go, Rust, Zig, C — compiles to static binary
-    C2 (Multi-bin): Go (fast compile), Rust (safe), Python+PyInstaller
-    C3 (Plugin): Go (plugin/pkg), Rust (wasm plugins), C (dlopen)
+    D1 (Single bin): Go, Rust, Zig, C — compiles to static binary
+    D2 (Multi-bin): Go (fast compile), Rust (safe), Python+PyInstaller
+    D3 (Plugin): Go (plugin/pkg), Rust (wasm plugins), C (dlopen)
 
-IF purpose == D (Game):
+IF purpose == E (Game):
   RECOMMEND: engine ecosystem + systems languages
   BRACKET by architecture:
-    D1 (Engine-Centric): C# (Unity + script), C++ (Unreal BP+C++),
+    E1 (Engine-Centric): C# (Unity + script), C++ (Unreal BP+C++),
         GDScript (Godot), Rust (Bevy)
-    D2 (Custom Engine): Rust (wgpu, winit, macroquad), C++ (SDL, OpenGL,
+    E2 (Custom Engine): Rust (wgpu, winit, macroquad), C++ (SDL, OpenGL,
         Vulkan), C# (MonoGame, Stride), Zig (cross-compile for consoles)
-    D3 (Web/Retro): TypeScript (Phaser, PixiJS, Three.js), Haxe
+    E3 (Web/Retro): TypeScript (Phaser, PixiJS, Three.js), Haxe
         (Heaps, OpenFL), Python (Pygame, Arcade), Lua (LÖVE)
 
-IF purpose == E (IoT / Embedded):
+IF purpose == F (IoT / Embedded):
   RECOMMEND: constrained languages + cross-compilation
   BRACKET by architecture:
-    E1 (Bare-Metal / RTOS): C (de facto standard), C++ (with constraits),
+    F1 (Bare-Metal / RTOS): C (de facto standard), C++ (with constraits),
         Rust (no-std, no-alloc), Zig (cross-compile natively)
-    E2 (Linux Embedded): C, C++, Python, Rust, Go — whatever Linux supports
-    E3 (MicroPython / Arduino): C++ (Arduino), Python (MicroPython,
+    F2 (Linux Embedded): C, C++, Python, Rust, Go — whatever Linux supports
+    F3 (MicroPython / Arduino): C++ (Arduino), Python (MicroPython,
         CircuitPython), Lua (eLua), JavaScript (Espruino)
 ```
 
@@ -481,7 +499,21 @@ PURPOSE = A (User-Facing App):
   Config/Secrets → B (Environment-based)
   Dev Toolchain → B (Standard toolchain)
 
-PURPOSE = B (Library / SDK):
+PURPOSE = B (Content Site / Marketing):
+  Testing → C (Test-After — no business logic to test, visual QA only)
+  Linting → B (Pragmatic — template code needs flexibility)
+  Architecture → user's choice from Level 2
+  Dependencies → B (Curated — SSG framework + maybe CMS client)
+  Git Workflow → A (Trunk-based — content changes should ship fast)
+  Documentation → B (Critical-only — build/deploy instructions + content guide)
+  Error Handling → C (Minimal — static sites have no runtime errors)
+  Performance → C (Ignore-until-painful — SSG output is inherently fast)
+  Code Review → C (Post-merge — content edits shouldn't block)
+  Database → SKIP (no database on content sites)
+  Config/Secrets → C (Config-in-repo — build config is part of the source)
+  Dev Toolchain → B (Standard toolchain — SSG, asset pipeline, CDN deploy)
+
+PURPOSE = C (Library / SDK):
   Testing → A (Strict TDD — API surface must be tested)
   Linting → A (Strict — public API consistency)
   Architecture → user's choice from Level 2
@@ -495,7 +527,7 @@ PURPOSE = B (Library / SDK):
   Config/Secrets → A (Strict — secrets never in lib)
   Dev Toolchain → B (Standard toolchain)
 
-PURPOSE = C (Infrastructure / CLI / DevOps):
+PURPOSE = D (Infrastructure / CLI / DevOps):
   Testing → B (Pragmatic — integration-heavy)
   Linting → A (Strict — CLI UX consistency)
   Architecture → user's choice from Level 2
@@ -509,7 +541,7 @@ PURPOSE = C (Infrastructure / CLI / DevOps):
   Config/Secrets → A (Strict — env + config files)
   Dev Toolchain → C (Full DX — automation matters)
 
-PURPOSE = D (Game):
+PURPOSE = E (Game):
   Testing → C (Test-After — playtesting and visual QA dominant)
   Linting → B (Pragmatic — engine code needs flexibility)
   Architecture → user's choice from Level 2
@@ -523,7 +555,7 @@ PURPOSE = D (Game):
   Config/Secrets → C (Config-in-repo — game config is part of the game)
   Dev Toolchain → C (Full DX — asset pipeline, build chain, packaging)
 
-PURPOSE = E (IoT / Embedded):
+PURPOSE = F (IoT / Embedded):
   Testing → C (Test-After — hardware testing dominates)
   Linting → A (Strict — firmware bugs are expensive, no OTA)
   Architecture → user's choice from Level 2
@@ -679,6 +711,11 @@ INCLUDE in the Tech Stack section:
 | **TypeScript** | `package.json` + `remix.config.*` | `@remix-run` | Vitest/Jest | GitHub Actions | B (TDD), B (Lint), C (Arch), B (Deps), B (Git) |
 | **TypeScript** | `package.json` + Express/Fastify/Nest | express/fastify/@nestjs | Jest | GitHub Actions | A (TDD), B (Lint), B (Arch), B (Deps), B (Git) |
 | **TypeScript** | `package.json` (no framework) | plain lib/app | Jest/Vitest | — | B (TDD), B (Lint), C (Arch), B (Deps), B (Git) |
+| **Astro Site** | `astro.config.*` / `src/pages/*` | Astro SSG | — | GitHub Pages / Netlify | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
+| **Hugo Site** | `hugo.toml` / `config.toml` / `content/` | Hugo SSG | — | Netlify / Cloudflare | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
+| **11ty Site** | `.eleventy.js` / `_config.js` | 11ty SSG | — | Netlify / GitHub Pages | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
+| **Jekyll Site** | `_config.yml` / `_posts/` | Jekyll SSG | — | GitHub Pages | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
+| **Next.js SSG** | `next.config.*` + `next export` or `output: export` | Next.js SSG mode | Vitest | Vercel | C (TDD), B (Lint), B1/B2 (SSG/CMS), B (Deps), A (Git) |
 | **Python** | `pyproject.toml` + `manage.py` | Django | pytest | GitHub Actions | A (TDD), B (Lint), B (Arch), B (Deps), B (Git) |
 | **Python** | `pyproject.toml` + `main.py` (FastAPI) | fastapi/starlette | pytest | — | A (TDD), B (Lint), B (Arch), B (Deps), B (Git) |
 | **Python** | `pyproject.toml` + `app.py` (Flask) | flask in deps | pytest | — | B (TDD), B (Lint), C (Arch), B (Deps), B (Git) |
