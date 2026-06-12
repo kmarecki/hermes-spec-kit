@@ -1,37 +1,116 @@
 # [PROJECT_NAME] Constitution
 
+> Ratified: [DATE] | Version: [VERSION]
+> Auto-detected from: [brownfield detected sources] *(remove if greenfield)*
+
+## Tech Stack
+
+- **Language**: [LANGUAGE_VERSION]
+- **Framework**: [FRAMEWORK]
+- **Test Framework**: [TEST_FRAMEWORK]
+- **Package Manager**: [PACKAGE_MANAGER]
+- **CI/CD**: [CI_PLATFORM]
+- **Database**: [DATABASE]
+- **Deployment**: [DEPLOYMENT_TARGET]
+
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
+### 1. Testing Philosophy
+**Chosen: [A | B | C] — [Rule Name]**
 
-[PRINCIPLE_1_DESCRIPTION]
+[User-picked option's full text as the constitutional rule]
 
-### [PRINCIPLE_2_NAME]
+**Rationale:** [Why this option was chosen]
 
-[PRINCIPLE_2_DESCRIPTION]
+### 2. Code Quality & Linting
+**Chosen: [A | B | C] — [Rule Name]**
 
-### [PRINCIPLE_3_NAME]
+[User-picked option's full text]
 
-[PRINCIPLE_3_DESCRIPTION]
+**Rationale:** [Why this option was chosen]
 
-### [PRINCIPLE_4_NAME]
+### 3. Architecture
+**Chosen: [A | B | C] — [Rule Name]**
 
-[PRINCIPLE_4_DESCRIPTION]
+[User-picked option's full text]
 
-### [PRINCIPLE_5_NAME]
+**Rationale:** [Why this option was chosen]
 
-[PRINCIPLE_5_DESCRIPTION]
+### 4. Dependencies & Third-Party
+**Chosen: [A | B | C] — [Rule Name]**
 
-## Governance
+[User-picked option's full text]
 
-[SECTION_2_NAME]
+**Rationale:** [Why this option was chosen]
 
-[SECTION_2_CONTENT]
+### 5. Git Workflow
+**Chosen: [A | B | C] — [Rule Name]**
 
-[SECTION_3_NAME]
+[User-picked option's full text]
 
-[SECTION_3_CONTENT]
+**Rationale:** [Why this option was chosen]
 
-[GOVERNANCE_RULES]
+### 6. Documentation
+**Chosen: [A | B | C] — [Rule Name]**
 
-Version: [CONSTITUTION_VERSION] | Ratified: [RATIFICATION_DATE] | Last Amended: [LAST_AMENDED_DATE]
+[User-picked option's full text]
+
+**Rationale:** [Why this option was chosen]
+
+### 7. Error Handling
+**Chosen: [A | B | C] — [Rule Name]**
+
+[User-picked option's full text]
+
+**Rationale:** [Why this option was chosen]
+
+### 8. Performance
+**Chosen: [A | B | C] — [Rule Name]**
+
+[User-picked option's full text]
+
+**Rationale:** [Why this option was chosen]
+
+### 9. Code Review
+**Chosen: [A | B | C] — [Rule Name]**
+
+[User-picked option's full text]
+
+**Rationale:** [Why this option was chosen]
+
+### 10. Database & Schema
+**Chosen: [A | B | C] — [Rule Name]**
+*(omit if project has no database)*
+
+[User-picked option's full text]
+
+**Rationale:** [Why this option was chosen]
+
+### 11. Configuration & Secrets
+**Chosen: [A | B | C] — [Rule Name]**
+
+[User-picked option's full text]
+
+**Rationale:** [Why this option was chosen]
+
+### 12. Dev Toolchain
+**Chosen: [A | B | C] — [Rule Name]**
+
+[User-picked option's full text]
+
+**Rationale:** [Why this option was chosen]
+
+## Rejected Alternatives
+
+For transparency, record the options that were considered and rejected:
+
+| Principle | Rejected Options | Reason |
+|-----------|-----------------|--------|
+| Testing | [e.g., Option C — Test-After] | [e.g., existing test suite uses pytest, must maintain coverage] |
+| ... | ... | ... |
+
+## Amendments
+
+| Date | Version | Change |
+|------|---------|--------|
+| [DATE] | [VERSION] | Initial ratification |

@@ -62,7 +62,7 @@ See `spec-kit-workflow` for the complete phase table and routing. Quick referenc
 
 | Phase | Skill | When | Purpose |
 |-------|-------|------|---------|
-| 0 — Constitution | `spec-kit-constitution` | "create constitution" | Project-wide principles and MUST/SHOULD rules |
+| 0 — Constitution | `spec-kit-constitution` | "create constitution" | Project-wide principles with auto-detection for existing codebases. Brownfield mode scans project files and pre-fills detected defaults (⭐). Greenfield mode guides user through 12 principles, each with 3 options and pros/cons. Always offers choice with tradeoffs. |
 | 1 — Specify | `spec-kit-specify` | "create a spec for [...]" | **WHAT**: Describe the feature, refactoring, or enhancement in detail. Functional requirements (FR-###), user scenarios, success criteria. No implementation details, no code. |
 | 1.5 — Clarify (opt) | `spec-kit-clarify` | "clarify [feature]" | Resolve ambiguities in the spec |
 | 2 — Plan | `spec-kit-plan` | "plan [feature]" | **HOW**: Design implementation approach. Study existing specs and codebase. Plan with smallest possible impact on existing code while respecting constitution rules and architecture. No code-level implementation details in the plan — focus on architecture, data flow, module boundaries. |
@@ -436,3 +436,4 @@ Installed via `./scripts/install.sh`:
 - `references/preflight.md` — Pre-action self-check rules (branch, mode, workflow)
 - `references/auto-commit.md` — Standard commit pattern across all skills
 - `references/history-tracking.md` — Process history design and rationale (append-only history.md)
+- `references/constitution-principles.md` — 12 principles × 3 options with pros/cons for constitution creation (brownfield/greenfield)
