@@ -245,8 +245,8 @@ The canonical constitution path is `specs/constitution.md`. All Hermes spec-kit 
 - **Bugfix sub-rounds: separate phase commits by default, quickfix batch on request.** The default `bugfix` mode keeps plan and tasks in separate commits for full traceability. The `quickfix` mode batches them on user request — only commit granularity differs, plan refs and task entries always exist.
 - **Additive-safe editing**. During design phases (0-3), freely iterate — rewrite spec/plan/tasks, review proposes any changes. After Phase 4 (Implement) begins, never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, correct text — but only the minimal field or section needed. New entries always append at the end. Preserve every existing bug ID, task ID, and requirement.
 - **Ordering enforced.** bugs.md entries MUST be in BUG-NNN ascending order. tasks.md entries MUST be in T### ascending order. New entries get the next sequential ID.
-- **history.md is mandatory after every markdown change.** Every markdown document created or modified MUST be recorded in `specs/[feature]/history.md`. No exceptions.
-- **Commit after every markdown change.** Each skill commits its artifacts immediately. Multiple related changes in one logical action can be one commit. Never batch unrelated changes.
+- **history.md is mandatory after every markdown change.** Every markdown document created or modified MUST be recorded in `specs/[feature]/history.md`. No exceptions. The pre-action check (preflight check #5) already ensures history.md exists before any work begins. The pre-commit guard (preflight post-completion #2) blocks commits until history.md is verified complete.
+- **Commit after every markdown change, but history.md FIRST.** Each skill commits its artifacts immediately, but the history.md entry MUST be appended BEFORE the commit. The pre-commit guard verifies this. Multiple related changes in one logical action can be one commit. Never batch unrelated changes.
 
 ## Spec Health Score
 

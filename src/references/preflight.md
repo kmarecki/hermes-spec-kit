@@ -40,6 +40,12 @@ Run these checks in order. If any check fails, stop and report before proceeding
        BLOCK: "Must load spec-kit-workflow first for branch guardrails
                and phase routing. Run: skill_view(name='spec-kit-workflow')"
        HALT
+
+5. HISTORY LOG CHECK — BEFORE creating or modifying any markdown document
+   IF you are about to create or modify any markdown document in specs/[feature]/:
+     ENSURE specs/[feature]/history.md EXISTS (create with header if missing)
+     NOTE: "history.md is the process log for this feature. Every markdown
+            change MUST be recorded here BEFORE the next commit."
 ```
 
 ## Quick summary for fast reference
@@ -47,14 +53,26 @@ Run these checks in order. If any check fails, stop and report before proceeding
 - Not on main/master? ✓
 - In bugfix mode? ✓ (if bugs.md open, route through workflow)
 - Workflow loaded before code? ✓
+- history.md exists for this feature? ✓ (created if missing)
 
 ## Post-Completion Requirements (MANDATORY)
 
 After every skill completes that created or modified any markdown document:
 
-1. **Append to history.md**: Every markdown file created or modified MUST be recorded in `specs/[feature]/history.md`. Create the file if it doesn't exist.
+1. **history.md is already ready** (pre-action check #5 already ensured it exists). Append an entry for each document created or modified:
+   - Format: `## [ISO_TIMESTAMP] | [Phase Name] → Complete` with skill, artifacts, commit hash, notes
+   - See `spec-kit/references/history-tracking.md` for the exact format
+   - This is NOT optional — if you skip this, the process log will be missing
 
-2. **Commit**: Commit changed documents immediately with these rules:
+2. **PRE-COMMIT GUARD — Verify history.md is updated**
+   BEFORE running `git add` and `git commit`:
+   ```text
+   READ specs/[feature]/history.md
+   IF any markdown document created/modified in THIS skill run is NOT recorded:
+     BLOCK: "Cannot commit — history.md is missing entries for [document(s)].
+             Append entries first."
+   ```
+   Only proceed to commit after history.md is verified complete.
    - **Spec/plan changes that alter requirements or design intent** → MUST be committed BEFORE any related code. This preserves the causal chain: spec describes what → code implements it. Never commit spec changes as a side-effect of a code commit.
    - **Status-only updates** (bug verified, task marked [X], bug status changed) → CAN share a commit with code. These document what the code did, not what it should do.
    - **Bugfix sub-round documents** (new plan section for new bugs, new tasks for new bugs):

@@ -56,15 +56,23 @@ Replace `[ALL_CAPS_PLACEHOLDER]` tokens with concrete text:
 - **MINOR** (x.1.x → x.2.0): New principles
 - **PATCH** (x.x.1 → x.x.2): Clarifications
 
-### Append to history.md
-Append entry to `specs/history.md` (create if missing):
-- Phase: Phase 0 — Complete
-- Artifact: `specs/constitution.md`
+### Append to history.md and Commit
 
-### Commit
-Follow `spec-kit/references/auto-commit.md`:
-- Scope: `specs/constitution.md`
-- Message: `"spec(phase-0): constitution for [PROJECT]"`
+**Order is critical: history.md FIRST, then commit.**
+
+1. **Append to history.md**:
+   Append entry to `specs/history.md` (create if missing):
+   - Phase: Phase 0 — Complete
+   - Artifact: `specs/constitution.md`
+
+2. **PRE-COMMIT GUARD**:
+   READ `specs/history.md` — confirm the constitution entry is recorded.
+   If missing: BLOCK — must append before commit.
+
+3. **Commit**:
+   Follow `spec-kit/references/auto-commit.md`:
+   - Scope: `specs/constitution.md`
+   - Message: `"spec(phase-0): constitution for [PROJECT]"`
 
 ## Completion
 - Report new version and bump rationale
