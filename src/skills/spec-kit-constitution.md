@@ -337,7 +337,7 @@ NOTE: purpose determines the weight of each principle below.
 
 #### Level 2 — Architecture Approach
 
-Based on the chosen purpose, present 3 architecture options:
+Based on the chosen purpose, present the architecture options:
 
 **If purpose = A (User-Facing App):**
 
@@ -346,6 +346,7 @@ Based on the chosen purpose, present 3 architecture options:
 | **A1** | Monolith | Single deployable, shared everything. MVC or similar. | Fastest to build, simple deploy, single codebase | Hard to scale team, technology lock-in | MVPs, small teams, prototypes |
 | **A2** | Modular Monolith | Bounded contexts in a shared runtime. Clear module boundaries. | Scales to medium teams, can extract services later, good separation | Requires discipline on boundaries | Growing teams, most web apps, medium complexity |
 | **A3** | Microservices | Independent services, separate deploys, own data stores. | Independent scaling, team autonomy, technology flexibility | Operational complexity, distributed debugging, data consistency | Large teams, high-scale apps, multiple domains |
+| **A4** | Serverless / FaaS | Individual functions deployed on-demand (Lambda, Cloudflare Workers, Vercel Functions, Google Cloud Functions). | Zero infrastructure management, auto-scale, pay-per-execution, fast deploys | Cold starts, execution time limits, vendor lock-in, testing complexity | APIs with variable traffic, event-driven, startups, Jamstack backends |
 
 **If purpose = B (Content Site / Marketing):**
 
@@ -370,6 +371,7 @@ Based on the chosen purpose, present 3 architecture options:
 | **D1** | Single Binary | Everything compiled into one binary. No runtime deps. | Zero friction for users, simple distribution, easy CI | Monolithic code, feature flag complexity | CLIs, single-purpose tools, Terraform providers |
 | **D2** | Multi-Binary | Separate binaries sharing common libs. | Independent releases, clear boundaries, composable | Distribution complexity, version coordination | Tool suites (like kubectl + plugins) |
 | **D3** | Plugin-Based | Core binary + plugin system. Users extend without forking. | Extensible by community, clean core, pluggable | Plugin API stability burden, discovery UX | Framework-like tools, extensible CLIs |
+| **D4** | Script / Declarative / Pipeline | Uncompiled scripts or declarative config (Python, shell, Terraform, Ansible). AI data pipelines (RAG, dataset prep, LLM eval) also fit here. | Fastest to iterate, no build step, easy to read, large ecosystem | No static binary, runtime deps needed, slower execution, harder to distribute | Data pipelines, AI/ML scripts, RAG ingestion, dataset prep, Terraform modules, Ansible playbooks, CI/CD configs |
 
 **If purpose = E (Game):**
 
@@ -389,7 +391,7 @@ Based on the chosen purpose, present 3 architecture options:
 
 ```
 ASK: "Given your purpose [A|B|C|D|E|F], which architecture approach fits?"
-RECORD: architecture = [A1|A2|A3 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3 | E1|E2|E3 | F1|F2|F3]
+RECORD: architecture = [A1|A2|A3|A4 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3|D4 | E1|E2|E3 | F1|F2|F3]
 ```
 
 ---
@@ -411,6 +413,9 @@ IF purpose == A (User-Facing App):
     A1 (Monolith): Django, Rails, Laravel, Next.js, ASP.NET — batteries-included
     A2 (Modular): FastAPI, Express/Nest, Spring Boot, Phoenix — modular frameworks
     A3 (Microservices): Go, Rust, ASP.NET Minimal API, Fastify — lightweight, fast
+    A4 (Serverless): TypeScript (Cloudflare Workers, Vercel Functions),
+        Python (Lambda, Google Cloud Functions), Go (Lambda custom runtime),
+        Rust (Lambda with wasm or custom runtime) — function-per-route
 
 IF purpose == B (Content Site / Marketing):
   RECOMMEND: SSG-friendly or lightweight backend languages
@@ -434,6 +439,9 @@ IF purpose == D (Infra / CLI):
     D1 (Single bin): Go, Rust, Zig, C — compiles to static binary
     D2 (Multi-bin): Go (fast compile), Rust (safe), Python+PyInstaller
     D3 (Plugin): Go (plugin/pkg), Rust (wasm plugins), C (dlopen)
+    D4 (Script / Pipeline): Python (langchain, llamaindex, torch, pandas,
+        transformers), Shell (bash automation), HCL (Terraform), YAML
+        (Ansible, CI/CD), Jupyter notebooks — no compilation, data-driven
 
 IF purpose == E (Game):
   RECOMMEND: engine ecosystem + systems languages
@@ -711,6 +719,13 @@ INCLUDE in the Tech Stack section:
 | **TypeScript** | `package.json` + `remix.config.*` | `@remix-run` | Vitest/Jest | GitHub Actions | B (TDD), B (Lint), C (Arch), B (Deps), B (Git) |
 | **TypeScript** | `package.json` + Express/Fastify/Nest | express/fastify/@nestjs | Jest | GitHub Actions | A (TDD), B (Lint), B (Arch), B (Deps), B (Git) |
 | **TypeScript** | `package.json` (no framework) | plain lib/app | Jest/Vitest | — | B (TDD), B (Lint), C (Arch), B (Deps), B (Git) |
+| **Serverless API** | `wrangler.toml` | Cloudflare Workers | Vitest | Cloudflare CI | B (TDD), B (Lint), A4 (Serverless), B (Deps), A (Git) |
+| **Serverless API** | `serverless.yml` | Serverless Framework | Jest/Mocha | GitHub Actions | B (TDD), B (Lint), A4 (Serverless), B (Deps), A (Git) |
+| **Serverless API** | `template.yaml` / `samconfig.toml` | AWS SAM | pytest | AWS CodeBuild | B (TDD), B (Lint), A4 (Serverless), B (Deps), A (Git) |
+| **AI/RAG Pipeline** | Python + langchain/llamaindex in deps | AI data pipeline | pytest | — | C (TDD), B (Lint), D4 (Script), C (Deps), A (Git) |
+| **Data Pipeline** | Python + pandas/airflow/prefect in deps | ETL / data pipeline | pytest | — | C (TDD), B (Lint), D4 (Script), C (Deps), A (Git) |
+| **Terraform** | `*.tf` files | Terraform / OpenTofu | terraform test | GitHub Actions | C (TDD), A (Lint), D4 (Script), A (Deps), A (Git) |
+| **Ansible** | `*.yml` in ansible/ or playbooks/ | Ansible | ansible-test | — | C (TDD), A (Lint), D4 (Script), A (Deps), A (Git) |
 | **Astro Site** | `astro.config.*` / `src/pages/*` | Astro SSG | — | GitHub Pages / Netlify | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
 | **Hugo Site** | `hugo.toml` / `config.toml` / `content/` | Hugo SSG | — | Netlify / Cloudflare | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
 | **11ty Site** | `.eleventy.js` / `_config.js` | 11ty SSG | — | Netlify / GitHub Pages | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
@@ -747,7 +762,6 @@ INCLUDE in the Tech Stack section:
 | **Elixir** | `mix.exs` (Phoenix) | phoenix in deps | ExUnit | — | A (TDD), B (Lint), A (Arch), B (Deps), B (Git) |
 | **Scala** | `build.sbt` (Play) | play in deps | ScalaTest | — | B (TDD), A (Lint), A (Arch), B (Deps), B (Git) |
 | **Deno** | `deno.json` / `deno.jsonc` | deno std | deno test | — | B (TDD), B (Lint), C (Arch), A (Deps), B (Git) |
-| **Terraform** | `*.tf` files | — | — | — | C (TDD), C (Lint), C (Arch), A (Deps), A (Git) |
 | **Docker** | `Dockerfile` only | any language | — | — | C (TDD), C (Lint), C (Arch), A (Deps), B (Git) |
 | **Nix** | `flake.nix` / `shell.nix` | nix language | — | — | C (TDD), A (Lint), B (Arch), A (Deps), A (Git) |
 | **Unity Game** | `Assembly-CSharp*` / `.unity` files | Unity engine | Unity Test Runner / NUnit | Unity Cloud Build | C (TDD), B (Lint), D1 (Engine), C (Deps), B (Git) |
