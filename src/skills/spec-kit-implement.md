@@ -29,7 +29,7 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 ## Git Commit Guidelines
 See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`. Branch guard handled by preflight.md.
 
-Note: design artifacts (spec.md, plan.md, tasks.md) were already batch-committed at implementation start. Do NOT re-commit them.
+Note: Each design phase skill (constitution, specify, clarify, plan, tasks) commits its own artifacts individually. Implement does NOT re-commit them.
 
 
 **Bugfix mode**: When tasks.md contains bugfix tasks (prefixed with BF-###), executes them alongside regular tasks.
@@ -88,34 +88,7 @@ SCAN tasks.md for `> **TDD**: Bypassed by user request`
     NOTE: "TDD active — phase-level RED-GREEN cycle enforced."
 ```
 
-### Step 1: Commit spec artifacts (batch — all design phases)
-
-Before starting implementation, commit all spec artifacts created during design phases as a single batch.
-Use the batch commit template from specs/git-conventions.md (default: "spec: [feature] spec artifacts (spec, plan, tasks)"):
-
-```bash
-IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
-  # Use the batch commit template from specs/git-conventions.md
-  # Default: "spec: [feature] spec artifacts (spec, plan, tasks)"
-  COMMIT_MSG="[batch commit message from conventions]"
-  git add specs/[feature]/spec.md       \
-         specs/[feature]/clarify.md      \
-         specs/[feature]/plan.md         \
-         specs/[feature]/research.md     \
-         specs/[feature]/data-model.md   \
-         specs/[feature]/contracts/      \
-         specs/[feature]/quickstart.md   \
-         specs/[feature]/tasks.md
-  git commit -m "$COMMIT_MSG" --no-verify
-  COMMIT_HASH=$(git rev-parse HEAD)
-  NOTE: "Spec artifacts committed as $COMMIT_HASH — design phase is frozen."
-  NOTE: "Implementation begins from this checkpoint. If you need to change the spec,"
-        "commit a spec amendment separately or start a new feature branch."
-ELSE
-  NOTE: "Not a git repository — skipping batch commit. No design checkpoint created."
-```
-
-### Step 2: Validate prerequisites
+### Step 1: Validate prerequisites
 ```
 IF specs/[feature]/tasks.md NOT EXISTS:
   ERROR: "Run spec-kit-tasks first to generate task breakdown"
@@ -125,7 +98,7 @@ IF specs/[feature]/spec.md NOT EXISTS:
   ERROR: "Run spec-kit-specify first"
 ```
 
-### Step 3: Load implementation context
+### Step 2: Load implementation context
 - LOAD `specs/[feature]/tasks.md` (REQUIRED)
 - LOAD `specs/[feature]/plan.md` (REQUIRED)
 - LOAD `specs/[feature]/data-model.md` (IF EXISTS)
@@ -135,7 +108,7 @@ IF specs/[feature]/spec.md NOT EXISTS:
 - LOAD `specs/[feature]/quickstart.md` (IF EXISTS)
 - IF `specs/[feature]/bugs.md` EXISTS: LOAD bugs.md for bugfix task context
 
-### Step 4: Parse tasks.md
+### Step 3: Parse tasks.md
 Extract:
 - Task phases: Setup, Foundational, Core, Integration, Polish
 - Task dependencies: Sequential vs parallel execution rules
@@ -143,7 +116,7 @@ Extract:
 - Execution flow: Phase order and dependency requirements
 - TDD bypass header (if present)
 
-### Step 5: Phase-level TDD execution
+### Step 4: Phase-level TDD execution
 
 For each phase (Setup → Foundational → Core → Integration → Polish):
 Execute the entire phase as a batch, not task-by-task:
@@ -219,20 +192,20 @@ IF tdd_bypassed:
       git commit -m "[commit message from conventions]" --no-verify
 ```
 
-### Step 6: Progress reporting
+### Step 5: Progress reporting
 After each phase:
 - Report phase completed: N/Total phases
 - Report tasks completed: N/Total
 - Report tests passing: Yes/No
 - In bugfix mode: Also report bugfix task progress (BF-### completed/total)
 
-### Step 7: Handle errors
+### Step 6: Handle errors
 - HALT execution if a non-parallel task cannot be completed
 - FOR parallel tasks [P]: continue with working tasks, report failed
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
-### Step 8: Full regression run — all existing tests
+### Step 7: Full regression run — all existing tests
 
 After ALL phases are complete and committed, run the ENTIRE test suite:
 
@@ -289,7 +262,7 @@ IF any tests fail:
         RETURN to fix remaining failures
 ```
 
-### Step 9: Build verification (if applicable)
+### Step 8: Build verification (if applicable)
 ```bash
 IF npm run build / tsc --noEmit / go build / cargo build is available:
   terminal("[build command]")
@@ -343,7 +316,7 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Revi
 - Bugfixes are NEVER implemented directly when a user mentions a bug
 - Bugfixes must follow: "bugfix [feature]" → plan → tasks → implement
 
-### Step 10: Append to history.md
+### Step 9: Append to history.md
 Append entry to `specs/[feature]/history.md` (create if missing) for each completed phase:
 - Phase: Phase 4 — [Phase Name] Complete
 - Artifact: source code changes

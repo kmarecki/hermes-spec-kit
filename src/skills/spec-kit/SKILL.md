@@ -239,7 +239,7 @@ The canonical constitution path is `specs/constitution.md`. All Hermes spec-kit 
 - **Do NOT implement during Plan, Clarify, or Tasks phases — even for "obvious" fixes.** The bugfix loop requires Plan → Tasks → Implement in order. A one-line change (removing an arrowhead, adding a CSS class) still needs a plan and a task entry before code touches disk. Skipping phases is a phase guardrail violation, not a shortcut. If you catch yourself reaching for `write_file`/`patch` during the bugfix loop before reaching Implement, stop and run the correct phase skill first.
 - **Do NOT pollute AGENTS.md with workflow mechanics.** AGENTS.md is project-level context: reference skills name, list active specs, document project conventions. Routing logic, trigger phrases, phase diagrams, and bugfix loop details belong in skill files. When you add a new phase or routing rule, update the relevant skill — not AGENTS.md.
 - **Do NOT allow features to be complete without Phase 6.** A feature without `implementation-summary.md` or `close.md` is not complete, even if all bugs are verified. The mandatory close prevents silent drift accumulation. If a user insists a feature is done without closing, explain why close matters (spec health, drift prevention, future refactoring context) rather than bypassing the requirement.
-- **Additive-safe editing**. Before the batch commit (start of Phase 4), spec/plan/tasks may be freely iterated and rewritten — review skill may propose any changes. After the batch commit freezes the design, never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, correct text — but only the minimal field or section needed. Never restructure or refactor a document beyond the change. New entries always append at the end. Preserve every existing bug ID, task ID, and requirement.
+- **Additive-safe editing**. During design phases (0-3), freely iterate — rewrite spec/plan/tasks, review proposes any changes. After Phase 4 (Implement) begins, never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, correct text — but only the minimal field or section needed. New entries always append at the end. Preserve every existing bug ID, task ID, and requirement.
 - **Ordering enforced.** bugs.md entries MUST be in BUG-NNN ascending order. tasks.md entries MUST be in T### ascending order. New entries get the next sequential ID.
 - **history.md is mandatory after every markdown change.** Every markdown document created or modified MUST be recorded in `specs/[feature]/history.md`. No exceptions.
 - **Commit after every markdown change.** Each skill commits its artifacts immediately. Multiple related changes in one logical action can be one commit. Never batch unrelated changes.
@@ -335,7 +335,7 @@ See `spec-kit/references/auto-commit.md` for the standard commit pattern. Each s
 
 ### Per-Phase Commit Convention
 
-Each phase skill commits its artifacts immediately upon completion. The batch commit at the start of Phase 4 (Implement) still captures the final design state, but individual commits provide granular traceability throughout the design process.
+Each phase skill commits its artifacts immediately upon completion. Design artifacts are never batched — each change gets its own commit for full traceability.
 
 The authoritative commit templates live in `specs/git-conventions.md`. Defaults shown here for quick reference:
 
@@ -346,7 +346,6 @@ The authoritative commit templates live in `specs/git-conventions.md`. Defaults 
 | 1.5 — Clarify | `specs/NNN-name/clarify.md`, `spec.md` | Clarify template: `spec(phase-1.5): [NNN-name] clarifications` | **Yes** — after update |
 | 2 — Plan | All plan artifacts | Plan template: `spec(phase-2): [NNN-name] plan` | **Yes** — after creation |
 | 3 — Tasks | `specs/NNN-name/tasks.md` | Tasks template: `spec(phase-3): [NNN-name] tasks` | **Yes** — after creation |
-| **Batch** (start of Phase 4) | all spec artifacts for the feature | Batch template: `spec: [NNN-name] spec artifacts (spec, plan, tasks)` | **Yes** — freezes design |
 | 4 — Implement | Source code per phase | Implement template: `feat: [NNN-name] Phase N - [Phase Name]` | Yes (per phase commit) |
 | 5 — Test / Bugs | `specs/NNN-name/bugs.md` | Bug log template: `spec(phase-5): [NNN-name] bug log` | Yes |
 | 5 — Bugfix fix | Source code per bugfix task | Bugfix template: `fix: [NNN-name] BF-### - description` | Yes (per fix) |
@@ -356,8 +355,7 @@ The authoritative commit templates live in `specs/git-conventions.md`. Defaults 
 
 ### Commit Granularity Rules
 
-- **Design phases** (0-3): Each skill commits its own artifacts immediately. This gives granular traceability at every step.
-- **Batch commit** (start of Phase 4): One commit capturing all spec artifacts (`specs/[feature]/spec.md`, `plan.md`, `tasks.md`, `clarify.md`, `research.md`, `data-model.md`, `contracts/`). This freezes the design before implementation begins.
+- **Design phases** (0-3): Each skill commits its own artifacts immediately. No batching.
 - **Implementation** (Phase 4): Commit per phase (not per task). Each phase boundary produces one commit covering all tests and code for that phase.
 - **Bugfix** (bugfix loop): Commit per bugfix task (BF-###). Message references the BUG-ID.
 - **Regression umbrella** (Phase 4 Step 9): One commit for BF-REGRESSION-001 covering all regression fixes.
@@ -373,11 +371,11 @@ Because every commit follows the `spec(phase-N)` or `feat/fix: [NNN-name]` conve
 # Show all spec commits for a feature
 git log --oneline --grep="003-user-auth" --all
 
-# Show only phase boundaries and the batch commit (not implementation detail)
-git log --oneline --grep="spec(phase-\|spec:.*spec artifacts" --all
+# Show only phase boundaries (not implementation detail)
+git log --oneline --grep="spec(phase-" --all
 
-# Show when a feature batch commit was made (just before implementation)
-git log --oneline --grep="spec artifacts.*spec, plan, tasks" --all
+# Show when a feature design artifacts were committed
+git log --oneline --grep="spec(phase-1):" --all
 
 # Show all bugfixes for a feature
 git log --oneline --grep="BF-" --all

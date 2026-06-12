@@ -71,7 +71,7 @@ All skills respond to three trigger styles: `spec-kit` prefix, `speckit` prefix,
 ## Key Design Decisions
 
 - Constitution is mandatory for all features — specify and plan block if missing
-- Design phases (0-3) do not auto-commit — batch commit at start of implementation
+- Design phases (0-3) each commit immediately — no batch commit
 - Phase-level TDD: all tests RED first, all code GREEN, then commit
 - TDD bypass at user request during task generation
 - One umbrella regression fix task, not individual bugs

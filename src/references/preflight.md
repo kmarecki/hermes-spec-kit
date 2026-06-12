@@ -60,9 +60,11 @@ After every skill completes that created or modified any markdown document:
    - Use commit template from specs/git-conventions.md (see auto-commit.md)
    - Skip silently if not a git repo
 
-3. **Additive-safe editing**: Applies after the batch commit at start of Phase 4 (Implement). Before that point (design phases 0-3), you may freely iterate — rewrite, restructure, refactor spec/plan/tasks as needed. The review skill may propose changes freely.
+3. **Additive-safe editing**. During design phases (0-3), you may freely iterate — rewrite, restructure, refactor spec/plan/tasks as needed. The review skill may propose changes freely. Each design phase skill commits its artifacts immediately (no batching).
    
-   Once the batch commit freezes the design, the additive-safe rule kicks in: never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, amend text, correct inaccuracies — but the modification must be minimal (change only the specific field or section needed). Never restructure or refactor a document beyond what's required for the change. New entries (new bugs, tasks, plan sections) always append at the end. The goal: preserve every existing bug ID, task ID, and requirement — only update what the current change demands.
+   During implementation and bugfix phases (4+), the additive-safe rule tightens: never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, amend text, correct inaccuracies — but the modification must be minimal (change only the specific field or section needed). Never restructure or refactor a document beyond what's required for the change. New entries (new bugs, tasks, plan sections) always append at the end. The goal: preserve every existing bug ID, task ID, and requirement — only update what the current change demands.
+   
+   If you return to modify spec/plan during test or bugfix phases: commit those changes immediately after editing, following the same per-document commit pattern.
 
 4. **Ordering**: bugs.md entries must be ascending by BUG-NNN. tasks.md entries must be ascending by T###. New entries append with the next sequential ID.
 

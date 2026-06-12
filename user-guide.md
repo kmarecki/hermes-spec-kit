@@ -137,7 +137,7 @@ Agent: Generates tasks.md with phases:
 You: "Implement 001-user-auth"
 
 Agent:
-  - Batch-commits spec/plan/tasks to freeze the design
+  - Each design phase already committed individually (no batch)
   - Phase 1: Writes user model tests (RED) → implements (GREEN) → commits
   - Phase 2: Registration tests → code → commit
   - ... continues through all phases
@@ -553,7 +553,7 @@ The core of the workflow. The agent adopts a **disciplined engineer**
 persona — follows the plan exactly, no scope creep.
 
 **Flow:**
-1. Batch-commit all spec artifacts (freezes the design)
+1. Each design phase already committed individually (no batch needed)
 2. For each phase: write tests (RED) → write code (GREEN) → commit
 3. Full regression suite at the end
 4. Any regressions captured in BF-REGRESSION-001 umbrella task
@@ -664,7 +664,7 @@ already exists from a prior reopen, it's checked out and reused.
 
 | Situation | Commit message |
 |-----------|---------------|
-| Batch commit (start of Implement) | `spec: [feature] spec artifacts (spec, plan, tasks)` |
+| Each design phase commits individually | See per-phase templates in auto-commit.md |
 | Per phase (Implement) | `feat: [feature] Phase N - [Name]` |
 | Regression umbrella fix | `fix: [feature] BF-REGRESSION-001 - fix regressions` |
 | Bugfix loop (per bug) | `fix: [feature] BF-### - description` |
