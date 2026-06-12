@@ -25,7 +25,9 @@ ELSE
 | spec-kit-specify | `specs/[feature]/spec.md` | Spec template: `spec(phase-1): [feature] spec` |
 | spec-kit-clarify | `specs/[feature]/clarify.md`, `specs/[feature]/spec.md` | Clarify template: `spec(phase-1.5): [feature] clarifications` |
 | spec-kit-plan | All plan artifacts | Plan template: `spec(phase-2): [feature] plan` |
+| spec-kit-plan (bugfix sub-round) | `plan.md` (appended bugfix sections) | Bugfix plan template: `spec(phase-2): [feature] bugfix plan (BUG-NNN, ...)` |
 | spec-kit-tasks | `specs/[feature]/tasks.md` | Tasks template: `spec(phase-3): [feature] tasks` |
+| spec-kit-tasks (bugfix sub-round) | `tasks.md` (appended bugfix tasks) | Bugfix tasks template: `spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...)` |
 | spec-kit-implement (phase) | Source code per phase | Implement template: `feat: [feature] Phase N - [Phase Name]` |
 | spec-kit-implement (regression) | Source code for regression fixes | Regression template: `fix: [feature] BF-REGRESSION-001 - fix regressions` |
 | spec-kit-implement (bugfix, per-task) | Source code per bugfix fix | Bugfix template: `fix: [feature] BF-### - description` |

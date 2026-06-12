@@ -304,6 +304,38 @@ Check for artifacts to determine current phase:
 - NOTE: Review is optional — only run if user explicitly asks for it
 - **TDD during bugfix**: `spec-kit-implement` enforces RED→GREEN per bugfix task — write a test reproducing the bug, then apply the fix. Plan Refs (above) ensure each bug has a plan section before implementation begins.
 
+### New bugs discovered during a fix round
+
+When new bugs are added to `bugs.md` during an active bugfix round (found during implementation or reported by the user mid-round):
+
+```text
+IF the current bugfix round is still in progress (BF-### tasks not all verified):
+  The current round completes normally.
+  The new bug is a separate BUG-NNN entry — it does NOT block or delay the active round.
+
+AFTER the current round completes and all original BF-### tasks are verified:
+  IF bugs.md has NEW open bugs (beyond the ones the round was fixing):
+    NOTE: "New bugs BUG-NNN, BUG-NNN+1 were logged during the previous round.
+           Each needs the full bugfix workflow: Plan → Tasks → Implement."
+    
+    SUGGEST: "Say 'bugfix [feature]' to start a new bugfix round."
+    
+    IMPORTANT — the new round MUST follow the FULL plan → tasks → implement
+    sequence, with document commits at each phase:
+    
+    - **Plan**: Append bugfix sections to plan.md → commit separately
+      (message: `spec(phase-2): [feature] bugfix plan (BUG-NNN, ...)`)
+    - **Tasks**: Append bugfix tasks to tasks.md → commit separately
+      (message: `spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...)`)
+    - **Implement**: RED→GREEN per bugfix task → commit per fix
+    
+    The rules are:
+    1. Plan and tasks are NEVER skipped — every new bug goes through the full cycle
+    2. Plan and tasks each get their OWN commit — never batched together
+    3. Document commits are NEVER batched with implementation commits
+    4. This applies even for single-line fixes — the phase sequence is mandatory
+```
+
 ### Bugfix loop completion — user decides when to close
 ```
 AFTER all bugs in bugs.md have Status: verified:

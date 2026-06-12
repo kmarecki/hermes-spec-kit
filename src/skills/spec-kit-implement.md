@@ -70,6 +70,14 @@ Plan Ref validation and the bugfix routing decision (clarify vs direct plan) hap
 - Report to the user: "Found additional issue BUG-NNN — logged separately. Address it via 'bugfix [feature]' after this round completes."
 - Exception: trivial test-only fixes (missing assertion, wrong test fixture) can be fixed inline
 
+**Full workflow for new bugs**: When the user invokes "bugfix [feature]" after new bugs were logged, the workflow routes through the COMPLETE plan → tasks → implement cycle for those bugs, with document commits at each phase:
+  - **Plan**: bugfix sections appended to `plan.md` → committed as `spec(phase-2): [feature] bugfix plan (BUG-NNN, ...)`
+  - **Tasks**: bugfix tasks appended to `tasks.md` → committed as `spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...)`
+  - **Implement**: each bugfix task follows its own RED→GREEN cycle → committed per fix
+  - Plan and tasks are NEVER skipped for new bugs — the full phase sequence is mandatory, even for single-line fixes
+  - Plan and tasks are NEVER batched into a single commit — each phase commits separately to preserve traceability
+  - Plan/tasks commits are NEVER batched with implementation commits — documents before code
+
 **What if a test cannot be written for a bug?** (e.g. visual layout issue, race condition, external dependency)
 - Note the reason in tasks.md next to the BF-### task
 - Apply the fix, then verify manually
