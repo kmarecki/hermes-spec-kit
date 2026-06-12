@@ -316,17 +316,19 @@ language + framework are chosen.
 
 Ask the user: *"What is this project's primary purpose?"*
 
-Present these 3 options with their tradeoffs:
+Present these 5 options with their tradeoffs:
 
 | Option | Type | Examples | Testing impact | Arch impact | Docs impact | Deps impact |
 |--------|------|----------|---------------|-------------|-------------|-------------|
 | **A — User-Facing Application** | Web/mobile API, frontend, full-stack app | SaaS, e-commerce, social app, dashboard, CMS | Needs integration + E2E tests. TDD pays off. | Architecture matters — will need to scale. | API docs, user docs, setup guide critical. | Framework deps expected (React, Django, etc.) |
 | **B — Library / SDK / Package** | Reusable code for other developers | npm package, PyPI lib, Go module, crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal internal coupling. | API docs, README, examples, changelog mandatory. | Zero or minimal deps to avoid transitive bloat. |
 | **C — Infrastructure / CLI / DevOps** | Automation, ops tools, platform | CLI tool, Terraform module, CI pipeline, daemon | Integration tests with real infra. Manual testing common. | Simple, composable. No over-engineering. | README + --help. Code that IS the documentation. | Minimal. Static binaries preferred. |
+| **D — Game** | Interactive application with game loop, rendering, input | 2D platformer, 3D FPS, puzzle game, RPG, mobile game, WebGL game | Unit tests for game logic. Visual/playtest testing critical. Integration tests for netcode. | ECS, scene graph, component-based. Game loop, render pipeline, physics. | Design doc, mechanics doc, modding API docs. README + gameplay guide. | Engine dependency (Unity, Unreal, Godot, Bevy). Graphics, audio, physics libs. |
+| **E — IoT / Embedded** | Firmware, device software, real-time systems | Sensor firmware, motor controller, smart home device, drone flight controller, RTOS application | Hardware-in-the-loop testing. Simulation for CI. Manual device testing essential. | HAL, RTOS tasks, driver layer. Memory-constrained. Real-time constraints. | Pinout docs, protocol specs, register maps. Datasheet references. | Minimal or zero std. Vendor SDKs. No dynamic allocation. Cross-compilation toolchain. |
 
 ```
 ASK: "What kind of project are you building?"
-RECORD: purpose = [A | B | C]
+RECORD: purpose = [A | B | C | D | E]
 NOTE: purpose determines the weight of each principle below.
 ```
 
@@ -360,9 +362,25 @@ Based on the chosen purpose, present 3 architecture options:
 | **C2** | Multi-Binary | Separate binaries sharing common libs. | Independent releases, clear boundaries, composable | Distribution complexity, version coordination | Tool suites (like kubectl + plugins) |
 | **C3** | Plugin-Based | Core binary + plugin system. Users extend without forking. | Extensible by community, clean core, pluggable | Plugin API stability burden, discovery UX | Framework-like tools, extensible CLIs |
 
+**If purpose = D (Game):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **D1** | Engine-Centric | Built on existing engine (Unity, Unreal, Godot). Visual scripting + code. | Fastest prototyping, massive asset stores, mature tooling | Engine lock-in, license costs, bloated builds, hard to optimize | Most games, indie to AAA, cross-platform |
+| **D2** | Custom Engine | Hand-rolled engine with ECS or scene-graph architecture. | Full control, no license fees, optimized for specific game | Massive upfront investment, no asset pipeline, constant engine work | Unique mechanics, competitive edge, learning exercise |
+| **D3** | Web/Retro | Browser-based (WebGL, Canvas, Phaser) or retro-style (pixel art, 8-bit) | Zero install for players, nostalgic appeal, tiny asset sizes | Performance ceilings, limited complex rendering, browser compatibility | Casual games, jam games, mobile web, educational |
+
+**If purpose = E (IoT / Embedded):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **E1** | Bare-Metal / RTOS | No OS or lightweight RTOS (FreeRTOS, Zephyr, Mbed). Direct hardware access. | Max performance, minimal latency, lowest power, no OS overhead | No memory protection, manual driver work, harder debugging, no standard libs | Sensor nodes, motor controllers, wearables, constrained devices |
+| **E2** | Linux-Based Embedded | Runs on Linux (Yocto, Buildroot, Raspberry Pi OS). User-space + kernel modules. | Rich ecosystem, standard tooling, debugging easy, networking built-in | Larger footprint, higher power, boot time, real-time challenges | Smart home hubs, drones, gateways, cameras, robots |
+| **E3** | MicroPython / Arduino | High-level firmware framework (Arduino, MicroPython, CircuitPython). Abstraction layer. | Fastest to prototype, huge community, beginner-friendly, extensive libraries | Limited performance, memory overhead, abstraction hides hardware issues | Prototypes, hobbyist, education, rapid IoT development |
+
 ```
-ASK: "Given your purpose [A|B|C], which architecture approach fits?"
-RECORD: architecture = [A1|A2|A3 | B1|B2|B3 | C1|C2|C3]
+ASK: "Given your purpose [A|B|C|D|E], which architecture approach fits?"
+RECORD: architecture = [A1|A2|A3 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3 | E1|E2|E3]
 ```
 
 ---
@@ -398,6 +416,25 @@ IF purpose == C (Infra / CLI):
     C1 (Single bin): Go, Rust, Zig, C — compiles to static binary
     C2 (Multi-bin): Go (fast compile), Rust (safe), Python+PyInstaller
     C3 (Plugin): Go (plugin/pkg), Rust (wasm plugins), C (dlopen)
+
+IF purpose == D (Game):
+  RECOMMEND: engine ecosystem + systems languages
+  BRACKET by architecture:
+    D1 (Engine-Centric): C# (Unity + script), C++ (Unreal BP+C++),
+        GDScript (Godot), Rust (Bevy)
+    D2 (Custom Engine): Rust (wgpu, winit, macroquad), C++ (SDL, OpenGL,
+        Vulkan), C# (MonoGame, Stride), Zig (cross-compile for consoles)
+    D3 (Web/Retro): TypeScript (Phaser, PixiJS, Three.js), Haxe
+        (Heaps, OpenFL), Python (Pygame, Arcade), Lua (LÖVE)
+
+IF purpose == E (IoT / Embedded):
+  RECOMMEND: constrained languages + cross-compilation
+  BRACKET by architecture:
+    E1 (Bare-Metal / RTOS): C (de facto standard), C++ (with constraits),
+        Rust (no-std, no-alloc), Zig (cross-compile natively)
+    E2 (Linux Embedded): C, C++, Python, Rust, Go — whatever Linux supports
+    E3 (MicroPython / Arduino): C++ (Arduino), Python (MicroPython,
+        CircuitPython), Lua (eLua), JavaScript (Espruino)
 ```
 
 For each bracket, present the specific language options as follows:
@@ -471,6 +508,34 @@ PURPOSE = C (Infrastructure / CLI / DevOps):
   Database → SKIP (infra tools shouldn't depend on DB)
   Config/Secrets → A (Strict — env + config files)
   Dev Toolchain → C (Full DX — automation matters)
+
+PURPOSE = D (Game):
+  Testing → C (Test-After — playtesting and visual QA dominant)
+  Linting → B (Pragmatic — engine code needs flexibility)
+  Architecture → user's choice from Level 2
+  Dependencies → C (Permissive — engines, assets, middleware, audio libs)
+  Git Workflow → B (Feature branches — asset changes need review)
+  Documentation → B (Critical-only — design doc + mechanics + API)
+  Error Handling → A (Defensive — game crashes ruin UX)
+  Performance → A (Optimize-first — frame budget is hard limit)
+  Code Review → B (Risk-based — gameplay logic vs asset changes)
+  Database → SKIP (save systems are engine-managed or custom binary)
+  Config/Secrets → C (Config-in-repo — game config is part of the game)
+  Dev Toolchain → C (Full DX — asset pipeline, build chain, packaging)
+
+PURPOSE = E (IoT / Embedded):
+  Testing → C (Test-After — hardware testing dominates)
+  Linting → A (Strict — firmware bugs are expensive, no OTA)
+  Architecture → user's choice from Level 2
+  Dependencies → A (Minimal — no stdlib, no heap, vendor SDK only)
+  Git Workflow → A (Trunk-based — most constrained, fast iteration)
+  Documentation → A (Exhaustive — pinouts, registers, protocols)
+  Error Handling → A (Defensive — watchdog, brownout, fail-safe)
+  Performance → A (Optimize-first — memory and cycles are hard limits)
+  Code Review → A (Strict — hardware damage risk, no hotfix possible)
+  Database → SKIP (no database on embedded devices)
+  Config/Secrets → B (Environment-based — compile-time flags, EEPROM)
+  Dev Toolchain → C (Full DX — cross-compiler, flashing, logic analyzer)
 ```
 
 Present these as a summary table to the user:
@@ -648,6 +713,17 @@ INCLUDE in the Tech Stack section:
 | **Terraform** | `*.tf` files | — | — | — | C (TDD), C (Lint), C (Arch), A (Deps), A (Git) |
 | **Docker** | `Dockerfile` only | any language | — | — | C (TDD), C (Lint), C (Arch), A (Deps), B (Git) |
 | **Nix** | `flake.nix` / `shell.nix` | nix language | — | — | C (TDD), A (Lint), B (Arch), A (Deps), A (Git) |
+| **Unity Game** | `Assembly-CSharp*` / `.unity` files | Unity engine | Unity Test Runner / NUnit | Unity Cloud Build | C (TDD), B (Lint), D1 (Engine), C (Deps), B (Git) |
+| **Unreal Game** | `.uproject` / `Source/*.Build.cs` | Unreal Engine | Unreal Automation Test | — | C (TDD), B (Lint), D1 (Engine), C (Deps), B (Git) |
+| **Godot Game** | `project.godot` / `*.gd` | Godot engine | GDScript unit test addon | — | C (TDD), B (Lint), D1 (Engine), C (Deps), B (Git) |
+| **Rust Game (Bevy)** | `Cargo.toml` (bevy in deps) | Bevy engine | cargo test | GitHub Actions | B (TDD), A (Lint), D1/D2 (Engine/Custom), A (Deps), B (Git) |
+| **Web Game** | `package.json` + canvas/Phaser | Phaser/PixiJS/Three.js | Vitest/Jest | — | C (TDD), B (Lint), D3 (Web/Retro), C (Deps), B (Git) |
+| **Arduino** | `.ino` files / `platformio.ini` | Arduino framework | — | — | C (TDD), A (Lint), E3 (Arduino), A (Deps), B (Git) |
+| **ESP-IDF** | `CMakeLists.txt` + esp-idf | ESP-IDF (Espressif SDK) | — | — | C (TDD), A (Lint), E1 (Bare-Metal), A (Deps), A (Git) |
+| **STM32 / ARM MCU** | `Makefile` + linker script + CMSIS | Bare-metal / HAL / CubeMX | — | — | C (TDD), A (Lint), E1 (Bare-Metal), A (Deps), A (Git) |
+| **Zephyr RTOS** | `CMakeLists.txt` + `prj.conf` | Zephyr RTOS | ztest | — | C (TDD), A (Lint), E1 (RTOS), A (Deps), A (Git) |
+| **Raspberry Pi / Yocto** | `local.conf` / `*.bb` (Yocto) | Yocto / Buildroot / RPi OS | pytest | — | C (TDD), A (Lint), E2 (Linux), A (Deps), A (Git) |
+| **MicroPython** | `boot.py` / `main.py` on MCU board | MicroPython / CircuitPython | — | — | C (TDD), B (Lint), E3 (MicroPython), A (Deps), A (Git) |
 
 Default options format: **Testing, Linting, Architecture, Dependencies, Git Workflow**.
 Remaining principles (Documentation, Error Handling, Performance, Code Review, Database, Config, Dev Toolchain) 
