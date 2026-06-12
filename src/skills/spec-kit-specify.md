@@ -68,16 +68,24 @@ Populate with:
 - Prioritize: scope > security > UX > technical
 
 
-
-Validate: no implementation leaks, all scenarios defined, criteria measurable.
+### Note on commits
+Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
 
 ### Append to history.md
 Append entry to `specs/[feature]/history.md` (create if missing):
 - Phase: Phase 1 — Complete
 - Artifact: `spec.md`
 
-### Note on commits
-Design phase artifacts (spec.md, clarify.md, plan.md, tasks.md) are NOT committed individually. They are batch-committed when Phase 4 (Implement) begins. See `spec-kit/references/auto-commit.md`.
+### Commit
+Follow `spec-kit/references/auto-commit.md`:
+- Scope: `specs/[feature]/spec.md`
+- Message: `"spec(phase-1): [feature] spec"`
+
+### Done When
+- [ ] spec.md created with FR-### requirements numbered sequentially
+- [ ] No existing content deleted (additive-only)
+- [ ] history.md entry appended
+- [ ] Committed
 
 ## Completion
 - Feature directory path, spec file path

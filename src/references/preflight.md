@@ -48,6 +48,22 @@ Run these checks in order. If any check fails, stop and report before proceeding
 - In bugfix mode? ✓ (if bugs.md open, route through workflow)
 - Workflow loaded before code? ✓
 
+## Post-Completion Requirements (MANDATORY)
+
+After every skill completes that created or modified any markdown document:
+
+1. **Append to history.md**: Every markdown file created or modified MUST be recorded in `specs/[feature]/history.md`. Create the file if it doesn't exist.
+
+2. **Commit**: Commit changed markdown documents immediately.
+   - One change → one commit
+   - Multiple related changes in one logical action (e.g. clarify updates clarify.md + amends spec.md) → one commit
+   - Use commit template from specs/git-conventions.md (see auto-commit.md)
+   - Skip silently if not a git repo
+
+3. **Additive-only editing**: NEVER delete, overwrite, or reorder existing content in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. Always append new entries at the end. If modifying an existing entry (e.g. updating bug status), change only the specific field — never remove the row.
+
+4. **Ordering**: bugs.md entries must be ascending by BUG-NNN. tasks.md entries must be ascending by T###. New entries append with the next sequential ID.
+
 ## Enforcement
 
 These checks are NOT optional. If you skip them and write to the wrong branch,

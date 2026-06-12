@@ -368,8 +368,10 @@ Report:
 - [ ] TDD mode (if active): Full regression suite passes — all tests green
 - [ ] TDD mode (if active): Regressions (if any) fixed via umbrella task
 - [ ] Build passes (if applicable)
-- [ ] All tasks in tasks.md marked [X]
+- [ ] All tasks in tasks.md marked [X] — additive-only, no tasks deleted
 - [ ] In bugfix mode: All bugfix tasks completed and verified
+- [ ] history.md appended per completed phase
+- [ ] Committed per phase boundary
 
 **Re-running this skill**:
 1. LOAD tasks.md and find the first incomplete phase

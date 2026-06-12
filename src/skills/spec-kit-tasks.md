@@ -98,9 +98,14 @@ Report: task count, phases, TDD mode, parallel tasks, bugfix tasks
 ### Append to history.md
 Append entry to `specs/[feature]/history.md` (create if missing):
 - Phase: Phase 3 — Complete
+- Artifact: `tasks.md`
+
+### Commit
+Follow `spec-kit/references/auto-commit.md`:
+- Scope: `specs/[feature]/tasks.md`
+- Message: `"spec(phase-3): [feature] tasks"`
+
 ## Completion
-- Task count by phase, parallelizable count, coverage %
-- Propose: `spec-kit-implement`
 
 ## Common Pitfalls
 1. **Missing file paths**: Every task needs an exact file path — otherwise the implement skill can't execute it.

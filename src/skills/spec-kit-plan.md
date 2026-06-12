@@ -82,12 +82,23 @@ For each open bug: analyze root cause, append bugfix section to plan.md (do NOT 
 **Additive-only**: Append new bugfix sections at the end of plan.md. Never delete or modify existing plan sections. If a new fix contradicts an existing plan section, ask the user for guidance.
 
 ### Note on commits
-Design phase artifacts are NOT committed individually. See `spec-kit/references/auto-commit.md`.
+Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
 
 ### Append to history.md
 Append entry to `specs/[feature]/history.md` (create if missing):
 - Phase: Phase 2 — Complete
 - Artifact: `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md`
+
+### Commit
+Follow `spec-kit/references/auto-commit.md`:
+- Scope: all plan artifacts for this feature
+- Message: `"spec(phase-2): [feature] plan"`
+
+### Done When
+- [ ] All plan artifacts created (plan.md, research.md, data-model.md, contracts/*, quickstart.md)
+- [ ] Bugfix mode: plan sections appended only (additive-only) — existing content preserved
+- [ ] history.md entry appended
+- [ ] Committed
 
 ## Completion
 - Generated artifacts list

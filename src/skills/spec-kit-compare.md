@@ -179,6 +179,12 @@ Append entry to `specs/[feature]/history.md` (create if missing):
 - Artifact: `comparison.md`
 
 ## Completion
+### Done When
+- [ ] comparison.md created with all variant dimensions
+- [ ] history.md entry appended
+- [ ] Committed (merge/cherry-pick)
+
+## Common Pitfalls
 1. **Cherry-picking without verifying compatibility**: Features from different variants may conflict. Verify the combined spec/plan is coherent.
 2. **Assuming the recommendation is correct**: Present the recommendation with rationale, then ask. The user may have priorities the agent doesn't know about.
 3. **Deleting variants immediately**: Keep the variants/ directory until the implementation is well underway — the user might change their mind.

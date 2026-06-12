@@ -239,6 +239,10 @@ The canonical constitution path is `specs/constitution.md`. All Hermes spec-kit 
 - **Do NOT implement during Plan, Clarify, or Tasks phases — even for "obvious" fixes.** The bugfix loop requires Plan → Tasks → Implement in order. A one-line change (removing an arrowhead, adding a CSS class) still needs a plan and a task entry before code touches disk. Skipping phases is a phase guardrail violation, not a shortcut. If you catch yourself reaching for `write_file`/`patch` during the bugfix loop before reaching Implement, stop and run the correct phase skill first.
 - **Do NOT pollute AGENTS.md with workflow mechanics.** AGENTS.md is project-level context: reference skills name, list active specs, document project conventions. Routing logic, trigger phrases, phase diagrams, and bugfix loop details belong in skill files. When you add a new phase or routing rule, update the relevant skill — not AGENTS.md.
 - **Do NOT allow features to be complete without Phase 6.** A feature without `implementation-summary.md` or `close.md` is not complete, even if all bugs are verified. The mandatory close prevents silent drift accumulation. If a user insists a feature is done without closing, explain why close matters (spec health, drift prevention, future refactoring context) rather than bypassing the requirement.
+- **Additive-only editing — STRICT.** Never delete, overwrite, or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. Always append new entries at the end. If updating a status field (e.g. bug → verified), change only that field — never remove the row.
+- **Ordering enforced.** bugs.md entries MUST be in BUG-NNN ascending order. tasks.md entries MUST be in T### ascending order. New entries get the next sequential ID.
+- **history.md is mandatory after every markdown change.** Every markdown document created or modified MUST be recorded in `specs/[feature]/history.md`. No exceptions.
+- **Commit after every markdown change.** Each skill commits its artifacts immediately. Multiple related changes in one logical action can be one commit. Never batch unrelated changes.
 
 ## Spec Health Score
 
@@ -331,28 +335,28 @@ See `spec-kit/references/auto-commit.md` for the standard commit pattern. Each s
 
 ### Per-Phase Commit Convention
 
-Design phases (0-3) do NOT auto-commit individually. All spec artifacts are committed as a single batch when Phase 4 (Implement) begins.
+Each phase skill commits its artifacts immediately upon completion. The batch commit at the start of Phase 4 (Implement) still captures the final design state, but individual commits provide granular traceability throughout the design process.
 
 The authoritative commit templates live in `specs/git-conventions.md`. Defaults shown here for quick reference:
 
 | Phase | Scope | Commit Message (from conventions) | Automatic? |
 |-------|-------|------------------------------------|------------|
-| 0 — Constitution | `specs/constitution.md` | Constitution template: `spec(phase-0): constitution for [project]` | **No** — batched |
-| 1 — Specify | `specs/NNN-name/spec.md` | (no separate commit) | **No** — batched |
-| 1.5 — Clarify | `specs/NNN-name/clarify.md` | (no separate commit) | **No** — batched |
-| 2 — Plan | `specs/NNN-name/plan.md`, `research.md`, etc. | (no separate commit) | **No** — batched |
-| 3 — Tasks | `specs/NNN-name/tasks.md` | (no separate commit) | **No** — batched |
-| **Batch** | all spec artifacts for the feature | Batch template: `spec: [NNN-name] spec artifacts (spec, plan, tasks)` | **Yes** — at start of Phase 4 (Implement) |
+| 0 — Constitution | `specs/constitution.md` | Constitution template: `spec(phase-0): constitution for [project]` | **Yes** — after creation |
+| 1 — Specify | `specs/NNN-name/spec.md` | Spec template: `spec(phase-1): [NNN-name] spec` | **Yes** — after creation |
+| 1.5 — Clarify | `specs/NNN-name/clarify.md`, `spec.md` | Clarify template: `spec(phase-1.5): [NNN-name] clarifications` | **Yes** — after update |
+| 2 — Plan | All plan artifacts | Plan template: `spec(phase-2): [NNN-name] plan` | **Yes** — after creation |
+| 3 — Tasks | `specs/NNN-name/tasks.md` | Tasks template: `spec(phase-3): [NNN-name] tasks` | **Yes** — after creation |
+| **Batch** (start of Phase 4) | all spec artifacts for the feature | Batch template: `spec: [NNN-name] spec artifacts (spec, plan, tasks)` | **Yes** — freezes design |
 | 4 — Implement | Source code per phase | Implement template: `feat: [NNN-name] Phase N - [Phase Name]` | Yes (per phase commit) |
 | 5 — Test / Bugs | `specs/NNN-name/bugs.md` | Bug log template: `spec(phase-5): [NNN-name] bug log` | Yes |
 | 5 — Bugfix fix | Source code per bugfix task | Bugfix template: `fix: [NNN-name] BF-### - description` | Yes (per fix) |
 | 5 — Regression umbrella | Source code for regressions | Regression template: `fix: [NNN-name] BF-REGRESSION-001 - fix regressions` | Yes (once) |
-| 6 — Summarize | `specs/NNN-name/implementation-summary.md` or `close.md`, + patched spec/plan | Summary template: `spec(phase-6): [NNN-name] implementation summary (health: N%)` | Yes |
+| 6 — Summarize | Summary/close + patched spec/plan | Summary template: `spec(phase-6): [NNN-name] implementation summary (health: N%)` | Yes |
 | — Refresh | Patched spec/plan artifacts | Refresh template: `spec(refresh): [NNN-name] reconcile spec artifacts with code` | Yes |
 
 ### Commit Granularity Rules
 
-- **Design phases** (0-3): No individual commits. All spec artifacts are committed as a single batch when Phase 4 begins. This lets the user iterate freely between Specify, Clarify, Plan, and Tasks without creating checkpoints.
+- **Design phases** (0-3): Each skill commits its own artifacts immediately. This gives granular traceability at every step.
 - **Batch commit** (start of Phase 4): One commit capturing all spec artifacts (`specs/[feature]/spec.md`, `plan.md`, `tasks.md`, `clarify.md`, `research.md`, `data-model.md`, `contracts/`). This freezes the design before implementation begins.
 - **Implementation** (Phase 4): Commit per phase (not per task). Each phase boundary produces one commit covering all tests and code for that phase.
 - **Bugfix** (bugfix loop): Commit per bugfix task (BF-###). Message references the BUG-ID.

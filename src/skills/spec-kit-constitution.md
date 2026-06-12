@@ -57,10 +57,14 @@ Replace `[ALL_CAPS_PLACEHOLDER]` tokens with concrete text:
 - **PATCH** (x.x.1 → x.x.2): Clarifications
 
 ### Append to history.md
-Append to `specs/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Phase 0
+Append entry to `specs/history.md` (create if missing):
+- Phase: Phase 0 — Complete
 - Artifact: `specs/constitution.md`
-- Note: Design phases are batch-committed at start of Phase 4 (Implement)
+
+### Commit
+Follow `spec-kit/references/auto-commit.md`:
+- Scope: `specs/constitution.md`
+- Message: `"spec(phase-0): constitution for [PROJECT]"`
 
 ## Completion
 - Report new version and bump rationale

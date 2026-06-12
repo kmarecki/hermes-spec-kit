@@ -69,9 +69,14 @@ After answer, loop: next question → answer → update spec.md.
 ### Append to history.md
 Append entry to `specs/[feature]/history.md` (create if missing):
 - Phase: Phase 1.5 — Complete
+- Artifact: `clarify.md`, `spec.md` (updated)
+
+### Commit
+Follow `spec-kit/references/auto-commit.md`:
+- Scope: `specs/[feature]/clarify.md`, `specs/[feature]/spec.md`
+- Message: `"spec(phase-1.5): [feature] clarifications"`
+
 ## Completion
-- Report:
-- Sections updated in spec
 - Propose: `spec-kit-plan`
 
 ## Common Pitfalls
