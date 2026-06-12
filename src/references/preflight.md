@@ -57,7 +57,9 @@ After every skill completes that created or modified any markdown document:
 2. **Commit**: Commit changed documents immediately with these rules:
    - **Spec/plan changes that alter requirements or design intent** → MUST be committed BEFORE any related code. This preserves the causal chain: spec describes what → code implements it. Never commit spec changes as a side-effect of a code commit.
    - **Status-only updates** (bug verified, task marked [X], bug status changed) → CAN share a commit with code. These document what the code did, not what it should do.
-   - **Bugfix sub-round documents** (new plan section for new bugs, new tasks for new bugs) → follow the full phase sequence: plan gets its own commit, tasks get their own commit, implementation commits per fix. NEVER batch plan + tasks into one commit, NEVER batch documents with implementation commits.
+   - **Bugfix sub-round documents** (new plan section for new bugs, new tasks for new bugs):
+     - `bugfix` (default): plan gets its own commit, tasks get its own commit, implementation commits per fix.
+     - `quickfix` (user opt-in): plan + tasks + fix batched in one commit. Plan ref and task entry ALWAYS exist.
    - **Phase 6 close** (patched spec/plan + close.md) → ONE commit. This is explicit intentional reconciliation.
    - **One change → one commit**. Multiple related changes in one logical action (e.g. clarify updates clarify.md + amends spec.md) → one commit.
    - Use commit template from specs/git-conventions.md (see auto-commit.md).

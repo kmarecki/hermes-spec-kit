@@ -167,14 +167,20 @@ Agent: Auto-chains:
 
 **If new bugs are discovered during a fix round**:
   They're logged in bugs.md separately, not fixed inline.
-  After the current round completes, "bugfix 001-user-auth" runs
-  the FULL plan → tasks → implement cycle for each new bug,
-  with separate commits at each phase:
-    spec(phase-2): 001-user-auth bugfix plan (BUG-003, ...)
-    spec(phase-3): 001-user-auth bugfix tasks (BUG-003, ...)
-    fix: BF-003 - apply the fix
-  Plan and tasks are NEVER batched into one commit, and document
-  commits are NEVER batched with implementation commits.
+  After the current round completes, you have two choices:
+
+  1. "bugfix 001-user-auth" — FULL phase sequence with separate
+     commits at each phase:
+       spec(phase-2): 001-user-auth bugfix plan (BUG-003)
+       spec(phase-3): 001-user-auth bugfix tasks (BUG-003)
+       fix: BF-003 - apply the fix
+
+  2. "quickfix 001-user-auth" — BATCHED for trivial fixes
+     (config typos, obvious one-liners). Plan section + tasks
+     entry + fix in one commit:
+       fix: BF-003 - description (plan+tasks+fix)
+     Plan ref and task entry still exist — only commit
+     granularity is reduced. User explicitly opts in.
 ```
 
 ### Step 7: Close the feature
@@ -201,7 +207,7 @@ Spec-kit has four modes, each suited to a different level of uncertainty:
 | Mode | When to use | How it runs | User involvement |
 |------|-------------|-------------|-----------------|
 | **Specify** (default) | You know what you want — low uncertainty | One linear path, user advances phase-by-phase | Manual — you say "plan", "implement", etc. |
-| **Bugfix** | You have a working feature with known bugs | Auto-chains Plan→Tasks→Implement→Test once you say "bugfix". If new bugs are discovered mid-round, they're logged separately and the next bugfix round runs the full plan→tasks→implement cycle with separate commits at each phase. | Minimal — inner loop is automatic |
+| **Bugfix** | You have a working feature with known bugs | Auto-chains Plan→Tasks→Implement→Test once you say "bugfix". If new bugs are discovered mid-round, they're logged separately and the next round runs the full plan→tasks→implement cycle (separate commits per phase). For trivial fixes, "quickfix [feature]" batches plan+tasks+fix in one commit (user explicitly opts in). | Minimal — inner loop is automatic |
 | **Explore** | You're unsure about the approach — high uncertainty | Spawns parallel agents, each trying a different approach on an isolated branch | Hands-off after launch; you compare results later |
 | **Reopen** | A closed feature needs more fixes | Creates bugfix branch from main, preserves original close data, routes through bugfix loop | Additive-only edits; must close again after fixes |
 
@@ -679,8 +685,9 @@ already exists from a prior reopen, it's checked out and reused.
 | Per phase (Implement) | `feat: [feature] Phase N - [Name]` |
 | Regression umbrella fix | `fix: [feature] BF-REGRESSION-001 - fix regressions` |
 | Bugfix loop (per bug) | `fix: [feature] BF-### - description` |
-| Bugfix sub-round plan (new bugs mid-round) | `spec(phase-2): [feature] bugfix plan (BUG-NNN, ...)` |
-| Bugfix sub-round tasks (new bugs mid-round) | `spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...)` |
+| Bugfix sub-round plan (new bugs, separate commit) | `spec(phase-2): [feature] bugfix plan (BUG-NNN, ...)` |
+| Bugfix sub-round tasks (new bugs, separate commit) | `spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...)` |
+| Bugfix sub-round quickfix (batched) | `fix: [feature] BF-### - description (plan+tasks+fix)` |
 | Explore variant promotion | `feat: [feature] merge winning variant [name]` |
 | Explore cherry-pick | `feat: [feature] cherry-pick [features] from [variant]` |
 | Close/Summary | `spec(phase-6): [feature] summary (health: N%)` |

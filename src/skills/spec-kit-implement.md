@@ -74,9 +74,16 @@ Plan Ref validation and the bugfix routing decision (clarify vs direct plan) hap
   - **Plan**: bugfix sections appended to `plan.md` → committed as `spec(phase-2): [feature] bugfix plan (BUG-NNN, ...)`
   - **Tasks**: bugfix tasks appended to `tasks.md` → committed as `spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...)`
   - **Implement**: each bugfix task follows its own RED→GREEN cycle → committed per fix
-  - Plan and tasks are NEVER skipped for new bugs — the full phase sequence is mandatory, even for single-line fixes
-  - Plan and tasks are NEVER batched into a single commit — each phase commits separately to preserve traceability
-  - Plan/tasks commits are NEVER batched with implementation commits — documents before code
+  - Plan and tasks are NEVER skipped for new bugs — the full phase sequence is mandatory
+
+**Quickfix mode for trivial bugs**: If the user says "quickfix [feature]" instead of "bugfix [feature]":
+  - Plan section + tasks entry + fix are drafted in one logical pass
+  - The user sees a compact summary before approval
+  - ALL committed as ONE commit: `fix: [feature] BF-### - description (plan+tasks+fix)`
+  - The commit body includes plan ref and task ID for traceability
+  - Plan section and task entry ALWAYS exist — only commit granularity differs
+  - TDD tests are still written (same exceptions apply)
+  - Guardrails: user explicitly opts in; never inferred; separate commits still the default
 
 **What if a test cannot be written for a bug?** (e.g. visual layout issue, race condition, external dependency)
 - Note the reason in tasks.md next to the BF-### task

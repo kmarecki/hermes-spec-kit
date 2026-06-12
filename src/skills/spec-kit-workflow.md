@@ -104,9 +104,10 @@ IF feature name is provided (e.g., "003-user-auth"):
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
 | **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
-| — | **`spec-kit-refresh`** | **Lightweight artifact refresh** | **Any (standalone)** |
-| — | **Explore mode** | Parallel branches for N variants, each runs independent phase sequence | User provides variants |
-| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Close** | bugs.md with open bugs |
+|| — | **`spec-kit-refresh`** | **Lightweight artifact refresh** | **Any (standalone)** |
+|| — | **Explore mode** | Parallel branches for N variants, each runs independent phase sequence | User provides variants |
+|| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Close** (bugs.md with open bugs) |
+|| — | **Quickfix** | Trivial bugfix: Plan section + tasks entry + fix in one batch commit (user opt-in, docs still exist) | bugfix sub-round with explicit "quickfix [feature]" |
 
 > **Important**: Phase 6 (Close/Summarize) is **mandatory** before a feature can enter Complete state. After the bugfix loop finishes (all bugs verified), the workflow auto-chains to Phase 6.
 
@@ -317,23 +318,30 @@ AFTER the current round completes and all original BF-### tasks are verified:
   IF bugs.md has NEW open bugs (beyond the ones the round was fixing):
     NOTE: "New bugs BUG-NNN, BUG-NNN+1 were logged during the previous round.
            Each needs the full bugfix workflow: Plan → Tasks → Implement."
-    
-    SUGGEST: "Say 'bugfix [feature]' to start a new bugfix round."
-    
-    IMPORTANT — the new round MUST follow the FULL plan → tasks → implement
-    sequence, with document commits at each phase:
-    
-    - **Plan**: Append bugfix sections to plan.md → commit separately
-      (message: `spec(phase-2): [feature] bugfix plan (BUG-NNN, ...)`)
-    - **Tasks**: Append bugfix tasks to tasks.md → commit separately
-      (message: `spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...)`)
-    - **Implement**: RED→GREEN per bugfix task → commit per fix
-    
-    The rules are:
-    1. Plan and tasks are NEVER skipped — every new bug goes through the full cycle
-    2. Plan and tasks each get their OWN commit — never batched together
-    3. Document commits are NEVER batched with implementation commits
-    4. This applies even for single-line fixes — the phase sequence is mandatory
+
+    TWO MODES available (user decides):
+
+    1. "bugfix [feature]" — FULL phase sequence with separate commits:
+       - Plan → commit (spec(phase-2): [feature] bugfix plan (BUG-NNN, ...))
+       - Tasks → commit (spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...))
+       - Implement → per-fix commits (fix: [feature] BF-### - description)
+
+    2. "quickfix [feature]" — BATCHED for trivial bugs (config typos, obvious one-liners):
+       - Plan section + tasks entry + fix drafted in one logical pass
+       - Shown as a compact summary: "BUG-NNN: [cause] → [fix]. Plan section
+         appended, BF-### task created."
+       - ALL committed as ONE commit:
+         fix: [feature] BF-### - description (plan+tasks+fix)
+       - The commit body includes the plan ref and task ID for traceability
+       - TDD tests are STILL written (unless truly untestable — same exception as bugfix)
+       - The plan section and task entry ALWAYS exist — only commit granularity differs
+       - "quickfix" is ONLY for the NEXT round (not retroactive)
+
+    Guardrails for quickfix mode:
+    a. Plan section and task entry MUST be written — no documentation gap
+    b. The user explicitly opts in by saying "quickfix" — never inferred
+    c. If the user says "bugfix", always use full sequence regardless of complexity
+    d. Quickfix does NOT apply to the current in-progress round — only the next one
 ```
 
 ### Bugfix loop completion — user decides when to close

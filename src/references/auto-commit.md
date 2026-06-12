@@ -31,6 +31,7 @@ ELSE
 | spec-kit-implement (phase) | Source code per phase | Implement template: `feat: [feature] Phase N - [Phase Name]` |
 | spec-kit-implement (regression) | Source code for regression fixes | Regression template: `fix: [feature] BF-REGRESSION-001 - fix regressions` |
 | spec-kit-implement (bugfix, per-task) | Source code per bugfix fix | Bugfix template: `fix: [feature] BF-### - description` |
+| spec-kit-implement (bugfix sub-round quickfix) | plan section + tasks entry + fix | Quickfix template: `fix: [feature] BF-### - description (plan+tasks+fix)` |
 | spec-kit-test | `specs/[feature]/bugs.md` | Bug log template: `spec(phase-5): [feature] bug log` |
 | spec-kit-summarize | Summary/close + patched spec/plan | Summary template: `spec(phase-6): [feature] summary (health: N%)` |
 | spec-kit-refresh | Patched spec artifacts | Refresh template: `spec(refresh): [feature] reconcile artifacts` |
