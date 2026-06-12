@@ -60,20 +60,20 @@ Explore [feature] ────┼── Variant B (branch: explore/NNN-feature-b
 
 See `spec-kit-workflow` for the complete phase table and routing. Quick reference:
 
-| Phase | Skill | When |
-|-------|-------|------|
-| 0 — Constitution | `spec-kit-constitution` | "create constitution" |
-| 1 — Specify | `spec-kit-specify` | "create a spec for [...]" |
-| 1.5 — Clarify (opt) | `spec-kit-clarify` | "clarify [feature]" |
-| 2 — Plan | `spec-kit-plan` | "plan [feature]" |
-| 3 — Tasks | `spec-kit-tasks` | "generate tasks for [feature]" |
-| 3.5 — Review (opt) | `spec-kit-review` | "review [feature]" or "analyze [feature]" |
-| 4 — Implement | `spec-kit-implement` | "implement [feature]" |
-| 5 — Test | `spec-kit-test` | "test [feature]" |
-| 6 — Summarize/Close | `spec-kit-summarize` | "summarize [feature]" / "close [feature]" |
-| Explore | `spec-kit-explore` | "explore [feature] with [variants]" |
-| Compare | `spec-kit-compare` | "compare [feature]" |
-| Refresh | `spec-kit-refresh` | "refresh [feature]" |
+| Phase | Skill | When | Purpose |
+|-------|-------|------|---------|
+| 0 — Constitution | `spec-kit-constitution` | "create constitution" | Project-wide principles and MUST/SHOULD rules |
+| 1 — Specify | `spec-kit-specify` | "create a spec for [...]" | **WHAT**: Describe the feature, refactoring, or enhancement in detail. Functional requirements (FR-###), user scenarios, success criteria. No implementation details, no code. |
+| 1.5 — Clarify (opt) | `spec-kit-clarify` | "clarify [feature]" | Resolve ambiguities in the spec |
+| 2 — Plan | `spec-kit-plan` | "plan [feature]" | **HOW**: Design implementation approach. Study existing specs and codebase. Plan with smallest possible impact on existing code while respecting constitution rules and architecture. No code-level implementation details in the plan — focus on architecture, data flow, module boundaries. |
+| 3 — Tasks | `spec-kit-tasks` | "generate tasks for [feature]" | Break plan into executable ordered tasks |
+| 3.5 — Review (opt) | `spec-kit-review` | "review [feature]" / "analyze [feature]" | Cross-artifact consistency + post-implement code quality |
+| 4 — Implement | `spec-kit-implement` | "implement [feature]" | TDD implementation following tasks.md |
+| 5 — Test | `spec-kit-test` | "test [feature]" | Bug tracking and manual testing |
+| 6 — Summarize/Close | `spec-kit-summarize` | "summarize [feature]" / "close [feature]" | Spec health score, gap analysis, intentional deviation patching |
+| Explore | `spec-kit-explore` | "explore [feature] with [variants]" | Parallel variant exploration |
+| Compare | `spec-kit-compare` | "compare [feature]" | Variant comparison matrix |
+| Refresh | `spec-kit-refresh` | "refresh [feature]" | Artifact reconciliation |
 
 ### Explore Mode (Parallel)
 **Skill**: `spec-kit-explore`
@@ -239,6 +239,7 @@ The canonical constitution path is `specs/constitution.md`. All Hermes spec-kit 
 - **Do NOT implement during Plan, Clarify, or Tasks phases — even for "obvious" fixes.** The bugfix loop requires Plan → Tasks → Implement in order. A one-line change (removing an arrowhead, adding a CSS class) still needs a plan and a task entry before code touches disk. Skipping phases is a phase guardrail violation, not a shortcut. If you catch yourself reaching for `write_file`/`patch` during the bugfix loop before reaching Implement, stop and run the correct phase skill first.
 - **Do NOT pollute AGENTS.md with workflow mechanics.** AGENTS.md is project-level context: reference skills name, list active specs, document project conventions. Routing logic, trigger phrases, phase diagrams, and bugfix loop details belong in skill files. When you add a new phase or routing rule, update the relevant skill — not AGENTS.md.
 - **Do NOT allow features to be complete without Phase 6.** A feature without `implementation-summary.md` or `close.md` is not complete, even if all bugs are verified. The mandatory close prevents silent drift accumulation. If a user insists a feature is done without closing, explain why close matters (spec health, drift prevention, future refactoring context) rather than bypassing the requirement.
+- **Commit spec changes before code, never with code.** Spec/plan changes that alter requirements or design intent must be committed before the related code commit. The causal chain is: spec describes what → code implements it. Committing them together blurs this chain and makes git history unreliable. Exceptions: status-only updates (bug verified, task [X]) can share a commit with code; Phase 6 close (patched spec/plan + close.md) is one intentional reconciliation commit.
 - **Additive-safe editing**. During design phases (0-3), freely iterate — rewrite spec/plan/tasks, review proposes any changes. After Phase 4 (Implement) begins, never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, correct text — but only the minimal field or section needed. New entries always append at the end. Preserve every existing bug ID, task ID, and requirement.
 - **Ordering enforced.** bugs.md entries MUST be in BUG-NNN ascending order. tasks.md entries MUST be in T### ascending order. New entries get the next sequential ID.
 - **history.md is mandatory after every markdown change.** Every markdown document created or modified MUST be recorded in `specs/[feature]/history.md`. No exceptions.

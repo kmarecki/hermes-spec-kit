@@ -17,7 +17,14 @@ metadata:
 
 **Phase**: 2
 
-**Purpose**: Create or update the implementation plan at `specs/[feature]/plan.md`. Defines architecture, resolves constitutional gates, generates design artifacts.
+**Purpose**: Create or update the implementation plan at `specs/[feature]/plan.md`. Defines **HOW** to implement the spec: architecture, data flow, module boundaries, API contracts.
+
+The plan must:
+- **Study existing specs and codebase** to understand current architecture, patterns, and conventions
+- **Minimize impact on existing code** — design the implementation with the smallest possible footprint while respecting constitution rules and architecture principles
+- **Avoid code-level implementation details** — the plan describes approach and structure, not line-level implementation. Concrete coding belongs in the Implement phase.
+- **Resolve constitutional gates** — verify the approach aligns with project principles
+- **Generate design artifacts**: `research.md`, `data-model.md`, `contracts/*`, `quickstart.md`
 
 **When NOT to use**: For trivial changes (typo fix, config change) — skip planning and go directly to implementation.
 

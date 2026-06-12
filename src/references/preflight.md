@@ -54,11 +54,13 @@ After every skill completes that created or modified any markdown document:
 
 1. **Append to history.md**: Every markdown file created or modified MUST be recorded in `specs/[feature]/history.md`. Create the file if it doesn't exist.
 
-2. **Commit**: Commit changed markdown documents immediately.
-   - One change → one commit
-   - Multiple related changes in one logical action (e.g. clarify updates clarify.md + amends spec.md) → one commit
-   - Use commit template from specs/git-conventions.md (see auto-commit.md)
-   - Skip silently if not a git repo
+2. **Commit**: Commit changed documents immediately with these rules:
+   - **Spec/plan changes that alter requirements or design intent** → MUST be committed BEFORE any related code. This preserves the causal chain: spec describes what → code implements it. Never commit spec changes as a side-effect of a code commit.
+   - **Status-only updates** (bug verified, task marked [X], bug status changed) → CAN share a commit with code. These document what the code did, not what it should do.
+   - **Phase 6 close** (patched spec/plan + close.md) → ONE commit. This is explicit intentional reconciliation.
+   - **One change → one commit**. Multiple related changes in one logical action (e.g. clarify updates clarify.md + amends spec.md) → one commit.
+   - Use commit template from specs/git-conventions.md (see auto-commit.md).
+   - Skip silently if not a git repo.
 
 3. **Additive-safe editing**. During design phases (0-3), you may freely iterate — rewrite, restructure, refactor spec/plan/tasks as needed. The review skill may propose changes freely. Each design phase skill commits its artifacts immediately (no batching).
    

@@ -17,7 +17,9 @@ metadata:
 
 **Phase**: 1
 
-**Purpose**: Create or update a feature specification at `specs/[feature]/spec.md`. Defines WHAT users need and WHY, not HOW to implement.
+**Purpose**: Create or update a feature specification at `specs/[feature]/spec.md`. Defines **WHAT** users need and **WHY** — the feature, refactoring, or enhancement in full detail. Captures functional requirements (FR-###), user scenarios, success criteria, entities, and edge cases. 
+
+**No implementation details, no code, no technology choices.** The spec describes what the system should do, not how to build it. Architecture decisions, data models, and technical approach belong in the Plan phase.
 
 **When NOT to use**: For tiny unambiguous changes (typo fix, rename), skip straight to implementation.
 

@@ -305,8 +305,39 @@ Same heuristic as pre-implement mode.
 - Constitution violations: N
 - Test coverage adequacy: Satisfactory / Needs improvement / Not assessed
 ```
+### Step 6: Next actions — deviation resolution (post-implement)
 
-### Step 6: Next actions (post-implement / closed-review)
+For each deviation found between code and spec/plan during post-implement review:
+
+```
+FOR each FR-### or plan section where code differs from spec/plan:
+  PRESENT the discrepancy to the user:
+    "FR-NNN in spec.md says: [original requirement]
+     Implementation does: [what code actually does]
+     
+     Options:
+     1. Update spec/plan to match implementation (intentional deviation — document it)
+     2. Keep spec/plan as-is — change code to match (create a bugfix task)
+     3. Skip for now (flag for Phase 6 close to resolve)"
+
+  WAIT for user decision before proceeding to the next discrepancy.
+
+  IF user picks 1:
+    PATCH spec.md or plan.md to reflect what was implemented
+    ADD note: "(Updated by post-implement review)"
+    NOTE: "spec.md updated — deviation documented."
+    These spec/plan patches will be committed by Phase 6 (summarize/close).
+
+  IF user picks 2:
+    ADD bug to bugs.md: "BUG-NNN: Implementation does not match spec FR-NNN"
+    NOTE: "Bug logged — run 'bugfix [feature]' to align implementation with spec."
+
+  IF user picks 3:
+    NOTE: "Deferred to Phase 6 close."
+```
+
+### Step 7: Next actions (non-deviation)
+
 ```
 IF mode == closed-review:
   PRESENT findings to user
