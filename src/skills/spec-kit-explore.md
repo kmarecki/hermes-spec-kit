@@ -89,11 +89,21 @@ NOTE: "Worktrees preserved at ../<repo>-worktrees/ for the compare phase."
 NOTE: "Run 'compare [feature]' to review and select a winner."
 ```
 
-### Append to history.md
-Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
-- Phase: Explore
-- Artifacts: specs/[feature]/variants/*/
-- Worktrees: ../<repo>-worktrees/explore-*/
+### Append to history.md and Commit
+
+**Order is critical: history.md FIRST, then commit.**
+
+1. **Append to history.md**:
+   Append to `specs/[feature]/history.md` following `spec-kit/references/history-tracking.md`:
+   - Phase: Explore
+   - Artifacts: specs/[feature]/variants/*/
+   - Worktrees: ../<repo>-worktrees/explore-*/
+
+2. **PRE-COMMIT GUARD**:
+   READ `specs/[feature]/history.md` — confirm the explore entry is recorded.
+   If missing: BLOCK — must append before commit.
+
+3. **Commit variant work**: Each variant subagent commits independently in its worktree. The main agent commits the spec artifacts for the variants directory.
 
 ## Common Pitfalls
 1. **Too many variants (3+):** Limited by `delegate_task.max_concurrent_children`. If user proposes 5, suggest grouping or prioritizing the top 3.

@@ -173,16 +173,20 @@ NOTE: "Worktrees preserved at ../<repo>-worktrees/ in case you need
       git worktree prune"
 ```
 
-### Step 4: Append to history.md
-Append entry to `specs/[feature]/history.md` (create if missing):
-- Phase: Compare — Complete
-- Artifact: `comparison.md`
+### Step 4: Append to history.md and Commit
 
-## Completion
-### Done When
-- [ ] comparison.md created with all variant dimensions
-- [ ] history.md entry appended
-- [ ] Committed (merge/cherry-pick)
+**Order is critical: history.md FIRST, then commit.**
+
+1. **Append to history.md**:
+   Append entry to `specs/[feature]/history.md` (create if missing):
+   - Phase: Compare — Complete
+   - Artifact: `comparison.md`
+
+2. **PRE-COMMIT GUARD**:
+   READ `specs/[feature]/history.md` — confirm the compare entry is recorded.
+   If missing: BLOCK — must append before commit.
+
+3. **Commit**: (the compare/git merge commit already captures this)
 
 ## Common Pitfalls
 1. **Cherry-picking without verifying compatibility**: Features from different variants may conflict. Verify the combined spec/plan is coherent.

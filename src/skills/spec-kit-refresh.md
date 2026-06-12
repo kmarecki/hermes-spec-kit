@@ -54,18 +54,28 @@ Classify: Match / Mismatch / Missing / Unplanned
 ### Refresh plan.md and data-model.md
 Same per-item approval for architecture, data model, and contract discrepancies.
 
-### Append to history.md
-Append entry to `specs/[feature]/history.md` (create if missing):
-- Phase: Refresh — Complete
-- Artifact: patched `spec.md`/`plan.md`
+### Append to history.md and Commit
+
+**Order is critical: history.md FIRST, then commit.**
+
+1. **Append to history.md**:
+   Append entry to `specs/[feature]/history.md` (create if missing):
+   - Phase: Refresh — Complete
+   - Artifact: patched `spec.md`/`plan.md`
+
+2. **PRE-COMMIT GUARD**:
+   READ `specs/[feature]/history.md` — confirm the refresh entry is recorded.
+   If missing: BLOCK — must append before commit.
+
+3. **Commit**:
+   `git commit -m "spec(refresh): [feature] reconcile artifacts"`
 
 ## Completion
 ### Done When
 - [ ] Each patch approved by user before applying
 - [ ] Additive-safe: spec/plan entries never deleted; modifications are minimal field updates
-- [ ] history.md entry appended
+- [ ] history.md entry appended (pre-commit guard verified)
 - [ ] Committed
-- Message: `"spec(refresh): [feature] reconcile artifacts"`
 
 ## Common Pitfalls
 
