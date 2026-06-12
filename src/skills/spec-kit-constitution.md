@@ -301,7 +301,198 @@ SCAN project root for these files to identify the tech stack:
            choosing principles for your new project."
 ```
 
-### Step 2: Load the principles reference
+### Step 2: Greenfield — 3-Level Decision Tree
+
+**Only for MODE=greenfield. If brownfield, skip to Step 2b below.**
+
+Guide the user through three levels of decisions. Each level narrows the
+options and pre-fills recommended defaults for the next level. Use the
+brownfield detection examples table (below) for recommended defaults once
+language + framework are chosen.
+
+---
+
+#### Level 1 — Highest-Level Purpose
+
+Ask the user: *"What is this project's primary purpose?"*
+
+Present these 3 options with their tradeoffs:
+
+| Option | Type | Examples | Testing impact | Arch impact | Docs impact | Deps impact |
+|--------|------|----------|---------------|-------------|-------------|-------------|
+| **A — User-Facing Application** | Web/mobile API, frontend, full-stack app | SaaS, e-commerce, social app, dashboard, CMS | Needs integration + E2E tests. TDD pays off. | Architecture matters — will need to scale. | API docs, user docs, setup guide critical. | Framework deps expected (React, Django, etc.) |
+| **B — Library / SDK / Package** | Reusable code for other developers | npm package, PyPI lib, Go module, crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal internal coupling. | API docs, README, examples, changelog mandatory. | Zero or minimal deps to avoid transitive bloat. |
+| **C — Infrastructure / CLI / DevOps** | Automation, ops tools, platform | CLI tool, Terraform module, CI pipeline, daemon | Integration tests with real infra. Manual testing common. | Simple, composable. No over-engineering. | README + --help. Code that IS the documentation. | Minimal. Static binaries preferred. |
+
+```
+ASK: "What kind of project are you building?"
+RECORD: purpose = [A | B | C]
+NOTE: purpose determines the weight of each principle below.
+```
+
+---
+
+#### Level 2 — Architecture Approach
+
+Based on the chosen purpose, present 3 architecture options:
+
+**If purpose = A (User-Facing App):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **A1** | Monolith | Single deployable, shared everything. MVC or similar. | Fastest to build, simple deploy, single codebase | Hard to scale team, technology lock-in | MVPs, small teams, prototypes |
+| **A2** | Modular Monolith | Bounded contexts in a shared runtime. Clear module boundaries. | Scales to medium teams, can extract services later, good separation | Requires discipline on boundaries | Growing teams, most web apps, medium complexity |
+| **A3** | Microservices | Independent services, separate deploys, own data stores. | Independent scaling, team autonomy, technology flexibility | Operational complexity, distributed debugging, data consistency | Large teams, high-scale apps, multiple domains |
+
+**If purpose = B (Library / SDK):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **B1** | Zero-Dependency | Stdlib only. Minimal API surface. No runtime deps. | Maximum compatibility, no supply chain risk, builds instantly | More custom code, reinventing wheels | Core libraries, security-sensitive, polyfills |
+| **B2** | Curated | Few well-chosen deps with justification. Pin exact versions. | Faster delivery, standard patterns, community leverage | Transitive bloat, upgrade burden | Most libraries, SDKs for popular platforms |
+| **B3** | Umbrella | Multi-package monorepo. Independent versioning per sub-package. | Clean separation, consumers pick what they need | Build complexity, tooling overhead, version coordination | Large SDKs (like AWS, Google Cloud clients) |
+
+**If purpose = C (Infrastructure / CLI / DevOps):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **C1** | Single Binary | Everything compiled into one binary. No runtime deps. | Zero friction for users, simple distribution, easy CI | Monolithic code, feature flag complexity | CLIs, single-purpose tools, Terraform providers |
+| **C2** | Multi-Binary | Separate binaries sharing common libs. | Independent releases, clear boundaries, composable | Distribution complexity, version coordination | Tool suites (like kubectl + plugins) |
+| **C3** | Plugin-Based | Core binary + plugin system. Users extend without forking. | Extensible by community, clean core, pluggable | Plugin API stability burden, discovery UX | Framework-like tools, extensible CLIs |
+
+```
+ASK: "Given your purpose [A|B|C], which architecture approach fits?"
+RECORD: architecture = [A1|A2|A3 | B1|B2|B3 | C1|C2|C3]
+```
+
+---
+
+#### Level 3 — Technology Choices
+
+Based on purpose + architecture, guide the user through technical choices.
+For each choice, present 3 options using the project-type-aware defaults
+from the tables below.
+
+**Technology choice 1: Language and framework**
+
+Present the user with relevant options based on purpose:
+
+```
+IF purpose == A (User-Facing App):
+  RECOMMEND: web-optimized languages
+  BRACKET by architecture:
+    A1 (Monolith): Django, Rails, Laravel, Next.js, ASP.NET — batteries-included
+    A2 (Modular): FastAPI, Express/Nest, Spring Boot, Phoenix — modular frameworks
+    A3 (Microservices): Go, Rust, ASP.NET Minimal API, Fastify — lightweight, fast
+
+IF purpose == B (Library / SDK):
+  RECOMMEND: ecosystem-specific languages
+  BRACKET by architecture:
+    B1 (Zero-Dep): Go stdlib, Rust no-std, Python stdlib, TypeScript with no deps
+    B2 (Curated): Pick target ecosystem (Python, JS, Go, Rust, Java)
+    B3 (Umbrella): TypeScript (monorepo with npm workspaces), Rust (workspaces)
+
+IF purpose == C (Infra / CLI):
+  RECOMMEND: systems languages
+  BRACKET by architecture:
+    C1 (Single bin): Go, Rust, Zig, C — compiles to static binary
+    C2 (Multi-bin): Go (fast compile), Rust (safe), Python+PyInstaller
+    C3 (Plugin): Go (plugin/pkg), Rust (wasm plugins), C (dlopen)
+```
+
+For each bracket, present the specific language options as follows:
+
+```
+  | Option | Language | Framework suggestions | Pros | Cons |
+  |--------|----------|----------------------|------|------|
+  | A | [lang] | [framework list] | [pros] | [cons] |
+  | B | [lang] | [framework list] | [pros] | [cons] |
+  | C | [lang] | [framework list] | [pros] | [cons] |
+
+  USER picks: [A | B | C]
+```
+
+After the user picks language + framework, use the **Brownfield Detection
+Examples table** (at the bottom of this skill) to find the matching row
+and pre-fill recommended defaults for the remaining principles.
+
+If the user's exact combination isn't in the table, infer from the closest
+match:
+- Same language + similar framework → use that row
+- Same purpose category → use generic defaults for that purpose
+
+---
+
+#### Step 2a: Default Mapping — Purpose to Principle Weights
+
+Once purpose + architecture are chosen, map them to recommended defaults
+for the 12 principles. These are weighted suggestions — the user still
+picks A/B/C in Step 3.
+
+```
+PURPOSE = A (User-Facing App):
+  Testing → A or B (TDD important for reliability)
+  Linting → B (Pragmatic — balance quality and speed)
+  Architecture → user's choice from Level 2
+  Dependencies → B (Curated — need frameworks)
+  Git Workflow → B (Feature branches — standard)
+  Documentation → B (Critical-only — API docs + setup)
+  Error Handling → A (Defensive — user-facing app)
+  Performance → B (Profile-then-optimize)
+  Code Review → A or B (Strict or Risk-based)
+  Database → A (Migration-first — if using DB)
+  Config/Secrets → B (Environment-based)
+  Dev Toolchain → B (Standard toolchain)
+
+PURPOSE = B (Library / SDK):
+  Testing → A (Strict TDD — API surface must be tested)
+  Linting → A (Strict — public API consistency)
+  Architecture → user's choice from Level 2
+  Dependencies → A or B (Minimal or Curated)
+  Git Workflow → B (Feature branches)
+  Documentation → A (Exhaustive — API docs mandatory)
+  Error Handling → B (Contract-based — surface errors cleanly)
+  Performance → B (Profile-then-optimize)
+  Code Review → A (Strict — every change reviewed)
+  Database → SKIP (libraries shouldn't dictate storage)
+  Config/Secrets → A (Strict — secrets never in lib)
+  Dev Toolchain → B (Standard toolchain)
+
+PURPOSE = C (Infrastructure / CLI / DevOps):
+  Testing → B (Pragmatic — integration-heavy)
+  Linting → A (Strict — CLI UX consistency)
+  Architecture → user's choice from Level 2
+  Dependencies → A (Minimal — static binaries)
+  Git Workflow → A (Trunk-based — fast iteration)
+  Documentation → C (Code-as-docs — help text + README)
+  Error Handling → C (Minimal — propagate, top-level catch)
+  Performance → A (Optimize-first — CLI responsiveness)
+  Code Review → B (Risk-based — config changes vs engine)
+  Database → SKIP (infra tools shouldn't depend on DB)
+  Config/Secrets → A (Strict — env + config files)
+  Dev Toolchain → C (Full DX — automation matters)
+```
+
+Present these as a summary table to the user:
+
+```
+  Based on your choices (Purpose: [name], Architecture: [name]), here are
+  the recommended defaults for each principle:
+
+  | Principle | Recommended | Why |
+  |-----------|-------------|-----|
+  | Testing   | ⭐ [option] | [reason] |
+  | Linting   | ⭐ [option] | [reason] |
+  | ...       |             |      |
+
+  Say 'bugfix [feature]' to start a new bugfix round.
+```
+
+Then proceed to Step 3 to let the user confirm or adjust each principle.
+
+---
+
+### Step 2b: Load the principles reference (both modes)
 
 ```
 LOAD spec-kit/references/constitution-principles.md
@@ -315,7 +506,8 @@ FOR each principle:
     SELECT the option that best matches detected project artifacts
     TAG it with ⭐ "detected"
   IF MODE == greenfield:
-    ASK the user about their intent or preference
+    USE the pre-filled mapping from Step 2a
+    TAG the recommended option with ⭐ "recommended for [purpose]"
 ```
 
 ### Step 3: Present each principle with choice
@@ -343,12 +535,17 @@ PRESENT for each principle:
   ASK: "Any notes or rationale for this choice?" → RECORD as rationale
 ```
 
-In greenfield mode, after showing the 3 options, include a short guiding question:
+In greenfield mode, after showing the 3 options, include the purpose-based
+recommendation from Step 2a instead of a generic guiding question:
 
 ```
-  GUIDING QUESTION (greenfield only):
-  "For a [project type], most teams pick [option]. This means [summary of tradeoff].
-   Does that match your priorities?"
+  ⭐ This option is recommended for [purpose name] projects because
+     [reason from Step 2a mapping].
+  You can still pick A, B, or C — this is a recommendation, not a requirement.
+
+  USER picks: [A | B | C]
+  RECORD the chosen option
+  ASK: "Any notes or rationale for this choice?" → RECORD as rationale
 ```
 
 ### Step 4: Handle principle exceptions
