@@ -62,7 +62,7 @@ Append entry to `specs/[feature]/history.md` (create if missing):
 ## Completion
 ### Done When
 - [ ] Each patch approved by user before applying
-- [ ] Additive-only: spec/plan entries never deleted, only updated or appended
+- [ ] Additive-safe: spec/plan entries never deleted; modifications are minimal field updates
 - [ ] history.md entry appended
 - [ ] Committed
 - Message: `"spec(refresh): [feature] reconcile artifacts"`

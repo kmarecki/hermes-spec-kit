@@ -83,7 +83,7 @@ Follow `spec-kit/references/auto-commit.md`:
 
 ### Done When
 - [ ] spec.md created with FR-### requirements numbered sequentially
-- [ ] No existing content deleted (additive-only)
+- [ ] No existing content deleted; modifications minimal (additive-safe)
 - [ ] history.md entry appended
 - [ ] Committed
 

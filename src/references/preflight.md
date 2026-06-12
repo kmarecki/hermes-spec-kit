@@ -60,7 +60,7 @@ After every skill completes that created or modified any markdown document:
    - Use commit template from specs/git-conventions.md (see auto-commit.md)
    - Skip silently if not a git repo
 
-3. **Additive-only editing**: NEVER delete, overwrite, or reorder existing content in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. Always append new entries at the end. If modifying an existing entry (e.g. updating bug status), change only the specific field — never remove the row.
+3. **Additive-safe editing**: Never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, amend text, correct inaccuracies — but the modification must be minimal (change only the specific field or section needed). Never restructure or refactor a document beyond what's required for the change. New entries (new bugs, tasks, plan sections) always append at the end. The goal: preserve every existing bug ID, task ID, and requirement — only update what the current change demands.
 
 4. **Ordering**: bugs.md entries must be ascending by BUG-NNN. tasks.md entries must be ascending by T###. New entries append with the next sequential ID.
 

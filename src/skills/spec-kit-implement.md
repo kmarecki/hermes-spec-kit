@@ -368,7 +368,7 @@ Report:
 - [ ] TDD mode (if active): Full regression suite passes — all tests green
 - [ ] TDD mode (if active): Regressions (if any) fixed via umbrella task
 - [ ] Build passes (if applicable)
-- [ ] All tasks in tasks.md marked [X] — additive-only, no tasks deleted
+- [ ] All tasks in tasks.md marked [X] — no tasks deleted, status-only update
 - [ ] In bugfix mode: All bugfix tasks completed and verified
 - [ ] history.md appended per completed phase
 - [ ] Committed per phase boundary

@@ -40,4 +40,4 @@ ELSE
 - Hash is captured for history.md traceability
 - Silently skip if not a git repo
 - Never commit broken state during Implement (tests must pass first)
-- Additive-only: never delete existing content. Only append or modify specific fields.
+- Additive-safe: never delete or reorder existing entries. Only append new, or modify specific fields minimally.
