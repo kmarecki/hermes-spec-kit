@@ -56,15 +56,13 @@ For each BF-### task:
      - Run it → confirm it fails (proves the bug exists)
   2. GREEN — Apply the minimal fix
      - Run the test → confirm it passes
-  3. APPEND to `specs/[feature]/history.md`:
-     ## [TIMESTAMP] | Phase 4 → Bugfix BF-### → Complete
-     - **Skill**: spec-kit-implement
-     - **Artifacts**: [files changed]
-     - **Notes**: Bugfix for BUG-NNN implemented. Tests pass after fix.
-  4. PRE-COMMIT GUARD: READ `specs/[feature]/history.md` — confirm BF-### entry is recorded.
-  5. COMMIT with the bugfix template from specs/git-conventions.md
-     (default: "fix: [feature] BF-### - description")
 ```
+
+After GREEN is confirmed, record the bugfix in history.md and commit:
+
+3. **Append to history.md**: Write an entry to `specs/[feature]/history.md` noting which BUG-NNN was fixed and that tests pass.
+4. **Pre-commit guard**: READ `specs/[feature]/history.md` — confirm the BF-### entry is recorded. If missing, BLOCK.
+5. **Commit**: `git commit -m "fix: [feature] BF-### - description" --no-verify`
 
 This "read first" step prevents the common AI-agent trap where code is changed based on a bug report alone without verifying root cause against the actual code. The Plan Ref (from spec-kit-plan) gives the analysis; this step validates it against live code.
 
@@ -142,7 +140,7 @@ Extract:
 For each phase (Setup → Foundational → Core → Integration → Polish):
 Execute the entire phase as a batch, not task-by-task:
 
-```
+```text
   Phase N: [Phase Name]
   
   ═══ RED SUB-PHASE ═══
@@ -181,26 +179,16 @@ Execute the entire phase as a batch, not task-by-task:
        NOTE: TypeScript projects MUST build — Vitest/Jest swallow type errors.
     
     d. UPDATE tasks.md — mark all tasks in this phase [X]
-    
-    e. RECORD test verification: collect the count of tests run and passed:
-       TEST_COUNT="[number of tests run for this phase]"
-       TEST_STATUS="All [N] passing: [N] tests, 0 failures"
-    
-    f. APPEND to `specs/[feature]/history.md`:
-       ## [TIMESTAMP] | Phase 4 → [Phase Name] → Complete
-       - **Skill**: spec-kit-implement
-       - **Artifacts**: source code changes for this phase
-       - **Notes**: [TEST_STATUS]. Tasks [X]: [N] tasks completed.
-    
-    g. PRE-COMMIT GUARD: READ `specs/[feature]/history.md` — confirm entry is recorded.
-    
-    h. COMMIT the full phase using the implement commit template from specs/git-conventions.md:
-       (default: "feat: [feature] Phase N - [Phase Name]")
-       git add -A
-       git commit -m "[commit message from conventions]" --no-verify
-       COMMIT_HASH=$(git rev-parse HEAD)
-       NOTE: "Phase N committed as $COMMIT_HASH"
+```
 
+After marking tasks complete, record the phase in history.md and commit:
+
+1. **Record test count**: Note the number of tests run and passed for this phase.
+2. **Append to history.md**: Write an entry to `specs/[feature]/history.md` with the test pass status and task completion count.
+3. **Pre-commit guard**: READ `specs/[feature]/history.md` — confirm the phase entry is recorded. If missing, BLOCK — must append before commit.
+4. **Commit the phase**: `git add -A && git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify`
+
+```
   ═══ Done with this phase ═══
 ```
 
@@ -212,17 +200,20 @@ Execute the entire phase as a batch, not task-by-task:
 - Parallel [P] tasks can be written in any order but still within RED/GREEN sub-phase boundaries
 
 #### TDD bypass mode (no test tasks)
-```
+```text
 IF tdd_bypassed:
   For each phase:
     For EACH task in the phase:
       a. IMPLEMENT directly
       b. VERIFY manually (no automated tests to run)
     UPDATE tasks.md — mark all tasks in phase [X]
-    COMMIT the phase using the implement template from specs/git-conventions.md:
-      (default: "feat: [feature] Phase N - [Phase Name]")
-      git add -A
-      git commit -m "[commit message from conventions]" --no-verify
+```
+
+After marking tasks complete: append to history.md, run pre-commit guard, then commit the phase.
+
+```text
+    git add -A
+    git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify
 ```
 
 ### Step 5: Progress reporting
@@ -240,71 +231,36 @@ After each phase:
 
 ### Step 7: Full regression run — all existing tests
 
-After ALL phases are complete and committed, run the ENTIRE test suite:
+After ALL phases are complete and committed, run the ENTIRE test suite.
 
-```bash
+```text
 IF tdd_bypassed:
   NOTE: "TDD was bypassed — skipping automated test verification."
   PROCEED to Step 8 (build verification)
   STOP
-
-DETECT test framework:
-  IF pytest is available:        terminal("pytest tests/ -q --tb=short")
-  ELSE IF go test is available:  terminal("go test ./...")
-  ELSE IF npm test is available: terminal("npm test")
-  ELSE:                          NOTE "No automated test framework detected — skipping."
-
-IF all tests pass:
-  REPORT: "All N tests pass. Feature implementation verified."
-  APPEND to `specs/[feature]/history.md`:
-    ## [TIMESTAMP] | Phase 4 → Full Regression → Pass
-    - **Skill**: spec-kit-implement
-    - **Artifacts**: (regression verification)
-    - **Notes**: Full regression suite passing: all N tests, 0 failures.
-  PROCEED to Step 8 (build verification)
-
-IF any tests fail:
-  REPORT failing tests:
-    | Test | File | Failure Type |
-    |------|------|-------------|
-  
-  CLASSIFY each failure:
-    - NEW failures (tests written during this implementation) → implementation is incomplete
-    - PRE-EXISTING failures (tests that existed before, now broken) → regression
-  
-  IF any failures:
-    CREATE one umbrella bugfix task appended to tasks.md:
-    ```
-    BF-REGRESSION-001 [BUGFIX] Fix regressions from [feature] implementation
-      — Fix all failing tests introduced by this implementation
-      — All N failures must be resolved
-    ```
-    NOTE: "Umbrella bugfix task BF-REGRESSION-001 created — fixing N regressions."
-    
-    For each regression:
-      a. DEBUG the root cause
-      b. FIX the code
-      c. RUN the specific failing test to verify GREEN
-      d. DO NOT run full suite again yet
-    
-    After all regressions fixed:
-      RUN full suite again
-      IF all pass:
-        APPEND to `specs/[feature]/history.md`:
-          ## [TIMESTAMP] | Phase 4 → Regression Fix → Complete
-          - **Skill**: spec-kit-implement
-          - **Artifacts**: source code (regression fixes)
-          - **Notes**: BF-REGRESSION-001 resolved. Full suite passing: all N tests, 0 failures.
-        PRE-COMMIT GUARD: READ `specs/[feature]/history.md` — confirm regression entry is recorded.
-        Follow `spec-kit/references/auto-commit.md`:
-        - Scope: source code changes
-        - Message: Use the regression commit template from specs/git-conventions.md
-          (default: `"fix: [feature] BF-REGRESSION-001 - fix regressions"`)
-        MARK BF-REGRESSION-001 as [X] in tasks.md
-        REPORT: "All regressions fixed. All N tests pass."
-      IF any still fail:
-        RETURN to fix remaining failures
 ```
+
+Detect and run the test framework. Then handle results:
+
+**If all tests pass:**
+1. REPORT: "All N tests pass. Feature implementation verified."
+2. **Append to history.md**: Write a full regression pass entry to `specs/[feature]/history.md`.
+3. PROCEED to Step 8 (build verification)
+
+**If any tests fail:**
+Classify each failure as NEW (implementation incomplete) or PRE-EXISTING (regression). Create umbrella bugfix task BF-REGRESSION-001 in tasks.md.
+
+For each regression:
+- DEBUG root cause → FIX code → RUN specific test to confirm GREEN
+
+After all regressions fixed:
+1. RUN full suite again
+2. IF all pass:
+   - **Append to history.md**: Write a regression fix entry to `specs/[feature]/history.md` noting BF-REGRESSION-001 resolved.
+   - **Pre-commit guard**: READ `specs/[feature]/history.md` — confirm the regression entry is recorded. If missing, BLOCK.
+   - Commit: `git commit -m "fix: [feature] BF-REGRESSION-001 - fix regressions" --no-verify`
+   - MARK BF-REGRESSION-001 as [X] in tasks.md
+   - REPORT: "All regressions fixed. All N tests pass."
 
 ### Step 8: Build verification (if applicable)
 ```bash
