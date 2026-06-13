@@ -23,8 +23,6 @@ Spec-driven development for Hermes Agent. Specifications drive code, not the oth
 ## Core Workflow
 
 ```text
-                                            ┌── explore mode ──┐
-                                            ▼                  │
 Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
                                                                       │
                                                                       └── bugfix loop ──┐
@@ -33,28 +31,17 @@ Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → 
                                                           [Clarify] → Plan → Tasks → [Review] → Implement → Test → Close (mandatory)
 ```
 
-The workflow has **three development modes**:
+The workflow has **two development modes**:
 
 | Mode | Trigger | Behavior |
 |------|---------|----------|
 | **specify** (default) | "Create a spec for [feature]" | Full forward phase sequence. Forward phases are manual; user decides when to advance. |
 | **bugfix** | "bugfix [feature]" | Reuses Plan → Tasks → Implement inner loop. Chains automatically — the user already committed by invoking bugfix mode. **Auto-chains to Close** when all bugs verified. |
-| **explore** | "Explore [feature] with [variants]" | Spawns N parallel branches, each running its own independent phase sequence. User compares variants with `spec-kit-compare` and chooses a winner. |
 | **reopen** | "Reopen [feature]" | Reopens a closed feature for bugfixing. Auto-creates bugs.md, creates a bugfix branch, and routes through the bugfix loop. Previous close.md becomes stale — must close again after fixes. |
 
 **Constitution is mandatory** in every mode. If `specs/constitution.md` doesn't exist, specify and plan will block until it's created.
 
 **Phase 6 (Close) is mandatory** to mark a feature complete. After the bugfix loop finishes or the user requests close, `spec-kit-summarize` runs in either full summary or lightweight close mode, computes spec health, and patches spec/plan artifacts to reflect intentional deviations.
-
-**Explore mode** diverges into parallel branches:
-```text
-                      ┌── Variant A (branch: explore/NNN-feature-a)
-                      │   └── Specify → Clarify → Plan → Tasks → [Implement]
-Explore [feature] ────┼── Variant B (branch: explore/NNN-feature-b)          ──→ Compare → Pick winner → Close
-                      │   └── Specify → Clarify → Plan → Tasks → [Implement]
-                      └── Variant C (branch: explore/NNN-feature-c)
-                          └── Specify → Clarify → Plan → Tasks → [Implement]
-```
 
 ## Phase Reference
 
@@ -71,21 +58,7 @@ See `spec-kit-workflow` for the complete phase table and routing. Quick referenc
 | 4 — Implement | `spec-kit-implement` | "implement [feature]" | TDD implementation following tasks.md |
 | 5 — Test | `spec-kit-test` | "test [feature]" | Bug tracking and manual testing |
 | 6 — Summarize/Close | `spec-kit-summarize` | "summarize [feature]" / "close [feature]" | Spec health score, gap analysis, intentional deviation patching |
-| Explore | `spec-kit-explore` | "explore [feature] with [variants]" | Parallel variant exploration |
-| Compare | `spec-kit-compare` | "compare [feature]" | Variant comparison matrix |
 | Refresh | `spec-kit-refresh` | "refresh [feature]" | Artifact reconciliation |
-
-### Explore Mode (Parallel)
-**Skill**: `spec-kit-explore`
-**When**: User says "explore [feature] with [variant descriptions]"
-
-Spawn N parallel branches, each running independent specify → clarify → plan → tasks → [implement] cycles. Harnesses `delegate_task` for true parallelism. Branches are named `explore/NNN-feature-<variant>`.
-
-### Compare Mode
-**Skill**: `spec-kit-compare`
-**When**: User says "compare [feature]" or "compare variants for [feature]"
-
-After explore completes, load all variant artifacts, build a structured comparison matrix across spec/plan/implementation dimensions, and guide the user to select a winning variant. Optionally cherry-pick features from rejected variants.
 
 **Bug tracking format**: Each bug has: ID (BUG-001), Severity (critical/major/minor/trivial), Area, Description, Steps to Reproduce, Expected vs Actual Result, Requires Clarification flag, Status (open/in-progress/resolved/verified).
 
@@ -188,9 +161,7 @@ Phase transitions are **manual** but gated by artifact presence. Each phase skil
 | `close.md` exists | Closed — complete |
 | `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
 | All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
-|| `history.md` last entry | Current phase (fast lookup) |
-|| `variants/` directory exists with ≥2 entries | Exploring (creative mode) |
-|| `comparison.md` exists | Compared — decision made |
+| `history.md` last entry | Current phase (fast lookup) |
 
 > **Tip**: `history.md` is the fastest phase detector. Read the last `→ Complete` line instead of scanning directory artifacts.
 
@@ -312,18 +283,15 @@ Spec-kit produces feature directories like `specs/003-user-auth/`. The correspon
 ```text
 {feature_prefix}/NNN-short-name        # Normal forward development
 {bugfix_prefix}/NNN-short-name          # Bugfix-only branch (standalone)
-{explore_prefix}/NNN-feature-<variant>   # Creative exploration (one per variant)
 ```
 
-With default values (`feat/`, `bug/`, `explore/`), common examples are:
+With default values (`feat/`, `bug/`), common examples are:
 
 | Spec Directory | Branch Name |
 |:---------------|:------------|
 | `specs/001-user-auth/` | `feature/001-user-auth` if prefix is `feature` |
 | `specs/002-oauth2-api-integration/` | `feat/002-oauth2-api-integration` with default `feat` |
 | `specs/003-data-export/` | `{bugfix_prefix}/003-data-export` (standalone bugfix) |
-| `specs/004-taskify/variants/react/` | `{explore_prefix}/004-taskify-react` |
-| `specs/004-taskify/variants/vue/` | `{explore_prefix}/004-taskify-vue` |
 
 **During the bugfix loop**, the bugfix work happens on whatever branch the feature was implemented on. Do not create separate bugfix branches for individual bugfix loop iterations — the loop is part of the same feature branch.
 
@@ -427,7 +395,6 @@ Installed via `./scripts/install.sh`:
 - `implementation-summary-template.md` — Post-implementation review summary (Phase 6, via `spec-kit-summarize`)
 - `close-template.md` — Lightweight close document (Phase 6 close mode, via `spec-kit-summarize`)
 - `history-template.md` — Transition log template (appended by every phase skill on completion)
-- `comparison-template.md`: Creative exploration comparison matrix template
 - `git-conventions-template.md`: Project-level git conventions (copy to specs/git-conventions.md)
 - `gitignore-template.md` — Project .gitignore starter (copy to project root after `git init`)
 

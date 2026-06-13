@@ -58,8 +58,6 @@ APPEND entry:
 | spec-kit-review (post-implement) | Phase 5.5 |
 | spec-kit-summarize | Phase 6 |
 | spec-kit-refresh | Refresh |
-| spec-kit-explore | Explore |
-| spec-kit-compare | Compare |
 | Reopen (workflow) | Reopen |
 
 ## Guard: history.md Before Every Commit

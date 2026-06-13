@@ -13,7 +13,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
      BLOCK: "On a blocked branch. All spec-kit work must be on a
              feature branch. Run:
              git checkout -b {feature_prefix}/NNN-name
-             (or {bugfix_prefix}/NNN-name for bugfix, {explore_prefix}/NNN-name for explore)"
+             (or {bugfix_prefix}/NNN-name for bugfix)"
      HALT
    
 2. MODE DETECTION

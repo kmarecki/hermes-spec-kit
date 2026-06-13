@@ -25,11 +25,11 @@ Before routing any feature-level command, check that the project is initialized 
 
 ### Branch Guard — STRICT
 
-Every feature, bugfix, or explore session MUST start on a branch named according to the project's git conventions. This prevents commits landing on blocked branches.
+Every feature or bugfix session MUST start on a branch named according to the project's git conventions. This prevents commits landing on blocked branches.
 
 ```
-BEFORE any route action (specify, plan, tasks, implement, bugfix, explore, close):
-  LOAD specs/git-conventions.md — read feature_prefix, bugfix_prefix, explore_prefix,
+BEFORE any route action (specify, plan, tasks, implement, bugfix, close):
+  LOAD specs/git-conventions.md — read feature_prefix, bugfix_prefix,
     reopen_suffix, branch_source, and blocked_branches. (Preflight step 3 already does this.)
 
   EXTRACT feature name from the user's command (e.g., "003-user-auth")
@@ -40,7 +40,6 @@ BEFORE any route action (specify, plan, tasks, implement, bugfix, explore, close
     CLASSIFY the operation and construct expected branch from conventions:
       bugfix → expected branch: {bugfix_prefix}/NNN-{short-name}
       reopen → expected branch: {original_prefix}/NNN-{short-name}{reopen_suffix} (from closed feature)
-      explore → expected branch: {explore_prefix}/NNN-feature-name-<variant>
       default (specify/plan/tasks/implement/close) → expected branch: {feature_prefix}/NNN-feature-name
 
     IF current branch is in blocked_branches (from conventions):
@@ -105,8 +104,7 @@ IF feature name is provided (e.g., "003-user-auth"):
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
 | **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
 || — | **`spec-kit-refresh`** | **Lightweight artifact refresh** | **Any (standalone)** |
-|| — | **Explore mode** | Parallel branches for N variants, each runs independent phase sequence | User provides variants |
-|| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Close** (bugs.md with open bugs) |
+| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Close** (bugs.md with open bugs) |
 || — | **Quickfix** | Trivial bugfix: Plan section + tasks entry + fix in one batch commit (user opt-in, docs still exist) | bugfix sub-round with explicit "quickfix [feature]" |
 
 > **Important**: Phase 6 (Close/Summarize) is **mandatory** before a feature can enter Complete state. After the bugfix loop finishes (all bugs verified), the workflow auto-chains to Phase 6.
@@ -247,17 +245,6 @@ WHEN user says "[feature] is done" or tries to start a new feature for the same 
 - When: Manual code changes, mid-stream alignment, or artifacts flagged as outdated
 - Standalone — no prerequisites
 
-### Creative Exploration
-- User says: "Explore [feature] with [variants]" or "Creative exploration for [feature]"
-- Route to: `spec-kit-explore`
-- When: User wants to compare N different approaches in parallel
-- After explore: Propose running `spec-kit-compare`
-
-### Compare Variants
-- User says: "Compare [feature]" or "Compare variants for [feature]"
-- Route to: `spec-kit-compare`
-- Prerequisites: `specs/[feature]/variants/` must exist with at least 2 variants
-
 ## Phase Detection
 
 Check for artifacts to determine current phase:
@@ -274,10 +261,8 @@ Check for artifacts to determine current phase:
 || `bugs.md` all verified | Testing complete — **must close** |
 || `implementation-summary.md` exists | Summarized — complete |
 || `close.md` exists | Closed — complete |
-|| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
-|| All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
-|| `variants/` directory exists with ≥2 entries | Exploring (creative mode) |
-|| `comparison.md` exists | Compared — decision made |
+| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
+| All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
 
 > **Drift detection**: When entering any phase for an existing feature that has `implementation-summary.md` or `close.md`, read its Spec State / Artifact State table. If any artifact is `⚠️ needs review` or `❌ outdated`, emit a warning: "Artifact drift detected — spec/plan may not reflect current code. Run 'refresh [feature]' to reconcile."
 
@@ -386,8 +371,6 @@ AFTER all bugs in bugs.md have Status: verified:
 - "Summarize 003-user-auth" (full summary)
 - "Close 003-user-auth" (lightweight close)
 - "Refresh 003-user-auth" (artifact alignment only)
-- "Explore 003-user-auth with React, Vue, and Svelte frontends"
-- "Compare 003-user-auth"
 
 ## Phase Guardrails — STRICT
 
@@ -404,8 +387,6 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Implement** | source code, `tasks.md` (completions), `bugs.md` (mark resolved) | ALLOWED | `tasks.md` with pending tasks |
 | **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
 | **Reopen** | `bugs.md` (create if missing), source code (fix loop) | ALLOWED (same as bugfix) | `close.md` exists, user says "reopen" |
-| **Explore** | `specs/[feature]/variants/*/` | ALLOWED (delegate_task subagents) | User provides variants |
-| **Compare** | `comparison.md` only | BLOCKED | `variants/` directory exists |
 | **Summarize / Close** | `implementation-summary.md`, `close.md`, `spec.md` (patch deviations), `plan.md` (patch deviations), `tasks.md` (finalize), `bugs.md` (finalize) | BLOCKED | `implementation-summary.md` and `close.md` both missing |
 | **Refresh** | `spec.md`, `plan.md`, `data-model.md`, `contracts/*` (per-item approval) | BLOCKED | User says "refresh" |
 

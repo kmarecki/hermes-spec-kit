@@ -1,12 +1,11 @@
 <!-- SPECKIT START -->
 This project uses spec-driven development via Hermes Agent's spec-kit skills.
 
-Skills: constitution, specify, clarify, plan, tasks, implement, test, review, summarize, refresh, explore, compare, workflow
+Skills: constitution, specify, clarify, plan, tasks, implement, test, review, summarize, refresh, workflow
 
 Development modes:
   - **Specify** (default): Constitution → Specify → [Clarify] → Plan → Tasks → Implement → Test → Close
   - **Bugfix**: Test → [Clarify] → Plan → Tasks → Implement → Test → Close (auto-chains inner loop)
-  - **Explore**: N parallel branches → Compare → Pick winner → Close
 
 Key behaviors:
   - Constitution is always optional

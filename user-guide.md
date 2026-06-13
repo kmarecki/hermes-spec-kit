@@ -3,16 +3,15 @@
 Spec-driven development for Hermes Agent. Every feature starts with a
 specification — not a line of code — and progresses through planning,
 task breakdown, TDD implementation, testing, and a mandatory close phase.
-Four development modes span the full feature lifecycle: forward development
-(specify), bugfix loop, parallel exploration, and reopen for closed features.
+Three development modes span the full feature lifecycle: forward development
+(specify), bugfix loop, and reopen for closed features.
 
 Git conventions (branch naming, commit messages, merge behaviour) are
 defined in `specs/git-conventions.md`. Copy the template from
 `spec-kit/templates/git-conventions-template.md` and customise per
 project.
 
-This guide covers installation, the core workflow, the explore-and-compare
-pattern for parallel variants, the reopen flow for closed features, and
+This guide covers installation, the core workflow, the reopen flow for closed features, and
 day-to-day usage.
 
 ---
@@ -30,16 +29,13 @@ day-to-day usage.
     - [Monorepo Mode](#monorepo-mode)
     - [Free-Text Mode](#free-text-mode-description--constitution)
     - [Brownfield Shortcut](#brownfield-shortcut)
-5.  [Explore Mode: Parallel Variants (Deep Dive)](#explore-mode-parallel-variants-deep-dive)
-    - [How Git Worktrees Keep Variants Apart](#how-git-worktrees-keep-variants-apart)
-    - [Walkthrough: Explore → Compare → Promote](#walkthrough-explore--compare--promote)
-6.  [Reopen Mode: Fixing Closed Features](#reopen-mode-fixing-closed-features)
-7.  [Phase Reference](#phase-reference)
-8.  [Branch Strategy](#branch-strategy)
-9.  [Git Commit Conventions](#git-commit-conventions)
-10. [Spec Health Score](#spec-health-score)
-11. [Troubleshooting](#troubleshooting)
-12. [Reference Tables](#reference-tables)
+5.  [Reopen Mode: Fixing Closed Features](#reopen-mode-fixing-closed-features)
+6.  [Phase Reference](#phase-reference)
+7.  [Branch Strategy](#branch-strategy)
+8.  [Git Commit Conventions](#git-commit-conventions)
+9.  [Spec Health Score](#spec-health-score)
+10. [Troubleshooting](#troubleshooting)
+11. [Reference Tables](#reference-tables)
 
 ---
 
@@ -48,9 +44,8 @@ day-to-day usage.
 Spec-kit is a structured workflow for building features with an AI agent.
 Instead of saying "build a login system" and hoping the agent gets it right,
 you guide it through seven phases — from specification through close — with
-checkpoints, guardrails, and review gates. Four modes cover the full feature
-lifecycle: forward development (specify), bugfix loop, parallel exploration,
-and reopen for closed features.
+checkpoints, guardrails, and review gates. Three modes cover the full feature
+lifecycle: forward development (specify), bugfix loop, and reopen for closed features.
 
 The constitution phase (Phase 0) adapts to how you work: describe your
 project in a sentence (free-text mode), walk through an interactive wizard
@@ -213,15 +208,14 @@ to closing commit.
 
 ---
 
-## Four Development Modes
+## Three Development Modes
 
-Spec-kit has four modes, each suited to a different level of uncertainty:
+Spec-kit has three modes, each suited to a different level of uncertainty:
 
 | Mode | When to use | How it runs | User involvement |
 |------|-------------|-------------|-----------------|
 | **Specify** (default) | You know what you want — low uncertainty | Starts with constitution decision tree (9 purposes × 25 architecture options). Then a linear forward phase sequence: Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close | Manual — you say "plan", "implement", etc. |
 | **Bugfix** | You have a working feature with known bugs | Auto-chains Plan→Tasks→Implement→Test once you say "bugfix". If new bugs are discovered mid-round, they're logged separately and the next round runs the full plan→tasks→implement cycle (separate commits per phase). For trivial fixes, "quickfix [feature]" batches plan+tasks+fix in one commit (user explicitly opts in). | Minimal — inner loop is automatic |
-| **Explore** | You're unsure about the approach — high uncertainty | Spawns parallel agents, each trying a different approach on an isolated branch | Hands-off after launch; you compare results later |
 | **Reopen** | A closed feature needs more fixes | Creates bugfix branch from main, preserves original close data, routes through bugfix loop | Additive-only edits; must close again after fixes |
 
 Phase sequence for each mode:
@@ -230,10 +224,9 @@ Phase sequence for each mode:
 |------|----------|
 | **Specify** | `Constitution → Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close` |
 | **Bugfix** | `Test → [Clarify if needed] → Plan → Tasks → Implement → Test → Close` |
-| **Explore** | Deep dive below → |
 | **Reopen** | Deep dive below → |
 
-Explore and Reopen have full walkthroughs in dedicated sections below.
+Reopen has a full walkthrough in the dedicated section below.
 
 |---
 
@@ -458,213 +451,6 @@ For existing codebases, most of the decision tree is skipped. The agent
 detects the stack from project files and pre-fills all defaults, only
 asking the user to confirm or adjust principles that the detection was
 uncertain about. This typically takes 1-2 minutes.
-
----
-
-## Explore Mode: Parallel Variants (Deep Dive)
-
-Explore mode is for features where you don't know the best approach upfront.
-Instead of guessing, you try several approaches in parallel and compare the
-results.
-
-**Example scenario**: You're building a real-time collaborative editor.
-Should it use Operational Transformation (OT), Conflict-Free Replicated
-Data Types (CRDTs), or a simpler lock-based approach? You're not sure.
-Explore mode tries all three.
-
-### How Git Worktrees Keep Variants Apart
-
-Each variant needs its own working directory so agents don't step on each
-other's files. **Git worktrees** make this possible.
-
-A git worktree is a separate directory that shares the same `.git` database
-but has its own:
-- Working tree (files on disk)
-- Index (staging area)
-- HEAD (checked-out branch)
-
-```text
-Your .git database (shared)
-  │
-  ├── ~/projects/editor/                   [feat/023-collab]
-  │    (main worktree — normal hermes session)
-  │
-  ├── ~/projects/editor-worktrees/explore-ot/
-  │    [explore/023-collab-ot]
-  │    (worktree — Agent A works here)
-  │
-  ├── ~/projects/editor-worktrees/explore-crdt/
-  │    [explore/023-collab-crdt]
-  │    (worktree — Agent B works here)
-  │
-  └── ~/projects/editor-worktrees/explore-locks/
-       [explore/023-collab-locks]
-       (worktree — Agent C works here)
-```
-
-**Key properties:**
-- Each worktree can have a **different branch checked out simultaneously**
-- Files in one worktree are **invisible** to the others — no cross-contamination
-- Commits are **shared** — a commit in worktree A is visible everywhere
-- `git log` in any worktree sees all commits from all worktrees
-- Worktrees live in `../<repo>-worktrees/` (sibling to your project root)
-- Add `**/worktrees/` to `.gitignore` so they're never committed
-
-**Compared to alternatives:**
-
-| Approach | Contamination | Git history | Disk space | Setup |
-|----------|---------------|-------------|------------|-------|
-| Same folder, switch branches | ✗ Files change under agent's feet | Shared | Minimal | Manual |
-| Separate clones | ✓ Fully isolated | N × full history | High | Manual |
-| Git worktrees | ✓ Fully isolated | Shared (single .git) | Minimal (no history copy) | One command |
-| Variant subdirectories in same branch | ✗ Agents modify same files | Shared branch | Minimal | Manual |
-
-Git worktrees give you the isolation of separate clones with the storage
-efficiency of shared history. This is the recommended approach.
-
-### Walkthrough: Explore → Compare → Promote
-
-Let's walk through a real explore session end-to-end.
-
-#### Step 1: Launch explore
-
-```
-hermes -s spec-kit-workflow
-
-You: "Explore 023-collab with OT, CRDT, and lock-based approaches"
-
-Agent:
-  - Creates specs/023-collab/variants/{ot,crdt,locks}/
-  - Creates 3 git worktrees:
-    git worktree add ../editor-worktrees/explore-ot     explore/023-collab-ot
-    git worktree add ../editor-worktrees/explore-crdt   explore/023-collab-crdt
-    git worktree add ../editor-worktrees/explore-locks  explore/023-collab-locks
-  - Runs a quick smoke test in each worktree (npm install, etc.)
-  - Spawns 3 delegate_task subagents
-```
-
-#### Step 2: Subagents work in parallel
-
-Each subagent receives its own worktree path and branch, plus a copy of
-the shared spec. They work simultaneously, completely independently.
-
-```text
-Subagent A (OT):
-  cd ../editor-worktrees/explore-ot
-  git checkout explore/023-collab-ot
-  Creates specs/023-collab/variants/ot/spec.md
-  Creates specs/023-collab/variants/ot/plan.md
-  ... implements OT-based sync ...
-
-Subagent B (CRDT):
-  cd ../editor-worktrees/explore-crdt
-  git checkout explore/023-collab-crdt
-  Creates specs/023-collab/variants/crdt/spec.md
-  Creates specs/023-collab/variants/crdt/plan.md
-  ... implements CRDT-based sync ...
-
-Subagent C (Locks):
-  cd ../editor-worktrees/explore-locks
-  git checkout explore/023-collab-locks
-  Creates specs/023-collab/variants/locks/spec.md
-  ... implements lock-based sync ...
-```
-
-**Spec artifacts** (spec.md, plan.md, tasks.md) for each variant are
-written back to the main repo under `specs/023-collab/variants/<name>/`.
-This keeps all compare-able documents in one place.
-
-**Source code** stays in the worktree directory — separate from other
-variants' code. When compare runs, it reads both the spec artifacts
-and the source code from each worktree.
-
-#### Step 3: Compare the results
-
-After all three finish (typically 5-15 minutes):
-
-```
-You: "Compare 023-collab"
-
-Agent:
-  - Loads all 3 variant artifacts from specs/023-collab/variants/
-  - Loads source code from each worktree
-  - Builds comparison matrix:
-```
-
-| Dimension | OT | CRDT | Locks |
-|-----------|----|------|-------|
-| **Approach** | Operational transform | Conflict-free data types | Mutual exclusion |
-| **Latency** | Low (server-mediated) | High (P2P consensus) | Very high (sequential) |
-| **Conflict resolution** | Centralized server decides | Automatic via LWW registers | Blocking — no conflicts |
-| **Offline support** | None — requires server | Full — local edits sync later | None |
-| **Implementation effort** | ~800 lines | ~2,000 lines | ~400 lines |
-| **Test coverage** | 12 tests | 28 tests | 6 tests |
-| **Risk** | Ordering edge cases | Merge explosion under load | Deadlocks |
-
-```
-Recommendation: CRDT for offline-first use case, OT for real-time.
-      (User priority is offline support → CRDT wins.)
-
-You: "Pick CRDT"
-```
-
-#### Step 4: Promote the winning variant
-
-After picking a winner, the agent merges the variant's code into the main
-feature branch:
-
-```
-Agent: "Choose promotion method: full merge or selective cherry-pick?"
-
-You: "Full merge"
-
-Agent:
-  git checkout feat/023-collab
-  git merge explore/023-collab-crdt --no-ff
-  → feat: 023-collab merge winning variant crdt
-
-  - Copies specs/023-collab/variants/crdt/* → specs/023-collab/
-  - Appends to history.md: compare → promote record
-  - Cleans up worktrees:
-    git worktree remove ../editor-worktrees/explore-ot
-    git worktree remove ../editor-worktrees/explore-crdt
-    git worktree remove ../editor-worktrees/explore-locks
-    git worktree prune
-```
-
-The feature is now on `feat/023-collab` with the CRDT implementation.
-Proceed normally with test → bugfix → close.
-
-#### Cherry-picking (alternative)
-
-If you want specific parts from multiple variants instead of one winner:
-
-```
-Agent: "Which features do you want from each variant?"
-You:  "Take CRDT merge logic, but use OT's network layer"
-
-Agent:
-  - Finds commit range for CRDT merge on explore/023-collab-crdt
-  - Finds commit range for OT network layer on explore/023-collab-ot
-  - git cherry-pick <crdt-merge-commits>
-  - git cherry-pick <ot-network-commits>
-  - Resolves any conflicts
-  - Updates spec/plan/tasks to reflect the combined approach
-  - commit: feat: 023-collab cherry-pick CRDT merge + OT network
-```
-
-**Cherry-pick risk**: If the OT network layer depends on OT-specific data
-structures, cherry-picking it onto CRDT code may break. Prefer full merge
-from a single variant unless you're certain the cherry-picked commits are
-self-contained.
-
-#### Without code implementation (design-only explore)
-
-Sometimes you only want to compare plans, not full implementations.
-If variants are design-only (spec/plan/tasks, no code), worktrees aren't
-needed — each variant lives in `specs/[feature]/variants/<name>/` only.
-The agent skips the worktree creation when it detects no implementation
-will be produced.
 
 ---
 
@@ -1174,7 +960,7 @@ hermes -w -s spec-kit-workflow
 /reload-skills
 
 # Load a specific skill mid-session
-/skill spec-kit-compare
+/skill spec-kit-summarize
 
 # Check installed skills
 hermes skills list | grep spec-kit

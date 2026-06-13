@@ -1,6 +1,6 @@
 # Hermes Spec-Kit
 
-Spec-driven development for Hermes Agent. 15 skills implementing a structured phase-based workflow with four development modes, a constitution 3-level decision tree (9 purposes × 25 architecture options), mandatory close with spec health scoring, and a reopen flow for fixing closed features.
+Spec-driven development for Hermes Agent. 13 skills implementing a structured phase-based workflow with three development modes, a constitution 3-level decision tree (9 purposes × 25 architecture options), mandatory close with spec health scoring, and a reopen flow for fixing closed features.
 
 ## Quick Start
 
@@ -57,12 +57,11 @@ scripts/
 |------|---------|----------|
 | **Specify** (default) | "Create a spec for [feature]" | Full forward phase sequence, manual transitions |
 | **Bugfix** | "bugfix [feature]" | Auto-chain inner loop (Plan→Tasks→Implement), mandatory close |
-| **Explore** | "Explore [feature] with [variants]" | N parallel branches, compare, pick winner |
 | **Reopen** | "Reopen [feature]" | Reopens closed feature for bugfixing, additive-only edits, routes through bugfix loop |
 
 ## Skills
 
-15 skills covering every phase + explore, compare, refresh, and workflow routing.
+13 skills covering every phase + refresh and workflow routing.
 See the [Phase Reference section](user-guide.md#phase-reference) in the user-guide for phases, purposes, and personas.
 
 All skills respond to three trigger styles: `spec-kit` prefix, `speckit` prefix, and natural language
