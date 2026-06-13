@@ -63,6 +63,8 @@ User describes in natural language. Agent structures into:
 - **Status**: open
 ```
 
+**Smart insert**: INSERT the new bug entry BEFORE the `---` separator that precedes `## Summary`. Then UPDATE the Summary table: add a row for the new bug, increment counts, and correct the open/in-progress/resolved/verified tallies. Never place new bugs after `---` or inside `## Summary`.
+
 After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
 
 ### Bug status validation

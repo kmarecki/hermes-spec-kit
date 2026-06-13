@@ -4,6 +4,8 @@
 **Created**: [DATE]
 **Status**: Open
 
+> **Section ordering**: New bugs are INSERTED at the end of ## Bug Log (before the `---` separator). The ## Summary section stays at the bottom and MUST be updated after every insert. Never put new bugs after the `---` separator.
+
 ## Bug Log
 
 ### BUG-001: [Short descriptive title]
@@ -35,7 +37,7 @@
 - **Plan Ref**: [Populated by plan phase]
 - **Status**: [open/in-progress/resolved/verified]
 
-[Add more bugs as needed]
+*New bugs are inserted here — before the `---` separator below.*
 
 ---
 

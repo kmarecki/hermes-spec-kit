@@ -83,7 +83,7 @@ For each User Story: MAP scenarios to test tasks, entities to model tasks
 For each open bug: CREATE BF-### task, include test task to verify fix
 ```
 
-**Additive-safe**: Append new bugfix tasks at the end of tasks.md. Never delete existing tasks. You may update task status fields (e.g. mark tasks as completed). If a new bugfix task has the same ID as an existing one, ask the user how to resolve.
+**Additive-safe**: Insert new bugfix tasks BEFORE the final `## Dependencies & Execution Order` section. Never delete existing tasks. You may update task status fields (e.g. mark tasks as completed). If a new bugfix task has the same ID as an existing one, ask the user how to resolve. The `## Dependencies` and `## Verification` sections (if present) must remain as the last sections — never insert anything after them.
 
 ### Generate task breakdown
 Organize by phase: Setup → Foundational → User Stories → Polish.

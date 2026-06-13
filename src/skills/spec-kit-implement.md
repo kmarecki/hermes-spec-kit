@@ -70,6 +70,8 @@ Plan Ref validation and the bugfix routing decision (clarify vs direct plan) hap
 
 **New bugs discovered during fix**: If while fixing BF-### you discover new failures or edge cases not covered by the original bug report (reported by the user or found during code reading):
 - Log them as new entries in `bugs.md` (do NOT merge into the current BF-### task)
+  - INSERT each new bug BEFORE the `---` separator that precedes `## Summary`
+  - UPDATE the Summary table: add a row, increment counts, correct tallies
 - Each new bug must follow its own RED→GREEN cycle — do not fix it inline with the current task
 - Report to the user: "Found additional issue BUG-NNN — logged separately. Address it via 'bugfix [feature]' after this round completes."
 - Exception: trivial test-only fixes (missing assertion, wrong test fixture) can be fixed inline
