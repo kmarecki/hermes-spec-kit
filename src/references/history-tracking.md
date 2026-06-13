@@ -51,6 +51,9 @@ APPEND entry:
 | spec-kit-tasks | Phase 3 |
 | spec-kit-review (pre-implement) | Phase 3.5 |
 | spec-kit-implement | Phase 4 (each sub-phase logged as Phase N) |
+| spec-kit-implement | Phase 4 → Full Regression → Pass (after all phases, full suite passes) |
+| spec-kit-implement | Phase 4 → Regression Fix → Complete (BF-REGRESSION-001 resolved) |
+| spec-kit-implement | Phase 4 → Bugfix BF-### → Complete (per-bugfix during bugfix mode) |
 | spec-kit-test | Phase 5 |
 | spec-kit-review (post-implement) | Phase 5.5 |
 | spec-kit-summarize | Phase 6 |
@@ -58,3 +61,14 @@ APPEND entry:
 | spec-kit-explore | Explore |
 | spec-kit-compare | Compare |
 | Reopen (workflow) | Reopen |
+
+## Guard: history.md Before Every Commit
+
+**history.md entries MUST be written before the corresponding git commit — never after.** Every commit in `spec-kit-implement` is preceded by a history.md entry:
+
+1. **Per-phase commit**: Entry appended in step 4f — includes test pass count and task completion count.
+2. **Bugfix commit (BF-###)**: Entry appended in bugfix mode step 3 — includes which BUG-NNN was fixed and test verification.
+3. **Regression fix commit (BF-REGRESSION-001)**: Entry appended in regression fix flow — includes full suite pass confirmation.
+4. **Full regression pass**: Entry appended in step 7 when all tests pass — standalone verification record (no commit, documents the checkpoint).
+
+The PRE-COMMIT GUARD reads history.md and blocks the commit if the entry is missing. This ensures the process log is never behind the git log.
