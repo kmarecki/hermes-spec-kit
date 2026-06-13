@@ -16,13 +16,22 @@ Run these checks in order. If any check fails, stop and report before proceeding
              (or {bugfix_prefix}/NNN-name for bugfix)"
      HALT
    
-2. MODE DETECTION
+2. MODE DETECTION — STRICT
    IF specs/[feature]/bugs.md EXISTS with Status: open entries:
-     MODE = bugfix
-     NOTE: "You are in bugfix mode for [feature]. Must route through
-            spec-kit-workflow before any code changes."
+     BLOCK: "You are in bugfix mode. Cannot write code directly — bugs must go through the workflow.
+             Route: 'bugfix [feature]' → plan → tasks → implement."
+     HALT
    ELSE:
      MODE = feature
+
+3. UNLOGGED BUG CHECK — before any code change
+   IF the user reported a bug or issue (not a planned feature task):
+     IF specs/[feature]/bugs.md NOT EXISTS OR the reported issue has no BUG-NNN entry:
+       BLOCK: "Bug must be logged before it can be fixed. Run 'test [feature]' first to log the bug,
+               then 'bugfix [feature]' to start the fix loop.
+               Rule: Log Before Fix — ALWAYS."
+       ROUTE to: spec-kit-test
+       HALT
 
 3. GIT CONVENTIONS
    IF specs/git-conventions.md EXISTS in the project root:
@@ -51,7 +60,8 @@ Run these checks in order. If any check fails, stop and report before proceeding
 ## Quick summary for fast reference
 
 - Not on main/master? ✓
-- In bugfix mode? ✓ (if bugs.md open, route through workflow)
+- Bug mode blocks code? ✓ (open bugs → BLOCK, route through bugfix)
+- Bug logged before fix? ✓ (unlogged bug → BLOCK, route to spec-kit-test)
 - Workflow loaded before code? ✓
 - history.md exists for this feature? ✓ (created if missing)
 
