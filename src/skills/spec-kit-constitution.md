@@ -147,8 +147,8 @@ SCAN project root for these files to identify the tech stack:
   │ vitest.config.*       → Vitest (JS/TS, Vite projects)        │
   │                                                              │
   | .mocharc.* / mocha    → Mocha (JS/TS)                        |
-  | .cypress.* / cypress  → Cypress (E2E, JS/TS)                |
-  | playwright.config.*   → Playwright (E2E, multi-lang)        |
+  | .cypress.* / cypress  → Cypress (F2E, JS/TS)                |
+  | playwright.config.*   → Playwright (F2E, multi-lang)        |
   |                                                              |
   │ pytest.ini /        → pytest (Python)                        │
   │ pyproject.toml [tool.pytest]                                    │
@@ -320,15 +320,15 @@ Present these 9 options with their tradeoffs:
 
 | Option | Type | Examples | Testing impact | Arch impact | Docs impact | Deps impact |
 |--------|------|----------|---------------|-------------|-------------|-------------|
-| **A — User-Facing Application** | Web/mobile API, frontend, full-stack app | SaaS, e-commerce, social app, dashboard, CMS | Needs integration + E2E tests. TDD pays off. | Architecture matters — will need to scale. | API docs, user docs, setup guide critical. | Framework deps expected (React, Django, etc.) |
+| **A — User-Facing Application** | Web/mobile API, frontend, full-stack app | SaaS, e-commerce, social app, dashboard, CMS | Needs integration + F2E tests. TDD pays off. | Architecture matters — will need to scale. | API docs, user docs, setup guide critical. | Framework deps expected (React, Django, etc.) |
 | **B — Content Site / Marketing** | Static or lightly dynamic, no auth/DB | Portfolio, landing page, blog, documentation site, marketing site | Minimal. Visual checks + broken link checker. No business logic to test. | Simple — SSG, template-driven, or plain HTML/CSS. No backend needed. | Content IS the documentation. Readme for build/deploy. | SSG framework or plain HTML/CSS. Zero server deps. |
-| **C — Library / SDK / Package** | Reusable code for other developers | npm package, PyPI lib, Go module, crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal internal coupling. | API docs, README, examples, changelog mandatory. | Zero or minimal deps to avoid transitive bloat. |
-| **D — Infrastructure / CLI / DevOps** | Automation, ops tools, platform | CLI tool, Terraform module, CI pipeline, daemon | Integration tests with real infra. Manual testing common. | Simple, composable. No over-engineering. | README + --help. Code that IS the documentation. | Minimal. Static binaries preferred. |
-| **E — Game** | Interactive application with game loop, rendering, input | 2D platformer, 3D FPS, puzzle game, RPG, mobile game, WebGL game | Unit tests for game logic. Visual/playtest testing critical. Integration tests for netcode. | ECS, scene graph, component-based. Game loop, render pipeline, physics. | Design doc, mechanics doc, modding API docs. README + gameplay guide. | Engine dependency (Unity, Unreal, Godot, Bevy). Graphics, audio, physics libs. |
-| **F — IoT / Embedded** | Firmware, device software, real-time systems | Sensor firmware, motor controller, smart home device, drone flight controller, RTOS application | Hardware-in-the-loop testing. Simulation for CI. Manual device testing essential. | HAL, RTOS tasks, driver layer. Memory-constrained. Real-time constraints. | Pinout docs, protocol specs, register maps. Datasheet references. | Minimal or zero std. Vendor SDKs. No dynamic allocation. Cross-compilation toolchain. |
-| **G — Native / Desktop Client** | Standalone client app, no backend to architect | iOS app, Android app, macOS app, Windows app, Linux desktop app, Electron app, Tauri app, Qt app | UI/snapshot tests, integration tests. Manual QA for visual polish. | Client-side architecture (MVC, MVVM, Redux, Composable). Platform SDK native or cross-platform framework. | User-facing help, API docs for local features, store listing. | Platform SDK, UI framework. Cross-platform framework for shared code. |
-| **H — Browser Extension** | Browser add-on modifying/extending the browser | Chrome extension, Firefox add-on, Safari extension, Edge extension | Manual browser testing. Puppeteer/Playwright for E2E. | Content scripts, service worker (MV3), popup page, options page. Cross-browser API abstraction. | Store listing, permissions guide, feature docs, privacy policy. | Minimal — browser APIs. Polyfill for cross-browser support (webextension-polyfill). |
-| **I — Research / Notebook** | Data exploration, academic research, one-off analysis | Jupyter notebook, R Markdown, Quarto doc, MATLAB script, experimental Python script | Minimal to none. Visual inspection of outputs. Assertions in cells. | Single notebook or notebook + reusable scripts. No deployment. No production infra. | Notebook cell comments, README with reproduction steps. Dataset provenance. | Permissive — pandas, numpy, matplotlib, torch, scipy, tidyverse. Whatever is needed. |
+| **C — Native / Desktop Client** | Standalone client app, no backend to architect | iOS app, Android app, macOS app, Windows app, Linux desktop app, Electron app, Tauri app, Qt app | UI/snapshot tests, integration tests. Manual QA for visual polish. | Client-side architecture (MVC, MVVM, Redux, Composable). Platform SDK native or cross-platform framework. | User-facing help, API docs for local features, store listing. | Platform SDK, UI framework. Cross-platform framework for shared code. |
+| **D — Library / SDK / Package** | Reusable code for other developers | npm package, PyPI lib, Go module, crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal internal coupling. | API docs, README, examples, changelog mandatory. | Zero or minimal deps to avoid transitive bloat. |
+| **E — Infrastructure / CLI / DevOps** | Automation, ops tools, platform | CLI tool, Terraform module, CI pipeline, daemon | Integration tests with real infra. Manual testing common. | Simple, composable. No over-engineering. | README + --help. Code that IS the documentation. | Minimal. Static binaries preferred. |
+| **F — Game** | Interactive application with game loop, rendering, input | 2D platformer, 3D FPS, puzzle game, RPG, mobile game, WebGL game | Unit tests for game logic. Visual/playtest testing critical. Integration tests for netcode. | ECS, scene graph, component-based. Game loop, render pipeline, physics. | Design doc, mechanics doc, modding API docs. README + gameplay guide. | Engine dependency (Unity, Unreal, Godot, Bevy). Graphics, audio, physics libs. |
+| **G — Browser Extension** | Browser add-on modifying/extending the browser | Chrome extension, Firefox add-on, Safari extension, Edge extension | Manual browser testing. Puppeteer/Playwright for F2E. | Content scripts, service worker (MV3), popup page, options page. Cross-browser API abstraction. | Store listing, permissions guide, feature docs, privacy policy. | Minimal — browser APIs. Polyfill for cross-browser support (webextension-polyfill). |
+| **H — Research / Notebook** | Data exploration, academic research, one-off analysis | Jupyter notebook, R Markdown, Quarto doc, MATLAB script, experimental Python script | Minimal to none. Visual inspection of outputs. Assertions in cells. | Single notebook or notebook + reusable scripts. No deployment. No production infra. | Notebook cell comments, README with reproduction steps. Dataset provenance. | Permissive — pandas, numpy, matplotlib, torch, scipy, tidyverse. Whatever is needed. |
+| **I — IoT / Embedded** | Firmware, device software, real-time systems | Sensor firmware, motor controller, smart home device, drone flight controller, RTOS application | Hardware-in-the-loop testing. Simulation for CI. Manual device testing essential. | HAL, RTOS tasks, driver layer. Memory-constrained. Real-time constraints. | Pinout docs, protocol specs, register maps. Datasheet references. | Minimal or zero std. Vendor SDKs. No dynamic allocation. Cross-compilation toolchain. |
 
 ```
 ASK: "What kind of project are you building?"
@@ -390,66 +390,66 @@ Based on the chosen purpose, present the architecture options:
 | **B2** | Headless CMS + SSG | Content managed in headless CMS (Strapi, Sanity, Contentful). SSG fetches at build time. | Non-developers edit content, structured content, revalidation possible | CMS hosting cost, build-time coupling, preview complexity | Team-maintained content sites, multi-author blogs, company sites |
 | **B3** | Lightweight Backend | Simple server (Express, Flask, PHP) serving mostly static content with a few dynamic routes. | Easy dynamic features (forms, comments, auth), no SSG build step | Server costs, maintenance overhead, slower than CDN-hosted static | Sites needing a few dynamic features without full web-app complexity |
 
-**If purpose = C (Library / SDK):**
+**If purpose = C (Native / Desktop Client):**
 
 | Option | Name | Description | Pros | Cons | Best for |
 |--------|------|-------------|------|------|----------|
-| **C1** | Zero-Dependency | Stdlib only. Minimal API surface. No runtime deps. | Maximum compatibility, no supply chain risk, builds instantly | More custom code, reinventing wheels | Core libraries, security-sensitive, polyfills |
-| **C2** | Curated | Few well-chosen deps with justification. Pin exact versions. | Faster delivery, standard patterns, community leverage | Transitive bloat, upgrade burden | Most libraries, SDKs for popular platforms |
-| **C3** | Umbrella | Multi-package monorepo. Independent versioning per sub-package. | Clean separation, consumers pick what they need | Build complexity, tooling overhead, version coordination | Large SDKs (like AWS, Google Cloud clients) |
+| **C1** | Native Platform | Platform-specific SDK (Swift/SwiftUI for iOS/macOS, Kotlin/Jetpack for Android, WinUI/WPF for Windows, GTK/Qt for Linux). | Best performance, full platform API access, native look-and-feel, smallest binary | Write once per platform, higher development cost, separate codebases to maintain | Performance-critical apps, platform-specific features, established products |
+| **C2** | Cross-Platform Framework | Shared codebase (Flutter, React Native, Tauri, .NET MAUI, Kotlin Multiplatform). | Single codebase, faster development, shared business logic | Abstraction leaks, platform limitations, larger binary, debugging complexity | Most mobile/desktop apps, startups, resource-constrained teams |
+| **C3** | Web Wrapper | Web tech packaged as client (Electron, PWA, Capacitor, Cordova, Tauri with web frontend). | Web skills transfer, fastest prototyping, easy updates, large ecosystem | Performance overhead, non-native UX, larger binary, limited platform API access | Internal tools, MVPs, cross-platform with limited native needs |
 
-**If purpose = D (Infrastructure / CLI / DevOps):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **D1** | Single Binary | Everything compiled into one binary. No runtime deps. | Zero friction for users, simple distribution, easy CI | Monolithic code, feature flag complexity | CLIs, single-purpose tools, Terraform providers |
-| **D2** | Multi-Binary | Separate binaries sharing common libs. | Independent releases, clear boundaries, composable | Distribution complexity, version coordination | Tool suites (like kubectl + plugins) |
-| **D3** | Plugin-Based | Core binary + plugin system. Users extend without forking. | Extensible by community, clean core, pluggable | Plugin API stability burden, discovery UX | Framework-like tools, extensible CLIs |
-| **D4** | Script / Declarative / Pipeline | Uncompiled scripts or declarative config (Python, shell, Terraform, Ansible). AI data pipelines (RAG, dataset prep, LLM eval) also fit here. | Fastest to iterate, no build step, easy to read, large ecosystem | No static binary, runtime deps needed, slower execution, harder to distribute | Data pipelines, AI/ML scripts, RAG ingestion, dataset prep, Terraform modules, Ansible playbooks, CI/CD configs |
-
-**If purpose = E (Game):**
+**If purpose = D (Library / SDK):**
 
 | Option | Name | Description | Pros | Cons | Best for |
 |--------|------|-------------|------|------|----------|
-| **E1** | Engine-Centric | Built on existing engine (Unity, Unreal, Godot). Visual scripting + code. | Fastest prototyping, massive asset stores, mature tooling | Engine lock-in, license costs, bloated builds, hard to optimize | Most games, indie to AAA, cross-platform |
-| **E2** | Custom Engine | Hand-rolled engine with ECS or scene-graph architecture. | Full control, no license fees, optimized for specific game | Massive upfront investment, no asset pipeline, constant engine work | Unique mechanics, competitive edge, learning exercise |
-| **E3** | Web/Retro | Browser-based (WebGL, Canvas, Phaser) or retro-style (pixel art, 8-bit) | Zero install for players, nostalgic appeal, tiny asset sizes | Performance ceilings, limited complex rendering, browser compatibility | Casual games, jam games, mobile web, educational |
+| **D1** | Zero-Dependency | Stdlib only. Minimal API surface. No runtime deps. | Maximum compatibility, no supply chain risk, builds instantly | More custom code, reinventing wheels | Core libraries, security-sensitive, polyfills |
+| **D2** | Curated | Few well-chosen deps with justification. Pin exact versions. | Faster delivery, standard patterns, community leverage | Transitive bloat, upgrade burden | Most libraries, SDKs for popular platforms |
+| **D3** | Umbrella | Multi-package monorepo. Independent versioning per sub-package. | Clean separation, consumers pick what they need | Build complexity, tooling overhead, version coordination | Large SDKs (like AWS, Google Cloud clients) |
 
-**If purpose = F (IoT / Embedded):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **F1** | Bare-Metal / RTOS | No OS or lightweight RTOS (FreeRTOS, Zephyr, Mbed). Direct hardware access. | Max performance, minimal latency, lowest power, no OS overhead | No memory protection, manual driver work, harder debugging, no standard libs | Sensor nodes, motor controllers, wearables, constrained devices |
-| **F2** | Linux-Based Embedded | Runs on Linux (Yocto, Buildroot, Raspberry Pi OS). User-space + kernel modules. | Rich ecosystem, standard tooling, debugging easy, networking built-in | Larger footprint, higher power, boot time, real-time challenges | Smart home hubs, drones, gateways, cameras, robots |
-| **F3** | MicroPython / Arduino | High-level firmware framework (Arduino, MicroPython, CircuitPython). Abstraction layer. | Fastest to prototype, huge community, beginner-friendly, extensive libraries | Limited performance, memory overhead, abstraction hides hardware issues | Prototypes, hobbyist, education, rapid IoT development |
-
-**If purpose = G (Native / Desktop Client):**
+**If purpose = E (Infrastructure / CLI / DevOps):**
 
 | Option | Name | Description | Pros | Cons | Best for |
 |--------|------|-------------|------|------|----------|
-| **G1** | Native Platform | Platform-specific SDK (Swift/SwiftUI for iOS/macOS, Kotlin/Jetpack for Android, WinUI/WPF for Windows, GTK/Qt for Linux). | Best performance, full platform API access, native look-and-feel, smallest binary | Write once per platform, higher development cost, separate codebases to maintain | Performance-critical apps, platform-specific features, established products |
-| **G2** | Cross-Platform Framework | Shared codebase (Flutter, React Native, Tauri, .NET MAUI, Kotlin Multiplatform). | Single codebase, faster development, shared business logic | Abstraction leaks, platform limitations, larger binary, debugging complexity | Most mobile/desktop apps, startups, resource-constrained teams |
-| **G3** | Web Wrapper | Web tech packaged as client (Electron, PWA, Capacitor, Cordova, Tauri with web frontend). | Web skills transfer, fastest prototyping, easy updates, large ecosystem | Performance overhead, non-native UX, larger binary, limited platform API access | Internal tools, MVPs, cross-platform with limited native needs |
+| **E1** | Single Binary | Everything compiled into one binary. No runtime deps. | Zero friction for users, simple distribution, easy CI | Monolithic code, feature flag complexity | CLIs, single-purpose tools, Terraform providers |
+| **E2** | Multi-Binary | Separate binaries sharing common libs. | Independent releases, clear boundaries, composable | Distribution complexity, version coordination | Tool suites (like kubectl + plugins) |
+| **E3** | Plugin-Based | Core binary + plugin system. Users extend without forking. | Extensible by community, clean core, pluggable | Plugin API stability burden, discovery UX | Framework-like tools, extensible CLIs |
+| **E4** | Script / Declarative / Pipeline | Uncompiled scripts or declarative config (Python, shell, Terraform, Ansible). AI data pipelines (RAG, dataset prep, LLM eval) also fit here. | Fastest to iterate, no build step, easy to read, large ecosystem | No static binary, runtime deps needed, slower execution, harder to distribute | Data pipelines, AI/ML scripts, RAG ingestion, dataset prep, Terraform modules, Ansible playbooks, CI/CD configs |
 
-**If purpose = H (Browser Extension):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **H1** | Simple / Single-Browser | Single-purpose extension targeting one browser. Minimal architecture: content script + popup. | Fastest to build, minimal code, simple permissions, easy review | No cross-browser reach, limited capabilities, harder to scale features | One-off utilities, site-specific tweaks, internal tools |
-| **H2** | Full MV3 | Manifest V3 with service worker, multiple pages (popup, options, side panel), background processing, storage API. | Full extension API access, service worker lifecycle, better security (MV3), can handle complex workflows | MV3 limitations (no background page, alarm-based wake), migration from MV2 complexity | Feature-rich extensions, productivity tools, developer tools |
-| **H3** | Cross-Browser | WebExtension API with polyfill (webextension-polyfill). Built for Chrome + Firefox + Safari + Edge. | Maximum reach, single codebase, consistent API, store on all platforms | Polyfill overhead, browser-specific quirks, testing across 4+ browsers, longer review cycles | Public extensions, commercial products, wide-audience tools |
-
-**If purpose = I (Research / Notebook):**
+**If purpose = F (Game):**
 
 | Option | Name | Description | Pros | Cons | Best for |
 |--------|------|-------------|------|------|----------|
-| **I1** | Single Notebook | One self-contained notebook (Jupyter, R Markdown, Quarto). All code and explanations in one file. | Zero setup, self-contained, easy to share, reproducible cell-by-cell | No reuse, hard to maintain at scale, no module boundaries | Exploratory analysis, teaching, one-off reports, data journalism |
-| **I2** | Notebook + Scripts | Notebook for narrative + Python/R scripts for reusable logic. Shared utility modules. | Clean separation of concerns, reusable code, notebook stays readable | More files to manage, import path issues, needs documentation between cells and scripts | Research projects with shared preprocessing, analysis + paper, multi-notebook projects |
-| **I3** | Package + Notebooks | Formal Python/R package with tests, notebooks as usage examples. Structured project with src/ layout. | Production-ready, testable, publishable, others can pip install | Significant overhead for research velocity, package management, CI setup | Research that becomes a product, reproducible academic research, team projects |
+| **F1** | Engine-Centric | Built on existing engine (Unity, Unreal, Godot). Visual scripting + code. | Fastest prototyping, massive asset stores, mature tooling | Engine lock-in, license costs, bloated builds, hard to optimize | Most games, indie to AAA, cross-platform |
+| **F2** | Custom Engine | Hand-rolled engine with ECS or scene-graph architecture. | Full control, no license fees, optimized for specific game | Massive upfront investment, no asset pipeline, constant engine work | Unique mechanics, competitive edge, learning exercise |
+| **F3** | Web/Retro | Browser-based (WebGL, Canvas, Phaser) or retro-style (pixel art, 8-bit) | Zero install for players, nostalgic appeal, tiny asset sizes | Performance ceilings, limited complex rendering, browser compatibility | Casual games, jam games, mobile web, educational |
+
+**If purpose = G (Browser Extension):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **G1** | Simple / Single-Browser | Single-purpose extension targeting one browser. Minimal architecture: content script + popup. | Fastest to build, minimal code, simple permissions, easy review | No cross-browser reach, limited capabilities, harder to scale features | One-off utilities, site-specific tweaks, internal tools |
+| **G2** | Full MV3 | Manifest V3 with service worker, multiple pages (popup, options, side panel), background processing, storage API. | Full extension API access, service worker lifecycle, better security (MV3), can handle complex workflows | MV3 limitations (no background page, alarm-based wake), migration from MV2 complexity | Feature-rich extensions, productivity tools, developer tools |
+| **G3** | Cross-Browser | WebExtension API with polyfill (webextension-polyfill). Built for Chrome + Firefox + Safari + Edge. | Maximum reach, single codebase, consistent API, store on all platforms | Polyfill overhead, browser-specific quirks, testing across 4+ browsers, longer review cycles | Public extensions, commercial products, wide-audience tools |
+
+**If purpose = H (Research / Notebook):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **H1** | Single Notebook | One self-contained notebook (Jupyter, R Markdown, Quarto). All code and explanations in one file. | Zero setup, self-contained, easy to share, reproducible cell-by-cell | No reuse, hard to maintain at scale, no module boundaries | Exploratory analysis, teaching, one-off reports, data journalism |
+| **H2** | Notebook + Scripts | Notebook for narrative + Python/R scripts for reusable logic. Shared utility modules. | Clean separation of concerns, reusable code, notebook stays readable | More files to manage, import path issues, needs documentation between cells and scripts | Research projects with shared preprocessing, analysis + paper, multi-notebook projects |
+| **H3** | Package + Notebooks | Formal Python/R package with tests, notebooks as usage examples. Structured project with src/ layout. | Production-ready, testable, publishable, others can pip install | Significant overhead for research velocity, package management, CI setup | Research that becomes a product, reproducible academic research, team projects |
 
 ```
+**If purpose = I (IoT / Embedded):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **I1** | Bare-Metal / RTOS | No OS or lightweight RTOS (FreeRTOS, Zephyr, Mbed). Direct hardware access. | Max performance, minimal latency, lowest power, no OS overhead | No memory protection, manual driver work, harder debugging, no standard libs | Sensor nodes, motor controllers, wearables, constrained devices |
+| **I2** | Linux-Based Embedded | Runs on Linux (Yocto, Buildroot, Raspberry Pi OS). User-space + kernel modules. | Rich ecosystem, standard tooling, debugging easy, networking built-in | Larger footprint, higher power, boot time, real-time challenges | Smart home hubs, drones, gateways, cameras, robots |
+| **I3** | MicroPython / Arduino | High-level firmware framework (Arduino, MicroPython, CircuitPython). Abstraction layer. | Fastest to prototype, huge community, beginner-friendly, extensive libraries | Limited performance, memory overhead, abstraction hides hardware issues | Prototypes, hobbyist, education, rapid IoT development |
+
 ASK: "Given your purpose [A|B|C|D|E|F|G|H|I], which architecture approach fits?"
-RECORD: architecture = [A1|A2|A3|A4 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3|D4 | E1|E2|E3 | F1|F2|F3 | G1|G2|G3 | H1|H2|H3 | I1|I2|I3]
+RECORD: architecture = [A1|A2|A3|A4 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3 | E1|E2|E3|E4 | F1|F2|F3 | G1|G2|G3 | H1|H2|H3 | I1|I2|I3]
 ```
 
 ---
@@ -484,72 +484,72 @@ IF purpose == B (Content Site / Marketing):
     B3 (Lightweight Backend): Express (Node), Flask (Python), PHP (no framework),
         Sinatra (Ruby) — minimal server, mostly static responses
 
-IF purpose == C (Library / SDK):
+IF purpose == D (Library / SDK):
   RECOMMEND: ecosystem-specific languages
   BRACKET by architecture:
-    C1 (Zero-Dep): Go stdlib, Rust no-std, Python stdlib, TypeScript with no deps
-    C2 (Curated): Pick target ecosystem (Python, JS, Go, Rust, Java)
-    C3 (Umbrella): TypeScript (monorepo with npm workspaces), Rust (workspaces)
+    D1 (Zero-Dep): Go stdlib, Rust no-std, Python stdlib, TypeScript with no deps
+    D2 (Curated): Pick target ecosystem (Python, JS, Go, Rust, Java)
+    D3 (Umbrella): TypeScript (monorepo with npm workspaces), Rust (workspaces)
 
-IF purpose == D (Infra / CLI):
+IF purpose == E (Infra / CLI):
   RECOMMEND: systems languages
   BRACKET by architecture:
-    D1 (Single bin): Go, Rust, Zig, C — compiles to static binary
-    D2 (Multi-bin): Go (fast compile), Rust (safe), Python+PyInstaller
-    D3 (Plugin): Go (plugin/pkg), Rust (wasm plugins), C (dlopen)
-    D4 (Script / Pipeline): Python (langchain, llamaindex, torch, pandas,
+    E1 (Single bin): Go, Rust, Zig, C — compiles to static binary
+    E2 (Multi-bin): Go (fast compile), Rust (safe), Python+PyInstaller
+    E3 (Plugin): Go (plugin/pkg), Rust (wasm plugins), C (dlopen)
+    E4 (Script / Pipeline): Python (langchain, llamaindex, torch, pandas,
         transformers), Shell (bash automation), HCL (Terraform), YAML
         (Ansible, CI/CD), Jupyter notebooks — no compilation, data-driven
 
-IF purpose == E (Game):
+IF purpose == F (Game):
   RECOMMEND: engine ecosystem + systems languages
   BRACKET by architecture:
-    E1 (Engine-Centric): C# (Unity + script), C++ (Unreal BP+C++),
+    F1 (Engine-Centric): C# (Unity + script), C++ (Unreal BP+C++),
         GDScript (Godot), Rust (Bevy)
-    E2 (Custom Engine): Rust (wgpu, winit, macroquad), C++ (SDL, OpenGL,
+    F2 (Custom Engine): Rust (wgpu, winit, macroquad), C++ (SDL, OpenGL,
         Vulkan), C# (MonoGame, Stride), Zig (cross-compile for consoles)
-    E3 (Web/Retro): TypeScript (Phaser, PixiJS, Three.js), Haxe
+    F3 (Web/Retro): TypeScript (Phaser, PixiJS, Three.js), Haxe
         (Heaps, OpenFL), Python (Pygame, Arcade), Lua (LÖVE)
 
-IF purpose == F (IoT / Embedded):
+IF purpose == I (IoT / Embedded):
   RECOMMEND: constrained languages + cross-compilation
   BRACKET by architecture:
-    F1 (Bare-Metal / RTOS): C (de facto standard), C++ (with constraits),
+    I1 (Bare-Metal / RTOS): C (de facto standard), C++ (with constraits),
         Rust (no-std, no-alloc), Zig (cross-compile natively)
-    F2 (Linux Embedded): C, C++, Python, Rust, Go — whatever Linux supports
-    F3 (MicroPython / Arduino): C++ (Arduino), Python (MicroPython,
+    I2 (Linux Embedded): C, C++, Python, Rust, Go — whatever Linux supports
+    I3 (MicroPython / Arduino): C++ (Arduino), Python (MicroPython,
         CircuitPython), Lua (eLua), JavaScript (Espruino)
 
-IF purpose == G (Native / Desktop Client):
+IF purpose == C (Native / Desktop Client):
   RECOMMEND: platform SDKs and cross-platform frameworks
   BRACKET by architecture:
-    G1 (Native): Swift (iOS/macOS), Kotlin (Android), C# (WinUI/WPF),
+    C1 (Native): Swift (iOS/macOS), Kotlin (Android), C# (WinUI/WPF),
         C++ (Qt), Rust (GTK-rs, egui) — platform-specific
-    G2 (Cross-Platform): Dart (Flutter), TypeScript (React Native),
+    C2 (Cross-Platform): Dart (Flutter), TypeScript (React Native),
         C# (.NET MAUI), Kotlin (KMP), Rust (Tauri) — shared codebase
-    G3 (Web Wrapper): TypeScript (Electron, PWA, Capacitor),
+    C3 (Web Wrapper): TypeScript (Electron, PWA, Capacitor),
         C# (Blazor Hybrid), Dart (Flutter Web) — web-first packaging
 
-IF purpose == H (Browser Extension):
+IF purpose == G (Browser Extension):
   RECOMMEND: WebExtension APIs and JS/TS ecosystems
   BRACKET by architecture:
-    H1 (Simple): TypeScript/JavaScript with vanilla manifest.json,
+    G1 (Simple): TypeScript/JavaScript with vanilla manifest.json,
         plain HTML/CSS for popup — minimal tooling
-    H2 (Full MV3): TypeScript with build tool (Vite, WebExtension
+    G2 (Full MV3): TypeScript with build tool (Vite, WebExtension
         Vite plugin), React/Vue for complex UI, Chrome extensions
         CLI (chrome-ext-cli) — structured project
-    H3 (Cross-Browser): TypeScript + webextension-polyfill,
+    G3 (Cross-Browser): TypeScript + webextension-polyfill,
         WXT framework (unified build for all browsers),
         Plasmo framework — multi-store deployment
 
-IF purpose == I (Research / Notebook):
+IF purpose == H (Research / Notebook):
   RECOMMEND: data-science languages and notebook ecosystems
   BRACKET by architecture:
-    I1 (Single Notebook): Python (Jupyter, JupyterLab), R (R Markdown,
+    H1 (Single Notebook): Python (Jupyter, JupyterLab), R (R Markdown,
         Quarto), Julia (Pluto.jl), Observable JS — zero setup
-    I2 (Notebook + Scripts): Python + .py modules + Jupyter,
+    H2 (Notebook + Scripts): Python + .py modules + Jupyter,
         R + .R scripts + R Markdown, Python + uv/poetry for deps
-    I3 (Package + Notebooks): Python (src layout + pytest + notebooks),
+    H3 (Package + Notebooks): Python (src layout + pytest + notebooks),
         R (package structure + testthat + vignettes), Julia (Pkg +
         Pluto notebooks) — production-ready research
 ```
@@ -612,7 +612,7 @@ PURPOSE = B (Content Site / Marketing):
   Config/Secrets → C (Config-in-repo — build config is part of the source)
   Dev Toolchain → B (Standard toolchain — SSG, asset pipeline, CDN deploy)
 
-PURPOSE = C (Library / SDK):
+PURPOSE = D (Library / SDK):
   Testing → A (Strict TDD — API surface must be tested)
   Linting → A (Strict — public API consistency)
   Architecture → user's choice from Level 2
@@ -626,7 +626,7 @@ PURPOSE = C (Library / SDK):
   Config/Secrets → A (Strict — secrets never in lib)
   Dev Toolchain → B (Standard toolchain)
 
-PURPOSE = D (Infrastructure / CLI / DevOps):
+PURPOSE = E (Infrastructure / CLI / DevOps):
   Testing → B (Pragmatic — integration-heavy)
   Linting → A (Strict — CLI UX consistency)
   Architecture → user's choice from Level 2
@@ -640,7 +640,7 @@ PURPOSE = D (Infrastructure / CLI / DevOps):
   Config/Secrets → A (Strict — env + config files)
   Dev Toolchain → C (Full DX — automation matters)
 
-PURPOSE = E (Game):
+PURPOSE = F (Game):
   Testing → C (Test-After — playtesting and visual QA dominant)
   Linting → B (Pragmatic — engine code needs flexibility)
   Architecture → user's choice from Level 2
@@ -654,7 +654,7 @@ PURPOSE = E (Game):
   Config/Secrets → C (Config-in-repo — game config is part of the game)
   Dev Toolchain → C (Full DX — asset pipeline, build chain, packaging)
 
-PURPOSE = F (IoT / Embedded):
+PURPOSE = I (IoT / Embedded):
   Testing → C (Test-After — hardware testing dominates)
   Linting → A (Strict — firmware bugs are expensive, no OTA)
   Architecture → user's choice from Level 2
@@ -668,7 +668,7 @@ PURPOSE = F (IoT / Embedded):
   Config/Secrets → B (Environment-based — compile-time flags, EEPROM)
   Dev Toolchain → C (Full DX — cross-compiler, flashing, logic analyzer)
 
-PURPOSE = G (Native / Desktop Client):
+PURPOSE = C (Native / Desktop Client):
   Testing → B (Pragmatic — UI tests for critical paths, manual QA for visual)
   Linting → B (Pragmatic — platform SDKs have their own conventions)
   Architecture → user's choice from Level 2
@@ -682,7 +682,7 @@ PURPOSE = G (Native / Desktop Client):
   Config/Secrets → B (Environment-based — build flavors, feature flags, remote config)
   Dev Toolchain → C (Full DX — build pipeline, code signing, app store deploy)
 
-PURPOSE = H (Browser Extension):
+PURPOSE = G (Browser Extension):
   Testing → C (Test-After — manual browser testing dominates)
   Linting → B (Pragmatic — content scripts need browser API flexibility)
   Architecture → user's choice from Level 2
@@ -696,7 +696,7 @@ PURPOSE = H (Browser Extension):
   Config/Secrets → A (Strict — API keys, tokens must never be in extension code)
   Dev Toolchain → B (Standard toolchain — build, zip, upload to stores)
 
-PURPOSE = I (Research / Notebook):
+PURPOSE = H (Research / Notebook):
   Testing → C (Test-After — visual inspection of outputs, assertions in cells)
   Linting → C (Minimal — notebooks are exploratory, not production code)
   Architecture → user's choice from Level 2
@@ -863,10 +863,10 @@ ELSE (single project):
 | **Serverless API** | `wrangler.toml` | Cloudflare Workers | Vitest | Cloudflare CI | B (TDD), B (Lint), A4 (Serverless), B (Deps), A (Git) |
 | **Serverless API** | `serverless.yml` | Serverless Framework | Jest/Mocha | GitHub Actions | B (TDD), B (Lint), A4 (Serverless), B (Deps), A (Git) |
 | **Serverless API** | `template.yaml` / `samconfig.toml` | AWS SAM | pytest | AWS CodeBuild | B (TDD), B (Lint), A4 (Serverless), B (Deps), A (Git) |
-| **AI/RAG Pipeline** | Python + langchain/llamaindex in deps | AI data pipeline | pytest | — | C (TDD), B (Lint), D4 (Script), C (Deps), A (Git) |
-| **Data Pipeline** | Python + pandas/airflow/prefect in deps | ETL / data pipeline | pytest | — | C (TDD), B (Lint), D4 (Script), C (Deps), A (Git) |
-| **Terraform** | `*.tf` files | Terraform / OpenTofu | terraform test | GitHub Actions | C (TDD), A (Lint), D4 (Script), A (Deps), A (Git) |
-| **Ansible** | `*.yml` in ansible/ or playbooks/ | Ansible | ansible-test | — | C (TDD), A (Lint), D4 (Script), A (Deps), A (Git) |
+| **AI/RAG Pipeline** | Python + langchain/llamaindex in deps | AI data pipeline | pytest | — | C (TDD), B (Lint), E4 (Script), C (Deps), A (Git) |
+| **Data Pipeline** | Python + pandas/airflow/prefect in deps | ETL / data pipeline | pytest | — | C (TDD), B (Lint), E4 (Script), C (Deps), A (Git) |
+| **Terraform** | `*.tf` files | Terraform / OpenTofu | terraform test | GitHub Actions | C (TDD), A (Lint), E4 (Script), A (Deps), A (Git) |
+| **Ansible** | `*.yml` in ansible/ or playbooks/ | Ansible | ansible-test | — | C (TDD), A (Lint), E4 (Script), A (Deps), A (Git) |
 | **Astro Site** | `astro.config.*` / `src/pages/*` | Astro SSG | — | GitHub Pages / Netlify | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
 | **Hugo Site** | `hugo.toml` / `config.toml` / `content/` | Hugo SSG | — | Netlify / Cloudflare | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
 | **11ty Site** | `.eleventy.js` / `_config.js` | 11ty SSG | — | Netlify / GitHub Pages | C (TDD), B (Lint), B1 (SSG), B (Deps), A (Git) |
@@ -905,28 +905,28 @@ ELSE (single project):
 | **Deno** | `deno.json` / `deno.jsonc` | deno std | deno test | — | B (TDD), B (Lint), C (Arch), A (Deps), B (Git) |
 | **Docker** | `Dockerfile` only | any language | — | — | C (TDD), C (Lint), C (Arch), A (Deps), B (Git) |
 | **Nix** | `flake.nix` / `shell.nix` | nix language | — | — | C (TDD), A (Lint), B (Arch), A (Deps), A (Git) |
-| **Unity Game** | `Assembly-CSharp*` / `.unity` files | Unity engine | Unity Test Runner / NUnit | Unity Cloud Build | C (TDD), B (Lint), D1 (Engine), C (Deps), B (Git) |
-| **Unreal Game** | `.uproject` / `Source/*.Build.cs` | Unreal Engine | Unreal Automation Test | — | C (TDD), B (Lint), D1 (Engine), C (Deps), B (Git) |
-| **Godot Game** | `project.godot` / `*.gd` | Godot engine | GDScript unit test addon | — | C (TDD), B (Lint), D1 (Engine), C (Deps), B (Git) |
-| **Rust Game (Bevy)** | `Cargo.toml` (bevy in deps) | Bevy engine | cargo test | GitHub Actions | B (TDD), A (Lint), D1/D2 (Engine/Custom), A (Deps), B (Git) |
-| **Web Game** | `package.json` + canvas/Phaser | Phaser/PixiJS/Three.js | Vitest/Jest | — | C (TDD), B (Lint), D3 (Web/Retro), C (Deps), B (Git) |
-| **Arduino** | `.ino` files / `platformio.ini` | Arduino framework | — | — | C (TDD), A (Lint), E3 (Arduino), A (Deps), B (Git) |
-| **ESP-IDF** | `CMakeLists.txt` + esp-idf | ESP-IDF (Espressif SDK) | — | — | C (TDD), A (Lint), E1 (Bare-Metal), A (Deps), A (Git) |
-| **STM32 / ARM MCU** | `Makefile` + linker script + CMSIS | Bare-metal / HAL / CubeMX | — | — | C (TDD), A (Lint), E1 (Bare-Metal), A (Deps), A (Git) |
-| **Zephyr RTOS** | `CMakeLists.txt` + `prj.conf` | Zephyr RTOS | ztest | — | C (TDD), A (Lint), E1 (RTOS), A (Deps), A (Git) |
-| **Raspberry Pi / Yocto** | `local.conf` / `*.bb` (Yocto) | Yocto / Buildroot / RPi OS | pytest | — | C (TDD), A (Lint), E2 (Linux), A (Deps), A (Git) |
-| **MicroPython** | `boot.py` / `main.py` on MCU board | MicroPython / CircuitPython | — | — | C (TDD), B (Lint), E3 (MicroPython), A (Deps), A (Git) |
-| **iOS App (Swift)** | `*.xcworkspace` / `*.xcodeproj` / `Package.swift` | Swift/SwiftUI | XCTest | Xcode Cloud / GitHub Actions | B (TDD), B (Lint), G1 (Native), B (Deps), B (Git) |
-| **Android App (Kotlin)** | `build.gradle.kts` / `AndroidManifest.xml` | Kotlin/Jetpack | JUnit + Compose UI Test | GitHub Actions / Bitrise | B (TDD), B (Lint), G1 (Native), B (Deps), B (Git) |
-| **Flutter App** | `pubspec.yaml` (flutter in deps) | Flutter/Dart | flutter test | GitHub Actions / Codemagic | B (TDD), B (Lint), G2 (Cross-Platform), B (Deps), B (Git) |
-| **React Native App** | `package.json` + react-native in deps | React Native | Jest + Detox | GitHub Actions | B (TDD), B (Lint), G2 (Cross-Platform), B (Deps), B (Git) |
-| **Electron App** | `package.json` + electron in deps | Electron/TypeScript | Vitest/Jest + Playwright | GitHub Actions | B (TDD), B (Lint), G3 (Web Wrapper), C (Deps), B (Git) |
-| **Tauri App** | `src-tauri/Cargo.toml` + `tauri.conf.json` | Tauri/Rust+TS | cargo test + Vitest | GitHub Actions | A (TDD), A (Lint), G2/G3 (Cross-Platform/Web), A (Deps), B (Git) |
-| **Chrome Extension** | `manifest.json` | Chrome Extension MV3 | Puppeteer/Playwright | — | C (TDD), B (Lint), H1/H2 (Simple/MV3), A (Deps), B (Git) |
-| **Cross-Browser Extension** | `manifest.json` + webextension-polyfill | WebExtension | Puppeteer/Playwright | — | C (TDD), B (Lint), H3 (Cross-Browser), A (Deps), B (Git) |
-| **Jupyter Notebook** | `*.ipynb` files | Python/Jupyter | — | — | C (TDD), C (Lint), I1 (Single Notebook), C (Deps), A (Git) |
-| **R Markdown / Quarto** | `*.Rmd` / `*.qmd` files | R/R Markdown | — | — | C (TDD), C (Lint), I1/I2 (Notebook), C (Deps), A (Git) |
-| **Research Package** | `pyproject.toml` + `src/` + notebooks/ | Python research pkg | pytest | — | C (TDD), C (Lint), I3 (Package), C (Deps), A (Git) |
+| **Unity Game** | `Assembly-CSharp*` / `.unity` files | Unity engine | Unity Test Runner / NUnit | Unity Cloud Build | C (TDD), B (Lint), F1 (Engine), C (Deps), B (Git) |
+| **Unreal Game** | `.uproject` / `Source/*.Build.cs` | Unreal Engine | Unreal Automation Test | — | C (TDD), B (Lint), F1 (Engine), C (Deps), B (Git) |
+| **Godot Game** | `project.godot` / `*.gd` | Godot engine | GDScript unit test addon | — | C (TDD), B (Lint), F1 (Engine), C (Deps), B (Git) |
+| **Rust Game (Bevy)** | `Cargo.toml` (bevy in deps) | Bevy engine | cargo test | GitHub Actions | B (TDD), A (Lint), E1/E2 (Engine/Custom), A (Deps), B (Git) |
+| **Web Game** | `package.json` + canvas/Phaser | Phaser/PixiJS/Three.js | Vitest/Jest | — | C (TDD), B (Lint), F3 (Web/Retro), C (Deps), B (Git) |
+| **Arduino** | `.ino` files / `platformio.ini` | Arduino framework | — | — | C (TDD), A (Lint), I3 (Arduino), A (Deps), B (Git) |
+| **ESP-IDF** | `CMakeLists.txt` + esp-idf | ESP-IDF (Espressif SDK) | — | — | C (TDD), A (Lint), I1 (Bare-Metal), A (Deps), A (Git) |
+| **STM32 / ARM MCU** | `Makefile` + linker script + CMSIS | Bare-metal / HAL / CubeMX | — | — | C (TDD), A (Lint), I1 (Bare-Metal), A (Deps), A (Git) |
+| **Zephyr RTOS** | `CMakeLists.txt` + `prj.conf` | Zephyr RTOS | ztest | — | C (TDD), A (Lint), I1 (RTOS), A (Deps), A (Git) |
+| **Raspberry Pi / Yocto** | `local.conf` / `*.bb` (Yocto) | Yocto / Buildroot / RPi OS | pytest | — | C (TDD), A (Lint), I2 (Linux), A (Deps), A (Git) |
+| **MicroPython** | `boot.py` / `main.py` on MCU board | MicroPython / CircuitPython | — | — | C (TDD), B (Lint), I3 (MicroPython), A (Deps), A (Git) |
+| **iOS App (Swift)** | `*.xcworkspace` / `*.xcodeproj` / `Package.swift` | Swift/SwiftUI | XCTest | Xcode Cloud / GitHub Actions | B (TDD), B (Lint), C1 (Native), B (Deps), B (Git) |
+| **Android App (Kotlin)** | `build.gradle.kts` / `AndroidManifest.xml` | Kotlin/Jetpack | JUnit + Compose UI Test | GitHub Actions / Bitrise | B (TDD), B (Lint), C1 (Native), B (Deps), B (Git) |
+| **Flutter App** | `pubspec.yaml` (flutter in deps) | Flutter/Dart | flutter test | GitHub Actions / Codemagic | B (TDD), B (Lint), C2 (Cross-Platform), B (Deps), B (Git) |
+| **React Native App** | `package.json` + react-native in deps | React Native | Jest + Detox | GitHub Actions | B (TDD), B (Lint), C2 (Cross-Platform), B (Deps), B (Git) |
+| **Electron App** | `package.json` + electron in deps | Electron/TypeScript | Vitest/Jest + Playwright | GitHub Actions | B (TDD), B (Lint), C3 (Web Wrapper), C (Deps), B (Git) |
+| **Tauri App** | `src-tauri/Cargo.toml` + `tauri.conf.json` | Tauri/Rust+TS | cargo test + Vitest | GitHub Actions | A (TDD), A (Lint), C2/C3 (Cross-Platform/Web), A (Deps), B (Git) |
+| **Chrome Extension** | `manifest.json` | Chrome Extension MV3 | Puppeteer/Playwright | — | C (TDD), B (Lint), G1/G2 (Simple/MV3), A (Deps), B (Git) |
+| **Cross-Browser Extension** | `manifest.json` + webextension-polyfill | WebExtension | Puppeteer/Playwright | — | C (TDD), B (Lint), G3 (Cross-Browser), A (Deps), B (Git) |
+| **Jupyter Notebook** | `*.ipynb` files | Python/Jupyter | — | — | C (TDD), C (Lint), H1 (Single Notebook), C (Deps), A (Git) |
+| **R Markdown / Quarto** | `*.Rmd` / `*.qmd` files | R/R Markdown | — | — | C (TDD), C (Lint), H1/H2 (Notebook), C (Deps), A (Git) |
+| **Research Package** | `pyproject.toml` + `src/` + notebooks/ | Python research pkg | pytest | — | C (TDD), C (Lint), H3 (Package), C (Deps), A (Git) |
 
 Default options format: **Testing, Linting, Architecture, Dependencies, Git Workflow**.
 Remaining principles (Documentation, Error Handling, Performance, Code Review, Database, Config, Dev Toolchain) 
