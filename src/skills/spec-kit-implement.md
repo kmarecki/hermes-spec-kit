@@ -56,7 +56,13 @@ For each BF-### task:
      - Run it → confirm it fails (proves the bug exists)
   2. GREEN — Apply the minimal fix
      - Run the test → confirm it passes
-  3. COMMIT with the bugfix template from specs/git-conventions.md
+  3. APPEND to `specs/[feature]/history.md`:
+     ## [TIMESTAMP] | Phase 4 → Bugfix BF-### → Complete
+     - **Skill**: spec-kit-implement
+     - **Artifacts**: [files changed]
+     - **Notes**: Bugfix for BUG-NNN implemented. Tests pass after fix.
+  4. PRE-COMMIT GUARD: READ `specs/[feature]/history.md` — confirm BF-### entry is recorded.
+  5. COMMIT with the bugfix template from specs/git-conventions.md
      (default: "fix: [feature] BF-### - description")
 ```
 
@@ -176,7 +182,19 @@ Execute the entire phase as a batch, not task-by-task:
     
     d. UPDATE tasks.md — mark all tasks in this phase [X]
     
-    e. COMMIT the full phase using the implement commit template from specs/git-conventions.md:
+    e. RECORD test verification: collect the count of tests run and passed:
+       TEST_COUNT="[number of tests run for this phase]"
+       TEST_STATUS="All [N] passing: [N] tests, 0 failures"
+    
+    f. APPEND to `specs/[feature]/history.md`:
+       ## [TIMESTAMP] | Phase 4 → [Phase Name] → Complete
+       - **Skill**: spec-kit-implement
+       - **Artifacts**: source code changes for this phase
+       - **Notes**: [TEST_STATUS]. Tasks [X]: [N] tasks completed.
+    
+    g. PRE-COMMIT GUARD: READ `specs/[feature]/history.md` — confirm entry is recorded.
+    
+    h. COMMIT the full phase using the implement commit template from specs/git-conventions.md:
        (default: "feat: [feature] Phase N - [Phase Name]")
        git add -A
        git commit -m "[commit message from conventions]" --no-verify
@@ -227,7 +245,7 @@ After ALL phases are complete and committed, run the ENTIRE test suite:
 ```bash
 IF tdd_bypassed:
   NOTE: "TDD was bypassed — skipping automated test verification."
-  PROCEED to Step 11 (build verification)
+  PROCEED to Step 8 (build verification)
   STOP
 
 DETECT test framework:
@@ -238,7 +256,12 @@ DETECT test framework:
 
 IF all tests pass:
   REPORT: "All N tests pass. Feature implementation verified."
-  PROCEED to Step 11 (build verification)
+  APPEND to `specs/[feature]/history.md`:
+    ## [TIMESTAMP] | Phase 4 → Full Regression → Pass
+    - **Skill**: spec-kit-implement
+    - **Artifacts**: (regression verification)
+    - **Notes**: Full regression suite passing: all N tests, 0 failures.
+  PROCEED to Step 8 (build verification)
 
 IF any tests fail:
   REPORT failing tests:
@@ -267,6 +290,12 @@ IF any tests fail:
     After all regressions fixed:
       RUN full suite again
       IF all pass:
+        APPEND to `specs/[feature]/history.md`:
+          ## [TIMESTAMP] | Phase 4 → Regression Fix → Complete
+          - **Skill**: spec-kit-implement
+          - **Artifacts**: source code (regression fixes)
+          - **Notes**: BF-REGRESSION-001 resolved. Full suite passing: all N tests, 0 failures.
+        PRE-COMMIT GUARD: READ `specs/[feature]/history.md` — confirm regression entry is recorded.
         Follow `spec-kit/references/auto-commit.md`:
         - Scope: source code changes
         - Message: Use the regression commit template from specs/git-conventions.md
@@ -331,13 +360,22 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Revi
 - Bugfixes are NEVER implemented directly when a user mentions a bug
 - Bugfixes must follow: "bugfix [feature]" → plan → tasks → implement
 
-### Step 9: Append to history.md (before commit)
+### Step 9: Append to history.md (before every commit)
 
-For each completed phase, BEFORE committing:
-1. Append entry to `specs/[feature]/history.md` (create if missing):
-   - Phase: Phase 4 — [Phase Name] Complete
-   - Artifact: source code changes
-2. **PRE-COMMIT GUARD**: READ `specs/[feature]/history.md` — confirm the entry is recorded.
+**Every commit in this skill must be preceded by a history.md entry.** This covers three commit types:
+
+1. **Per-phase commits** (Step 4h): history.md appended in Step 4f (test pass status included).
+2. **Bugfix commits** (BF-###, Step 5): history.md appended in Bugfix Mode step 3.
+3. **Regression fix commits** (BF-REGRESSION-001, Step 7): history.md appended in regression fix flow.
+
+**PRE-COMMIT GUARD** (applies to every commit):
+```text
+READ specs/[feature]/history.md
+IF the entry for the current work (phase completion, bugfix, or regression fix) is NOT recorded:
+  BLOCK: "Cannot commit — history.md is missing the entry. Append first."
+```
+
+**history.md entries MUST be appended BEFORE git commit -- never after.**
 
 ## Completion
 
@@ -361,7 +399,12 @@ Report:
 - [ ] Build passes (if applicable)
 - [ ] All tasks in tasks.md marked [X] — no tasks deleted, status-only update
 - [ ] In bugfix mode: All bugfix tasks completed and verified
-- [ ] history.md appended per completed phase
+- [ ] history.md entries appended for every commit:
+      - One entry per completed phase (with test pass count)
+      - One entry per bugfix (BF-###)
+      - One entry for full regression pass
+      - One entry for regression fix (if applicable)
+- [ ] PRE-COMMIT GUARD confirmed for every commit
 - [ ] Committed per phase boundary
 
 **Re-running this skill**:
