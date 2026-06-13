@@ -39,7 +39,7 @@ if [ "$STALE_COUNT" -gt 0 ]; then
 fi
 
 # Remove renamed/obsolete skill directories
-OBSOLETE_DIRS="spec-kit-analyze spec-kit-checklist"
+OBSOLETE_DIRS="spec-kit-analyze spec-kit-checklist spec-kit-explore spec-kit-compare"
 for obsolete in $OBSOLETE_DIRS; do
   if [ -d "$SKILLS_DIR/$obsolete" ]; then
     echo "  Removing obsolete skill directory: $obsolete"
@@ -76,6 +76,7 @@ mkdir -p "$TEMPLATES_DIR"
 
 # Remove obsolete template files
 rm -f "$TEMPLATES_DIR/checklist-template.md"
+rm -f "$TEMPLATES_DIR/comparison-template.md"
 
 for tmpl in "$PROJECT_DIR"/src/templates/*-template.md; do
   if [ -f "$tmpl" ]; then

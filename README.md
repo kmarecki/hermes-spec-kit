@@ -43,15 +43,15 @@ Full workflow documentation: **[user-guide.md](user-guide.md)**
 
 ```
 src/
-  skills/                # Skill source files (14 .md + 1 directory skill)
+  skills/                # Skill source files (12 .md + 1 directory skill)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
-  templates/             # Template source files (15 templates)
+  templates/             # Template source files (14 templates)
   references/            # Reference files (preflight.md, auto-commit.md, history-tracking.md)
 scripts/
   install.sh             # Installs to ~/.hermes/skills/
 ```
 
-## Four Development Modes
+## Three Development Modes
 
 | Mode | Trigger | Behavior |
 |------|---------|----------|
