@@ -22,16 +22,23 @@ day-to-day usage.
 1.  [What is Spec-Kit?](#what-is-spec-kit)
 2.  [Quick Start: Your First Feature](#quick-start-your-first-feature)
 3.  [Four Development Modes](#four-development-modes)
-4.  [Explore Mode: Parallel Variants (Deep Dive)](#explore-mode-parallel-variants-deep-dive)
+4.  [Constitution Decision Tree](#constitution-decision-tree)
+    - [Level 1: Purpose (9 options)](#level-1-purpose-9-options)
+    - [Level 2: Architecture (25 options)](#level-2-architecture-25-options-across-9-purposes)
+    - [Level 3: Technology Choices](#level-3-technology-choices)
+    - [Purpose-to-Principle Defaults](#after-level-3-purpose-to-principle-defaults)
+    - [Monorepo Mode](#monorepo-mode)
+    - [Brownfield Shortcut](#brownfield-shortcut)
+5.  [Explore Mode: Parallel Variants (Deep Dive)](#explore-mode-parallel-variants-deep-dive)
     - [How Git Worktrees Keep Variants Apart](#how-git-worktrees-keep-variants-apart)
     - [Walkthrough: Explore → Compare → Promote](#walkthrough-explore--compare--promote)
-5.  [Reopen Mode: Fixing Closed Features](#reopen-mode-fixing-closed-features)
-6.  [Phase Reference](#phase-reference)
-7.  [Branch Strategy](#branch-strategy)
-8.  [Git Commit Conventions](#git-commit-conventions)
-9.  [Spec Health Score](#spec-health-score)
-10. [Troubleshooting](#troubleshooting)
-11. [Reference Tables](#reference-tables)
+6.  [Reopen Mode: Fixing Closed Features](#reopen-mode-fixing-closed-features)
+7.  [Phase Reference](#phase-reference)
+8.  [Branch Strategy](#branch-strategy)
+9.  [Git Commit Conventions](#git-commit-conventions)
+10. [Spec Health Score](#spec-health-score)
+11. [Troubleshooting](#troubleshooting)
+12. [Reference Tables](#reference-tables)
 
 ---
 
@@ -56,7 +63,7 @@ and reopen for closed features.
 - Without close, features accumulate half-finished
 
 **What tools does it add?**
-- 14 spec-kit skills in `~/.hermes/skills/` — respond to `spec-kit` prefix, `speckit` prefix,
+- 15 spec-kit skills in `~/.hermes/skills/` — respond to `spec-kit` prefix, `speckit` prefix,
   and natural language phrases
   (e.g. `"speckit plan 001-user-auth"`, `"spec-kit plan 001-user-auth"`, or
   `"plan the implementation for 001-user-auth"` all trigger the same skill)
@@ -206,7 +213,7 @@ Spec-kit has four modes, each suited to a different level of uncertainty:
 
 | Mode | When to use | How it runs | User involvement |
 |------|-------------|-------------|-----------------|
-| **Specify** (default) | You know what you want — low uncertainty | One linear path, user advances phase-by-phase | Manual — you say "plan", "implement", etc. |
+| **Specify** (default) | You know what you want — low uncertainty | Starts with constitution decision tree (9 purposes × 25 architecture options). Then a linear forward phase sequence: Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close | Manual — you say "plan", "implement", etc. |
 | **Bugfix** | You have a working feature with known bugs | Auto-chains Plan→Tasks→Implement→Test once you say "bugfix". If new bugs are discovered mid-round, they're logged separately and the next round runs the full plan→tasks→implement cycle (separate commits per phase). For trivial fixes, "quickfix [feature]" batches plan+tasks+fix in one commit (user explicitly opts in). | Minimal — inner loop is automatic |
 | **Explore** | You're unsure about the approach — high uncertainty | Spawns parallel agents, each trying a different approach on an isolated branch | Hands-off after launch; you compare results later |
 | **Reopen** | A closed feature needs more fixes | Creates bugfix branch from main, preserves original close data, routes through bugfix loop | Additive-only edits; must close again after fixes |
@@ -221,6 +228,175 @@ Phase sequence for each mode:
 | **Reopen** | Deep dive below → |
 
 Explore and Reopen have full walkthroughs in dedicated sections below.
+
+|---
+
+## Constitution Decision Tree
+
+Every spec-kit project starts with a **constitution** — a set of project-wide
+principles that guide all future features. The constitution phase (Phase 0)
+uses a 3-level decision tree to narrow from general purpose to specific
+technology choices, then maps those choices to weighted defaults for each of
+the 12 project principles.
+
+The skill auto-detects whether the project already has code (**brownfield
+mode**) or is starting fresh (**greenfield mode**):
+
+- **Brownfield**: Scans the project root for `package.json`, `pyproject.toml`,
+  `go.mod`, `Cargo.toml`, `Gemfile`, `build.gradle`, `*.csproj`, `Dockerfile`,
+  test configs, CI configs, database migrations, lint configs — 60+ detection
+  patterns. Pre-fills ⭐-marked defaults for every principle based on what's
+  detected.
+- **Greenfield**: Guides the user through every choice, recommending purpose-
+  specific defaults at each level.
+
+### Level 1: Purpose (9 options)
+
+The first question is always: *"What is this project's primary purpose?"*
+
+| Code | Purpose | Examples | Testing impact | Architecture impact | Docs impact |
+|------|---------|----------|---------------|-------------------|-------------|
+| **A** | User-Facing Application | SaaS, e-commerce, dashboard, CMS, API server | Integration + E2E tests needed. TDD pays off. | Architecture matters — will need to scale. | API docs, setup guide critical. |
+| **B** | Content Site / Marketing | Portfolio, blog, docs site, landing page | Minimal — visual checks + broken link checker. | Simple — SSG, template-driven, or plain HTML/CSS. | Content IS the documentation. |
+| **C** | Native / Desktop Client | iOS app, Android app, Electron, Tauri, Qt desktop app | UI/snapshot + integration tests. Manual QA for visuals. | Platform SDK defines architecture (MVC, MVVM, Compose). | Store listing, user help. |
+| **D** | Library / SDK / Package | npm package, PyPI lib, Go module, Rust crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal coupling. | API docs, README, changelog mandatory. |
+| **E** | Infra / CLI / DevOps | CLI tool, Terraform module, CI pipeline, daemon, AI pipeline | Integration-heavy. Manual testing common. | Simple and composable. No over-engineering. | README + --help. Code IS the documentation. |
+| **F** | Game | Unity/Unreal/Godot game, WebGL game | Unit tests for game logic. Playtesting + visual QA critical. | ECS, scene graph, component-based. Engine-driven. | Design doc + mechanics + gameplay guide. |
+| **G** | Browser Extension | Chrome MV3, Firefox add-on, Safari extension | Manual browser testing. Playwright for E2E. | Manifest-driven. Content scripts + service worker + popup. | Store listing + permissions + privacy policy. |
+| **H** | Research / Notebook | Jupyter, R Markdown, Quarto, MATLAB | Minimal — visual inspection of outputs | Single notebook or notebook + scripts. No production infra. | README with reproduction steps. |
+| **I** | IoT / Embedded | Arduino, ESP32, STM32, Zephyr RTOS, RPi Linux | Hardware-in-the-loop. Simulation for CI. | HAL, RTOS tasks, driver layer. Memory-constrained. | Pinout docs, protocol specs, register maps. |
+
+Each option comes with pros/cons so the user understands tradeoffs before
+committing.
+
+**Monorepo check**: After picking a purpose, the agent asks whether this
+is a multi-project monorepo (e.g., one repo containing a web app + mobile
+app + shared library). If yes, Levels 1-3 run independently per sub-project,
+and the constitution gets a `Projects` table at the top.
+
+### Level 2: Architecture (25 options across 9 purposes)
+
+Based on the chosen purpose, the agent presents architecture options.
+Each option has a description, pros, cons, and best-use guidance.
+
+**A — User-Facing App**: Monolith (A1), Modular Monolith (A2),
+Microservices (A3), Serverless/FaaS (A4)
+
+**B — Content Site**: Static Site Generator (B1), Headless CMS + SSG (B2),
+Lightweight Backend (B3)
+
+**C — Native / Desktop Client**: Native Platform (C1), Cross-Platform
+Framework (C2), Web Wrapper (C3)
+
+**D — Library / SDK**: Zero-Dependency (D1), Curated (D2),
+Umbrella/Multi-Package (D3)
+
+**E — Infra / CLI / DevOps**: Single Binary (E1), Multi-Binary (E2),
+Plugin-Based (E3), Script/Pipeline/Declarative (E4)
+
+**F — Game**: Engine-Centric (F1), Custom Engine (F2), Web/Retro (F3)
+
+**G — Browser Extension**: Simple/Single-Browser (G1), Full MV3 (G2),
+Cross-Browser (G3)
+
+**H — Research / Notebook**: Single Notebook (H1), Notebook + Scripts (H2),
+Package + Notebooks (H3)
+
+**I — IoT / Embedded**: Bare-Metal / RTOS (I1), Linux-Based Embedded (I2),
+MicroPython / Arduino (I3)
+
+### Level 3: Technology Choices
+
+With purpose + architecture settled, the agent brackets recommended
+languages and frameworks. Examples:
+
+- **A1 (Monolith web app)**: Django, Rails, Laravel, Next.js, ASP.NET
+- **C1 (Native client)**: Swift (iOS/macOS), Kotlin (Android), C# (WinUI), C++ (Qt)
+- **F1 (Engine-based game)**: C# + Unity, C++ + Unreal, GDScript + Godot, Rust + Bevy
+- **I1 (Bare-metal IoT)**: C, C++ (constrained), Rust no-std, Zig
+
+Each bracket presents 3-4 options with framework suggestions, pros, and
+cons. The user picks one.
+
+### After Level 3: Purpose-to-Principle Defaults
+
+Once purpose, architecture, and tech are known, the agent maps them to
+recommended defaults for all 12 constitution principles. Here are the
+mappings for each purpose (architecture-independent):
+
+| Principle | A (User-Facing) | B (Content) | C (Native) | D (Library) | E (Infra/CLI) | F (Game) | G (Browser Ext) | H (Research) | I (IoT/Embedded) |
+|-----------|-----------------|-------------|------------|-------------|---------------|----------|-----------------|--------------|------------------|
+| Testing | A or B | C | B | A | B | C | C | C | C |
+| Linting | B | B | B | A | A | B | B | C | A |
+| Dependencies | B | B | B | A or B | A | C | A | C | A |
+| Git Workflow | B | A | B | B | A | B | B | A | A |
+| Documentation | B | B | B | A | C | B | A | B | A |
+| Error Handling | A | C | A | B | C | A | A | C | A |
+| Performance | B | C | B | B | A | A | A | C | A |
+| Code Review | A or B | C | A | A | B | B | A | C | A |
+| Database | A | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP | SKIP |
+| Config/Secrets | B | C | B | A | A | C | A | C | B |
+| Dev Toolchain | B | B | C | B | C | C | B | A | C |
+
+Key: A = Strict, B = Pragmatic / Curated, C = Permissive / Minimal,
+SKIP = principle not applicable
+
+After showing these defaults, the agent walks through each of the 12
+principles with 3 options (A/B/C) and their pros/cons. The user may
+accept the recommended default or pick a different option.
+
+### Monorepo Mode
+
+When the user confirms a multi-project monorepo:
+
+1. A `Projects` table is added to the constitution header
+2. Each sub-project runs Levels 1-3 independently (different purposes
+   and architectures are allowed)
+3. Shared principles apply to the PRIMARY sub-project
+4. The constitution notes: "Applies to all sub-projects" where broadly
+   relevant
+
+### Example Interaction
+
+```
+You: "Create a constitution for my-project"
+
+Agent: "No existing project detected — greenfield mode."
+
+Agent presents Level 1:
+  "What is this project's primary purpose?"
+  A — User-Facing Application
+  B — Content Site / Marketing
+  …
+  I — IoT / Embedded
+
+You: "A — User-Facing Application"
+
+Agent: "Is this a multi-project monorepo?" → "No"
+
+Agent presents Level 2:
+  "Given User-Facing App, which architecture?"
+  A1 — Monolith
+  A2 — Modular Monolith
+  A3 — Microservices
+  A4 — Serverless
+
+You: "A2 — Modular Monolith"
+
+Agent presents Level 3 language/framework options and you pick one.
+Then the agent shows recommended principle defaults and walks through
+each principle for confirmation.
+
+Result: specs/constitution.md with 12 principles and a full Tech Stack
+section. Approx 5-10 minutes for a new project.
+```
+
+### Brownfield Shortcut
+
+For existing codebases, most of the decision tree is skipped. The agent
+detects the stack from project files and pre-fills all defaults, only
+asking the user to confirm or adjust principles that the detection was
+uncertain about. This typically takes 1-2 minutes.
 
 ---
 
@@ -512,6 +688,26 @@ Agent:
 
 Project-wide principles and MUST/SHOULD rules. Runs once per project.
 Required before specify or plan can proceed — both will block without it.
+
+Uses a **3-level decision tree** to narrow from general purpose to specific
+technology choices, then pre-fills the 12 project principles with
+purpose-weighted defaults. Two modes:
+
+- **Greenfield** (no existing code): Walks the user through all 3 levels:
+  Level 1 (9 purposes A–I), Level 2 (2–4 architecture options per purpose),
+  Level 3 (language/framework bracketing). After the tree completes, each
+  of the 12 principles is presented with 3 options and pros/cons.
+- **Brownfield** (existing codebase): Auto-detects language, framework,
+  test runner, CI, database, and linting from 60+ detection patterns.
+  Pre-fills ⭐-marked defaults — the user confirms or adjusts them.
+
+Supports multi-project monorepos: after Level 1, asks whether the repo
+contains multiple sub-projects. If yes, Levels 1-3 run independently per
+sub-project, and the constitution gets a `Projects` table.
+
+See the [Constitution Decision Tree](#constitution-decision-tree) section
+for a full walkthrough with all 9 purposes, 25 architecture options, and
+purpose-to-principle default mappings.
 
 ### Phase 1: Specify
 **Skill**: `spec-kit-specify` · **Trigger**: "Create a spec for [description]"
@@ -921,20 +1117,21 @@ hermes -w -s spec-kit-workflow
 hermes skills list | grep spec-kit
 ```
 
-### Workflow Diagram
+|### Workflow Diagram
 
 ```text
                                             ┌── Explore ───────────────┐
                                             │   git worktree add …     │
                                             │   delegate_task × N      │
                                             ▼                          │
-Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
-                                                                      │
-                                    ┌─────────────────────────────────┘
-                                    ▼
-                             ┌─→ [Clarify] → Plan → Tasks → Implement → Test → Close (mandatory)
-                             │
-                             └── Reopen ──→ bugfix loop → Close (append, preserve original)
+Constitution (3-level tree) → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
+  │ Level 1: 9 purposes (A-I)                                                        │
+  │ Level 2: 25 architecture options                                                 │
+  │ Level 3: Tech bracketing                                              ┌──────────┘
+  │ After: 12 principles with purpose-mapped defaults                     ▼
+  └─────────────────────→                    ┌─→ [Clarify] → Plan → Tasks → Implement → Test → Close (mandatory)
+                                             │
+                                             └── Reopen ──→ bugfix loop → Close (append, preserve original)
 
                              Optional gates:
                                [Review] ← pre-implement (before code)
