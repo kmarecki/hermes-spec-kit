@@ -316,7 +316,7 @@ language + framework are chosen.
 
 Ask the user: *"What is this project's primary purpose?"*
 
-Present these 6 options with their tradeoffs:
+Present these 9 options with their tradeoffs:
 
 | Option | Type | Examples | Testing impact | Arch impact | Docs impact | Deps impact |
 |--------|------|----------|---------------|-------------|-------------|-------------|
@@ -326,12 +326,46 @@ Present these 6 options with their tradeoffs:
 | **D — Infrastructure / CLI / DevOps** | Automation, ops tools, platform | CLI tool, Terraform module, CI pipeline, daemon | Integration tests with real infra. Manual testing common. | Simple, composable. No over-engineering. | README + --help. Code that IS the documentation. | Minimal. Static binaries preferred. |
 | **E — Game** | Interactive application with game loop, rendering, input | 2D platformer, 3D FPS, puzzle game, RPG, mobile game, WebGL game | Unit tests for game logic. Visual/playtest testing critical. Integration tests for netcode. | ECS, scene graph, component-based. Game loop, render pipeline, physics. | Design doc, mechanics doc, modding API docs. README + gameplay guide. | Engine dependency (Unity, Unreal, Godot, Bevy). Graphics, audio, physics libs. |
 | **F — IoT / Embedded** | Firmware, device software, real-time systems | Sensor firmware, motor controller, smart home device, drone flight controller, RTOS application | Hardware-in-the-loop testing. Simulation for CI. Manual device testing essential. | HAL, RTOS tasks, driver layer. Memory-constrained. Real-time constraints. | Pinout docs, protocol specs, register maps. Datasheet references. | Minimal or zero std. Vendor SDKs. No dynamic allocation. Cross-compilation toolchain. |
+| **G — Native / Desktop Client** | Standalone client app, no backend to architect | iOS app, Android app, macOS app, Windows app, Linux desktop app, Electron app, Tauri app, Qt app | UI/snapshot tests, integration tests. Manual QA for visual polish. | Client-side architecture (MVC, MVVM, Redux, Composable). Platform SDK native or cross-platform framework. | User-facing help, API docs for local features, store listing. | Platform SDK, UI framework. Cross-platform framework for shared code. |
+| **H — Browser Extension** | Browser add-on modifying/extending the browser | Chrome extension, Firefox add-on, Safari extension, Edge extension | Manual browser testing. Puppeteer/Playwright for E2E. | Content scripts, service worker (MV3), popup page, options page. Cross-browser API abstraction. | Store listing, permissions guide, feature docs, privacy policy. | Minimal — browser APIs. Polyfill for cross-browser support (webextension-polyfill). |
+| **I — Research / Notebook** | Data exploration, academic research, one-off analysis | Jupyter notebook, R Markdown, Quarto doc, MATLAB script, experimental Python script | Minimal to none. Visual inspection of outputs. Assertions in cells. | Single notebook or notebook + reusable scripts. No deployment. No production infra. | Notebook cell comments, README with reproduction steps. Dataset provenance. | Permissive — pandas, numpy, matplotlib, torch, scipy, tidyverse. Whatever is needed. |
 
 ```
 ASK: "What kind of project are you building?"
-RECORD: purpose = [A | B | C | D | E | F]
+RECORD: purpose = [A | B | C | D | E | F | G | H | I]
 NOTE: purpose determines the weight of each principle below.
 ```
+
+After the user picks their purpose, ask about monorepo:
+
+```text
+ASK: "Is this a multi-project monorepo with different purposes?
+      (e.g., a repo containing a web app + mobile app + shared library)
+      [yes | no]"
+
+IF yes:
+  NOTE: "Multi-project monorepo detected. The constitution will define
+         each sub-project separately under a 'Projects' section."
+
+  ASK: "How many sub-projects does this monorepo contain?"
+  RECORD: sub_project_count = [N]
+
+  FOR each sub-project (1 to N):
+    ASK: "Sub-project [N] name? (e.g., 'frontend', 'mobile-app', 'shared-lib')"
+    RECORD: sub_project_name = [name]
+
+    RUN Levels 1-3 for this sub-project independently:
+      ASK its purpose (can differ per sub-project)
+      ASK its architecture (can differ)
+      ASK its tech choices
+
+  AFTER all sub-projects defined, the constitution will contain a
+  'Projects' table at the top, and shared principles will be determined
+  by the PRIMARY sub-project (the largest or most important one).
+
+  IF monorepo:
+    MODE = monorepo
+    PRIMARY purpose = [chosen by user]
 
 ---
 
@@ -389,9 +423,33 @@ Based on the chosen purpose, present the architecture options:
 | **F2** | Linux-Based Embedded | Runs on Linux (Yocto, Buildroot, Raspberry Pi OS). User-space + kernel modules. | Rich ecosystem, standard tooling, debugging easy, networking built-in | Larger footprint, higher power, boot time, real-time challenges | Smart home hubs, drones, gateways, cameras, robots |
 | **F3** | MicroPython / Arduino | High-level firmware framework (Arduino, MicroPython, CircuitPython). Abstraction layer. | Fastest to prototype, huge community, beginner-friendly, extensive libraries | Limited performance, memory overhead, abstraction hides hardware issues | Prototypes, hobbyist, education, rapid IoT development |
 
+**If purpose = G (Native / Desktop Client):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **G1** | Native Platform | Platform-specific SDK (Swift/SwiftUI for iOS/macOS, Kotlin/Jetpack for Android, WinUI/WPF for Windows, GTK/Qt for Linux). | Best performance, full platform API access, native look-and-feel, smallest binary | Write once per platform, higher development cost, separate codebases to maintain | Performance-critical apps, platform-specific features, established products |
+| **G2** | Cross-Platform Framework | Shared codebase (Flutter, React Native, Tauri, .NET MAUI, Kotlin Multiplatform). | Single codebase, faster development, shared business logic | Abstraction leaks, platform limitations, larger binary, debugging complexity | Most mobile/desktop apps, startups, resource-constrained teams |
+| **G3** | Web Wrapper | Web tech packaged as client (Electron, PWA, Capacitor, Cordova, Tauri with web frontend). | Web skills transfer, fastest prototyping, easy updates, large ecosystem | Performance overhead, non-native UX, larger binary, limited platform API access | Internal tools, MVPs, cross-platform with limited native needs |
+
+**If purpose = H (Browser Extension):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **H1** | Simple / Single-Browser | Single-purpose extension targeting one browser. Minimal architecture: content script + popup. | Fastest to build, minimal code, simple permissions, easy review | No cross-browser reach, limited capabilities, harder to scale features | One-off utilities, site-specific tweaks, internal tools |
+| **H2** | Full MV3 | Manifest V3 with service worker, multiple pages (popup, options, side panel), background processing, storage API. | Full extension API access, service worker lifecycle, better security (MV3), can handle complex workflows | MV3 limitations (no background page, alarm-based wake), migration from MV2 complexity | Feature-rich extensions, productivity tools, developer tools |
+| **H3** | Cross-Browser | WebExtension API with polyfill (webextension-polyfill). Built for Chrome + Firefox + Safari + Edge. | Maximum reach, single codebase, consistent API, store on all platforms | Polyfill overhead, browser-specific quirks, testing across 4+ browsers, longer review cycles | Public extensions, commercial products, wide-audience tools |
+
+**If purpose = I (Research / Notebook):**
+
+| Option | Name | Description | Pros | Cons | Best for |
+|--------|------|-------------|------|------|----------|
+| **I1** | Single Notebook | One self-contained notebook (Jupyter, R Markdown, Quarto). All code and explanations in one file. | Zero setup, self-contained, easy to share, reproducible cell-by-cell | No reuse, hard to maintain at scale, no module boundaries | Exploratory analysis, teaching, one-off reports, data journalism |
+| **I2** | Notebook + Scripts | Notebook for narrative + Python/R scripts for reusable logic. Shared utility modules. | Clean separation of concerns, reusable code, notebook stays readable | More files to manage, import path issues, needs documentation between cells and scripts | Research projects with shared preprocessing, analysis + paper, multi-notebook projects |
+| **I3** | Package + Notebooks | Formal Python/R package with tests, notebooks as usage examples. Structured project with src/ layout. | Production-ready, testable, publishable, others can pip install | Significant overhead for research velocity, package management, CI setup | Research that becomes a product, reproducible academic research, team projects |
+
 ```
-ASK: "Given your purpose [A|B|C|D|E|F], which architecture approach fits?"
-RECORD: architecture = [A1|A2|A3|A4 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3|D4 | E1|E2|E3 | F1|F2|F3]
+ASK: "Given your purpose [A|B|C|D|E|F|G|H|I], which architecture approach fits?"
+RECORD: architecture = [A1|A2|A3|A4 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3|D4 | E1|E2|E3 | F1|F2|F3 | G1|G2|G3 | H1|H2|H3 | I1|I2|I3]
 ```
 
 ---
@@ -461,6 +519,39 @@ IF purpose == F (IoT / Embedded):
     F2 (Linux Embedded): C, C++, Python, Rust, Go — whatever Linux supports
     F3 (MicroPython / Arduino): C++ (Arduino), Python (MicroPython,
         CircuitPython), Lua (eLua), JavaScript (Espruino)
+
+IF purpose == G (Native / Desktop Client):
+  RECOMMEND: platform SDKs and cross-platform frameworks
+  BRACKET by architecture:
+    G1 (Native): Swift (iOS/macOS), Kotlin (Android), C# (WinUI/WPF),
+        C++ (Qt), Rust (GTK-rs, egui) — platform-specific
+    G2 (Cross-Platform): Dart (Flutter), TypeScript (React Native),
+        C# (.NET MAUI), Kotlin (KMP), Rust (Tauri) — shared codebase
+    G3 (Web Wrapper): TypeScript (Electron, PWA, Capacitor),
+        C# (Blazor Hybrid), Dart (Flutter Web) — web-first packaging
+
+IF purpose == H (Browser Extension):
+  RECOMMEND: WebExtension APIs and JS/TS ecosystems
+  BRACKET by architecture:
+    H1 (Simple): TypeScript/JavaScript with vanilla manifest.json,
+        plain HTML/CSS for popup — minimal tooling
+    H2 (Full MV3): TypeScript with build tool (Vite, WebExtension
+        Vite plugin), React/Vue for complex UI, Chrome extensions
+        CLI (chrome-ext-cli) — structured project
+    H3 (Cross-Browser): TypeScript + webextension-polyfill,
+        WXT framework (unified build for all browsers),
+        Plasmo framework — multi-store deployment
+
+IF purpose == I (Research / Notebook):
+  RECOMMEND: data-science languages and notebook ecosystems
+  BRACKET by architecture:
+    I1 (Single Notebook): Python (Jupyter, JupyterLab), R (R Markdown,
+        Quarto), Julia (Pluto.jl), Observable JS — zero setup
+    I2 (Notebook + Scripts): Python + .py modules + Jupyter,
+        R + .R scripts + R Markdown, Python + uv/poetry for deps
+    I3 (Package + Notebooks): Python (src layout + pytest + notebooks),
+        R (package structure + testthat + vignettes), Julia (Pkg +
+        Pluto notebooks) — production-ready research
 ```
 
 For each bracket, present the specific language options as follows:
@@ -576,6 +667,48 @@ PURPOSE = F (IoT / Embedded):
   Database → SKIP (no database on embedded devices)
   Config/Secrets → B (Environment-based — compile-time flags, EEPROM)
   Dev Toolchain → C (Full DX — cross-compiler, flashing, logic analyzer)
+
+PURPOSE = G (Native / Desktop Client):
+  Testing → B (Pragmatic — UI tests for critical paths, manual QA for visual)
+  Linting → B (Pragmatic — platform SDKs have their own conventions)
+  Architecture → user's choice from Level 2
+  Dependencies → B (Curated — platform SDK + UI framework, minimize transitive)
+  Git Workflow → B (Feature branches — release management matters)
+  Documentation → B (Critical-only — user-facing help + setup + store listing)
+  Error Handling → A (Defensive — app crashes cause user frustration)
+  Performance → B (Profile-then-optimize — startup time, frame drops, memory)
+  Code Review → A (Strict — app store review failures are costly)
+  Database → SKIP (local storage is platform-managed: Core Data, Room, SharedPrefs)
+  Config/Secrets → B (Environment-based — build flavors, feature flags, remote config)
+  Dev Toolchain → C (Full DX — build pipeline, code signing, app store deploy)
+
+PURPOSE = H (Browser Extension):
+  Testing → C (Test-After — manual browser testing dominates)
+  Linting → B (Pragmatic — content scripts need browser API flexibility)
+  Architecture → user's choice from Level 2
+  Dependencies → A (Minimal — browser APIs preferred, avoid bloating extension)
+  Git Workflow → B (Feature branches — store release cycles)
+  Documentation → A (Exhaustive — store listing, permissions, privacy policy mandatory)
+  Error Handling → A (Defensive — broken extension in user's browser is invisible failure)
+  Performance → A (Optimize-first — content script perf impacts every page user visits)
+  Code Review → A (Strict — privileged API misuse can cause account/data theft)
+  Database → SKIP (storage API is browser-provided)
+  Config/Secrets → A (Strict — API keys, tokens must never be in extension code)
+  Dev Toolchain → B (Standard toolchain — build, zip, upload to stores)
+
+PURPOSE = I (Research / Notebook):
+  Testing → C (Test-After — visual inspection of outputs, assertions in cells)
+  Linting → C (Minimal — notebooks are exploratory, not production code)
+  Architecture → user's choice from Level 2
+  Dependencies → C (Permissive — use whatever lib the analysis needs)
+  Git Workflow → A (Trunk-based — research is fast iteration, no release branches)
+  Documentation → B (Critical-only — reproduction steps + dataset provenance)
+  Error Handling → C (Minimal — errors are part of exploration, top-level catch)
+  Performance → C (Ignore-until-painful — correct analysis first, optimize if needed)
+  Code Review → C (Post-merge — notebooks are exploratory, not approval-gated)
+  Database → SKIP (research uses files, not databases)
+  Config/Secrets → C (Config-in-repo — dataset paths, API keys in .env.example)
+  Dev Toolchain → A (Minimal — just a notebook runtime, no build pipeline)
 ```
 
 Present these as a summary table to the user:
@@ -672,9 +805,17 @@ FILL each section with:
   - Recorded rationale
   - Rejected alternatives table with reasons
 
-INCLUDE in the Tech Stack section:
-  - Detected language/framework (brownfield) or "New project — TBD" (greenfield)
-  - Test framework, CI, package manager
+IF MODE == monorepo:
+  FILL the Projects table at the top with each sub-project's:
+    - Name, Purpose, Language/Framework, Architecture option
+  SHARED principles apply to the PRIMARY sub-project
+  NOTE per principle: "Applies to all sub-projects. Project-specific
+    variations documented in the Projects section."
+
+ELSE (single project):
+  INCLUDE in the Tech Stack section:
+    - Detected language/framework (brownfield) or "New project — TBD" (greenfield)
+    - Test framework, CI, package manager
 ```
 
 ### Step 6: Version management
@@ -775,6 +916,17 @@ INCLUDE in the Tech Stack section:
 | **Zephyr RTOS** | `CMakeLists.txt` + `prj.conf` | Zephyr RTOS | ztest | — | C (TDD), A (Lint), E1 (RTOS), A (Deps), A (Git) |
 | **Raspberry Pi / Yocto** | `local.conf` / `*.bb` (Yocto) | Yocto / Buildroot / RPi OS | pytest | — | C (TDD), A (Lint), E2 (Linux), A (Deps), A (Git) |
 | **MicroPython** | `boot.py` / `main.py` on MCU board | MicroPython / CircuitPython | — | — | C (TDD), B (Lint), E3 (MicroPython), A (Deps), A (Git) |
+| **iOS App (Swift)** | `*.xcworkspace` / `*.xcodeproj` / `Package.swift` | Swift/SwiftUI | XCTest | Xcode Cloud / GitHub Actions | B (TDD), B (Lint), G1 (Native), B (Deps), B (Git) |
+| **Android App (Kotlin)** | `build.gradle.kts` / `AndroidManifest.xml` | Kotlin/Jetpack | JUnit + Compose UI Test | GitHub Actions / Bitrise | B (TDD), B (Lint), G1 (Native), B (Deps), B (Git) |
+| **Flutter App** | `pubspec.yaml` (flutter in deps) | Flutter/Dart | flutter test | GitHub Actions / Codemagic | B (TDD), B (Lint), G2 (Cross-Platform), B (Deps), B (Git) |
+| **React Native App** | `package.json` + react-native in deps | React Native | Jest + Detox | GitHub Actions | B (TDD), B (Lint), G2 (Cross-Platform), B (Deps), B (Git) |
+| **Electron App** | `package.json` + electron in deps | Electron/TypeScript | Vitest/Jest + Playwright | GitHub Actions | B (TDD), B (Lint), G3 (Web Wrapper), C (Deps), B (Git) |
+| **Tauri App** | `src-tauri/Cargo.toml` + `tauri.conf.json` | Tauri/Rust+TS | cargo test + Vitest | GitHub Actions | A (TDD), A (Lint), G2/G3 (Cross-Platform/Web), A (Deps), B (Git) |
+| **Chrome Extension** | `manifest.json` | Chrome Extension MV3 | Puppeteer/Playwright | — | C (TDD), B (Lint), H1/H2 (Simple/MV3), A (Deps), B (Git) |
+| **Cross-Browser Extension** | `manifest.json` + webextension-polyfill | WebExtension | Puppeteer/Playwright | — | C (TDD), B (Lint), H3 (Cross-Browser), A (Deps), B (Git) |
+| **Jupyter Notebook** | `*.ipynb` files | Python/Jupyter | — | — | C (TDD), C (Lint), I1 (Single Notebook), C (Deps), A (Git) |
+| **R Markdown / Quarto** | `*.Rmd` / `*.qmd` files | R/R Markdown | — | — | C (TDD), C (Lint), I1/I2 (Notebook), C (Deps), A (Git) |
+| **Research Package** | `pyproject.toml` + `src/` + notebooks/ | Python research pkg | pytest | — | C (TDD), C (Lint), I3 (Package), C (Deps), A (Git) |
 
 Default options format: **Testing, Linting, Architecture, Dependencies, Git Workflow**.
 Remaining principles (Documentation, Error Handling, Performance, Code Review, Database, Config, Dev Toolchain) 

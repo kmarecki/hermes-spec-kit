@@ -2,8 +2,19 @@
 
 > Ratified: [DATE] | Version: [VERSION]
 > Auto-detected from: [brownfield detected sources] *(remove if greenfield)*
+> *[If monorepo: Multi-project constitution — see Projects section]*
+
+## Projects *(omit if single-project)*
+
+| Project | Purpose | Language/Framework | Architecture | 
+|---------|---------|-------------------|--------------|
+| [e.g., frontend] | [purpose] | [tech] | [arch option] |
+| [e.g., mobile] | G — Native Client | [Flutter] | G2 — Cross-platform |
+| [e.g., backend] | A — User-Facing App | [Go] | A2 — Modular Monolith |
 
 ## Tech Stack
+
+*(For single-project constitutions. Multi-project: see Projects table above.)*
 
 - **Language**: [LANGUAGE_VERSION]
 - **Framework**: [FRAMEWORK]
@@ -14,6 +25,8 @@
 - **Deployment**: [DEPLOYMENT_TARGET]
 
 ## Core Principles
+
+*(Shared principles apply to all projects in a monorepo. Project-specific variations noted per principle.)*
 
 ### 1. Testing Philosophy
 **Chosen: [A | B | C] — [Rule Name]**
@@ -30,7 +43,7 @@
 **Rationale:** [Why this option was chosen]
 
 ### 3. Architecture
-**Chosen: [A | B | C] — [Rule Name]**
+**Chosen: [A1|A2|A3|A4 | ... | I1|I2|I3] — [Rule Name]**
 
 [User-picked option's full text]
 
