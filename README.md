@@ -101,8 +101,15 @@ Documentation, Error Handling, Performance, Code Review, Database, Config/Secret
 are pre-filled with purpose-weighted defaults. The user confirms or adjusts each one.
 
 **Brownfield mode**: If the project already has code, the agent auto-detects language, framework,
-test runner, CI, database, and linting — then pre-fills ⭐-marked defaults. Greenfield mode guides
-through all choices.
+test runner, CI, database, and linting — then pre-fills ⭐-marked defaults.
+
+**Free-text mode** (new projects): User describes the project in natural language
+(e.g. "React Native mobile app for fitness, small team, ship fast"). The agent
+maps description → purpose → architecture → tech → principle defaults automatically.
+User reviews the inference table and may accept or correct any item.
+
+**Wizard mode** (guided, new projects): Interactive 3-level decision tree with
+tradeoffs at each level.
 
 **Monorepo support**: After choosing Level 1 purpose, the agent asks "Is this a multi-project
 monorepo?" If yes, Levels 1-3 run independently per sub-project, and the constitution gets a

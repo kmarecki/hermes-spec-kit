@@ -28,6 +28,7 @@ day-to-day usage.
     - [Level 3: Technology Choices](#level-3-technology-choices)
     - [Purpose-to-Principle Defaults](#after-level-3-purpose-to-principle-defaults)
     - [Monorepo Mode](#monorepo-mode)
+    - [Free-Text Mode](#free-text-mode-description--constitution)
     - [Brownfield Shortcut](#brownfield-shortcut)
 5.  [Explore Mode: Parallel Variants (Deep Dive)](#explore-mode-parallel-variants-deep-dive)
     - [How Git Worktrees Keep Variants Apart](#how-git-worktrees-keep-variants-apart)
@@ -50,6 +51,11 @@ you guide it through seven phases — from specification through close — with
 checkpoints, guardrails, and review gates. Four modes cover the full feature
 lifecycle: forward development (specify), bugfix loop, parallel exploration,
 and reopen for closed features.
+
+The constitution phase (Phase 0) adapts to how you work: describe your
+project in a sentence (free-text mode), walk through an interactive wizard
+(guided mode), or let the agent auto-detect from existing code (brownfield
+mode).
 
 **Who is this for?**
 - Developers who want AI-written code they can trust
@@ -240,7 +246,19 @@ technology choices, then maps those choices to weighted defaults for each of
 the 12 project principles.
 
 The skill auto-detects whether the project already has code (**brownfield
-mode**) or is starting fresh (**greenfield mode**):
+mode**) or is starting fresh (**greenfield mode**). For greenfield projects,
+two input methods are offered:
+
+- **Free-text description**: User describes the project in a sentence
+  (e.g. "React Native mobile app for fitness, small team, Firebase"). The
+  agent maps the description to a purpose (A-I), architecture option (A1-I3),
+  technology choices, and principle defaults automatically. The user reviews
+  the inference table and may accept or correct any item. Total time: ~30 seconds.
+- **Guided wizard**: Interactive 3-level decision tree with tradeoffs at
+  each level. The agent walks through Purpose → Architecture → Tech → principles.
+  Total time: ~5-10 minutes.
+
+<!-- brownfield description stays the same -->
 
 - **Brownfield**: Scans the project root for `package.json`, `pyproject.toml`,
   `go.mod`, `Cargo.toml`, `Gemfile`, `build.gradle`, `*.csproj`, `Dockerfile`,
@@ -390,6 +408,49 @@ each principle for confirmation.
 Result: specs/constitution.md with 12 principles and a full Tech Stack
 section. Approx 5-10 minutes for a new project.
 ```
+
+### Free-Text Mode: Description → Constitution
+
+For users who know what they're building and want to skip the wizard, the
+free-text mode maps a natural-language project description directly to
+purpose, architecture, tech, and principle defaults.
+
+```
+You: "Create a constitution for my-project"
+
+Agent: "No existing project detected. Which approach?
+         1. Free-text — describe your project in a sentence
+         2. Guided wizard — 3 levels of choices with tradeoffs"
+
+You: "1 — Free-text"
+
+Agent: "Describe your project in a few sentences — what are you building,
+         what platform, team size, and any key constraints?"
+
+You: "React Native mobile app for fitness tracking, small two-person team,
+      want to ship quickly, no backend — Firebase for auth and data"
+
+Agent infers:
+  | Inference | Value | Correct? |
+  |-----------|-------|----------|
+  | Purpose | C — Native / Desktop Client | ✅ |
+  | Architecture | C2 — Cross-Platform (React Native) | ✅ |
+  | Language | TypeScript (React Native) | ✅ |
+  | Testing | B — Pragmatic TDD | ✅ |
+
+Agent: "Does this look right? Say 'all good' to proceed, or correct
+         specific items. I'll then walk through the 12 principles."
+
+You: "All good"
+
+Agent: Walks through 12 principles (skipping Database, not applicable).
+       Approx 30 seconds of interaction.
+```
+
+The key difference: instead of answering 3 levels of questions, the user
+writes one sentence and reviews 4-5 inferred values. The 12 principles
+still get confirmed/adjusted individually — only the purpose/architecture/
+tech tree is shortcut.
 
 ### Brownfield Shortcut
 
@@ -691,15 +752,17 @@ Required before specify or plan can proceed — both will block without it.
 
 Uses a **3-level decision tree** to narrow from general purpose to specific
 technology choices, then pre-fills the 12 project principles with
-purpose-weighted defaults. Two modes:
+purpose-weighted defaults. Three input modes:
 
-- **Greenfield** (no existing code): Walks the user through all 3 levels:
-  Level 1 (9 purposes A–I), Level 2 (2–4 architecture options per purpose),
-  Level 3 (language/framework bracketing). After the tree completes, each
-  of the 12 principles is presented with 3 options and pros/cons.
 - **Brownfield** (existing codebase): Auto-detects language, framework,
   test runner, CI, database, and linting from 60+ detection patterns.
   Pre-fills ⭐-marked defaults — the user confirms or adjusts them.
+- **Free-text** (new project): User describes the project in a sentence.
+  Agent maps description to purpose, architecture, tech, and principle
+  defaults. User reviews the inference table.
+- **Wizard** (guided, new project): Walks the user through all 3 levels:
+  Level 1 (9 purposes A–I), Level 2 (2–4 architecture options per purpose),
+  Level 3 (language/framework bracketing).
 
 Supports multi-project monorepos: after Level 1, asks whether the repo
 contains multiple sub-projects. If yes, Levels 1-3 run independently per

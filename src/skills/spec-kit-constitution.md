@@ -1,7 +1,7 @@
 ---
 name: spec-kit-constitution
-description: Load when the user says 'spec-kit constitution', 'speckit constitution', 'spec-kit principles', 'speckit principles', "create constitution", "create project principles", or "set up project principles" — Phase 0 project setup. Handles both brownfield (existing codebase) and greenfield (new project) modes.
-version: 2.0.0
+description: Load when the user says 'spec-kit constitution', 'speckit constitution', 'spec-kit principles', 'speckit principles', "create constitution", "create project principles", or "set up project principles" — Phase 0 project setup. Three modes: brownfield (auto-detect from existing code), free-text (describe your project in a sentence, agent maps to purpose/arch/principles), and guided wizard (3-level decision tree with 9 purposes × 25 architecture options).
+version: 2.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -21,9 +21,18 @@ with tradeoffs explained.
 **Phase**: 0 (Project Foundation)
 
 **Purpose**: Create or update the project constitution at `specs/constitution.md`.
-Auto-detects project stack in brownfield mode, or guides the user through
-principled choices in greenfield mode. Always presents 3 options per principle
-with pros and cons.
+
+Three input modes:
+1. **Brownfield** (existing code): Auto-detects stack from project files —
+   60+ detection patterns for language, framework, test runner, CI, database,
+   and linting. Pre-fills ⭐-marked defaults.
+2. **Free-text description** (new project): User describes the project in
+   natural language (e.g. "React Native mobile app for fitness, small team,
+   ship fast"). Agent maps description to purpose → architecture → tech →
+   principle defaults automatically. User reviews and adjusts.
+3. **Wizard** (guided, new project): Interactive 3-level decision tree
+   (9 purposes × 25 architecture options). User picks at each level.
+   Always presents 3 options per principle with pros and cons.
 
 **When NOT to use**: This is a one-time setup per project. Do NOT re-run for
 every feature — principles are project-wide.
@@ -297,13 +306,125 @@ SCAN project root for these files to identify the tech stack:
 
   ELSE:
     MODE = greenfield
-    NOTE: "No existing project detected — greenfield mode. I'll guide you through
-           choosing principles for your new project."
+    NOTE: "No existing project detected. Would you like to:
+           1. Describe your project in a sentence — I'll map it to purpose,
+              architecture, tech, and principle defaults automatically
+           2. Use the guided wizard — 3 levels of choices with tradeoffs at each step"
+    
+    ASK: "Which approach do you prefer? (1) Free-text description or (2) Guided wizard"
+    
+    RECORD: input_mode = [free-text | wizard]
 ```
 
-### Step 2: Greenfield — 3-Level Decision Tree
+### Step 2a: Free-Text — Description to Constitution
 
-**Only for MODE=greenfield. If brownfield, skip to Step 2b below.**
+**Only for MODE=greenfield AND input_mode=free-text.**
+
+The user provides a natural-language project description. The agent maps it
+to a purpose (A-I), architecture (A1-I3), technology choices, and principle
+defaults automatically. The user reviews the inferred choices and may accept
+or adjust any of them.
+
+```text
+1. PROMPT: "Describe your project in a few sentences — what are you building,
+   what platform/target, team size, and any key constraints?"
+
+2. AWAIT user input (e.g. "React Native mobile app for fitness tracking,
+   small two-person team, want to ship quickly, no backend — Firebase")
+
+3. INFER from the description:
+
+   MAP the description to a purpose code (A-I):
+     - Look for keywords: "mobile app", "iOS", "Android", "desktop"
+       → Purpose C (Native/Desktop Client)
+     - "web app", "SaaS", "API", "dashboard", "full-stack"
+       → Purpose A (User-Facing Application)
+     - "library", "package", "SDK", "npm", "PyPI"
+       → Purpose D (Library/SDK)
+     - "CLI", "tool", "script", "pipeline", "Terraform"
+       → Purpose E (Infrastructure/CLI/DevOps)
+     - "game", "Unity", "Unreal", "Godot"
+       → Purpose F (Game)
+     - "extension", "browser add-on", "Chrome extension"
+       → Purpose G (Browser Extension)
+     - "notebook", "research", "analysis", "Jupyter"
+       → Purpose H (Research/Notebook)
+     - "firmware", "embedded", "IoT", "Arduino", "ESP32"
+       → Purpose I (IoT/Embedded)
+     - "portfolio", "blog", "landing page", "marketing site"
+       → Purpose B (Content Site/Marketing)
+     - If ambiguous: infer the closest match and note the uncertainty
+
+   MAP architecture from implied stack:
+     - "React Native", "Flutter", "Tauri" → C2 (Cross-Platform)
+     - "iOS app (Swift)", "Android (Kotlin)" → C1 (Native)
+     - "Electron", "PWA", "Capacitor" → C3 (Web Wrapper)
+     - "Firebase", "Vercel", "Cloudflare" → A4 (Serverless)
+     - "Unity", "Unreal", "Godot" → F1 (Engine-Centric)
+     - "Rails", "Django", "Laravel" → A1 (Monolith)
+     - "microservices", "distributed" → A3 (Microservices)
+     - "Arduino", "sensor firmware" → I3 (MicroPython/Arduino)
+     - "bare-metal", "RTOS", "FreeRTOS" → I1 (Bare-Metal/RTOS)
+     - "single notebook", "analysis only" → H1 (Single Notebook)
+     - "static site", "SSG" → B1 (Static Site Generator)
+     - Default: use the most common architecture for the detected purpose
+
+   MAP tech choices from explicit mentions:
+     - "React Native" → TypeScript, React Native framework
+     - "Flutter" → Dart, Flutter
+     - "Firebase" → BaaS for auth/db
+     - Extract any explicit language/framework mentions
+
+   MAP principle defaults from inferred purpose using the Step 2c
+   (Purpose-to-Principle) mapping table below.
+
+4. PRESENT the inferred result as a table:
+
+   | Inference | Value | Correct? |
+   |-----------|-------|----------|
+   | Purpose | C — Native / Desktop Client | ✅ / 🔄 |
+   | Architecture | C2 — Cross-Platform (Flutter/React Native) | ✅ / 🔄 |
+   | Language | TypeScript (React Native) | ✅ / 🔄 |
+   | Testing | B — Pragmatic TDD (recommended for native apps) | ✅ / 🔄 |
+
+   ASK: "Does this look right? You can say 'all good' to proceed with these
+         defaults, or correct specific items. I'll then walk through the
+         12 principles to confirm or adjust."
+
+5. IF user says "all good" or confirms:
+   PROCEED to Step 2c (Load principles reference) then Step 3
+
+6. IF user corrects specific items:
+   UPDATE the inferred values
+   RECORD corrections as user rationale
+   PROCEED to Step 3
+
+7. IF user says "I want the wizard instead":
+   SET input_mode = wizard
+   ROUTE to Step 2b (Wizard mode below)
+
+8. IF the description is too vague to map confidently:
+   NOTE: "Description is quite broad. I'll use [purpose] as a starting point,
+          but let me know if that doesn't fit."
+   PROCEED with best-guess inference
+```
+
+**Inference examples:**
+
+| User says | Inferred purpose | Inferred arch | Principle defaults |
+|-----------|-----------------|---------------|-------------------|
+| "iOS app with SwiftUI for habit tracking, solo dev" | C — Native | C1 — Native Platform | C defaults, Testing C (solo dev) |
+| "React Native mobile app for fitness, small team, Firebase" | C — Native | C2 — Cross-Platform | C defaults, Testing B |
+| "Django REST API for a SaaS dashboard" | A — User-Facing | A1 — Monolith | A defaults |
+| "CLI tool in Go for managing Kubernetes clusters" | E — Infra/CLI | E1 — Single Binary | E defaults |
+| "Three.js browser game, WebGL, casual" | F — Game | F3 — Web/Retro | F defaults |
+| "Jupyter notebook analyzing stock market data" | H — Research | H1 — Single Notebook | H defaults |
+
+---
+
+### Step 2b: Wizard — 3-Level Decision Tree
+
+**Only for MODE=greenfield AND (input_mode=wizard OR no input_mode set yet).**
 
 Guide the user through three levels of decisions. Each level narrows the
 options and pre-fills recommended defaults for the next level. Use the
@@ -577,7 +698,7 @@ match:
 
 ---
 
-#### Step 2a: Default Mapping — Purpose to Principle Weights
+#### Step 2c: Default Mapping — Purpose to Principle Weights
 
 Once purpose + architecture are chosen, map them to recommended defaults
 for the 12 principles. These are weighted suggestions — the user still
@@ -730,7 +851,7 @@ Then proceed to Step 3 to let the user confirm or adjust each principle.
 
 ---
 
-### Step 2b: Load the principles reference (both modes)
+### Step 2d: Load the principles reference (both modes)
 
 ```
 LOAD spec-kit/references/constitution-principles.md
@@ -744,7 +865,7 @@ FOR each principle:
     SELECT the option that best matches detected project artifacts
     TAG it with ⭐ "detected"
   IF MODE == greenfield:
-    USE the pre-filled mapping from Step 2a
+    USE the pre-filled mapping from Step 2c
     TAG the recommended option with ⭐ "recommended for [purpose]"
 ```
 
@@ -774,11 +895,11 @@ PRESENT for each principle:
 ```
 
 In greenfield mode, after showing the 3 options, include the purpose-based
-recommendation from Step 2a instead of a generic guiding question:
+recommendation from Step 2c instead of a generic guiding question:
 
 ```
   ⭐ This option is recommended for [purpose name] projects because
-     [reason from Step 2a mapping].
+     [reason from Step 2c mapping].
   You can still pick A, B, or C — this is a recommendation, not a requirement.
 
   USER picks: [A | B | C]
@@ -843,7 +964,8 @@ ELSE (single project):
 
 ## Completion
 - Report: "Constitution ratified with [N] principles."
-- Report mode: brownfield or greenfield
+- Report mode: brownfield, free-text, or wizard (greenfield)
+- If free-text mode: Show which purpose/architecture/tech were inferred from user's description
 - List all chosen options (A/B/C per principle)
 - List any principles skipped with reason
 - Propose: Run `spec-kit-specify` to create the first feature specification.
