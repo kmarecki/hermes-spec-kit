@@ -102,12 +102,12 @@ IF feature name is provided (e.g., "003-user-auth"):
 || 3.5 | `spec-kit-review` | Quality gate (optional) | Tasks |
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
-| **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
+|| **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
 || — | **`spec-kit-refresh`** | **Lightweight artifact refresh** | **Any (standalone)** |
-| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Close** (bugs.md with open bugs) |
+|| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Close** (bugs.md with open bugs) |
 || — | **Quickfix** | Trivial bugfix: Plan section + tasks entry + fix in one batch commit (user opt-in, docs still exist) | bugfix sub-round with explicit "quickfix [feature]" |
 
-> **Important**: Phase 6 (Close/Summarize) is **mandatory** before a feature can enter Complete state. After the bugfix loop finishes (all bugs verified), the workflow auto-chains to Phase 6.
+> **Important**: Phase 6 (Close/Summarize) is **mandatory** before a feature can enter Complete state. After the bugfix loop finishes (all bugs verified), the user is prompted to run Phase 6.
 
 ## Routing Logic
 
@@ -227,7 +227,6 @@ Each skill BLOCKS if prerequisites are not met:
 - Route to: `spec-kit-summarize` (full mode)
 - User says: "Close [feature]" or "Complete [feature]"
 - Route to: `spec-kit-summarize` (lightweight close mode)
-- **Auto-trigger**: After bugfix loop completes (all bugs verified), auto-route to `spec-kit-summarize`
 
 ### Block: Feature cannot be done without Phase 6
 ```
@@ -261,8 +260,8 @@ Check for artifacts to determine current phase:
 || `bugs.md` all verified | Testing complete — **must close** |
 || `implementation-summary.md` exists | Summarized — complete |
 || `close.md` exists | Closed — complete |
-| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
-| All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
+|| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
+|| All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
 
 > **Drift detection**: When entering any phase for an existing feature that has `implementation-summary.md` or `close.md`, read its Spec State / Artifact State table. If any artifact is `⚠️ needs review` or `❌ outdated`, emit a warning: "Artifact drift detected — spec/plan may not reflect current code. Run 'refresh [feature]' to reconcile."
 

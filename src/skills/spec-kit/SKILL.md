@@ -36,7 +36,7 @@ The workflow has **two development modes**:
 | Mode | Trigger | Behavior |
 |------|---------|----------|
 | **specify** (default) | "Create a spec for [feature]" | Full forward phase sequence. Forward phases are manual; user decides when to advance. |
-| **bugfix** | "bugfix [feature]" | Reuses Plan → Tasks → Implement inner loop. Chains automatically — the user already committed by invoking bugfix mode. **Auto-chains to Close** when all bugs verified. |
+| **bugfix** | "bugfix [feature]" | Reuses Plan → Tasks → Implement inner loop. Chains automatically — the user already committed by invoking bugfix mode. **User is prompted to close** when all bugs verified. |
 | **reopen** | "Reopen [feature]" | Reopens a closed feature for bugfixing. Auto-creates bugs.md, creates a bugfix branch, and routes through the bugfix loop. Previous close.md becomes stale — must close again after fixes. |
 
 **Constitution is mandatory** in every mode. If `specs/constitution.md` doesn't exist, specify and plan will block until it's created.

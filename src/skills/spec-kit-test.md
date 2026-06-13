@@ -19,7 +19,7 @@ metadata:
 
 **Purpose**: Log user-discovered bugs in `bugs.md` and orchestrate the bugfix loop. User reports bugs in natural language; agent formats them into structured entries.
 
-**When NOT to use**: During implementation or before the final automated test run (Step 9 of implement) completes.
+**When NOT to use**: During implementation or before the full regression run (Step 7 of implement) completes.
 
 **Routing**: Load this skill when the user says "test [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 

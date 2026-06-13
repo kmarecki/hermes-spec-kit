@@ -79,6 +79,9 @@ Same per-item approval for architecture, data model, and contract discrepancies.
 
 ## Common Pitfalls
 
+1. **Using refresh instead of close**: Refresh doesn't generate a close document. The feature won't be marked complete.
+2. **Bulk patching without user approval**: Each discrepancy needs explicit yes/no. Don't auto-approve.
+
 ## Key Difference from Summary
 
 | Aspect | summarize | refresh |
@@ -87,7 +90,3 @@ Same per-item approval for architecture, data model, and contract discrepancies.
 | Gap analysis | Full matrix | Per-item yes/no |
 | Spec health | Computed | Not computed |
 | When | End of feature | Mid-stream alignment |
-
-## Common Pitfalls
-1. **Using refresh instead of close**: Refresh doesn't generate a close document. The feature won't be marked complete.
-2. **Bulk patching without user approval**: Each discrepancy needs explicit yes/no. Don't auto-approve.

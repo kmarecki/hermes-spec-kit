@@ -27,7 +27,7 @@ A **spec-driven development (SDD) workflow system** for Hermes Agent. 13 skills 
 | Skill | Phase | Purpose |
 |-------|-------|---------|
 | spec-kit-workflow | — | Orchestrator — routes requests to phases |
-| spec-kit-constitution | 0 | Project principles (always optional) |
+| spec-kit-constitution | 0 | Project principles (mandatory before specify/plan) |
 | spec-kit-specify | 1 | Feature specification |
 | spec-kit-clarify | 1.5 | Ambiguity resolution (optional) |
 | spec-kit-plan | 2 | Implementation planning |
@@ -39,7 +39,7 @@ A **spec-driven development (SDD) workflow system** for Hermes Agent. 13 skills 
 
 ## Key Behaviors
 
-- **Constitution is always optional** — warn, don't block
+- **Constitution is mandatory** — specify and plan block without it
 - **Design phases (0-3) do not auto-commit** — batch commit at start of Phase 4
 - **Phase-level TDD** — all tests RED first, all code GREEN, one commit per phase
 - **TDD bypass** — user asked at task generation, tracked in tasks.md header

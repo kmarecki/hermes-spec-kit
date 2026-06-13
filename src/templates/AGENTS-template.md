@@ -8,7 +8,7 @@ Development modes:
   - **Bugfix**: Test → [Clarify] → Plan → Tasks → Implement → Test → Close (auto-chains inner loop)
 
 Key behaviors:
-  - Constitution is always optional
+  - Constitution is mandatory — specify and plan block without it
   - Phase 6 (Close/Summarize) is mandatory to complete a feature
   - All spec artifacts are batch-committed when Phase 4 begins (not per design phase)
   - Implementation uses phase-level TDD: all tests RED first, all code GREEN, then commit
