@@ -1,4 +1,4 @@
-# Implementation Summary: [Feature Name]
+[Implementation Summary: FEATURE NAME]
 
 **Feature**: specs/[###-feature-name]/
 **Created**: [DATE]

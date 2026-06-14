@@ -1,4 +1,4 @@
-# Process History: [Feature Name]
+[Process History: FEATURE NAME]
 
 ## [TIMESTAMP] | Phase N → [Phase Name] → Complete
 - **Skill**: [skill-name]

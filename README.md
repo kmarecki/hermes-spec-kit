@@ -41,12 +41,12 @@ Full workflow documentation: **[user-guide.md](user-guide.md)**
 
 ## Project Structure
 
-```
+```text
 src/
-  skills/                # Skill source files (12 .md + 1 directory skill)
+  skills/                # Skill source files (12 .md + 1 umbrella directory)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
-  templates/             # Template source files (14 templates)
-  references/            # Reference files (preflight.md, auto-commit.md, history-tracking.md)
+  templates/             # Template source files (14 templates, all *-template.md)
+  references/            # Reference files (4: preflight, auto-commit, history-tracking, + more)
 scripts/
   install.sh             # Installs to ~/.hermes/skills/
 ```

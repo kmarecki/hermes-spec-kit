@@ -1,4 +1,4 @@
-# Data Model: [Feature Name]
+[Data Model: FEATURE NAME]
 
 **Feature**: [Link to spec.md]
 **Date**: [DATE]

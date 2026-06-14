@@ -1,4 +1,4 @@
-# Close: [Feature Name]
+[Close: FEATURE NAME]
 
 **Feature**: specs/[###-feature-name]/
 **Spec Health**: N%

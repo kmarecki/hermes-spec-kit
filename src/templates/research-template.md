@@ -1,4 +1,4 @@
-# Technical Research: [Feature Name]
+[Technical Research: FEATURE NAME]
 
 **Feature**: [Link to spec.md]
 **Date**: [DATE]

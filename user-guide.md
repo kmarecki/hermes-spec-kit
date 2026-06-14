@@ -64,7 +64,7 @@ mode).
 - Without close, features accumulate half-finished
 
 **What tools does it add?**
-- 15 spec-kit skills in `~/.hermes/skills/` — respond to `spec-kit` prefix, `speckit` prefix,
+- 13 spec-kit skills in `~/.hermes/skills/` — respond to `spec-kit` prefix, `speckit` prefix,
   and natural language phrases
   (e.g. `"speckit plan 001-user-auth"`, `"spec-kit plan 001-user-auth"`, or
   `"plan the implementation for 001-user-auth"` all trigger the same skill)

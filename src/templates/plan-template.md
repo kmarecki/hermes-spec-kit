@@ -30,7 +30,7 @@
 
 ### Documentation (this feature)
 
-specs/[###-feature]/
+specs/[###-feature-name]/
 ├── plan.md              # This file
 ├── research.md          # Phase 0 output
 ├── data-model.md        # Phase 1 output

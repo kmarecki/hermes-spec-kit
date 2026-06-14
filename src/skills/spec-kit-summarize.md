@@ -31,7 +31,7 @@ See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`. Branch guar
 
 
 **When to run**:
-- **After bugfix loop completes** (all bugs verified) — auto-triggered as mandatory close
+- **After bugfix loop completes** (all bugs verified) — suggested as mandatory close (user decides when to run it)
 - User says: "Summarize [feature]" — full gap analysis
 - User says: "Close [feature]" — lightweight close
 
@@ -54,9 +54,9 @@ ELIF user explicitly says "summarize [feature]":
   USE full summary mode → implementation-summary-template.md
   RUN all steps below
 
-ELIF auto-triggered after bugfix loop (all bugs verified):
-  ASK user: "Generate a full implementation summary or a lightweight close document?"
-  WAIT for user response
+ELIF all bugs in bugs.md have Status: verified:
+  NOTE: "All bugs verified. Suggest running 'close [feature]' or 'summarize [feature]' to complete Phase 6 (mandatory)."
+  PROMPT user for which mode: full summary or lightweight close
   USE the mode they selected
 
 ELSE:
@@ -373,19 +373,17 @@ After this skill completes, the feature enters **Complete** state:
 - "Implementation summary for [feature]" — same as summarize
 - "Status of [feature]" — checks if summary exists, reports state
 
-## Mandatory Close (Auto-Trigger)
+## Mandatory Close (User-Initiated)
 
-After the bugfix loop completes (all bugs in bugs.md marked Status: verified), the workflow MUST auto-trigger Phase 6 (Summarize/Close):
+After the bugfix loop completes (all bugs in bugs.md marked Status: verified), the workflow suggests Phase 6 (Summarize/Close) — the user decides when to run it:
 
-```
-TRIGGER: All bugs in bugs.md have Status: verified
+```text
+CHECK: All bugs in bugs.md have Status: verified
 
 ACTION:
-  1. Load spec-kit-summarize (this skill)
-  2. Determine mode from feature complexity:
-     - ≤5 tasks, no complex plan → lightweight close
-     - >5 tasks or complex plan → full summary
-  3. Run appropriate mode
+  1. Suggest the user run Phase 6: "'close [feature]' or 'summarize [feature]'?"
+  2. WAIT for user choice: full summary ('summarize') or lightweight close ('close')
+  3. Run the chosen mode
   4. Present output to user
 
 BLOCKER: A feature CANNOT enter Complete state without Phase 6 completing.

@@ -25,15 +25,15 @@ Run these checks in order. If any check fails, stop and report before proceeding
      MODE = feature
 
 3. UNLOGGED BUG CHECK — before any code change
-   IF the user reported a bug or issue (not a planned feature task):
-     IF specs/[feature]/bugs.md NOT EXISTS OR the reported issue has no BUG-NNN entry:
-       BLOCK: "Bug must be logged before it can be fixed. Run 'test [feature]' first to log the bug,
-               then 'bugfix [feature]' to start the fix loop.
-               Rule: Log Before Fix — ALWAYS."
-       ROUTE to: spec-kit-test
-       HALT
+  IF the user reported a bug or issue (not a planned feature task):
+    IF specs/[feature]/bugs.md NOT EXISTS OR the reported issue has no BUG-NNN entry:
+      BLOCK: "Bug must be logged before it can be fixed. Run 'test [feature]' first to log the bug,
+              then 'bugfix [feature]' to start the fix loop.
+              Rule: Log Before Fix — ALWAYS."
+      ROUTE to: spec-kit-test
+      HALT
 
-3. GIT CONVENTIONS
+4. GIT CONVENTIONS
    IF specs/git-conventions.md EXISTS in the project root:
      LOAD and apply for branch naming, commit messages, and merge behaviour.
      CHECK version: read `Conventions version:` line from the file

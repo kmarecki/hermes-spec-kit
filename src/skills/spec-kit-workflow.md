@@ -382,7 +382,7 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Clarify** | `clarify.md`, `spec.md` (amend) | BLOCKED | `clarify.md` exists |
 | **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md` | BLOCKED | `plan.md` exists, no `tasks.md` |
 | **Tasks** | `tasks.md` only | BLOCKED | `tasks.md` exists, no completions |
-| **Review** | None (read-only) | BLOCKED | User says "review", "analyze", or "quality check" |
+| **Review** | `tasks.md` only (closed-review mode, user approval) | BLOCKED | User says "review", "analyze", or "quality check" |
 | **Implement** | source code, `tasks.md` (completions), `bugs.md` (mark resolved) | ALLOWED | `tasks.md` with pending tasks |
 | **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
 | **Reopen** | `bugs.md` (create if missing), source code (fix loop) | ALLOWED (same as bugfix) | `close.md` exists, user says "reopen" |
