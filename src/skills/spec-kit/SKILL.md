@@ -8,17 +8,16 @@ category: software-development
 
 Spec-driven development for Hermes Agent. Specifications drive code, not the other way around.
 
-**This is the overview skill. For phase routing (including bugfix, implement, plan), load `spec-kit-workflow` instead.** The workflow skill handles all routing decisions based on artifact state and trigger phrases. This skill only documents the overall workflow and conventions.
+**For phase routing (bugfix, implement, plan, reopen, close), load `spec-kit-workflow` instead.** The workflow skill handles all routing decisions based on artifact state and trigger phrases. This skill only documents the overall workflow, conventions, and project structure.
 
 ## ⚠️ Critical Approach Rule: Read First, Build Second
+
 **ALWAYS read the source repository design documents before implementing a skill or template that mirrors an existing system.** This prevents creating simplified approximations instead of faithful implementations.
 
-**The pitfall to avoid:** Jumping to building before reading. When a user asks to implement parity with an existing system:
+When a user asks to implement parity with an existing system:
 1. Read the actual source design docs, templates, and workflows FIRST
 2. Analyze all commands, templates, and their exact structures
 3. Only then build or update templates
-
-**When this applies:** Any time implementing "parity" with, "mirroring," or "equivalent to" an existing system.
 
 ## Core Workflow
 
@@ -31,103 +30,41 @@ Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → 
                                                           [Clarify] → Plan → Tasks → [Review] → Implement → Test → Close (mandatory)
 ```
 
-The workflow has **two development modes**:
-
 | Mode | Trigger | Behavior |
 |------|---------|----------|
-| **specify** (default) | "Create a spec for [feature]" | Full forward phase sequence. Forward phases are manual; user decides when to advance. |
-| **bugfix** | "bugfix [feature]" | Reuses Plan → Tasks → Implement inner loop. Chains automatically — the user already committed by invoking bugfix mode. **User is prompted to close** when all bugs verified. |
-| **reopen** | "Reopen [feature]" | Reopens a closed feature for bugfixing. Auto-creates bugs.md, creates a bugfix branch, and routes through the bugfix loop. Previous close.md becomes stale — must close again after fixes. |
+| **specify** (default) | "Create a spec for [feature]" | Full forward phase sequence, manual transitions |
+| **bugfix** | "bugfix [feature]" | Auto-chains Plan→Tasks→Implement, prompts to close |
+| **reopen** | "Reopen [feature]" | Creates bugfix branch from closed feature, preserves original close |
 
-**Constitution is mandatory** in every mode. If `specs/constitution.md` doesn't exist, specify and plan will block until it's created.
-
-**Phase 6 (Close) is mandatory** to mark a feature complete. After the bugfix loop finishes or the user requests close, `spec-kit-summarize` runs in either full summary or lightweight close mode, computes spec health, and patches spec/plan artifacts to reflect intentional deviations.
+**Constitution is mandatory** in every mode. **Phase 6 (Close) is mandatory** to mark a feature complete.
 
 ## Phase Reference
 
-See `spec-kit-workflow` for the complete phase table and routing. Quick reference:
+Load `spec-kit-workflow` for the full routing table, prerequisite checks, phase detection, and guardrails.
 
-| Phase | Skill | When | Purpose |
-|-------|-------|------|---------|
-| 0 — Constitution | `spec-kit-constitution` | "create constitution" | Project-wide principles with auto-detection for existing codebases. Brownfield mode scans project files and pre-fills detected defaults (⭐). Greenfield mode guides user through 12 principles, each with 3 options and pros/cons. Always offers choice with tradeoffs. |
-| 1 — Specify | `spec-kit-specify` | "create a spec for [...]" | **WHAT**: Describe the feature, refactoring, or enhancement in detail. Functional requirements (FR-###), user scenarios, success criteria. No implementation details, no code. |
-| 1.5 — Clarify (opt) | `spec-kit-clarify` | "clarify [feature]" | Resolve ambiguities in the spec |
-| 2 — Plan | `spec-kit-plan` | "plan [feature]" | **HOW**: Design implementation approach. Study existing specs and codebase. Plan with smallest possible impact on existing code while respecting constitution rules and architecture. No code-level implementation details in the plan — focus on architecture, data flow, module boundaries. |
-| 3 — Tasks | `spec-kit-tasks` | "generate tasks for [feature]" | Break plan into executable ordered tasks |
-| 3.5 — Review (opt) | `spec-kit-review` | "review [feature]" / "analyze [feature]" | Cross-artifact consistency + post-implement code quality |
-| 4 — Implement | `spec-kit-implement` | "implement [feature]" | TDD implementation following tasks.md |
-| 5 — Test | `spec-kit-test` | "test [feature]" | Bug tracking and manual testing |
-| 6 — Summarize/Close | `spec-kit-summarize` | "summarize [feature]" / "close [feature]" | Spec health score, gap analysis, intentional deviation patching |
-| Refresh | `spec-kit-refresh` | "refresh [feature]" | Artifact reconciliation |
-
-**Bug tracking format**: Each bug has: ID (BUG-001), Severity (critical/major/minor/trivial), Area, Description, Steps to Reproduce, Expected vs Actual Result, Requires Clarification flag, Status (open/in-progress/resolved/verified).
-
-### ⚠️ Bugfix Gate: Log Before Fix
-
-When the user reports a bug, the first action is **always** to create or update `bugs.md` in the feature's spec directory. Do NOT make any code changes before the bug is logged.
-
-**Always log the bug first, then route through the fix loop.** A user who says "stop" or "stop fixing" while you're changing code is telling you to step back and follow the proper procedure — not to give up on the task.
-
-### Bugfix Loop
-
-After bugs are logged in `bugs.md`, the workflow routes back through earlier phases:
-
-```text
-Test → [Clarify if needed] → Plan → Tasks → [Review] → Implement → Test (verify) → Close (mandatory)
-```
-
-- **"bugfix [feature]"** starts the loop
-- **Default route**: Plan (for straightforward bugs)
-- **With clarification**: 
-  - *User-initiated*: user says "clarify [BUG-NNN]" — route through clarify step for that specific bug regardless of its Requires Clarification flag. The user may volunteer new details or corrections for any bug.
-  - *Agent-initiated*: if a bug has `Requires Clarification: yes`, route through clarify step first.
-- **Bugfix tasks**: Prefixed with `BF-###` and tagged `[BUGFIX]`
-- **Bugfix task tracing**: When a bugfix task supersedes specific original (buggy) tasks, append `[T###-fix]` to trace the relationship (e.g. `BF-001 [BUGFIX] [T051-fix] Fix validate_cluster_shape`). This connects bugfix work back to the original tasks that need rework, useful during post-implementation review.
-- **TDD for bugfixes**: Each bugfix follows RED→GREEN — write a failing test that reproduces the bug, then apply the fix. If a test cannot be written (visual layout, race condition, external dep), note the reason in the task and verify manually.
-- **New bugs found mid-fix**: If during implementation a new issue surfaces (user reports it, or code reading reveals it), log it as a separate entry in bugs.md. Each new bug gets its own RED→GREEN cycle — do not fix it inline with the current BF-### task. Exception: trivial test fixes only.
-- **Full workflow for new bugs**: When "bugfix [feature]" is invoked after new bugs were logged mid-round, the workflow runs the COMPLETE plan → tasks → implement cycle with separate commits per phase.
-- **Quickfix mode**: When the user says "quickfix [feature]", plan section + tasks entry + fix are drafted in one pass and committed together. Plan refs and task entries ALWAYS exist — only commit granularity differs. User explicitly opts in.
-- **Verify**: User marks bug status as "verified" when fix is confirmed
-Auto-close: When all bugs are verified, suggest Phase 6 (spec-kit-summarize) — the user decides when to close. Do NOT auto-trigger.
-- **Repeat**: Loop until all bugs are verified and close is generated
-
-### Phase 6 (Summarize/Close): Post-Implementation Review
-
-The **canonical post-implementation review** is `spec-kit-summarize` (Phase 6). Run it with:
-- "summarize [feature]" — full gap analysis: compares actual code against spec/plan/tasks, produces `implementation-summary.md` with ✅/⚠️/❌ verdicts, **computes spec health score**, **patches spec/plan artifacts** for intentional deviations, and creates bug entries for uncovered gaps.
-- "close [feature]" — lightweight close mode: produces `close.md` with health score, artifact state, and key decisions. No deep gap analysis.
-
-**Phase 6 is mandatory** to mark a feature complete. The workflow orchestrator blocks attempts to start new features or mark features done without running Phase 6 first.
-
-Do NOT attempt a manual post-implementation review by following reference steps here. Load `spec-kit-summarize` and let it handle the analysis. The umbrella skill does not duplicate the summarization logic — refer to the skill file for execution details.
+| Phase | Skill | Purpose |
+|-------|-------|---------|
+| 0 — Constitution | `spec-kit-constitution` | Project principles (brownfield/free-text/wizard) |
+| 1 — Specify | `spec-kit-specify` | Functional requirements, user scenarios |
+| 1.5 — Clarify | `spec-kit-clarify` | Resolve ambiguities in the spec |
+| 2 — Plan | `spec-kit-plan` | Architecture, data flow, module boundaries |
+| 3 — Tasks | `spec-kit-tasks` | Executable task breakdown with TDD flag |
+| 3.5 — Review | `spec-kit-review` | Pre/post implement quality check (optional) |
+| 4 — Implement | `spec-kit-implement` | Phase-level TDD execution |
+| 5 — Test | `spec-kit-test` | Bug tracking and manual testing |
+| 6 — Close | `spec-kit-summarize` | Spec health score, gap analysis, deviation patching |
+| — Refresh | `spec-kit-refresh` | Standalone artifact reconciliation |
 
 ## AGENTS.md Conventions
 
-AGENTS.md is **project-level context** — reference skills by name, don't replicate their routing logic or trigger phrases.
+**Put in AGENTS.md**: which skills are available, active spec directories, project-specific context (tech stack, build commands), project conventions.
 
-**Put in AGENTS.md**:
-- Which skills are available
-- Active spec directories and current artifacts
-- Project-specific context (tech stack, build commands)
-- Conventions unique to the project
+**Keep out of AGENTS.md**: trigger phrase lists, routing tables, workflow mechanics, phase diagrams, bugfix loop details. Routing belongs in skill files.
 
-**Keep out of AGENTS.md**:
-- Trigger phrase lists or routing tables
-- Workflow mechanics / phase descriptions / diagrams
-- Any routing that already lives in a skill file
+## Workflow Tracking
 
-Routing logic, trigger phrases, and workflow mechanics belong in the skill files. When you add a new phase or routing rule, update the relevant skill — not AGENTS.md. This keeps AGENTS.md stable and skills as the source of truth.
+Every spec directory maintains `specs/NNN-name/history.md` — an append-only process log. Each phase skill appends one entry on completion:
 
-## Workflow Tracking (Transition Log)
-
-Every spec directory maintains `specs/NNN-name/history.md` — an append-only process history. Each phase skill appends one entry when it completes. This gives:
-
-- **Transition history** — when and why phases changed, survives context compression
-- **Fast phase detection** — `grep '→ Complete' history.md | tail -1` is faster than scanning the directory
-- **User visibility** — `cat history.md` shows the full process history
-- **No sync drift** — append-only entries can never disagree with reality
-
-**Format** (appended by each phase skill on completion):
 ```markdown
 ## [ISO_TIMESTAMP] | Phase N → [Name] → Complete
 - **Skill**: [skill-name]
@@ -135,272 +72,43 @@ Every spec directory maintains `specs/NNN-name/history.md` — an append-only pr
 - **Notes**: [key decisions, user input, deviations]
 ```
 
-**When created**: First transition (typically Phase 1: Specify) creates the file. If a user manually created `spec.md` before running a skill, the first skill run backfills entries for all completed phases.
-
-**Phase detection shortcut**: Instead of scanning the spec directory for artifact files, load `history.md` and read the last `→ Complete` line. The phase name before the arrow is the current phase. Cross-check against artifact presence as a sanity check.
-
-See `references/history-tracking.md` for full design rationale.
-
-## Phase Enforcement
-
-Phase transitions are **manual** but gated by artifact presence. Each phase skill checks whether its prerequisite documents already exist in `specs/NNN-feature-name/`. If a prerequisite is missing, the skill warns the user and suggests running the appropriate prior phase. No separate `.phase` marker files are used — phase state is determined solely by which markdown files are present in the spec directory.
-
-**Phase 6 (Close) is mandatory** — a feature cannot enter Complete state without either `implementation-summary.md` or `close.md` present. This prevents silent drift accumulation.
-
-| Artifacts Present | Current Phase |
-|:-----------------|:-------------|
-| `constitution.md` only | Ready to Specify |
-| `spec.md` exists | Specified |
-| `clarify.md` exists | Clarifying/Clarified |
-| `plan.md` exists | Planning/Planned |
-| `tasks.md` exists | Tasking/Tasked |
-| `tasks.md` with completions | Implementing |
-| `bugs.md` with open bugs | Testing (bugfix loop) |
-| `bugs.md` all verified | Testing complete — **must close** |
-| `implementation-summary.md` exists | Summarized — complete |
-| `close.md` exists | Closed — complete |
-| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
-| All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
-| `history.md` last entry | Current phase (fast lookup) |
-
-> **Tip**: `history.md` is the fastest phase detector. Read the last `→ Complete` line instead of scanning directory artifacts.
-
-> **Drift detection**: When loading an existing feature that has `implementation-summary.md` or `close.md`, read its Spec State / Artifact State table. If any artifact is `⚠️ needs review` or `❌ outdated`, warn the user and suggest `spec-kit-refresh`.
-
-## Phase Guardrails (Permission Matrix)
-
-See `spec-kit-workflow` for the full permission matrix (12 rows, one per phase). Quick summary:
-
-- **Code-editing tools** (write_file/patch/terminal for builds): ALLOWED only during **Implement** (Phase 4) and bugfix loop implementations
-- **Spec artifact writes**: Only during their respective phase
-- **`history.md`**: All phases may append to the process history
-- **Summarize/Close exception**: May patch `spec.md` and `plan.md` to reconcile intentional deviations
-- **Refresh exception**: May patch spec artifacts with per-item user approval
-
-### Pre-Work Self-Check
-Before ANY tool call:
-1. **What phase am I in?** Detect from artifacts present (see Phase Enforcement table above)
-2. **Open bugs lock**: Does `specs/[feature]/bugs.md` (for the target feature) have any bug with Status: open?
-   - IF YES → You are in **Test** phase. Code tools (write_file, patch on source code, terminal for builds) are **BLOCKED**.
-   - IF you are about to write code despite open bugs → **STOP**. You must route through "bugfix [feature]" first: plan → tasks → implement.
-3. **Is this tool in the ALLOWED column for this phase?** Check the Permission Matrix
-4. **Am I about to write code?** If YES and phase is NOT Implement → STOP. You are violating the guardrail.
-5. **Am I starting a new feature or marking one complete?** If implementation-summary.md and close.md are both missing but bugs.md is all verified → BLOCK: Phase 6 (Close) required.
-6. **Does an existing close/summary show drift?** If implementation-summary.md or close.md shows `⚠️ needs review` or `❌ outdated` artifacts → WARN: drift detected, suggest refresh.
-
-## Migration from OpenCode Spec-Kit
-
-Projects that previously used OpenCode's `.specify/` structure can migrate to Hermes spec-kit:
-
-1. **Constitution**: copy `.specify/memory/constitution.md` → `specs/constitution.md`
-2. **Install skills**: run `scripts/install.sh` from the hermes-spec-kit project
-3. **Update AGENTS.md**: add spec-kit workflow section (see `AGENTS-template.md`)
-4. **Verify**: existing `specs/NNN-feature-name/` directories are already compatible with Hermes skills
-
-The canonical constitution path is `specs/constitution.md`. All Hermes spec-kit skills reference this path. The `.specify/` directory can be removed once migration is verified.
-
-## Anti-Patterns to Avoid
-
-- **TDD is the default, not optional.** Test-first is enforced. The Iron Law says: NO production code without a failing test first. If you wrote code before the test, delete it and start over. The only exceptions require explicit user permission: throwaway prototypes, generated code, and configuration files. Without user permission, TDD is not optional — the agent cannot unilaterally skip it. See spec-kit-implement's Iron Law table for common rationalizations.
-- **Do NOT demand all artifacts exist before advancing.** Small features may skip Clarify or Plan entirely.
-- **Do NOT use Cline/OpenCode command syntax** (e.g. `/speckit.specify`). Use natural language with skill names instead.
-- **Do NOT fix bugs before logging them.** Bug reports always go into `bugs.md` first. Making code changes without a bug entry skips the workflow and causes user frustration. "Stop" / "stop fixing" means pause and follow the proper loop — never interpret it as permission to give up permanently.
-- **Do NOT assume the fix approach before clarifying user intent.** When a user reports unexpected visual output (wrong colors, misaligned elements, oversized boxes, extra rendered elements), first CLARIFY whether they want the element fixed (adjusted/aligned) or removed entirely. Jumping to a sophisticated alignment fix when the user wants simple removal wastes time and causes frustration. A clarifying question like "Do you want this fixed in place or removed?" costs seconds and saves rework.
-- **Do NOT ask for permission mid-bugfix-loop.** The bugfix inner loop (Plan → Tasks → Implement) chains automatically — do not ask "run spec-kit-tasks now?" or "proceed to implement?" when already in bugfix mode. The user committed to the path when they said "bugfix [feature]".
-- **Do NOT set bug status to resolved/verified preemptively.** Only the user marks a bug verified — after they have tested the fix. Changing status to "resolved" before the user confirms is a workflow bypass. If you've applied a fix, set status to "in-progress" (or leave it at "open") and wait for the user to test and say it's fixed. The verify gate belongs to the user, not the agent.
-- **Do NOT restructure existing working skills when adding new ones.** Adding one new skill (e.g. `spec-kit-test`) should only install that skill — do not convert existing flat `.md` files to directories, rename files, or change the install format. If the existing setup works, leave it alone.
-- **Do NOT implement during Plan, Clarify, or Tasks phases — even for "obvious" fixes.** The bugfix loop requires Plan → Tasks → Implement in order. A one-line change (removing an arrowhead, adding a CSS class) still needs a plan and a task entry before code touches disk. Skipping phases is a phase guardrail violation, not a shortcut. If you catch yourself reaching for `write_file`/`patch` during the bugfix loop before reaching Implement, stop and run the correct phase skill first.
-- **Do NOT pollute AGENTS.md with workflow mechanics.** AGENTS.md is project-level context: reference skills name, list active specs, document project conventions. Routing logic, trigger phrases, phase diagrams, and bugfix loop details belong in skill files. When you add a new phase or routing rule, update the relevant skill — not AGENTS.md.
-- **Do NOT allow features to be complete without Phase 6.** A feature without `implementation-summary.md` or `close.md` is not complete, even if all bugs are verified. The mandatory close prevents silent drift accumulation. If a user insists a feature is done without closing, explain why close matters (spec health, drift prevention, future refactoring context) rather than bypassing the requirement.
-- **Commit spec changes before code, never with code.** Spec/plan changes that alter requirements or design intent must be committed before the related code commit. The causal chain is: spec describes what → code implements it. Committing them together blurs this chain and makes git history unreliable. Exceptions: status-only updates (bug verified, task [X]) can share a commit with code; Phase 6 close (patched spec/plan + close.md) is one intentional reconciliation commit; **quickfix mode** (user says "quickfix [feature]") batches plan + tasks + fix as one logical commit.
-- **Bugfix sub-rounds: separate phase commits by default, quickfix batch on request.** The default `bugfix` mode keeps plan and tasks in separate commits for full traceability. The `quickfix` mode batches them on user request — only commit granularity differs, plan refs and task entries always exist.
-- **Additive-safe editing**. During design phases (0-3), freely iterate — rewrite spec/plan/tasks, review proposes any changes. After Phase 4 (Implement) begins, never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, correct text — but only the minimal field or section needed. New entries always append at the end. Preserve every existing bug ID, task ID, and requirement.
-- **Ordering enforced.** bugs.md entries MUST be in BUG-NNN ascending order. tasks.md entries MUST be in T### ascending order. New entries get the next sequential ID.
-- **history.md is mandatory after every markdown change.** Every markdown document created or modified MUST be recorded in `specs/[feature]/history.md`. No exceptions. The pre-action check (preflight check #5) already ensures history.md exists before any work begins. The pre-commit guard (preflight post-completion #2) blocks commits until history.md is verified complete.
-- **Commit after every markdown change, but history.md FIRST.** Each skill commits its artifacts immediately, but the history.md entry MUST be appended BEFORE the commit. The pre-commit guard verifies this. Multiple related changes in one logical action can be one commit. Never batch unrelated changes.
-
-## Spec Health Score
-
-Spec health is a 0-100% score computed during Phase 6 (Summarize/Close). It indicates how well spec/plan artifacts align with actual code.
-
-### Formula
-```
-spec_health = (resolved + acknowledged) / (resolved + acknowledged + not_done) * 100
-```
-
-Where:
-- **resolved** = requirements implemented as planned OR intentionally deviated with documented rationale (spec/plan auto-updated)
-- **acknowledged** = requirements deferred with documented reason
-- **not_done** = requirements missing without documented reason
-
-### Interpretation
-
-| Score | Meaning | Action |
-|-------|---------|--------|
-| 100% | Artifacts fully aligned with code | No action needed |
-| 80-99% | Minor gaps tracked but not blocking | Acceptable — review at leisure |
-| 50-79% | Significant drift | Run `spec-kit-refresh` before refactoring |
-| <50% | Artifacts are misleading | Run `spec-kit-refresh` before proceeding |
-
-### How Score is Used
-
-- **At feature close**: The score is written into `implementation-summary.md` or `close.md`
-- **On future feature load**: The workflow reads the score from the last close/summary. If <80%, warns the user about drift
-- **On refresh**: Score is recalculated after refresh (though refresh does not produce an output document — the old score in close/summary remains stale until next close/summary)
+**Phase detection shortcut**: Read `history.md` last `→ Complete` line instead of scanning directory artifacts. See `references/history-tracking.md` for the full design.
 
 ## Template Path Convention
 
-All skills reference templates using the canonical skill‑relative path:
-
-```
-spec-kit/templates/<name>-template.md
-```
-
-NOT bare paths like `templates/<name>.md`. This ensures templates resolve correctly regardless of which Hermes profile or working directory loaded the skill.
-
-To load a template: use `skill_view(name='spec-kit', file_path='templates/<name>-template.md')` then copy the content to the target location.
+All skills reference templates as `spec-kit/templates/<name>-template.md` — NOT bare paths like `templates/<name>.md`. This ensures correct resolution regardless of Hermes profile or working directory.
 
 ## Project Structure
 
-```
+```text
 src/
-  skills/                # Skill source files
-    spec-kit-*.md
-    spec-kit/            # Umbrella SKILL.md directory
-      SKILL.md
-  templates/             # Template source files
-    *-template.md
+  skills/                # Skill source files (12 .md + umbrella directory)
+    spec-kit/SKILL.md    # This file
+  templates/             # Template source files (13 templates, all *-template.md)
+  references/            # Reference files (5: preflight, auto-commit, etc.)
 scripts/
   install.sh             # Copies src/* to ~/.hermes/skills/
 ```
 
 Skills and templates are maintained in the project directory and installed via `./scripts/install.sh`. Do not edit files in `~/.hermes/skills/` directly.
 
-## Git Branch Naming Convention
+## Git Branch Naming
 
-Spec-kit produces feature directories like `specs/003-user-auth/`. The corresponding git branch should mirror the spec number and name for traceability. The authoritative rules live in `specs/git-conventions.md` (auto-created by preflight if missing). Default patterns:
+Default patterns (customise via `specs/git-conventions.md`):
+- Forward development: `{feature_prefix}/NNN-short-name` (default: `feat/`)
+- Bugfix: `{bugfix_prefix}/NNN-short-name` (default: `bug/`)
+- Reopen: `{original_prefix}/NNN-short-name{reopen_suffix}` (default: `-bugfixing`)
 
-```text
-{feature_prefix}/NNN-short-name        # Normal forward development
-{bugfix_prefix}/NNN-short-name          # Bugfix-only branch (standalone)
-```
-
-With default values (`feat/`, `bug/`), common examples are:
-
-| Spec Directory | Branch Name |
-|:---------------|:------------|
-| `specs/001-user-auth/` | `feature/001-user-auth` if prefix is `feature` |
-| `specs/002-oauth2-api-integration/` | `feat/002-oauth2-api-integration` with default `feat` |
-| `specs/003-data-export/` | `{bugfix_prefix}/003-data-export` (standalone bugfix) |
-
-**During the bugfix loop**, the bugfix work happens on whatever branch the feature was implemented on. Do not create separate bugfix branches for individual bugfix loop iterations — the loop is part of the same feature branch.
-
-**Post-Summarize**, if the user wants to squash or merge to main, follow the project's git workflow (rebase/merge). The branch naming itself lives in the umbrella skill, not in AGENTS.md, to keep AGENTS.md minimal.
-
-## Git Integration
-
-Git links phase progress to version history. Every phase transition automatically commits the spec artifacts, creating recoverable checkpoints and an audit trail without manual steps.
-
-### Automatic Commit on Phase Completion
-
-See `spec-kit/references/auto-commit.md` for the standard commit pattern. Each skill simply references the auto-commit pattern with its scope and message.
-
-### Per-Phase Commit Convention
-
-Each phase skill commits its artifacts immediately upon completion. Design artifacts are never batched — each change gets its own commit for full traceability.
-
-The authoritative commit templates live in `specs/git-conventions.md`. Defaults shown here for quick reference:
-
-| Phase | Scope | Commit Message (from conventions) | Automatic? |
-|-------|-------|------------------------------------|------------|
-| 0 — Constitution | `specs/constitution.md` | Constitution template: `spec(phase-0): constitution for [project]` | **Yes** — after creation |
-| 1 — Specify | `specs/NNN-name/spec.md` | Spec template: `spec(phase-1): [NNN-name] spec` | **Yes** — after creation |
-| 1.5 — Clarify | `specs/NNN-name/clarify.md`, `spec.md` | Clarify template: `spec(phase-1.5): [NNN-name] clarifications` | **Yes** — after update |
-| 2 — Plan | All plan artifacts | Plan template: `spec(phase-2): [NNN-name] plan` | **Yes** — after creation |
-| 3 — Tasks | `specs/NNN-name/tasks.md` | Tasks template: `spec(phase-3): [NNN-name] tasks` | **Yes** — after creation |
-| 4 — Implement | Source code per phase | Implement template: `feat: [NNN-name] Phase N - [Phase Name]` | Yes (per phase commit) |
-| 5 — Test / Bugs | `specs/NNN-name/bugs.md` | Bug log template: `spec(phase-5): [NNN-name] bug log` | Yes |
-| 5 — Bugfix fix | Source code per bugfix task | Bugfix template: `fix: [NNN-name] BF-### - description` | Yes (per fix) |
-| 5 — Regression umbrella | Source code for regressions | Regression template: `fix: [NNN-name] BF-REGRESSION-001 - fix regressions` | Yes (once) |
-| 6 — Summarize | Summary/close + patched spec/plan | Summary template: `spec(phase-6): [NNN-name] implementation summary (health: N%)` | Yes |
-| — Refresh | Patched spec/plan artifacts | Refresh template: `spec(refresh): [NNN-name] reconcile spec artifacts with code` | Yes |
-
-### Commit Granularity Rules
-
-- **Design phases** (0-3): Each skill commits its own artifacts immediately. No batching.
-- **Implementation** (Phase 4): Commit per phase (not per task). Each phase boundary produces one commit covering all tests and code for that phase.
-- **Bugfix** (bugfix loop): Commit per bugfix task (BF-###). Message references the BUG-ID.
-- **Bugfix sub-round** (new bugs discovered mid-round and fixed in a subsequent round): Two modes:
-  - `bugfix` (default): Plan and tasks each get separate commits. Plan: `spec(phase-2): [feature] bugfix plan (BUG-NNN, ...)`. Tasks: `spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...)`. Implementation per fix.
-  - `quickfix` (user opt-in for trivial bugs): Plan section + tasks entry + fix batched in one commit: `fix: [feature] BF-### - description (plan+tasks+fix)`. Plan ref and task entry ALWAYS exist — only commit granularity differs.
-- **Regression umbrella** (Phase 4 Step 9): One commit for BF-REGRESSION-001 covering all regression fixes.
-- **Refresh**: Commit after all approved patches.
-- **Never commit broken state**: Tests must pass before commit during Implement. Spec artifacts are always safe to commit (documentation, not code).
-- **If not in a git repo**: The commit step is skipped silently. Phase transition logging to `history.md` still happens.
-
-### Traceability Through Git History
-
-Because every commit follows the `spec(phase-N)` or `feat/fix: [NNN-name]` convention, you can query git for the full lifecycle of a feature:
-
-```bash
-# Show all spec commits for a feature
-git log --oneline --grep="003-user-auth" --all
-
-# Show only phase boundaries (not implementation detail)
-git log --oneline --grep="spec(phase-" --all
-
-# Show when a feature design artifacts were committed
-git log --oneline --grep="spec(phase-1):" --all
-
-# Show all bugfixes for a feature
-git log --oneline --grep="BF-" --all
-
-# Show current phase across all features (latest spec commit per feature)
-git log --oneline --grep="spec(phase-" --diff-filter=A --name-only --pretty=format: | sort -u
-```
-
-### history.md → Git History Linking
-
-The process history (`history.md`) captures the commit hash automatically:
-
-```markdown
-## 2026-06-07T12:00Z | Phase 6 → Summarize → Complete
-- **Skill**: spec-kit-summarize
-- **Artifacts**: specs/003-user-auth/implementation-summary.md, specs/003-user-auth/spec.md (patched), specs/003-user-auth/plan.md (patched)
-- **Spec Health**: 92%
-- **Commit**: abc1234
-```
-
-The agent runs `git rev-parse HEAD` after the commit and writes the hash into the history.md entry. No manual hash entry needed.
-
-### Git Rules Summary
-
-1. **Automatic commit on phase completion** — each phase skill commits before reporting done
-2. **One commit per task** during Implement
-3. **One commit per bugfix** — message references BUG-ID
-4. **Phase 6 includes spec/plan patches** — the commit captures reconciled artifacts
-5. **Tests pass before commit** in Implement phase (silent skip if not in a git repo)
-6. **history.md captures commit hash** via `git rev-parse HEAD`
+During the bugfix loop, all work happens on the existing feature branch. Post-close branch management (squash/merge) follows the project's git workflow.
 
 ## Available Templates
 
-Installed via `./scripts/install.sh`:
-- `spec-template.md`: Feature specification with User Stories, FR-### requirements, Given/When/Then scenarios
-- `plan-template.md`: Technical decomposition
-- `tasks-template.md`: Task breakdown with parallel `[P]` markers
-- `constitution-template.md`: Project principles template
-- `history-template.md`
-- `data-model-template.md` — Data model template
-- `bugs-template.md` — Bug tracking template (BUG-### format)
-- `implementation-summary-template.md` — Post-implementation review summary (Phase 6, via `spec-kit-summarize`)
-- `close-template.md` — Lightweight close document (Phase 6 close mode, via `spec-kit-summarize`)
-- `history-template.md` — Transition log template (appended by every phase skill on completion)
-- `git-conventions-template.md`: Project-level git conventions (copy to specs/git-conventions.md)
-- `gitignore-template.md` — Project .gitignore starter (copy to project root after `git init`)
+Installed via `./scripts/install.sh` — see `src/templates/` for the full list: spec, plan, tasks, constitution, bugs, data-model, research, history, implementation-summary, close, AGENTS, git-conventions, gitignore (13 total).
 
 ## References
 
-- `references/preflight.md` — Pre-action self-check rules (branch, mode, workflow)
-- `references/auto-commit.md` — Standard commit pattern across all skills
-- `references/history-tracking.md` — Process history design and rationale (append-only history.md)
-- `references/constitution-principles.md` — 12 principles × 3 options with pros/cons for constitution creation (brownfield/greenfield)
+- `references/preflight.md` — Pre-action self-check (branch, mode, workflow, history)
+- `references/auto-commit.md` — Standard commit patterns across all phases
+- `references/history-tracking.md` — Process history design rationale
+- `references/constitution-principles.md` — 12 principles × 3 options with pros/cons
+- `references/constitution-tables.md` — Wizard tables and brownfield detection data
