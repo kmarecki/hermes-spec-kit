@@ -21,69 +21,13 @@ This skill does NOT execute phases itself. It routes requests to the correct pha
 
 ## Pre-flight: Project Readiness
 
-Before routing any feature-level command, check that the project is initialized AND the branch is correct:
+Load and follow `spec-kit/references/preflight.md` before any routing action. Preflight handles branch guardrails (checks #1, #4), mode detection (#2), unlogged bug check (#3), git conventions (#4 renamed), workflow load check (#5), and history.md readiness (#6).
 
-### Branch Guard — STRICT
-
-Every feature or bugfix session MUST start on a branch named according to the project's git conventions. This prevents commits landing on blocked branches.
-
-```
-BEFORE any route action (specify, plan, tasks, implement, bugfix, close):
-  LOAD specs/git-conventions.md — read feature_prefix, bugfix_prefix,
-    reopen_suffix, branch_source, and blocked_branches. (Preflight step 3 already does this.)
-
-  EXTRACT feature name from the user's command (e.g., "003-user-auth")
-
-  IF feature has a spec number prefix (NNN-):
-    DETECT current branch: $(git rev-parse --abbrev-ref HEAD)
-
-    CLASSIFY the operation and construct expected branch from conventions:
-      bugfix → expected branch: {bugfix_prefix}/NNN-{short-name}
-      reopen → expected branch: {original_prefix}/NNN-{short-name}{reopen_suffix} (from closed feature)
-      default (specify/plan/tasks/implement/close) → expected branch: {feature_prefix}/NNN-feature-name
-
-    IF current branch is in blocked_branches (from conventions):
-      IF operation == reopen:
-        DETECT original prefix from close.md or git log
-        SET reopen_branch = "${prefix}/${NNN}-${short_name}${reopen_suffix}"
-        IF git branch --list "${reopen_branch}":
-          PROMPT: "git checkout ${reopen_branch}  (reusing existing branch)"
-        ELSE:
-          PROMPT: "git checkout -b ${reopen_branch} ${branch_source} && git push -u origin ${reopen_branch}"
-      ELSE:
-        BLOCK: "Cannot work on feature [feature] while on [branch] branch."
-        PROMPT: "Run these commands to create the feature branch:
-          git checkout -b {feature_prefix}/NNN-feature-name
-          git push -u origin {feature_prefix}/NNN-feature-name"
-
-    IF current branch != expected branch AND current branch NOT in blocked_branches:
-      WARN: "Currently on '[current]'. Expected branch is '[expected]'.
-             Proceed anyway? If not, abort and switch branches."
-
-  IF feature has NO spec number prefix:
-    NOTE: "Feature name has no NNN- prefix — cannot enforce branch naming.
-           Run spec-kit-specify first to create a numbered spec."
-    SUGGEST: "Create spec first, then continue."
-
-  IF NOT in a git repository:
-    NOTE: "Not a git repository — branch guardrail skipped."
-```
-
-```
-  IF specs/ directory NOT EXISTS:
-    IF user said "Create a spec for..." or "Create constitution":
-      ALLOW — command creates the specs/ directory
-      PROCEED with routing
-    ELSE:
-      BLOCK: "No specs/ directory found. This project hasn't been initialized.
-              Start with: 'Create a constitution for [project]' or 'Create a spec for [description]'
-              to create the first specification."
-      PROMPT: "Run 'spec-kit-constitution' first."
-```
+> **Note**: If you already have preflight loaded from a prior skill call, you do not need to reload it. Re-run checks #1 and #4 as a quick sanity check, then proceed directly to routing.
 
 Additionally, for any command that references a specific feature:
 
-```
+```text
 IF feature name is provided (e.g., "003-user-auth"):
   IF specs/[feature]/ directory NOT EXISTS:
     BLOCK: "Feature [feature] not found in specs/. Available specs: [list directories]"
@@ -157,70 +101,12 @@ Each skill BLOCKS if prerequisites are not met:
 - User says: "Implement [feature]"
 - Propose routing to: `spec-kit-implement`
 
-
 ### Reopen (Closed Feature Bugfix)
 - User says: "Reopen [feature]" or "reopen [feature]"
-- **Purpose**: Fix bugs in a feature that was previously closed. Routes through bugfix flow, then regenerates close.md.
+- **Purpose**: Fix bugs in a previously closed feature. Routes through bugfix flow, then updates close.md.
 - **Prerequisites**: `close.md` or `implementation-summary.md` must exist
-
-**Reopen flow:**
-```
-1. VALIDATE: close.md or implementation-summary.md EXISTS
-   IF not: "Feature [feature] is not closed — nothing to reopen.
-            Use 'bugfix [feature]' if bugs are already logged."
-
-2. DETECT original branch prefix from close.md header or git log
-   CONSTRUCT reopen_branch = {original_prefix}/NNN-{short-name}{reopen_suffix}
-     (reopen_suffix from specs/git-conventions.md, default: -bugfixing)
-
-3. BRANCH:
-   IF on a blocked branch (from specs/git-conventions.md blocked_branches):
-     CREATE reopen_branch from branch_source (from conventions, default: main)
-   IF reopen_branch already exists:
-     CHECKOUT and reuse
-
-4. BUGS:
-   IF bugs.md NOT FOUND:
-     CREATE bugs.md from spec-kit/templates/bugs-template.md
-     NOTE: "bugs.md created. Describe the bugs you're reopening for."
-     ROUTE to: spec-kit-test (let user log bugs)
-   IF bugs.md EXISTS (all verified):
-     NOTE: "Existing bugs.md found with N verified bugs.
-            Add new bugs, then the fix loop will start."
-     ROUTE to: spec-kit-test (let user log new bugs)
-   IF bugs.md EXISTS (open bugs):
-     PROCEED to bugfix flow
-
-5. ROUTE: spec-kit-plan → spec-kit-tasks → spec-kit-implement (auto-chain)
-
-   **IMPORTANT — Additive-only rule for reopen:**
-   - All edits to bugs.md, plan.md, and tasks.md during reopen must be **additive only**
-   - Never remove or overwrite existing content — only append new sections, bugs, or tasks
-   - If new content conflicts with existing content (same bug ID, same task ID, conflicting spec change):
-     STOP and ask the user how to resolve before proceeding
-   - Existing verified bugs, completed tasks, and original plan sections must be preserved exactly
-
-6. WORKFLOW LOG:
-   APPEND to specs/[feature]/history.md following spec-kit/references/history-tracking.md:
-   - **Phase**: Reopen
-   - **Notes**: "Feature reopened from closed state. Previous close.md will become stale — must close again after fixes."
-
-7. AFTER fixes:
-   User says "close [feature]" → updates close.md with new health score section
-   (appends a new close entry with the updated health, preserving the original close data)
-   NOTE: Previous health score loaded and compared.
-   
-   **Conflict rule for close update:**
-   If the new close assessment contradicts the original close (e.g., same requirement
-   went from ✅ Resolved to ❌ Not Done):
-     PROMPT user: "Requirement FR-XXX was ✅ Resolved in the original close but
-                   is now ❌ Not Done. How should I reflect this?
-                   1. Mark as new ❌ Not Done (additive — original close preserved)
-                   2. Override the status (update the entry)
-                   3. Flag as ⚠️ Acknowledged instead"
-```
-
-> **Important**: Reopen is for bugfixes on already-closed features. If the feature never went through close, use "bugfix [feature]" instead. If no bugs are logged yet, reopen auto-creates bugs.md — unlike bugfix mode which expects bugs.md to already exist.
+- **Full reopen flow**: See `spec-kit-summarize` — the reopen routing and branch creation logic is defined there. This skill only validates prerequisites and dispatches.
+- **Conflict rule**: If the new close assessment contradicts the original close (same requirement went from ✅ to ❌), prompt the user to resolve before proceeding.
 
 ### Summarize / Close (Phase 6 — Mandatory)
 - User says: "Summarize [feature]" or "Implementation summary for [feature]"
@@ -229,7 +115,7 @@ Each skill BLOCKS if prerequisites are not met:
 - Route to: `spec-kit-summarize` (lightweight close mode)
 
 ### Block: Feature cannot be done without Phase 6
-```
+```text
 WHEN user says "[feature] is done" or tries to start a new feature for the same project:
   IF implementation-summary.md or close.md does NOT exist:
     BLOCK: "Cannot mark [feature] complete — Phase 6 (Close/Summarize) is mandatory."
@@ -272,76 +158,43 @@ Check for artifacts to determine current phase:
 - LOAD `specs/[feature]/bugs.md`
 - IF `specs/[feature]/close.md` or `specs/[feature]/implementation-summary.md` EXISTS:
     NOTE: "Feature [feature] was previously closed. Use 'reopen [feature]' to explicitly reopen it."
-    SUGGEST: "Reopen creates a bugfix branch from the project's branch_source (from conventions) and auto-creates bugs.md if needed."
-    ROUTE to: reopen flow (user said 'reopen [feature]' to continue)
+    SUGGEST: "Reopen creates a bugfix branch and auto-creates bugs.md if needed."
+    ROUTE to: reopen flow
 - **Plan Ref enforcement** — for each bug with Status: open or in-progress:
   - CHECK for a **Plan Ref** entry
   - IF any open bug lacks a Plan Ref:
     - REPORT: "BUG-NNN lacks a Plan Ref. A plan section must address this bug before implementation."
-    - SUGGEST: Route through `spec-kit-plan` first (the plan skill will create the Plan Ref)
+    - SUGGEST: Route through `spec-kit-plan` first
     - REQUIRE: User confirms before proceeding without Plan Refs
 - FOR each bug with Status: open or in-progress:
-  - IF Requires Clarification checkbox "yes" is checked: ROUTE to `spec-kit-clarify` first, then automatically chain to plan → tasks → implement
+  - IF Requires Clarification checkbox "yes" is checked: ROUTE to `spec-kit-clarify` first, then auto-chain to plan → tasks → implement
   - ELSE: ROUTE to `spec-kit-plan` directly
 - AFTER plan → AUTOMATICALLY route to `spec-kit-tasks`
 - AFTER tasks → AUTOMATICALLY route to `spec-kit-implement`
 - DEFAULT route: `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement` (automatic chain, no user choice)
 - NOTE: Review is optional — only run if user explicitly asks for it
-- **TDD during bugfix**: `spec-kit-implement` enforces RED→GREEN per bugfix task — write a test reproducing the bug, then apply the fix. Plan Refs (above) ensure each bug has a plan section before implementation begins.
+- **TDD during bugfix**: `spec-kit-implement` enforces RED→GREEN per bugfix task.
 
 ### New bugs discovered during a fix round
-
-When new bugs are added to `bugs.md` during an active bugfix round (found during implementation or reported by the user mid-round):
+See `spec-kit-implement` ("New bugs discovered during fix" section) for the full rules on logging mid-round bugs and the bugfix vs quickfix mode choice. Key routing summary:
 
 ```text
 IF the current bugfix round is still in progress (BF-### tasks not all verified):
+  New bugs are logged by spec-kit-test — do NOT start a new round yet.
   The current round completes normally.
-  The new bug is a separate BUG-NNN entry — it does NOT block or delay the active round.
 
 AFTER the current round completes and all original BF-### tasks are verified:
-  IF bugs.md has NEW open bugs (beyond the ones the round was fixing):
-    NOTE: "New bugs BUG-NNN, BUG-NNN+1 were logged during the previous round.
-           Each needs the full bugfix workflow: Plan → Tasks → Implement."
-
-    TWO MODES available (user decides):
-
-    1. "bugfix [feature]" — FULL phase sequence with separate commits:
-       - Plan → commit (spec(phase-2): [feature] bugfix plan (BUG-NNN, ...))
-       - Tasks → commit (spec(phase-3): [feature] bugfix tasks (BUG-NNN, ...))
-       - Implement → per-fix commits (fix: [feature] BF-### - description)
-
-    2. "quickfix [feature]" — BATCHED for trivial bugs (config typos, obvious one-liners):
-       - Plan section + tasks entry + fix drafted in one logical pass
-       - Shown as a compact summary: "BUG-NNN: [cause] → [fix]. Plan section
-         appended, BF-### task created."
-       - ALL committed as ONE commit:
-         fix: [feature] BF-### - description (plan+tasks+fix)
-       - The commit body includes the plan ref and task ID for traceability
-       - TDD tests are STILL written (unless truly untestable — same exception as bugfix)
-       - The plan section and task entry ALWAYS exist — only commit granularity differs
-       - "quickfix" is ONLY for the NEXT round (not retroactive)
-
-    Guardrails for quickfix mode:
-    a. Plan section and task entry MUST be written — no documentation gap
-    b. The user explicitly opts in by saying "quickfix" — never inferred
-    c. If the user says "bugfix", always use full sequence regardless of complexity
-    d. Quickfix does NOT apply to the current in-progress round — only the next one
+  IF bugs.md has NEW open bugs:
+    User chooses: "bugfix [feature]" (full sequence) or "quickfix [feature]" (batched).
 ```
 
 ### Bugfix loop completion — user decides when to close
-```
-AFTER all bugs in bugs.md have Status: verified:
-  NOTE: Check for BF-REGRESSION tasks in tasks.md — these are auto-created
-        regression fixes from Step 8 of implement. They are NOT user bugs
-        and do NOT need manual verification.
-  
+After all bugs in bugs.md have Status: verified:
+```text
   SUGGEST: "All N bugs verified. Ready to close? Say 'close [feature]' to
             generate a close document, or 'add bug' to log more bugs."
-  
   DO NOT auto-trigger close. The user decides when to advance.
-  
-  The close is MANDATORY before the feature can be marked complete —
-  enforced at the Block section below, not automatically here.
+  The close is MANDATORY before the feature can be marked complete.
 ```
 
 ### Test phase
@@ -403,7 +256,7 @@ You MUST determine the current phase before any tool call. Each phase has strict
 
 ### Mandatory Close Enforcement
 
-```
+```text
 Pre-Work Self-Check addition:
   5. Am I starting a NEW feature or marking an existing one complete?
      IF yes → Does specs/[feature]/contain either implementation-summary.md or close.md?

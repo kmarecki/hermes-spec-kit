@@ -75,21 +75,11 @@ Each skill commits its own artifacts immediately. See `spec-kit/references/auto-
 
 ### Append to history.md and Commit
 
-**Order is critical: history.md FIRST, then commit.**
-
-1. **Append to history.md**:
-   Append entry to `specs/[feature]/history.md` (create if missing):
-   - Phase: Phase 1 — Complete
-   - Artifact: `specs/[feature]/spec.md`
-
-2. **PRE-COMMIT GUARD**:
-   READ `specs/[feature]/history.md` — confirm the spec.md entry is recorded.
-   If missing: BLOCK — must append before commit.
-
-3. **Commit**:
-   Follow `spec-kit/references/auto-commit.md`:
-   - Scope: `specs/[feature]/spec.md`
-   - Message: `"spec(phase-1): [feature] spec"`
+Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+- Phase: Phase 1 — Specify
+- Artifact: `specs/[feature]/spec.md`
+- Scope: `specs/[feature]/spec.md`
+- Message: `"spec(phase-1): [feature] spec"`
 
 ### Done When
 - [ ] spec.md created with FR-### requirements numbered sequentially

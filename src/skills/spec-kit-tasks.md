@@ -97,21 +97,11 @@ Report: task count, phases, TDD mode, parallel tasks, bugfix tasks
 
 ### Append to history.md and Commit
 
-**Order is critical: history.md FIRST, then commit.**
-
-1. **Append to history.md**:
-   Append entry to `specs/[feature]/history.md` (create if missing):
-   - Phase: Phase 3 — Complete
-   - Artifact: `tasks.md`
-
-2. **PRE-COMMIT GUARD**:
-   READ `specs/[feature]/history.md` — confirm the tasks.md entry is recorded.
-   If missing: BLOCK — must append before commit.
-
-3. **Commit**:
-   Follow `spec-kit/references/auto-commit.md`:
-   - Scope: `specs/[feature]/tasks.md`
-   - Message: `"spec(phase-3): [feature] tasks"`
+Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+- Phase: Phase 3 — Tasks
+- Artifact: `specs/[feature]/tasks.md`
+- Scope: `specs/[feature]/tasks.md`
+- Message: `"spec(phase-3): [feature] tasks"`
 
 ## Completion
 

@@ -68,21 +68,11 @@ After answer, loop: next question → answer → update spec.md.
 
 ### Append to history.md and Commit
 
-**Order is critical: history.md FIRST, then commit.**
-
-1. **Append to history.md**:
-   Append entry to `specs/[feature]/history.md` (create if missing):
-   - Phase: Phase 1.5 — Complete
-   - Artifact: `clarify.md`, `spec.md` (amended)
-
-2. **PRE-COMMIT GUARD**:
-   READ `specs/[feature]/history.md` — confirm the clarify.md entry is recorded.
-   If missing: BLOCK — must append before commit.
-
-3. **Commit**:
-   Follow `spec-kit/references/auto-commit.md`:
-   - Scope: `specs/[feature]/clarify.md`, `specs/[feature]/spec.md`
-   - Message: `"spec(phase-1.5): [feature] clarifications"`
+Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+- Phase: Phase 1.5 — Clarify
+- Artifact: `clarify.md`, `spec.md` (amended)
+- Scope: `specs/[feature]/clarify.md`, `spec.md`
+- Message: `"spec(phase-1.5): [feature] clarifications"`
 
 ## Completion
 - Propose: `spec-kit-plan`

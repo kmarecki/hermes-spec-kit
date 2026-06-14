@@ -369,24 +369,15 @@ ELSE (normal pre/post-implement):
 
 ### Append to history.md and Commit
 
-**Order is critical: history.md FIRST, then commit.**
-
 ```text
 IF mode == closed-review:
   NOTE: "Review on closed feature — history.md not updated."
-  NOTE: "Run 'reopen [feature]' if issues need fixing."
 ELSE:
-  1. Append to `specs/[feature]/history.md` (create if missing):
-     - Phase: Phase 3.5 or Phase 5.5 (mode-dependent) — Complete
-     - Artifact: review report
-
-  2. PRE-COMMIT GUARD:
-     READ `specs/[feature]/history.md` — confirm the review entry is recorded.
-     If missing: BLOCK — must append before commit.
-
-  3. Commit:
-     git add specs/[feature]/history.md
-     git commit -m "spec(review): [feature] review findings" --no-verify
+  Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+  - Phase: Phase 3.5 or Phase 5.5 (mode-dependent) — Review
+  - Artifact: review report
+  - Scope: review findings
+  - Message: `"spec(review): [feature] review findings"`
 ```
 
 ## Completion

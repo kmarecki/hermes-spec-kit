@@ -56,19 +56,11 @@ Same per-item approval for architecture, data model, and contract discrepancies.
 
 ### Append to history.md and Commit
 
-**Order is critical: history.md FIRST, then commit.**
-
-1. **Append to history.md**:
-   Append entry to `specs/[feature]/history.md` (create if missing):
-   - Phase: Refresh — Complete
-   - Artifact: patched `spec.md`/`plan.md`
-
-2. **PRE-COMMIT GUARD**:
-   READ `specs/[feature]/history.md` — confirm the refresh entry is recorded.
-   If missing: BLOCK — must append before commit.
-
-3. **Commit**:
-   `git commit -m "spec(refresh): [feature] reconcile artifacts"`
+Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+- Phase: Refresh
+- Artifact: patched `spec.md`/`plan.md`
+- Scope: patched spec artifacts
+- Message: `"spec(refresh): [feature] reconcile artifacts"`
 
 ## Completion
 ### Done When

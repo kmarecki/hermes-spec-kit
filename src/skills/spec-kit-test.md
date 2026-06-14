@@ -83,21 +83,11 @@ IF all bugs verified:
 
 ### Append to history.md and Commit
 
-**Order is critical: history.md FIRST, then commit.**
-
-1. **Append to history.md**:
-   Append entry to `specs/[feature]/history.md` (create if missing):
-   - Phase: Phase 5 — Complete
-   - Artifact: `bugs.md`
-
-2. **PRE-COMMIT GUARD**:
-   READ `specs/[feature]/history.md` — confirm the bugs.md entry is recorded.
-   If missing: BLOCK — must append before commit.
-
-3. **Commit**:
-   See `spec-kit/references/auto-commit.md`:
-   - Scope: `specs/[feature]/bugs.md`
-   - Message: `"spec(phase-5): [feature] bug log"`
+Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+- Phase: Phase 5 — Testing
+- Artifact: `specs/[feature]/bugs.md`
+- Scope: `specs/[feature]/bugs.md`
+- Message: `"spec(phase-5): [feature] bug log"`
 
 ## Common Pitfalls
 1. **Fixing before logging**: Procedural lock. Log first, fix later. Violating this causes workflow corruption.

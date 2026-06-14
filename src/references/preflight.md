@@ -93,6 +93,40 @@ After every skill completes that created or modified any markdown document:
    - Use commit template from specs/git-conventions.md (see auto-commit.md).
    - Skip silently if not a git repo.
 
+---
+
+### Shared Commit Procedure (reference from every skill)
+
+**Every skill that creates or modifies markdown artifacts MUST follow this procedure instead of re-implementing it.**
+
+```text
+1. APPEND to specs/[feature]/history.md:
+   - Phase: [Phase Name]
+   - Artifact: [comma-separated list of artifacts created/modified]
+
+2. PRE-COMMIT GUARD:
+   READ specs/[feature]/history.md
+   IF the entry for this phase is NOT recorded:
+     BLOCK: "Cannot commit — history.md is missing the [phase] entry. Append first."
+
+3. COMMIT:
+   Follow the auto-commit template for this phase:
+   - Scope: [artifacts scope]
+   - Message: [commit message template]
+   git commit -m "[message]" --no-verify
+```
+
+Skills MUST replace their full "Append to history.md and Commit" section with:
+```text
+Follow the Shared Commit Procedure in spec-kit/references/preflight.md:
+- Phase: [Phase Name]
+- Artifact: [comma-separated list]
+- Scope: [git scope for auto-commit.md]
+- Message: "[commit message template]"
+```
+
+This ensures the 3-step pattern (append → guard → commit) is defined in ONE place, not copy-pasted across every skill. See each skill's section for the phase-specific phase name, artifacts, and commit message.
+
 3. **Additive-safe editing**. During design phases (0-3), you may freely iterate — rewrite, restructure, refactor spec/plan/tasks as needed. The review skill may propose changes freely. Each design phase skill commits its artifacts immediately (no batching).
    
    During implementation and bugfix phases (4+), the additive-safe rule tightens: never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, amend text, correct inaccuracies — but the modification must be minimal (change only the specific field or section needed). Never restructure or refactor a document beyond what's required for the change. New entries (new bugs, tasks, plan sections) always append at the end. The goal: preserve every existing bug ID, task ID, and requirement — only update what the current change demands.

@@ -93,21 +93,11 @@ Each skill commits its own artifacts immediately. See `spec-kit/references/auto-
 
 ### Append to history.md and Commit
 
-**Order is critical: history.md FIRST, then commit.**
-
-1. **Append to history.md**:
-   Append entry to `specs/[feature]/history.md` (create if missing):
-   - Phase: Phase 2 — Complete
-   - Artifact: `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md`
-
-2. **PRE-COMMIT GUARD**:
-   READ `specs/[feature]/history.md` — confirm the plan artifacts are recorded.
-   If missing: BLOCK — must append before commit.
-
-3. **Commit**:
-   Follow `spec-kit/references/auto-commit.md`:
-   - Scope: all plan artifacts for this feature
-   - Message: `"spec(phase-2): [feature] plan"`
+Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+- Phase: Phase 2 — Plan
+- Artifact: `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md`
+- Scope: all plan artifacts for this feature
+- Message: `"spec(phase-2): [feature] plan"`
 
 ### Done When
 - [ ] All plan artifacts created (plan.md, research.md, data-model.md, contracts/*, quickstart.md)
