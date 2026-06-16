@@ -67,8 +67,20 @@ User describes in natural language. Agent structures into:
 
 After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
 
+### MCP state sync (optional, when MCP server is configured)
+When the MCP server is available (`mcp_spec_kit_log_bug` tool exists), call it after each bug to sync state:
+```text
+CALL mcp_spec_kit_log_bug(feature="[feature]", severity="[severity]",
+      description="[summary]", area="[area]")
+IF response.next_suggested:
+  NOTE: "MCP suggests next: {next_suggested}"
+```
+
 ### Bug status validation
-When user finishes logging → count open bugs. If 0, feature complete. If >0, suggest "bugfix [feature]".
+When user finishes logging → count open bugs:
+- **If 0 bugs**: Feature complete. Suggest close.
+- **If >0 bugs AND MCP available**: Auto-chain to bugfix flow. The MCP server tracks the state. Call `mcp_spec_kit_get_next_actions(feature)` to get the available actions, then auto-chain: plan → tasks → implement.
+- **If >0 bugs AND no MCP**: Suggest "bugfix [feature]" as before.
 
 ### Mark bugs as verified
 ```

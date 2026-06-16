@@ -136,6 +136,33 @@ fi
 
 echo ""
 echo "Done. Installed to $SKILLS_DIR"
+
+# --- MCP Server ---
+MCP_SERVER_DIR="$PROJECT_DIR/spec-kit-mcp-server"
+MCP_SERVER_DST="$SKILLS_DIR/spec-kit/mcp-server"
+if [ -f "$MCP_SERVER_DIR/server.py" ]; then
+  mkdir -p "$MCP_SERVER_DST"
+  cp "$MCP_SERVER_DIR/server.py" "$MCP_SERVER_DST/server.py"
+  cp "$MCP_SERVER_DIR/test_server.py" "$MCP_SERVER_DST/test_server.py" 2>/dev/null || true
+  chmod +x "$MCP_SERVER_DST/server.py"
+  echo "  Installing MCP server: spec-kit-mcp-server"
+
+  # Add to Hermes config if hermes command is available
+  if command -v hermes &>/dev/null; then
+    current_config=$(hermes config show mcp_servers 2>/dev/null || echo "")
+    if ! echo "$current_config" | grep -q "spec-kit"; then
+      echo ""
+      echo "  MCP server configured. To enable it, add to ~/.hermes/config.yaml:"
+      echo ""
+      echo "  mcp_servers:"
+      echo "    spec-kit:"
+      echo "      command: \"python3\""
+      echo "      args: [\"$MCP_SERVER_DST/server.py\"]"
+      echo ""
+      echo "  Then restart Hermes Agent for the tools to appear."
+    fi
+  fi
+fi
 echo ""
 echo "Skills:"
 ls -1 "$SKILLS_DIR"/*.md 2>/dev/null | xargs -I{} basename {} || echo "  (none)"
