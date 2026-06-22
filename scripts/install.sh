@@ -170,20 +170,27 @@ if [ -f "$MCP_SERVER_DIR/server.py" ]; then
     fi
   fi
 
-  # Auto-configure in Hermes config.yaml — always write fresh entry
+  # Auto-configure in Hermes config.yaml
   CONFIG_FILE="$HOME/.hermes/config.yaml"
   if [ -n "$MCP_PYTHON" ]; then
-    # Remove any old spec-kit lines to avoid duplicates
+    # Remove ONLY the old spec-kit lines (leave other mcp_servers intact)
     if [ -f "$CONFIG_FILE" ]; then
-      grep -v "# spec-kit-mcp" "$CONFIG_FILE" > "$CONFIG_FILE.tmp" 2>/dev/null || true
-      grep -v "spec-kit:" "$CONFIG_FILE.tmp" > "$CONFIG_FILE.tmp2" 2>/dev/null || true
-      mv "$CONFIG_FILE.tmp2" "$CONFIG_FILE" 2>/dev/null || true
-      rm -f "$CONFIG_FILE.tmp" "$CONFIG_FILE.tmp2" 2>/dev/null || true
+      python3 -c "
+import re
+with open('$CONFIG_FILE') as f:
+    content = f.read()
+# Remove the spec-kit block (4 lines under mcp_servers)
+content = re.sub(r'  spec-kit:\n    command: .*\n    args: \[.*\]\n', '', content)
+# Remove empty mcp_servers line if left behind
+content = re.sub(r'^mcp_servers:\n(?=\n|$)', '', content, flags=re.MULTILINE)
+with open('$CONFIG_FILE', 'w') as f:
+    f.write(content)
+print('ok', end='')
+" 2>/dev/null
     fi
 
-    # Write fresh entry
+    # Append fresh entry
     echo "" >> "$CONFIG_FILE"
-    echo "# spec-kit-mcp" >> "$CONFIG_FILE"
     echo "mcp_servers:" >> "$CONFIG_FILE"
     echo "  spec-kit:" >> "$CONFIG_FILE"
     echo "    command: \"$MCP_PYTHON\"" >> "$CONFIG_FILE"
