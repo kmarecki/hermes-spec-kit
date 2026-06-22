@@ -77,6 +77,7 @@ mkdir -p "$TEMPLATES_DIR"
 # Remove obsolete template files
 rm -f "$TEMPLATES_DIR/checklist-template.md"
 rm -f "$TEMPLATES_DIR/comparison-template.md"
+rm -f "$TEMPLATES_DIR/soul-template.md"
 
 for tmpl in "$PROJECT_DIR"/src/templates/*-template.md; do
   if [ -f "$tmpl" ]; then
@@ -135,7 +136,6 @@ if [ -f "$SOUL_TEMPLATE" ]; then
 fi
 
 echo ""
-echo "Done. Installed to $SKILLS_DIR"
 
 # --- MCP Server ---
 MCP_SERVER_DIR="$PROJECT_DIR/spec-kit-mcp-server"
@@ -143,26 +143,44 @@ MCP_SERVER_DST="$SKILLS_DIR/spec-kit/mcp-server"
 if [ -f "$MCP_SERVER_DIR/server.py" ]; then
   mkdir -p "$MCP_SERVER_DST"
   cp "$MCP_SERVER_DIR/server.py" "$MCP_SERVER_DST/server.py"
-  cp "$MCP_SERVER_DIR/test_server.py" "$MCP_SERVER_DST/test_server.py" 2>/dev/null || true
+  cp "$MCP_SERVER_DIR/README.md" "$MCP_SERVER_DST/README.md" 2>/dev/null || true
   chmod +x "$MCP_SERVER_DST/server.py"
-  echo "  Installing MCP server: spec-kit-mcp-server"
+  echo "  Installing MCP server: spec-kit-mcp-server/server.py"
 
-  # Add to Hermes config if hermes command is available
-  if command -v hermes &>/dev/null; then
-    current_config=$(hermes config show mcp_servers 2>/dev/null || echo "")
-    if ! echo "$current_config" | grep -q "spec-kit"; then
-      echo ""
-      echo "  MCP server configured. To enable it, add to ~/.hermes/config.yaml:"
-      echo ""
-      echo "  mcp_servers:"
-      echo "    spec-kit:"
-      echo "      command: \"python3\""
-      echo "      args: [\"$MCP_SERVER_DST/server.py\"]"
-      echo ""
-      echo "  Then restart Hermes Agent for the tools to appear."
+  # Auto-configure in Hermes config.yaml
+  CONFIG_FILE="$HOME/.hermes/config.yaml"
+  if [ -f "$CONFIG_FILE" ]; then
+    if ! grep -q "spec-kit:" "$CONFIG_FILE" 2>/dev/null; then
+      # Find mcp_servers section or add it
+      if grep -q "^mcp_servers:" "$CONFIG_FILE" 2>/dev/null; then
+        # Append to existing mcp_servers section
+        sed -i "/^mcp_servers:/a\  spec-kit:\n    command: \"python3\"\n    args: [\"$MCP_SERVER_DST/server.py\"]" "$CONFIG_FILE"
+      else
+        # Add new mcp_servers section
+        echo "" >> "$CONFIG_FILE"
+        echo "mcp_servers:" >> "$CONFIG_FILE"
+        echo "  spec-kit:" >> "$CONFIG_FILE"
+        echo "    command: \"python3\"" >> "$CONFIG_FILE"
+        echo "    args: [\"$MCP_SERVER_DST/server.py\"]" >> "$CONFIG_FILE"
+      fi
+      echo "  -> Added spec-kit MCP server to ~/.hermes/config.yaml"
+      echo "  -> Restart Hermes Agent for tools to appear (mcp_spec_kit_*)"
     fi
+  else
+    echo ""
+    echo "  To enable the MCP server, add to ~/.hermes/config.yaml:"
+    echo ""
+    echo "  mcp_servers:"
+    echo "    spec-kit:"
+    echo "      command: \"python3\""
+    echo "      args: [\"$MCP_SERVER_DST/server.py\"]"
+    echo ""
+    echo "  Then restart Hermes Agent for the tools to appear."
   fi
 fi
+
+echo ""
+echo "Done. Installed to $SKILLS_DIR"
 echo ""
 echo "Skills:"
 ls -1 "$SKILLS_DIR"/*.md 2>/dev/null | xargs -I{} basename {} || echo "  (none)"
