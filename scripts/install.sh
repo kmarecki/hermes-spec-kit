@@ -173,14 +173,18 @@ if [ -f "$MCP_SERVER_DIR/server.py" ]; then
   # Auto-configure in Hermes config.yaml
   CONFIG_FILE="$HOME/.hermes/config.yaml"
   if [ -n "$MCP_PYTHON" ]; then
-    # Remove ONLY the old spec-kit lines (leave other mcp_servers intact)
+    # Remove ONLY old spec-kit entries (leave other mcp_servers intact)
     if [ -f "$CONFIG_FILE" ]; then
       python3 -c "
 import re
 with open('$CONFIG_FILE') as f:
     content = f.read()
-# Remove the spec-kit block (4 lines under mcp_servers)
-content = re.sub(r'  spec-kit:\n    command: .*\n    args: \[.*\]\n', '', content)
+# Remove broken block: mcp_servers: with command/args directly under (no server name)
+content = re.sub(r'mcp_servers:\n    command: .*?\n    args: \[.*?\]\n', '', content)
+# Remove correct block: mcp_servers: with spec-kit: key
+content = re.sub(r'mcp_servers:\n  spec-kit:\n    command: .*?\n    args: \[.*?\]\n', '', content)
+# Remove comment marker
+content = re.sub(r'# spec-kit-mcp\n', '', content)
 # Remove empty mcp_servers line if left behind
 content = re.sub(r'^mcp_servers:\n(?=\n|$)', '', content, flags=re.MULTILINE)
 with open('$CONFIG_FILE', 'w') as f:
