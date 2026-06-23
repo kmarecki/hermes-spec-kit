@@ -1,6 +1,6 @@
 # Hermes Spec-Kit
 
-Spec-driven development for Hermes Agent. 13 skills implementing a structured phase-based workflow with three development modes, a constitution 3-level decision tree (9 purposes × 25 architecture options), mandatory close with spec health scoring, and a reopen flow for fixing closed features.
+Spec-driven development for Hermes Agent. 11 skills implementing a structured phase-based workflow with three development modes, a constitution 3-level decision tree (9 purposes × 25 architecture options), mandatory close with spec health scoring, and a reopen flow for fixing closed features. Includes an optional MCP server for deterministic state management.
 
 ## Quick Start
 
@@ -8,10 +8,11 @@ Spec-driven development for Hermes Agent. 13 skills implementing a structured ph
 # 1. Clone (if you haven't already) and install
 git clone https://github.com/kmarecki/hermes-spec-kit.git
 cd hermes-spec-kit
-./scripts/install.sh          # copies skills + templates to ~/.hermes/skills/
+./scripts/install.sh          # copies skills + templates + MCP server to ~/.hermes/skills/
 
-# 2. Reload skills in your Hermes session
+# 2. Reload skills and MCP in your Hermes session
 /reload-skills                # or start a new session
+/reload-mcp                   # if MCP server was auto-configured
 
 # 3. Go to your project, create a spec
 cd /path/to/your-project
@@ -43,12 +44,20 @@ Full workflow documentation: **[user-guide.md](user-guide.md)**
 
 ```text
 src/
-  skills/                # Skill source files (12 .md + 1 umbrella directory)
+  skills/                # Skill source files (11 .md + 1 umbrella directory)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
-  templates/             # Template source files (14 templates, all *-template.md)
-  references/            # Reference files (4: preflight, auto-commit, history-tracking, + more)
+  templates/             # Template source files (13 templates, all *-template.md)
+  references/            # Reference files (5: preflight, auto-commit, history-tracking,
+                         #   constitution-tables, constitution-principles)
+  skills/
+    spec-kit-bugfix/      [removed] — function absorbed into spec-kit-workflow
 scripts/
-  install.sh             # Installs to ~/.hermes/skills/
+  install.sh             # Installs to ~/.hermes/skills/ + MCP config
+  uninstall.sh           # Full clean uninstall (skills, MCP, config)
+spec-kit-mcp-server/
+  server.py              # MCP server — 12 tools, pure Python stdlib
+  README.md              # MCP server docs
+  test_server.py         # Smoke test
 ```
 
 ## Three Development Modes
@@ -61,7 +70,10 @@ scripts/
 
 ## Skills
 
-13 skills covering every phase + refresh and workflow routing.
+11 skills covering every phase + refresh and workflow routing.
+(The former `spec-kit-bugfix` alias skill was removed — its function is absorbed into the
+workflow skill's bugfix routing.)
+
 See the [Phase Reference section](user-guide.md#phase-reference) in the user-guide for phases, purposes, and personas.
 
 All skills respond to three trigger styles: `spec-kit` prefix, `speckit` prefix, and natural language
@@ -117,6 +129,39 @@ monorepo?" If yes, Levels 1-3 run independently per sub-project, and the constit
 Full walkthrough: see [Constitution Decision Tree](user-guide.md#constitution-decision-tree)
 in the user-guide.
 
+## MCP Server (Optional)
+
+An MCP server (`spec-kit-mcp-server/server.py`) provides deterministic workflow state
+management — replacing LLM-based phase/artifact detection with structured JSON-RPC calls
+over stdio. 12 tools exposed as `mcp_spec_kit_*` in Hermes.
+
+**Tools:**
+
+| Tool | Purpose |
+|------|---------|
+| `init_feature` | Register a new feature in state |
+| `get_feature_state` | Get current phase, artifacts, bugs |
+| `get_next_actions` | Available actions from current state |
+| `advance_phase` | Validate and transition to next phase |
+| `log_bug` | Log bug (returns `next_suggested`) |
+| `set_bug_status` | Update bug status |
+| `set_bug_plan_ref` | Link bug to plan section |
+| `list_features` | List all registered features |
+| `reopen_feature` | Reopen closed feature |
+| `close_feature` | Close feature after Phase 6 |
+| `update_artifact` | Update artifact status |
+| `auto_detect_features` | Scan specs/ dir, reconcile state |
+
+**State file**: `specs/.spec-kit/state.json` (per-project).
+
+**Fallback**: When the MCP server is not configured, all skills fall back to
+filesystem-based artifact detection — backward compatible, no skill changes needed.
+
+**Installation**: `install.sh` copies the server and auto-configures via `hermes mcp add`.
+Activate in Hermes with `/reload-mcp`.
+
+Full docs: [spec-kit-mcp-server/README.md](spec-kit-mcp-server/README.md)
+
 ## Key Design Decisions
 
 - Constitution is mandatory for all features — specify and plan block if missing
@@ -132,3 +177,5 @@ in the user-guide.
 - Spec health score computed at close (0-100%)
 - Branch guardrails block git operations on main/master
 - Pre-action self-check in every skill (branch, mode, workflow)
+- MCP server (optional): deterministic state, compaction-proof, zero external deps (pure stdlib)
+- Skills fall back to filesystem detection when MCP server is not configured (backward compatible)

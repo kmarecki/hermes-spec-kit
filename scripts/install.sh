@@ -170,19 +170,73 @@ if [ -f "$MCP_SERVER_DIR/server.py" ]; then
     fi
   fi
 
-  # Auto-configure via hermes mcp add (official API)
+  # Auto-configure MCP server
   CONFIG_FILE="$HOME/.hermes/config.yaml"
   if [ -n "$MCP_PYTHON" ]; then
-    # Remove old config via hermes mcp remove (ignores error if not found)
-    hermes mcp remove spec-kit 2>/dev/null || true
+    # Try hermes mcp add with a timeout (connection test can hang)
+    if command -v timeout &>/dev/null; then
+      timeout 10 hermes mcp add spec-kit \
+        --command "$MCP_PYTHON" \
+        --args "$MCP_SERVER_DST/server.py" 2>/dev/null && \
+        ADD_OK=true || ADD_OK=false
+    else
+      hermes mcp add spec-kit \
+        --command "$MCP_PYTHON" \
+        --args "$MCP_SERVER_DST/server.py" 2>/dev/null && \
+        ADD_OK=true || ADD_OK=false
+    fi
 
-    # Add via official command
-    hermes mcp add spec-kit \
-      --command "$MCP_PYTHON" \
-      --args "$MCP_SERVER_DST/server.py" 2>/dev/null && \
-      echo "  -> Added spec-kit MCP server via hermes mcp add" || \
-      echo "  -> WARNING: 'hermes mcp add' failed. Config may need manual setup."
-    echo "  -> In Hermes session, run /reload-mcp to activate"
+    if [ "$ADD_OK" = true ]; then
+      echo "  -> Added spec-kit MCP server via hermes mcp add"
+    else
+      echo "  -> 'hermes mcp add' timed out or failed — writing config manually..."
+
+      # Remove any existing spec-kit block from mcp_servers using python3 yaml
+      # (fallback to sed if yaml module unavailable)
+      if python3 -c "import yaml" 2>/dev/null; then
+        python3 -c "
+import yaml, os
+cp = os.path.expanduser('$CONFIG_FILE')
+if os.path.exists(cp):
+    with open(cp) as f:
+        cfg = yaml.safe_load(f) or {}
+else:
+    cfg = {}
+if 'mcp_servers' not in cfg:
+    cfg['mcp_servers'] = {}
+cfg['mcp_servers']['spec-kit'] = {
+    'command': '$MCP_PYTHON',
+    'args': ['$MCP_SERVER_DST/server.py']
+}
+with open(cp, 'w') as f:
+    yaml.dump(cfg, f, default_flow_style=False, indent=2)
+print('  -> MCP config written via Python yaml')
+"
+      else
+        # Fallback: remove old spec-kit block and append
+        mkdir -p "$(dirname "$CONFIG_FILE")"
+        touch "$CONFIG_FILE"
+        # Remove existing spec-kit block (3 lines: spec-kit:, command:, args:)
+        sed -i '/^  spec-kit:/{
+          N;N;d
+        }' "$CONFIG_FILE" 2>/dev/null || true
+        # Remove empty mcp_servers line (no entries left)
+        sed -i '/^mcp_servers:$/{
+          N
+          /^mcp_servers:\n$/d
+        }' "$CONFIG_FILE" 2>/dev/null || true
+        # Append new entry
+        cat >> "$CONFIG_FILE" << MCPEOF
+
+mcp_servers:
+  spec-kit:
+    command: "$MCP_PYTHON"
+    args: ["$MCP_SERVER_DST/server.py"]
+MCPEOF
+        echo "  -> MCP config written (sed fallback)"
+      fi
+      echo "  -> In Hermes session, run /reload-mcp to activate"
+    fi
   else
     echo "  -> WARNING: mcp Python package not available."
     echo "     Hermes needs it for MCP support. Install manually:"

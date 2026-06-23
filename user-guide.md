@@ -6,11 +6,6 @@ task breakdown, TDD implementation, testing, and a mandatory close phase.
 Three development modes span the full feature lifecycle: forward development
 (specify), bugfix loop, and reopen for closed features.
 
-Git conventions (branch naming, commit messages, merge behaviour) are
-defined in `specs/git-conventions.md`. Copy the template from
-`spec-kit/templates/git-conventions-template.md` and customise per
-project.
-
 This guide covers installation, the core workflow, the reopen flow for closed features, and
 day-to-day usage.
 
@@ -20,7 +15,7 @@ day-to-day usage.
 
 1.  [What is Spec-Kit?](#what-is-spec-kit)
 2.  [Quick Start: Your First Feature](#quick-start-your-first-feature)
-3.  [Four Development Modes](#four-development-modes)
+3.  [Three Development Modes](#three-development-modes)
 4.  [Constitution Decision Tree](#constitution-decision-tree)
     - [Level 1: Purpose (9 options)](#level-1-purpose-9-options)
     - [Level 2: Architecture (25 options)](#level-2-architecture-25-options-across-9-purposes)
@@ -34,8 +29,9 @@ day-to-day usage.
 7.  [Branch Strategy](#branch-strategy)
 8.  [Git Commit Conventions](#git-commit-conventions)
 9.  [Spec Health Score](#spec-health-score)
-10. [Troubleshooting](#troubleshooting)
-11. [Reference Tables](#reference-tables)
+10. [MCP Server](#mcp-server)
+11. [Troubleshooting](#troubleshooting)
+12. [Reference Tables](#reference-tables)
 
 ---
 
@@ -64,13 +60,15 @@ mode).
 - Without close, features accumulate half-finished
 
 **What tools does it add?**
-- 13 spec-kit skills in `~/.hermes/skills/` — respond to `spec-kit` prefix, `speckit` prefix,
+- 11 spec-kit skills in `~/.hermes/skills/` — respond to `spec-kit` prefix, `speckit` prefix,
   and natural language phrases
   (e.g. `"speckit plan 001-user-auth"`, `"spec-kit plan 001-user-auth"`, or
   `"plan the implementation for 001-user-auth"` all trigger the same skill)
 - Templates in `~/.hermes/skills/spec-kit/templates/`
 - Reference files in `~/.hermes/skills/spec-kit/references/` (preflight checks, auto-commit patterns, history tracking)
 - A `specs/` directory in your project for feature artifacts
+- An optional MCP server (`mcp_spec_kit_*` tools) for deterministic state management
+  — auto-configured by install.sh, activates with `/reload-mcp`
 
 ---
 
@@ -789,6 +787,84 @@ health score is compared against the original. Any requirements that
 changed status (e.g., from ✅ Resolved to ❌ Not Done) are flagged for
 user resolution.
 
+## MCP Server (Optional)
+
+An MCP server delivers deterministic workflow state management. Instead of the LLM
+inferring the current phase, artifact status, and bug state from file presence — which
+drifts after context compaction — the server stores state in a structured JSON file
+(`specs/.spec-kit/state.json`) and enforces valid transitions.
+
+### How it works
+
+```
+Hermes ─→ mcp_spec_kit_* tools ─→ MCP Server (server.py)
+                                         ↓
+                                   state.json
+```
+
+The server communicates over stdio using JSON-RPC 2.0 with Content-Length framing.
+Zero external dependencies — pure Python stdlib.
+
+### Tools provided
+
+| Tool | Purpose |
+|------|---------|
+| `mcp_spec_kit_init_feature` | Register a new feature |
+| `mcp_spec_kit_get_feature_state` | Get current phase, artifacts, bugs |
+| `mcp_spec_kit_get_next_actions` | Available actions from current state |
+| `mcp_spec_kit_advance_phase` | Validate and transition to next phase |
+| `mcp_spec_kit_log_bug` | Log bug — returns `next_suggested` |
+| `mcp_spec_kit_set_bug_status` | Update bug status |
+| `mcp_spec_kit_set_bug_plan_ref` | Link bug to plan section |
+| `mcp_spec_kit_list_features` | List all registered features |
+| `mcp_spec_kit_reopen_feature` | Reopen closed feature |
+| `mcp_spec_kit_close_feature` | Close feature after Phase 6 |
+| `mcp_spec_kit_update_artifact` | Update artifact status |
+| `mcp_spec_kit_auto_detect_features` | Scan specs/ dir, reconcile state |
+
+### Benefits
+
+- **Deterministic**: State is stored, not inferred — survives context compaction
+- **Enforced transitions**: `advance_phase` rejects invalid moves (wrong phase, missing
+  prerequisites)
+- **Auto-chain**: `log_bug` returns `next_suggested: "bugfix_plan"` — the LLM does not
+  guess what to do next
+- **Backward compatible**: When the MCP server is not configured, every skill falls back
+  to filesystem-based detection. No skill changes needed.
+
+### Installation
+
+The install script (`./scripts/install.sh`) automatically:
+
+1. Copies `server.py` to `~/.hermes/skills/spec-kit/mcp-server/`
+2. Creates a Python venv at `~/.hermes-venv` if the `mcp` SDK is not found
+3. Runs `hermes mcp add spec-kit` to register the server in `config.yaml`
+4. Prints instructions to activate with `/reload-mcp`
+
+If `hermes mcp add` times out during connection verification, add the config
+manually to `~/.hermes/config.yaml`:
+
+```yaml
+mcp_servers:
+  spec-kit:
+    command: "/home/krzys/.hermes-venv/bin/python3"
+    args: ["/home/krzys/.hermes/skills/spec-kit/mcp-server/server.py"]
+```
+
+Then run `/reload-mcp` in Hermes and verify with `/toolsets` — the
+`mcp_spec_kit_*` tools should appear.
+
+### Skill integration
+
+When the MCP server is available (its tools exist in the Hermes toolset), skills
+defer to it for state queries and transitions. When unavailable, the same skills
+use the filesystem-based detection and routing from the table above.
+
+The `spec-kit-test` skill treats MCP availability specially:
+- With MCP: after logging bugs, calls `mcp_spec_kit_get_next_actions` and
+  **auto-chains** to plan → tasks → implement for the bugfix loop
+- Without MCP: suggests "bugfix [feature]" as before
+
 ---
 
 ## Troubleshooting
@@ -918,14 +994,16 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | bugs-template.md | Phase 5 | Bug tracking |
 | implementation-summary-template.md | Phase 6 | Full summary |
 | close-template.md | Phase 6 | Lightweight close |
-| comparison-template.md | Compare | Variant comparison matrix |
 | history-template.md | Phase transitions | Append-only log entries |
 | git-conventions-template.md | Project setup | Git branch/commit conventions |
 | gitignore-template.md | Project setup | .gitignore starter |
 | AGENTS-template.md | Project setup | Starting AGENTS.md |
-| soul-template.md | Hermes setup | Neutral persona |
 
 ### Artifact Detection (Phase Detection)
+
+When the MCP server is configured, `mcp_spec_kit_get_feature_state` is the
+**single source of truth** for current phase, artifact status, and bug state.
+The table below is used as fallback when the MCP server is not available.
 
 | Artifacts present | Current phase |
 |-------------------|---------------|
@@ -964,9 +1042,14 @@ hermes -w -s spec-kit-workflow
 
 # Check installed skills
 hermes skills list | grep spec-kit
+
+# MCP server commands (if installed)
+/reload-mcp                    # Activate MCP server after install/config change
+hermes mcp status              # Check MCP server status
+mcp_spec_kit_list_features     # List all registered features via MCP
 ```
 
-|### Workflow Diagram
+### Workflow Diagram
 
 ```text
                                             ┌── Explore ───────────────┐
