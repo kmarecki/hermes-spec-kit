@@ -154,6 +154,9 @@ over stdio. 12 tools exposed as `mcp_spec_kit_*` in Hermes.
 
 **State file**: `specs/.spec-kit/state.json` (per-project).
 
+**Dependency**: Requires the [mcp Python SDK](https://pypi.org/project/mcp/) (`pip install mcp`).
+The install script auto-installs it in a venv at `~/.hermes-venv/`.
+
 **Fallback**: When the MCP server is not configured, all skills fall back to
 filesystem-based artifact detection — backward compatible, no skill changes needed.
 
@@ -177,5 +180,5 @@ Full docs: [spec-kit-mcp-server/README.md](spec-kit-mcp-server/README.md)
 - Spec health score computed at close (0-100%)
 - Branch guardrails block git operations on main/master
 - Pre-action self-check in every skill (branch, mode, workflow)
-- MCP server (optional): deterministic state, compaction-proof, zero external deps (pure stdlib)
+- MCP server (optional): deterministic state, compaction-proof, uses `mcp` Python SDK
 - Skills fall back to filesystem detection when MCP server is not configured (backward compatible)

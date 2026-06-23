@@ -1,6 +1,6 @@
 # spec-kit MCP Server
 
-Deterministic workflow orchestration for spec-kit. Replaces LLM-based state detection with a structured MCP server.
+Deterministic workflow orchestration for spec-kit. Replaces LLM-based state detection with a structured MCP server using the official `mcp` Python SDK.
 
 ## Quick Start
 
@@ -8,16 +8,14 @@ Deterministic workflow orchestration for spec-kit. Replaces LLM-based state dete
 # Install (copies server to ~/.hermes/skills/spec-kit/mcp-server/)
 ./scripts/install.sh
 
-# Add to ~/.hermes/config.yaml:
-mcp_servers:
-  spec-kit:
-    command: "python3"
-    args: ["~/.hermes/skills/spec-kit/mcp-server/server.py"]
+# Activate in Hermes
+/reload-mcp
 
-# Restart Hermes Agent — tools appear as mcp_spec_kit_*
+# Verify tools
+/toolsets    # should show mcp_spec_kit_*
 ```
 
-## MCP Tools
+## MCP Tools (12)
 
 | Tool | Purpose | Replaces |
 |------|---------|----------|
@@ -76,7 +74,7 @@ Stored at `specs/.spec-kit/state.json`:
 - **Compaction-proof**: Survives context loss — MCP server always returns canonical state
 - **Enforced transitions**: Server rejects `advance_phase` if prerequisites not met
 - **Auto-chain**: `log_bug` returns `next_suggested: "bugfix_plan"` — the LLM doesn't guess what to do next
-- **Zero deps**: Pure Python stdlib — no pip install needed
+- **Uses MCP SDK**: Built on the official `mcp` Python SDK (FastMCP) — compatible with stdio transport
 
 ## Skill Integration
 

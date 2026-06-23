@@ -802,8 +802,7 @@ Hermes ─→ mcp_spec_kit_* tools ─→ MCP Server (server.py)
                                    state.json
 ```
 
-The server communicates over stdio using JSON-RPC 2.0 with Content-Length framing.
-Zero external dependencies — pure Python stdlib.
+The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`FastMCP`) for stdio transport — compatible with Hermes' built-in MCP client.
 
 ### Tools provided
 

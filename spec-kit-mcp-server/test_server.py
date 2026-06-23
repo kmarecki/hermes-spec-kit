@@ -1,92 +1,125 @@
 #!/usr/bin/env python3
-"""Quick smoke test for the MCP server."""
-import subprocess, json, os, sys, time
+"""Smoke test for the MCP server using the official mcp SDK client."""
+import anyio, json, os, sys
+from pathlib import Path
 
-os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from mcp import StdioServerParameters
+from mcp.client.stdio import stdio_client
+from mcp.client.session import ClientSession
 
-proc = subprocess.Popen(
-    ['python3', 'spec-kit-mcp-server/server.py'],
-    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-    text=True, bufsize=0
-)
+SERVER_DIR = Path(__file__).resolve().parent
+SERVER_SCRIPT = SERVER_DIR / "server.py"
 
-def send(msg):
-    body = json.dumps(msg)
-    data = f"Content-Length: {len(body)}\r\n\r\n{body}"
-    proc.stdin.write(data)
-    proc.stdin.flush()
+async def test():
+    server_params = StdioServerParameters(
+        command=sys.executable,
+        args=[str(SERVER_SCRIPT)],
+    )
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            init = await session.initialize()
+            print(f"✓ Initialize: {init.serverInfo.name} v{init.serverInfo.version}")
 
-def recv():
-    headers = b""
-    while True:
-        ch = proc.stdout.buffer.read(1)
-        if not ch:
-            return None
-        headers += ch
-        if headers.endswith(b"\r\n\r\n"):
-            break
-    cl = int([h for h in headers.decode().split("\r\n") if h.startswith("Content-Length")][0].split(":")[1])
-    body = proc.stdout.buffer.read(cl)
-    return json.loads(body.decode())
+            tools = await session.list_tools()
+            assert len(tools.tools) >= 11, f"Expected 11+ tools, got {len(tools.tools)}"
+            print(f"✓ Tools listed: {len(tools.tools)} tools")
 
-# Initialize
-send({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}})
-r = recv()
-print(f"Initialize: {'OK' if r and r.get('id')==1 else 'FAIL'}")
+            # init_feature
+            result = await session.call_tool("spec_kit_init_feature", {
+                "feature": "001-user-auth", "name": "User Auth", "mode": "specify"
+            })
+            data = json.loads(result.content[0].text)
+            assert data["success"], f"init_feature failed: {data}"
+            print(f"✓ init_feature: phase {data['state']['current_phase']}")
 
-# initialized notification
-send({"jsonrpc":"2.0","method":"notifications/initialized"})
+            # get_feature_state
+            result = await session.call_tool("spec_kit_get_feature_state", {"feature": "001-user-auth"})
+            data = json.loads(result.content[0].text)
+            assert data["state"]["current_phase"] == 0
+            print(f"✓ get_feature_state: phase {data['state']['current_phase']}")
 
-# List tools
-send({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}})
-r = recv()
-tools = r.get("result",{}).get("tools",[])
-print(f"Tools listed: {len(tools)} tools")
+            # advance_phase
+            result = await session.call_tool("spec_kit_advance_phase", {
+                "feature": "001-user-auth", "from_phase": 0, "artifacts_created": ["constitution.md"]
+            })
+            data = json.loads(result.content[0].text)
+            assert data["success"]
+            print(f"✓ advance_phase: 0 -> 1 ({data['phase_name']})")
 
-# Init feature
-send({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"spec_kit_init_feature","arguments":{"feature":"001-user-auth","name":"User Auth","mode":"specify"}}})
-r = recv()
-res = json.loads(r["result"]["content"][0]["text"])
-print(f"Init feature: {'OK' if res.get('success') else 'FAIL'} - {res.get('state',{}).get('current_phase')}")
+            # log_bug
+            result = await session.call_tool("spec_kit_log_bug", {
+                "feature": "001-user-auth", "severity": "critical",
+                "description": "Auth flow broken", "area": "auth"
+            })
+            data = json.loads(result.content[0].text)
+            assert data["success"]
+            assert data["next_suggested"] == "bugfix_plan"
+            print(f"✓ log_bug: {data['bug_id']} next={data['next_suggested']}")
 
-# Get state
-send({"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"spec_kit_get_feature_state","arguments":{"feature":"001-user-auth"}}})
-r = recv()
-res = json.loads(r["result"]["content"][0]["text"])
-print(f"Get state: phase={res['state']['current_phase']} status={res['state']['status']}")
+            # set_bug_status
+            result = await session.call_tool("spec_kit_set_bug_status", {
+                "feature": "001-user-auth", "bug_id": data["bug_id"], "status": "resolved"
+            })
+            data2 = json.loads(result.content[0].text)
+            assert data2["success"]
+            print(f"✓ set_bug_status: {data['bug_id']} -> resolved")
 
-# Advance phase
-send({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"spec_kit_advance_phase","arguments":{"feature":"001-user-auth","from_phase":0,"artifacts_created":["constitution.md"]}}})
-r = recv()
-res = json.loads(r["result"]["content"][0]["text"])
-print(f"Advance to phase 1: {'OK' if res.get('success') else 'FAIL'} -> {res.get('phase_name')}")
+            # set_bug_plan_ref
+            result = await session.call_tool("spec_kit_set_bug_plan_ref", {
+                "feature": "001-user-auth", "bug_id": data["bug_id"], "plan_ref": "plan.md#bugfix-BUG-001"
+            })
+            data3 = json.loads(result.content[0].text)
+            assert data3["success"]
+            print(f"✓ set_bug_plan_ref: {data['bug_id']} -> plan.md#bugfix-BUG-001")
 
-# Log bug
-send({"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"spec_kit_log_bug","arguments":{"feature":"001-user-auth","severity":"critical","description":"Auth flow broken","area":"auth"}}})
-r = recv()
-res = json.loads(r["result"]["content"][0]["text"])
-print(f"Log bug: {'OK' if res.get('success') else 'FAIL'} -> {res.get('bug_id')} next={res.get('next_suggested')}")
+            # get_next_actions
+            result = await session.call_tool("spec_kit_get_next_actions", {"feature": "001-user-auth"})
+            data4 = json.loads(result.content[0].text)
+            print(f"✓ get_next_actions: {len(data4['available_actions'])} actions, {data4['open_bugs']} open bugs")
 
-# Get next actions
-send({"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"spec_kit_get_next_actions","arguments":{"feature":"001-user-auth"}}})
-r = recv()
-res = json.loads(r["result"]["content"][0]["text"])
-actions = [a['action'] for a in res.get('available_actions',[])]
-print(f"Next actions: {actions} open_bugs={res.get('open_bugs')}")
+            # list_features
+            result = await session.call_tool("spec_kit_list_features", {})
+            data5 = json.loads(result.content[0].text)
+            assert len(data5["features"]) == 1
+            print(f"✓ list_features: {[f['feature'] for f in data5['features']]}")
 
-# List features
-send({"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"spec_kit_list_features","arguments":{}}})
-r = recv()
-res = json.loads(r["result"]["content"][0]["text"])
-print(f"List features: {[f['feature'] for f in res.get('features',[])]}")
+            # update_artifact
+            result = await session.call_tool("spec_kit_update_artifact", {
+                "feature": "001-user-auth", "artifact": "spec.md", "status": "present"
+            })
+            data6 = json.loads(result.content[0].text)
+            assert data6["success"]
+            print(f"✓ update_artifact: spec.md -> present")
 
-proc.terminate()
-# Cleanup state file
-state_path = os.path.join("specs", ".spec-kit", "state.json")
-if os.path.exists(state_path):
-    os.remove(state_path)
-    d = os.path.dirname(state_path)
-    if os.path.exists(d) and not os.listdir(d):
-        os.rmdir(d)
+            return True
 
-print("\nAll tests passed!" if True else "\nSome tests FAILED")
+def main():
+    # Cleanup before
+    state_path = Path("specs/.spec-kit/state.json")
+    if state_path.exists():
+        state_path.unlink()
+        parent = state_path.parent
+        if parent.exists() and not any(parent.iterdir()):
+            parent.rmdir()
+
+    try:
+        success = anyio.run(test)
+        print(f"\n{'All tests passed!' if success else 'Some tests FAILED'}")
+    except Exception as e:
+        print(f"\nFAILED: {e}")
+        import traceback
+        traceback.print_exc()
+        success = False
+    finally:
+        # Cleanup after
+        if state_path.exists():
+            state_path.unlink()
+            parent = state_path.parent
+            if parent.exists() and not any(parent.iterdir()):
+                parent.rmdir()
+
+    return 0 if success else 1
+
+if __name__ == "__main__":
+    sys.exit(main())
