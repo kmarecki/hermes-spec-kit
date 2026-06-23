@@ -170,37 +170,19 @@ if [ -f "$MCP_SERVER_DIR/server.py" ]; then
     fi
   fi
 
-  # Auto-configure in Hermes config.yaml
+  # Auto-configure via hermes mcp add (official API)
   CONFIG_FILE="$HOME/.hermes/config.yaml"
   if [ -n "$MCP_PYTHON" ]; then
-    # Remove ONLY old spec-kit entries (leave other mcp_servers intact)
-    if [ -f "$CONFIG_FILE" ]; then
-      python3 -c "
-import re
-with open('$CONFIG_FILE') as f:
-    content = f.read()
-# Remove broken block: mcp_servers: with command/args directly under (no server name)
-content = re.sub(r'mcp_servers:\n    command: .*?\n    args: \[.*?\]\n', '', content)
-# Remove correct block: mcp_servers: with spec-kit: key
-content = re.sub(r'mcp_servers:\n  spec-kit:\n    command: .*?\n    args: \[.*?\]\n', '', content)
-# Remove comment marker
-content = re.sub(r'# spec-kit-mcp\n', '', content)
-# Remove empty mcp_servers line if left behind
-content = re.sub(r'^mcp_servers:\n(?=\n|$)', '', content, flags=re.MULTILINE)
-with open('$CONFIG_FILE', 'w') as f:
-    f.write(content)
-print('ok', end='')
-" 2>/dev/null
-    fi
+    # Remove old config via hermes mcp remove (ignores error if not found)
+    hermes mcp remove spec-kit 2>/dev/null || true
 
-    # Append fresh entry
-    echo "" >> "$CONFIG_FILE"
-    echo "mcp_servers:" >> "$CONFIG_FILE"
-    echo "  spec-kit:" >> "$CONFIG_FILE"
-    echo "    command: \"$MCP_PYTHON\"" >> "$CONFIG_FILE"
-    echo "    args: [\"$MCP_SERVER_DST/server.py\"]" >> "$CONFIG_FILE"
-    echo "  -> Added spec-kit MCP server to ~/.hermes/config.yaml"
-    echo "  -> Restart Hermes Agent for tools to appear (mcp_spec_kit_*)"
+    # Add via official command
+    hermes mcp add spec-kit \
+      --command "$MCP_PYTHON" \
+      --args "$MCP_SERVER_DST/server.py" 2>/dev/null && \
+      echo "  -> Added spec-kit MCP server via hermes mcp add" || \
+      echo "  -> WARNING: 'hermes mcp add' failed. Config may need manual setup."
+    echo "  -> In Hermes session, run /reload-mcp to activate"
   else
     echo "  -> WARNING: mcp Python package not available."
     echo "     Hermes needs it for MCP support. Install manually:"
