@@ -68,15 +68,12 @@ if [ -f "$CONFIG_FILE" ]; then
     cp "$CONFIG_FILE" "$CONFIG_FILE.spec-kit-backup"
     echo "  Backed up config to: $CONFIG_FILE.spec-kit-backup"
 
-    # Remove the spec-kit MCP server block (4 lines: mcp_servers: → spec-kit: → command: → args:)
-    # Use perl for reliable multi-line replacement
-    if command -v perl &>/dev/null; then
-      perl -i -pe 'undef $_ if /^mcp_servers:\n\s+spec-kit:\n\s+command: "python3"\n\s+args: \[.*?\]/s' "$CONFIG_FILE" 2>/dev/null
-    fi
-    # Also try removing any remaining spec-kit lines via grep -v
-    grep -v "spec-kit" "$CONFIG_FILE" > "$CONFIG_FILE.tmp" 2>/dev/null && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    # Remove spec-kit block (3 lines: spec-kit:, command:, args:)
+    sed -i '/^  spec-kit:/{
+      N;N;d
+    }' "$CONFIG_FILE" 2>/dev/null || true
 
-    # Clean up empty mcp_servers section
+    # Remove empty mcp_servers section (no entries left)
     sed -i '/^mcp_servers:$/{
       N
       /^mcp_servers:\n$/d
