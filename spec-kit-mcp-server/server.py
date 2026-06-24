@@ -76,8 +76,6 @@ def _validate_advance(feature, state, from_phase, to_phase):
         return False, f"Feature '{feature}' not initialized"
     if f["status"] == "closed":
         return False, f"Feature '{feature}' is closed — use reopen"
-    if f["status"] == "reopened":
-        return False, f"Feature '{feature}' is reopened — bugfix loop in progress"
 
     current = f["current_phase"]
     if current != from_phase:
@@ -206,12 +204,16 @@ def advance_phase(feature: str, from_phase: int, artifacts_created: list[str] = 
 
     to_phase = from_phase + 1
 
+    # Mark explicitly provided artifacts
     for art in artifacts_created:
         f["artifacts"][art] = "present"
+
+    # Auto-mark required artifacts for the completed phase (if still absent)
     for art in PHASES[from_phase]["artifacts"]:
-        if art not in f["artifacts"]:
+        if f["artifacts"].get(art) == "absent":
             f["artifacts"][art] = "present"
 
+    # Validate after artifacts are updated
     ok, reason = _validate_advance(feature, state, from_phase, to_phase)
     if not ok:
         return json.dumps({"error": reason})
@@ -332,6 +334,7 @@ def reopen_feature(feature: str) -> str:
         return json.dumps({"error": f"Feature '{feature}' is not closed (status: {f['status']})"})
 
     f["status"] = "reopened"
+    f["current_phase"] = 5
     f["last_transition"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     _save_state(state)
 
