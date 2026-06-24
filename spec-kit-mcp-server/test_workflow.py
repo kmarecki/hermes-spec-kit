@@ -203,6 +203,11 @@ async def test_bug_lifecycle(session):
         })
         assert json.loads(r.content[0].text)["success"]
 
+    # Create bugs.md (required by MCP server guard before log_bug)
+    bugs_path = Path("specs") / "bug-life" / "bugs.md"
+    bugs_path.parent.mkdir(parents=True, exist_ok=True)
+    bugs_path.write_text("# Bugs\n\n### BUG-001: Placeholder\n- **Status**: open\n")
+
     # Log bug
     r = await session.call_tool("log_bug", {
         "feature": "bug-life", "severity": "critical", "description": "Login fails", "area": "auth"
@@ -267,6 +272,16 @@ async def test_reopen_flow(session):
     d = json.loads(r.content[0].text)
     check("reopen_feature succeeds", d["success"])
     check("  new_status is reopened", d["new_status"] == "reopened")
+
+    # Create bugs.md (required by MCP server guard before log_bug)
+    bugs_path = Path("specs") / "bug-life" / "bugs.md"
+    bugs_path.parent.mkdir(parents=True, exist_ok=True)
+    bugs_path.write_text("# Bugs\n\n### BUG-001: Placeholder\n- **Status**: open\n")
+
+    # Create bugs.md (required by MCP server guard)
+    bugs_path = Path("specs") / "reopen-test" / "bugs.md"
+    bugs_path.parent.mkdir(parents=True, exist_ok=True)
+    bugs_path.write_text("# Bugs\n\n### BUG-001: Placeholder\n- **Status**: open\n")
 
     # Log bug in reopened feature
     r = await session.call_tool("log_bug", {

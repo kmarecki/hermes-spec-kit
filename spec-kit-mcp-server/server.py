@@ -226,9 +226,26 @@ def advance_phase(feature: str, from_phase: int, artifacts_created: list[str] = 
     return json.dumps({"success": True, "from_phase": from_phase, "to_phase": to_phase, "phase_name": PHASES[to_phase]["name"], "artifacts_updated": artifacts_created, "state": _get_feature(state, feature)})
 
 
+def _bugs_md_path(feature):
+    """Return the expected bugs.md path for a feature."""
+    return Path("specs") / feature / "bugs.md"
+
+
+def _require_bugs_md(feature):
+    """Check if bugs.md exists for this feature. Returns error message or None."""
+    bpath = _bugs_md_path(feature)
+    if not bpath.exists():
+        return f"specs/{feature}/bugs.md does not exist. You MUST write bugs to bugs.md first via spec-kit-test before calling MCP bug tools."
+    content = bpath.read_text()
+    if "BUG-" not in content and "### BUG-" not in content:
+        return f"specs/{feature}/bugs.md exists but has no bug entries. Write bugs using spec-kit-test first."
+    return None
+
+
 @mcp.tool(name="log_bug")
 def log_bug(feature: str, severity: str = "minor", description: str = "", area: str = "") -> str:
-    """Log a bug. Auto-generates BUG-NNN ID. Suggests next action (bugfix_plan).
+    """Sync a bug entry to the MCP state. ONLY call AFTER writing to bugs.md.
+    The bugs.md file must exist and contain bug entries before this tool works.
 
     Args:
         feature: Feature ID
@@ -236,6 +253,11 @@ def log_bug(feature: str, severity: str = "minor", description: str = "", area: 
         description: Bug description
         area: Affected area (e.g., auth, database, ui)
     """
+    # Enforce: bugs.md must exist with entries first
+    guard = _require_bugs_md(feature)
+    if guard:
+        return json.dumps({"error": guard, "hint": "Run spec-kit-test first to write bugs to bugs.md"})
+
     state = _load_state()
     f = _get_feature(state, feature)
     if f is None:
@@ -259,12 +281,12 @@ def log_bug(feature: str, severity: str = "minor", description: str = "", area: 
     f["artifacts"]["bugs.md"] = "present"
     _save_state(state)
 
-    return json.dumps({"success": True, "bug_id": bug_id, "severity": severity, "next_suggested": "bugfix_plan", "reason": "Bug logged — plan a fix approach before implementing", "total_open": len([b for b in f["bugs"] if b["status"] == "open"])})
+    return json.dumps({"success": True, "bug_id": bug_id, "severity": severity, "next_suggested": "bugfix_plan", "reason": "Bug synced to MCP state. Proceed with 'bugfix [feature]' to start the fix workflow.", "total_open": len([b for b in f["bugs"] if b["status"] == "open"])})
 
 
 @mcp.tool(name="set_bug_plan_ref")
 def set_bug_plan_ref(feature: str, bug_id: str, plan_ref: str) -> str:
-    """Link a bug to its plan section (called by spec-kit-plan).
+    """Link a bug to its plan section. Called by spec-kit-plan after writing plan.md.
 
     Args:
         feature: Feature ID
@@ -282,12 +304,13 @@ def set_bug_plan_ref(feature: str, bug_id: str, plan_ref: str) -> str:
             _save_state(state)
             return json.dumps({"success": True, "bug_id": bug_id, "status": bug["status"]})
 
-    return json.dumps({"error": f"Bug {bug_id} not found"})
+    return json.dumps({"error": f"Bug {bug_id} not found in MCP state"})
 
 
 @mcp.tool(name="set_bug_status")
 def set_bug_status(feature: str, bug_id: str, status: str) -> str:
     """Update bug status (open, in-progress, resolved, verified).
+    ONLY call when the corresponding status change is also reflected in bugs.md.
 
     Args:
         feature: Feature ID
@@ -305,7 +328,7 @@ def set_bug_status(feature: str, bug_id: str, status: str) -> str:
             _save_state(state)
             return json.dumps({"success": True, "bug_id": bug_id, "new_status": status})
 
-    return json.dumps({"error": f"Bug {bug_id} not found"})
+    return json.dumps({"error": f"Bug {bug_id} not found in MCP state"})
 
 
 @mcp.tool(name="list_features")

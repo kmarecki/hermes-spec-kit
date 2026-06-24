@@ -67,32 +67,25 @@ User describes in natural language. Agent structures into:
 
 After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
 
-### MCP state sync — AFTER writing bugs.md, not instead of
-When the MCP server is configured (`mcp_spec_kit_*` tools exist), call MCP to sync
-**AFTER** writing each bug to bugs.md. MCP is an ADDITIONAL notification step, not a
-replacement for the bugs.md file.
-
-**IMPORTANT**: The bugs.md file is the primary bug log. MCP state is a supplemental
-sync for workflow orchestration. Never skip bugs.md.
+### MCP sync — write bugs.md FIRST, then sync to MCP
+The MCP server enforces this order: `mcp_spec_kit_log_bug` will REJECT the call
+if `bugs.md` does not exist with bug entries. You MUST write to bugs.md first,
+then call MCP to sync.
 
 ```text
 1. WRITE bug entry to bugs.md (smart insert format above)
-2. THEN call MCP to sync:
+2. Confirm with user: "Logged BUG-NNN: [summary] — correct?"
+3. THEN call MCP to sync:
    CALL mcp_spec_kit_log_bug(feature="[feature]", severity="[severity]",
          description="[summary]", area="[area]")
-   IF response.next_suggested:
-     NOTE: "MCP suggests next: {next_suggested}"
 ```
 
-### Bug status validation — strict MCP guard
+### Bug status validation
 When user finishes logging → count open bugs:
 - **If 0 bugs**: Feature complete. Suggest close.
-- **If >0 bugs**: Say "bugfix [feature]" to start the workflow. The bugfix workflow
+- **If >0 bugs**: Say \"bugfix [feature]\" to start the workflow. The bugfix workflow
   (spec-kit-tasks → spec-kit-implement) handles plan → tasks → implement.
   **Never fix bugs directly** — always route through the workflow.
-- If MCP is available, you may additionally call `mcp_spec_kit_get_next_actions(feature)`
-  to show the user what the workflow will do, but DO NOT auto-execute — the user must
-  explicitly say "bugfix [feature]".
 
 ### Mark bugs as verified
 ```
