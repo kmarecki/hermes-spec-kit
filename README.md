@@ -167,24 +167,32 @@ Full docs: [spec-kit-mcp-server/README.md](spec-kit-mcp-server/README.md)
 
 ## Running Tests
 
-The MCP server has a workflow integration test suite (11 tests) that exercises
-the server via the `mcp` Python SDK client — no Hermes session needed.
+Two test suites validate the project:
+
+**MCP server workflow tests** (11 tests) — exercises the server state machine
+via the `mcp` Python SDK client. No Hermes session needed.
 
 ```bash
-# Requires the mcp SDK (auto-installed by install.sh in the venv)
-pip install mcp
-
 cd spec-kit-mcp-server
-
-# Run all tests (each spawns its own server process)
+pip install mcp
 python3 test_workflow.py
-
-# Or via the delegating wrapper
-python3 test_server.py
 ```
 
-The tests cover: happy path forward cycle, prerequisite enforcement,
-bug lifecycle, reopen flow, auto-detect, and error cases.
+**Skill validation tests** (12 checks) — validates all skill markdown files:
+frontmatter YAML, reference/template file existence, cross-skill links,
+phase coverage, pre-flight compliance, and workflow diagram completeness.
+
+```bash
+pip install pyyaml
+python3 test_skills.py
+```
+
+Run both together:
+
+```bash
+pip install mcp pyyaml
+python3 spec-kit-mcp-server/test_workflow.py && python3 spec-kit-mcp-server/test_skills.py
+```
 
 ## Key Design Decisions
 

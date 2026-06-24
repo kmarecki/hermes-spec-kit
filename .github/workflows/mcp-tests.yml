@@ -1,4 +1,4 @@
-name: spec-kit MCP tests
+name: spec-kit tests
 
 on:
   push:
@@ -21,7 +21,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install mcp
+          pip install mcp pyyaml
+
+      - name: Validate skill files (frontmatter, references, templates)
+        run: python3 spec-kit-mcp-server/test_skills.py
 
       - name: Run MCP server workflow tests
-        run: python spec-kit-mcp-server/test_workflow.py
+        run: python3 spec-kit-mcp-server/test_workflow.py
