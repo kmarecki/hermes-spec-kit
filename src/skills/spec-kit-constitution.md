@@ -560,6 +560,17 @@ ELSE (single project):
 - **MINOR** (x.1.x → x.2.0): New principles
 - **PATCH** (x.x.1 → x.x.2): Clarifications
 
+
+### MCP state sync (optional, when MCP server is configured)
+
+After creating the artifact(s) and before committing, sync workflow state
+to the MCP server so it stays consistent across phases.
+
+```text
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="constitution.md", status="present")
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=0, artifacts_created=["constitution.md"])
+```
+
 ### Append to history.md and Commit
 
 Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:

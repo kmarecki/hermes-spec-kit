@@ -318,6 +318,20 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Revi
 - Bugfixes are NEVER implemented directly when a user mentions a bug
 - Bugfixes must follow: "bugfix [feature]" → plan → tasks → implement
 
+
+### MCP state sync (optional, when MCP server is configured)
+
+After each phase commit and before the final regression commit, sync workflow state
+to the MCP server. The implement phase is complex (multiple commits), so sync only once
+at the end after the regression fix:
+
+```text
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="tasks.md", status="present")
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=4, artifacts_created=[])
+```
+
+If MCP is not available, skip — the phase is tracked via filesystem artifacts.
+
 ### Step 9: Append to history.md (before every commit)
 
 **Every commit in this skill must be preceded by a history.md entry.** This covers three commit types:
