@@ -67,20 +67,32 @@ User describes in natural language. Agent structures into:
 
 After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
 
-### MCP state sync (optional, when MCP server is configured)
-When the MCP server is available (`mcp_spec_kit_log_bug` tool exists), call it after each bug to sync state:
+### MCP state sync — AFTER writing bugs.md, not instead of
+When the MCP server is configured (`mcp_spec_kit_*` tools exist), call MCP to sync
+**AFTER** writing each bug to bugs.md. MCP is an ADDITIONAL notification step, not a
+replacement for the bugs.md file.
+
+**IMPORTANT**: The bugs.md file is the primary bug log. MCP state is a supplemental
+sync for workflow orchestration. Never skip bugs.md.
+
 ```text
-CALL mcp_spec_kit_log_bug(feature="[feature]", severity="[severity]",
-      description="[summary]", area="[area]")
-IF response.next_suggested:
-  NOTE: "MCP suggests next: {next_suggested}"
+1. WRITE bug entry to bugs.md (smart insert format above)
+2. THEN call MCP to sync:
+   CALL mcp_spec_kit_log_bug(feature="[feature]", severity="[severity]",
+         description="[summary]", area="[area]")
+   IF response.next_suggested:
+     NOTE: "MCP suggests next: {next_suggested}"
 ```
 
-### Bug status validation
+### Bug status validation — strict MCP guard
 When user finishes logging → count open bugs:
 - **If 0 bugs**: Feature complete. Suggest close.
-- **If >0 bugs AND MCP available**: Auto-chain to bugfix flow. The MCP server tracks the state. Call `mcp_spec_kit_get_next_actions(feature)` to get the available actions, then auto-chain: plan → tasks → implement.
-- **If >0 bugs AND no MCP**: Suggest "bugfix [feature]" as before.
+- **If >0 bugs**: Say "bugfix [feature]" to start the workflow. The bugfix workflow
+  (spec-kit-tasks → spec-kit-implement) handles plan → tasks → implement.
+  **Never fix bugs directly** — always route through the workflow.
+- If MCP is available, you may additionally call `mcp_spec_kit_get_next_actions(feature)`
+  to show the user what the workflow will do, but DO NOT auto-execute — the user must
+  explicitly say "bugfix [feature]".
 
 ### Mark bugs as verified
 ```

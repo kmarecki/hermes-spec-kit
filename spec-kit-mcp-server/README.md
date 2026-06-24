@@ -19,18 +19,21 @@ Deterministic workflow orchestration for spec-kit. Replaces LLM-based state dete
 
 | Tool | Purpose | Replaces |
 |------|---------|----------|
-| `spec_kit_get_feature_state` | Get current phase, artifacts, bugs | File-system phase detection |
-| `spec_kit_get_next_actions` | Available actions from current state | Routing logic in skills |
-| `spec_kit_advance_phase` | Validate and transition to next phase | Manual phase advancement |
-| `spec_kit_log_bug` | Log bug, get auto-chain suggestion | Manual bug logging |
-| `spec_kit_set_bug_status` | Update bug status | Manual status changes |
-| `spec_kit_set_bug_plan_ref` | Link bug to plan section | Manual plan ref tracking |
-| `spec_kit_init_feature` | Register new feature | Manual feature init |
-| `spec_kit_list_features` | List all features | File-system directory scan |
-| `spec_kit_reopen_feature` | Reopen closed feature | Manual reopen logic |
-| `spec_kit_close_feature` | Close feature after Phase 6 | Manual close tracking |
-| `spec_kit_update_artifact` | Update artifact status | Manual artifact tracking |
-| `spec_kit_auto_detect_features` | Scan specs/ dir, reconcile state | Initial setup |
+| `init_feature` | Register new feature | Manual feature init |
+| `get_feature_state` | Get current phase, artifacts, bugs | File-system phase detection |
+| `get_next_actions` | Available actions from current state | Routing logic in skills |
+| `advance_phase` | Validate and transition to next phase | Manual phase advancement |
+| `log_bug` | Log bug, get auto-chain suggestion | Manual bug logging |
+| `set_bug_status` | Update bug status | Manual status changes |
+| `set_bug_plan_ref` | Link bug to plan section | Manual plan ref tracking |
+| `list_features` | List all features | File-system directory scan |
+| `reopen_feature` | Reopen closed feature | Manual reopen logic |
+| `close_feature` | Close feature after Phase 6 | Manual close tracking |
+| `update_artifact` | Update artifact status | Manual artifact tracking |
+| `auto_detect_features` | Scan specs/ dir, reconcile state | Initial setup |
+
+> **Note**: In Hermes, tools appear with the `mcp_spec_kit_` prefix (e.g., `mcp_spec_kit_log_bug`).
+> Call them using the full prefixed name.
 
 ## Architecture
 

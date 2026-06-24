@@ -127,3 +127,4 @@ mcp_servers:
 ```
 
 12 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_log_bug`, etc.
+(In Hermes the tools appear with the `mcp_spec_kit_` prefix — call them by this full name.)

@@ -101,7 +101,7 @@ mcp = FastMCP("spec-kit-workflow")
 # ── Tools ──────────────────────────────────────────────────────────────────
 
 
-@mcp.tool(name="spec_kit_init_feature")
+@mcp.tool(name="init_feature")
 def init_feature(feature: str, name: str = None, mode: str = "specify") -> str:
     """Initialize a new feature in the workflow state.
 
@@ -129,7 +129,7 @@ def init_feature(feature: str, name: str = None, mode: str = "specify") -> str:
     return json.dumps({"success": True, "state": _get_feature(state, feature)})
 
 
-@mcp.tool(name="spec_kit_get_feature_state")
+@mcp.tool(name="get_feature_state")
 def get_feature_state(feature: str) -> str:
     """Get current workflow state for a feature — phase, artifacts, bugs, status.
 
@@ -143,7 +143,7 @@ def get_feature_state(feature: str) -> str:
     return json.dumps({"state": f})
 
 
-@mcp.tool(name="spec_kit_get_next_actions")
+@mcp.tool(name="get_next_actions")
 def get_next_actions(feature: str) -> str:
     """Get available actions from current phase — includes advance, bugfix, verify, close.
 
@@ -187,7 +187,7 @@ def get_next_actions(feature: str) -> str:
     return json.dumps({"current_phase": phase, "phase_name": PHASES[phase]["name"], "status": f["status"], "available_actions": actions, "open_bugs": len(open_bugs)})
 
 
-@mcp.tool(name="spec_kit_advance_phase")
+@mcp.tool(name="advance_phase")
 def advance_phase(feature: str, from_phase: int, artifacts_created: list[str] = None) -> str:
     """Advance to the next phase. Validates prerequisites and artifact state.
 
@@ -224,7 +224,7 @@ def advance_phase(feature: str, from_phase: int, artifacts_created: list[str] = 
     return json.dumps({"success": True, "from_phase": from_phase, "to_phase": to_phase, "phase_name": PHASES[to_phase]["name"], "artifacts_updated": artifacts_created, "state": _get_feature(state, feature)})
 
 
-@mcp.tool(name="spec_kit_log_bug")
+@mcp.tool(name="log_bug")
 def log_bug(feature: str, severity: str = "minor", description: str = "", area: str = "") -> str:
     """Log a bug. Auto-generates BUG-NNN ID. Suggests next action (bugfix_plan).
 
@@ -260,7 +260,7 @@ def log_bug(feature: str, severity: str = "minor", description: str = "", area: 
     return json.dumps({"success": True, "bug_id": bug_id, "severity": severity, "next_suggested": "bugfix_plan", "reason": "Bug logged — plan a fix approach before implementing", "total_open": len([b for b in f["bugs"] if b["status"] == "open"])})
 
 
-@mcp.tool(name="spec_kit_set_bug_plan_ref")
+@mcp.tool(name="set_bug_plan_ref")
 def set_bug_plan_ref(feature: str, bug_id: str, plan_ref: str) -> str:
     """Link a bug to its plan section (called by spec-kit-plan).
 
@@ -283,7 +283,7 @@ def set_bug_plan_ref(feature: str, bug_id: str, plan_ref: str) -> str:
     return json.dumps({"error": f"Bug {bug_id} not found"})
 
 
-@mcp.tool(name="spec_kit_set_bug_status")
+@mcp.tool(name="set_bug_status")
 def set_bug_status(feature: str, bug_id: str, status: str) -> str:
     """Update bug status (open, in-progress, resolved, verified).
 
@@ -306,7 +306,7 @@ def set_bug_status(feature: str, bug_id: str, status: str) -> str:
     return json.dumps({"error": f"Bug {bug_id} not found"})
 
 
-@mcp.tool(name="spec_kit_list_features")
+@mcp.tool(name="list_features")
 def list_features() -> str:
     """List all registered features with phase, status, and bug counts."""
     state = _load_state()
@@ -317,7 +317,7 @@ def list_features() -> str:
     return json.dumps({"features": result})
 
 
-@mcp.tool(name="spec_kit_reopen_feature")
+@mcp.tool(name="reopen_feature")
 def reopen_feature(feature: str) -> str:
     """Reopen a closed feature for bugfixing.
 
@@ -338,7 +338,7 @@ def reopen_feature(feature: str) -> str:
     return json.dumps({"success": True, "feature": feature, "new_status": "reopened", "current_phase": f["current_phase"], "next": "log_bug or bugfix_plan"})
 
 
-@mcp.tool(name="spec_kit_close_feature")
+@mcp.tool(name="close_feature")
 def close_feature(feature: str) -> str:
     """Mark feature as closed after Phase 6 completes.
 
@@ -358,7 +358,7 @@ def close_feature(feature: str) -> str:
     return json.dumps({"success": True, "feature": feature, "status": "closed"})
 
 
-@mcp.tool(name="spec_kit_update_artifact")
+@mcp.tool(name="update_artifact")
 def update_artifact(feature: str, artifact: str, status: str = "present") -> str:
     """Update artifact status (present, absent, verified).
 
@@ -377,7 +377,7 @@ def update_artifact(feature: str, artifact: str, status: str = "present") -> str
     return json.dumps({"success": True, "feature": feature, "artifact": artifact, "status": status})
 
 
-@mcp.tool(name="spec_kit_auto_detect_features")
+@mcp.tool(name="auto_detect_features")
 def auto_detect_features(feature: str = None) -> str:
     """Scan specs/ directory and reconcile state — auto-registers unknown features.
 
