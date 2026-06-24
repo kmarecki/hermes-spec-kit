@@ -165,6 +165,27 @@ Activate in Hermes with `/reload-mcp`.
 
 Full docs: [spec-kit-mcp-server/README.md](spec-kit-mcp-server/README.md)
 
+## Running Tests
+
+The MCP server has a workflow integration test suite (11 tests) that exercises
+the server via the `mcp` Python SDK client — no Hermes session needed.
+
+```bash
+# Requires the mcp SDK (auto-installed by install.sh in the venv)
+pip install mcp
+
+cd spec-kit-mcp-server
+
+# Run all tests (each spawns its own server process)
+python3 test_workflow.py
+
+# Or via the delegating wrapper
+python3 test_server.py
+```
+
+The tests cover: happy path forward cycle, prerequisite enforcement,
+bug lifecycle, reopen flow, auto-detect, and error cases.
+
 ## Key Design Decisions
 
 - Constitution is mandatory for all features — specify and plan block if missing
