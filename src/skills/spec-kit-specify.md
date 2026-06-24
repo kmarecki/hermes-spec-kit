@@ -73,6 +73,17 @@ Populate with:
 ### Note on commits
 Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
 
+
+### MCP state sync (optional, when MCP server is configured)
+
+After creating the artifact(s) and before committing, sync workflow state
+to the MCP server so it stays consistent across phases.
+
+```text
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="spec.md", status="present")
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=1, artifacts_created=["spec.md"])
+```
+
 ### Append to history.md and Commit
 
 Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:

@@ -1,6 +1,7 @@
 ---
 name: spec-kit-constitution
-description: Load when the user says 'spec-kit constitution', 'speckit constitution', 'spec-kit principles', 'speckit principles', "create constitution", "create project principles", or "set up project principles" — Phase 0 project setup. Three modes: brownfield (auto-detect from existing code), free-text (describe your project in a sentence, agent maps to purpose/arch/principles), and guided wizard (3-level decision tree with 9 purposes × 25 architecture options).
+description: >
+  Load when the user says 'spec-kit constitution', 'speckit constitution', 'spec-kit principles', 'speckit principles', "create constitution", "create project principles", or "set up project principles" — Phase 0 project setup. Three modes: brownfield (auto-detect from existing code), free-text (describe your project in a sentence, agent maps to purpose/arch/principles), and guided wizard (3-level decision tree with 9 purposes × 25 architecture options).
 version: 2.1.0
 author: Hermes Agent
 license: MIT
@@ -558,6 +559,17 @@ ELSE (single project):
 - **MAJOR** (1.x.x → 2.0.0): Backward-incompatible governance changes
 - **MINOR** (x.1.x → x.2.0): New principles
 - **PATCH** (x.x.1 → x.x.2): Clarifications
+
+
+### MCP state sync (optional, when MCP server is configured)
+
+After creating the artifact(s) and before committing, sync workflow state
+to the MCP server so it stays consistent across phases.
+
+```text
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="constitution.md", status="present")
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=0, artifacts_created=["constitution.md"])
+```
 
 ### Append to history.md and Commit
 

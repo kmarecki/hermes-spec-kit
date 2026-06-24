@@ -67,8 +67,25 @@ User describes in natural language. Agent structures into:
 
 After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
 
+### MCP sync — write bugs.md FIRST, then sync to MCP
+The MCP server enforces this order: `mcp_spec_kit_log_bug` will REJECT the call
+if `bugs.md` does not exist with bug entries. You MUST write to bugs.md first,
+then call MCP to sync.
+
+```text
+1. WRITE bug entry to bugs.md (smart insert format above)
+2. Confirm with user: "Logged BUG-NNN: [summary] — correct?"
+3. THEN call MCP to sync:
+   CALL mcp_spec_kit_log_bug(feature="[feature]", severity="[severity]",
+         description="[summary]", area="[area]")
+```
+
 ### Bug status validation
-When user finishes logging → count open bugs. If 0, feature complete. If >0, suggest "bugfix [feature]".
+When user finishes logging → count open bugs:
+- **If 0 bugs**: Feature complete. Suggest close.
+- **If >0 bugs**: Say \"bugfix [feature]\" to start the workflow. The bugfix workflow
+  (spec-kit-tasks → spec-kit-implement) handles plan → tasks → implement.
+  **Never fix bugs directly** — always route through the workflow.
 
 ### Mark bugs as verified
 ```

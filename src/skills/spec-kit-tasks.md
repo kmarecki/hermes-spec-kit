@@ -95,6 +95,17 @@ Phase dependencies, parallel execution opportunities.
 ### Note on commits
 Report: task count, phases, TDD mode, parallel tasks, bugfix tasks
 
+
+### MCP state sync (optional, when MCP server is configured)
+
+After creating the artifact(s) and before committing, sync workflow state
+to the MCP server so it stays consistent across phases.
+
+```text
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="tasks.md", status="present")
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=3, artifacts_created=["tasks.md"])
+```
+
 ### Append to history.md and Commit
 
 Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:

@@ -77,6 +77,7 @@ mkdir -p "$TEMPLATES_DIR"
 # Remove obsolete template files
 rm -f "$TEMPLATES_DIR/checklist-template.md"
 rm -f "$TEMPLATES_DIR/comparison-template.md"
+rm -f "$TEMPLATES_DIR/soul-template.md"
 
 for tmpl in "$PROJECT_DIR"/src/templates/*-template.md; do
   if [ -f "$tmpl" ]; then
@@ -132,6 +133,81 @@ if [ -f "$SOUL_TEMPLATE" ]; then
       echo "  -> Skipping SOUL.md (left unchanged)"
       ;;
   esac
+fi
+
+echo ""
+
+# --- MCP Server ---
+MCP_SERVER_DIR="$PROJECT_DIR/spec-kit-mcp-server"
+MCP_SERVER_DST="$SKILLS_DIR/spec-kit/mcp-server"
+if [ -f "$MCP_SERVER_DIR/server.py" ]; then
+  mkdir -p "$MCP_SERVER_DST"
+  cp "$MCP_SERVER_DIR/server.py" "$MCP_SERVER_DST/server.py"
+  cp "$MCP_SERVER_DIR/README.md" "$MCP_SERVER_DST/README.md" 2>/dev/null || true
+  chmod +x "$MCP_SERVER_DST/server.py"
+  echo "  Installing MCP server: spec-kit-mcp-server/server.py"
+
+  # Determine Python for MCP — prefer venv with mcp SDK, fallback to system
+  MCP_PYTHON=""
+  if python3 -c "import mcp" 2>/dev/null; then
+    MCP_PYTHON="python3"
+    echo "  -> mcp SDK found (system python)"
+  else
+    # Try creating a venv with mcp installed
+    MCP_VENV="$HOME/.hermes-venv"
+    if [ ! -f "$MCP_VENV/bin/python3" ]; then
+      echo "  -> Creating venv at $MCP_VENV..."
+      python3 -m venv "$MCP_VENV"
+      echo "  -> Installing mcp SDK (pip install mcp)..."
+      "$MCP_VENV/bin/pip" install mcp
+    fi
+    if "$MCP_VENV/bin/python3" -c "import mcp" 2>/dev/null; then
+      MCP_PYTHON="$MCP_VENV/bin/python3"
+      echo "  -> mcp SDK installed in venv"
+    else
+      echo "  -> WARNING: Failed to install mcp SDK in venv."
+      echo "     Try: $MCP_VENV/bin/pip install mcp"
+    fi
+  fi
+
+  # Configure MCP server in config.yaml
+  #
+  # NOTE: We write config.yaml directly instead of using 'hermes mcp add'.
+  # 'hermes mcp add' tries to hot-reload into a running Hermes process, which
+  # times out when no session is active (typical during installation).
+  #
+  CONFIG_FILE="$HOME/.hermes/config.yaml"
+  if [ -n "$MCP_PYTHON" ]; then
+    echo "  -> Configuring MCP server in $CONFIG_FILE..."
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+    [ -f "$CONFIG_FILE" ] || touch "$CONFIG_FILE"
+
+    # Remove any existing spec-kit block from mcp_servers (3 lines)
+    sed -i '/^  spec-kit:/{
+      N;N;d
+    }' "$CONFIG_FILE" 2>/dev/null || true
+
+    # If mcp_servers section is now empty (no remaining entries), remove it
+    sed -i '/^mcp_servers:$/{
+      N
+      /^mcp_servers:\n$/d
+    }' "$CONFIG_FILE" 2>/dev/null || true
+
+    # Append fresh config entry
+    cat >> "$CONFIG_FILE" << EOF
+
+mcp_servers:
+  spec-kit:
+    command: "$MCP_PYTHON"
+    args: ["$MCP_SERVER_DST/server.py"]
+EOF
+    echo "  -> Added spec-kit MCP server entry"
+    echo "  -> Activate in Hermes with: /reload-mcp"
+  else
+    echo "  -> WARNING: mcp Python package not available."
+    echo "     Hermes needs it for MCP support. Install manually:"
+    echo "     python3 -m venv ~/.hermes-venv && ~/.hermes-venv/bin/pip install mcp"
+  fi
 fi
 
 echo ""

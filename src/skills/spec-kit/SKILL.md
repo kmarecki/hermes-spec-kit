@@ -112,3 +112,35 @@ Installed via `./scripts/install.sh` — see `src/templates/` for the full list:
 - `references/history-tracking.md` — Process history design rationale
 - `references/constitution-principles.md` — 12 principles × 3 options with pros/cons
 - `references/constitution-tables.md` — Wizard tables and brownfield detection data
+
+## MCP Server (optional)
+
+Spec-kit includes a **deterministic workflow MCP server** that replaces LLM-based state detection with structured tools. When enabled, the server enforces phase transitions, provides auto-chaining after bug logging, and survives context compaction.
+
+See `spec-kit-mcp-server/README.md` for setup and usage. Enable by adding to `~/.hermes/config.yaml`:
+
+```yaml
+mcp_servers:
+  spec-kit:
+    command: "python3"
+    args: ["~/.hermes/skills/spec-kit/mcp-server/server.py"]
+```
+
+12 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_log_bug`, etc.
+(In Hermes the tools appear with the `mcp_spec_kit_` prefix — call them by this full name.)
+
+## ⚠️ MCP Tool Usage Rules — Critical
+
+MCP tools are available globally, but they MUST only be called within their
+designated skill context:
+
+- `mcp_spec_kit_advance_phase` — ONLY call within the phase skill that owns the
+  transition (e.g., `spec-kit-constitution` calls advance 0→1). Never advance
+  a phase outside its owning skill.
+- `mcp_spec_kit_update_artifact` — ONLY call after writing the artifact file.
+  The file must exist before you sync its status.
+- All other MCP tools — Follow the instructions in the phase skill that loaded
+  you. If no phase skill is loaded, do NOT call MCP tools for state changes.
+
+Bug tracking (`bugs.md`) is purely file-based — no MCP tools for that. Write
+bugs to `bugs.md` via `spec-kit-test`, which is the single source of truth.
