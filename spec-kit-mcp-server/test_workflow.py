@@ -184,71 +184,6 @@ async def test_missing_feature(session):
     d = json.loads(r.content[0].text)
     check("advance_phase on missing returns error", "error" in d)
 
-    r = await session.call_tool("log_bug", {"feature": "nope", "description": "x"})
-    d = json.loads(r.content[0].text)
-    check("log_bug on missing returns error", "error" in d)
-
-
-async def test_bug_lifecycle(session):
-    """Full bug lifecycle: log → plan_ref → resolved → verified."""
-    print("\n═══ Bug lifecycle ═══")
-    r = await session.call_tool("init_feature", {"feature": "bug-life"})
-    assert json.loads(r.content[0].text)["success"]
-
-    # Advance to phase 5 where bugs can be logged
-    for f, arts in [(0, ["constitution.md"]), (1, ["spec.md"]), (2, ["plan.md"]),
-                     (3, ["tasks.md"]), (4, [])]:
-        r = await session.call_tool("advance_phase", {
-            "feature": "bug-life", "from_phase": f, "artifacts_created": arts
-        })
-        assert json.loads(r.content[0].text)["success"]
-
-    # Create bugs.md (required by MCP server guard before log_bug)
-    bugs_path = Path("specs") / "bug-life" / "bugs.md"
-    bugs_path.parent.mkdir(parents=True, exist_ok=True)
-    bugs_path.write_text("# Bugs\n\n### BUG-001: Placeholder\n- **Status**: open\n")
-
-    # Log bug
-    r = await session.call_tool("log_bug", {
-        "feature": "bug-life", "severity": "critical", "description": "Login fails", "area": "auth"
-    })
-    d = json.loads(r.content[0].text)
-    check("log_bug succeeds", d["success"])
-    bug_id = d["bug_id"]
-    check(f"  bug ID is {bug_id}", bug_id.startswith("BUG-"))
-    check("  next_suggested is bugfix_plan", d["next_suggested"] == "bugfix_plan")
-
-    # Log second bug
-    r = await session.call_tool("log_bug", {
-        "feature": "bug-life", "severity": "minor", "description": "Typo", "area": "ui"
-    })
-    d2 = json.loads(r.content[0].text)
-    check("second bug gets BUG-002", d2["bug_id"] == "BUG-002")
-    check("  total_open is 2", d2["total_open"] == 2)
-
-    # Set plan ref
-    r = await session.call_tool("set_bug_plan_ref", {
-        "feature": "bug-life", "bug_id": bug_id, "plan_ref": "plan.md#fix-BUG-001"
-    })
-    d3 = json.loads(r.content[0].text)
-    check("set_bug_plan_ref succeeds", d3["success"])
-    check("  status still open", d3["status"] == "open")
-
-    # Set resolved
-    r = await session.call_tool("set_bug_status", {
-        "feature": "bug-life", "bug_id": bug_id, "status": "resolved"
-    })
-    d4 = json.loads(r.content[0].text)
-    check("set_bug_status resolved", d4["success"])
-    check("  new_status is resolved", d4["new_status"] == "resolved")
-
-    # Get next actions — should show verify_bugs
-    r = await session.call_tool("get_next_actions", {"feature": "bug-life"})
-    d5 = json.loads(r.content[0].text)
-    actions = [a["action"] for a in d5.get("available_actions", [])]
-    check("get_next_actions shows verify_bugs", "verify_bugs" in actions)
-    check("  open_bugs is 1 (one still open)", d5["open_bugs"] == 1)
-
 
 async def test_reopen_flow(session):
     """Close → reopen → log bug → close again."""
@@ -273,27 +208,8 @@ async def test_reopen_flow(session):
     check("reopen_feature succeeds", d["success"])
     check("  new_status is reopened", d["new_status"] == "reopened")
 
-    # Create bugs.md (required by MCP server guard before log_bug)
-    bugs_path = Path("specs") / "bug-life" / "bugs.md"
-    bugs_path.parent.mkdir(parents=True, exist_ok=True)
-    bugs_path.write_text("# Bugs\n\n### BUG-001: Placeholder\n- **Status**: open\n")
-
-    # Create bugs.md (required by MCP server guard)
-    bugs_path = Path("specs") / "reopen-test" / "bugs.md"
-    bugs_path.parent.mkdir(parents=True, exist_ok=True)
-    bugs_path.write_text("# Bugs\n\n### BUG-001: Placeholder\n- **Status**: open\n")
-
-    # Log bug in reopened feature
-    r = await session.call_tool("log_bug", {
-        "feature": "reopen-test", "description": "Bug after reopen"
-    })
-    d2 = json.loads(r.content[0].text)
-    check("log_bug in reopened feature succeeds", d2["success"])
-    check("  gets BUG-001", d2["bug_id"] == "BUG-001")
-
     # Close again
-    # Can't close from reopened status — advance to phase 6 first
-    # reopened feature stays at current phase (5), so advance 5->6
+    # reopened feature advances 5->6 then closes
     r = await session.call_tool("advance_phase", {
         "feature": "reopen-test", "from_phase": 5, "artifacts_created": []
     })
@@ -430,7 +346,6 @@ async def main():
         test_wrong_phase_rejected,
         test_update_artifact,
         test_reopen_non_closed_rejected,
-        test_bug_lifecycle,
         test_get_next_actions_progression,
         test_happy_path_forward,
         test_prerequisite_enforcement,

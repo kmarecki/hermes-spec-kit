@@ -132,17 +132,15 @@ mcp_servers:
 ## ⚠️ MCP Tool Usage Rules — Critical
 
 MCP tools are available globally, but they MUST only be called within their
-designated skill context. Calling them without the proper skill loaded bypasses
-workflow enforcement:
+designated skill context:
 
-- `mcp_spec_kit_log_bug` — ONLY call when loaded via `spec-kit-test`. Never call
-  this tool directly. If you see a bug, load `spec-kit-test` first, which will
-  write `bugs.md`, sync to MCP, and HALT for user direction.
 - `mcp_spec_kit_advance_phase` — ONLY call within the phase skill that owns the
   transition (e.g., `spec-kit-constitution` calls advance 0→1). Never advance
   a phase outside its owning skill.
+- `mcp_spec_kit_update_artifact` — ONLY call after writing the artifact file.
+  The file must exist before you sync its status.
 - All other MCP tools — Follow the instructions in the phase skill that loaded
   you. If no phase skill is loaded, do NOT call MCP tools for state changes.
 
-**Violation**: Calling `mcp_spec_kit_log_bug` outside of `spec-kit-test` skips
-the bugs.md write and the "log before fix" safety lock. The agent MUST NOT do this.
+Bug tracking (`bugs.md`) is purely file-based — no MCP tools for that. Write
+bugs to `bugs.md` via `spec-kit-test`, which is the single source of truth.
