@@ -68,7 +68,11 @@ User describes in natural language. Agent structures into:
 After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
 
 ### Bug status validation
-When user finishes logging → count open bugs. If 0, feature complete. If >0, suggest "bugfix [feature]".
+When user finishes logging → count open bugs:
+- **If 0 bugs**: Feature complete. Suggest close.
+- **If >0 bugs**: Say \"bugfix [feature]\" to start the workflow. The bugfix workflow
+  (spec-kit-tasks → spec-kit-implement) handles plan → tasks → implement.
+  **Never fix bugs directly** — always route through the workflow.
 
 ### Mark bugs as verified
 ```

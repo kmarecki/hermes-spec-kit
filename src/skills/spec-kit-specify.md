@@ -36,8 +36,10 @@ Load and follow `spec-kit/references/preflight.md` before any action in this ski
 
 ### Validate prerequisites
 ```
-IF specs/constitution.md NOT EXISTS:
-  BLOCK: "No constitution found. Project setup is mandatory — run spec-kit-constitution first."
+IF specs/[feature]/spec.md EXISTS:
+  BLOCK: "spec.md for [feature] already exists. The No Complete Overwrite rule
+          forbids overwriting it. If you need to modify the spec for bugfix,
+          run: 'bugfix [feature]' or 'reopen [feature]'."
   HALT
 ```
 
@@ -73,6 +75,17 @@ Populate with:
 ### Note on commits
 Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
 
+
+### MCP state sync (optional, when MCP server is configured)
+
+After creating the artifact(s) and before committing, sync workflow state
+to the MCP server so it stays consistent across phases.
+
+```text
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="spec.md", status="present")
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=1, artifacts_created=["spec.md"])
+```
+
 ### Append to history.md and Commit
 
 Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
@@ -97,4 +110,4 @@ Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
 3. **Over-specifying**: For simple features, a single paragraph + 2-3 FRs is enough. Don't force full template on trivial changes.
 
 ## Prerequisite Enforcement
-**BLOCKED** if: constitution.md does not exist.
+**BLOCKED** if: spec.md for this feature already exists (No Complete Overwrite rule).

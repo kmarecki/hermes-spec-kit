@@ -1,7 +1,7 @@
 ---
 name: spec-kit-review
-description: Load when the user says 'spec-kit review [feature]', 'speckit review [feature]', "review [feature]", "quality check [feature]", or "analyze [feature]" — cross-artifact consistency check (pre-implement) and code quality review (post-implement).
-version: 1.1.0
+description: Load when the user says 'spec-kit review [feature]', 'speckit review [feature]', "review [feature]", "quality check [feature]", or "analyze [feature]" — cross-artifact consistency check (pre-implement) and critical code quality review (post-implement).
+version: 1.2.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -18,9 +18,9 @@ metadata:
 **Purpose**: Provides quality checks at two points in the workflow, plus a
 third mode for reviewing already-closed features without altering history:
 
-1. **Pre-implement** (after tasks.md, before code): Verify spec/plan/tasks are coherent and internally consistent. READ-ONLY — outputs a report, no file changes.
+1. **Pre-implement** (after tasks.md, before code): Verify spec/plan/tasks are coherent **and** analyze the existing codebase structure to evaluate whether the planned approach fits the project architecture and follows current best practices. READ-ONLY — outputs a report, no file changes.
 
-2. **Post-implement** (after tests green, before close): Review code quality — does the implementation match the constitution? Does it fulfill the spec? Are there deviations, quality issues, or technical debt introduced?
+2. **Post-implement** (after tests green, before close): **Critical** code quality review — does the implementation match the constitution? Does it fulfill the spec? Is the architecture sound? Are there structural defects, security issues, or design debt introduced? Focuses on **important** findings; skips cosmetic/style nitpicks.
 
 3. **Closed-review** (feature is already closed): Same checks as post-implement but does NOT update history.md. If issues are found, offers to add refactoring tasks to tasks.md and reopen the feature.|
 
@@ -32,7 +32,7 @@ third mode for reviewing already-closed features without altering history:
 
 **Routing**: Load this skill when the user says "review [feature]", "analyze [feature]", or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
-**Task Persona**: Adopt the mindset of a thorough code auditor. Check every artifact against every other — spec vs plan vs tasks vs code. Use web search to research best patterns and practices when evaluating architecture or implementation quality. Every finding must be actionable and backed by evidence. Does this hold up under scrutiny?
+**Task Persona**: Adopt the mindset of a senior architect doing a critical design review. You are not a style checker — you look for **structural problems, design flaws, security risks, and architectural misalignments** that would cause real pain if left unfixed. Every finding must be actionable and backed by evidence. Use web search to research current best practices for the project's tech stack when evaluating architecture or implementation quality. Ask yourself: *"Will this cause a problem in production? Will this be hard to maintain? Is there a simpler, more robust approach?"* If the answer to all three is no, the finding is probably a nitpick — skip it. Does this hold up under scrutiny?
 
 ## Pre-flight
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
@@ -47,7 +47,7 @@ DETECT current artifacts:
     NOTE: "Feature [feature] is closed. Review will NOT update history.md."
 
   IF tasks.md exists AND no implementation code exists:
-    MODE = pre-implement (cross-artifact consistency check)
+    MODE = pre-implement (cross-artifact consistency + codebase architecture analysis)
 
   IF tests have passed AND writeable source code exists AND no close.md:
     MODE = post-implement (code quality review)
@@ -62,6 +62,27 @@ DETECT current artifacts:
 ---
 
 ## Pre-Implement Mode: Cross-Artifact Consistency
+
+### Review scope (feature-level only)
+This review is scoped to the feature being examined. The following are
+**IN SCOPE**:
+- Spec/plan/tasks coherence and completeness
+- Codebase architecture fit (does the plan fit the existing code?)
+- Best-practice validation for the planned approach
+- Design soundness (abstraction level, data flow, error handling)
+
+The following are **OUT OF SCOPE** — do NOT flag or block on these:
+- Missing project constitution — this is a project-level concern tracked
+  separately. If the constitution exists, the review will note alignment.
+  If it doesn't exist, that's not a feature issue.
+- Missing project-level tooling (CI config, deployment pipeline, linting)
+- Broad tech stack evaluations not specific to this feature
+- Pre-existing code quality issues in unrelated parts of the codebase
+- Personal stylistic preferences (see Nitpick Filter below)
+
+If you discover a project-level issue during review, add it to a
+"Project-Level Notes" section at the bottom of the report — do NOT
+assign severity or block the feature.
 
 ### Step 1: Validate prerequisites
 ```
@@ -125,9 +146,16 @@ Create internal representations:
 - User stories missing acceptance criteria alignment
 - Tasks referencing undefined files/components
 
-**D. Constitution Alignment**
-- Any requirement or plan element conflicting with MUST principles
-- Missing mandated sections or quality gates
+**D. Constitution Alignment** (project-level — informational only)
+WHEN specs/constitution.md EXISTS at project root:
+  - Check feature artifacts for alignment with each applicable principle
+  - Note any conflicts or gaps as informational findings
+  - Do NOT assign CRITICAL severity — this is guidance, not a gate
+WHEN specs/constitution.md does NOT exist:
+  - SKIP this pass entirely
+  - Add to Project-Level Notes: "Constitution not found — alignment
+    check skipped. This is a project-level gap, not a feature issue."
+  - Do NOT produce findings for missing constitution
 
 **E. Naming Conventions** (pre-implement)
 - Consistent naming patterns across spec, plan, and tasks
@@ -156,12 +184,46 @@ Create internal representations:
 - Bugfix tasks without verification/regression test tasks
 - Unclear mapping between bug and fix approach
 
+**F. Codebase Architecture Analysis** (new — pre-implement)
+- Scan the project's existing directory tree and module structure to understand current architecture patterns (layers, module boundaries, framework conventions, dependency injection style, testing patterns)
+- Evaluate whether the planned architecture/design in plan.md fits the existing codebase — does it follow the same patterns or introduce new ones? If new patterns are proposed, is the justification compelling?
+- Identify integration risk points — where the new feature connects to existing code. Are the interfaces clean? Are existing modules being modified in a way that could cause regressions?
+- Check if the plan reuses existing abstractions or reinvents them. Is there already a utility, mixin, or service that does what the plan proposes?
+- For each file path referenced in tasks.md: does the path follow the existing project layout conventions? Or does it introduce a new directory structure that doesn't match?
+
+**G. Best Practice Validation** (new — pre-implement)
+- For each major technology or pattern in the plan, briefly research (web search) current recommended practices. Example questions:
+  - "Does framework X recommend this approach for Y in 2026?"
+  - "Is this pattern considered best practice or is there a newer recommended alternative?"
+  - "Are there known pitfalls or gotchas with this approach that the plan doesn't address?"
+- Flag approaches that are:
+  - Known anti-patterns (e.g., God objects, sequential async waterfalls, callback hell in modern frameworks)
+  - Deprecated or superseded patterns (e.g., class components in a React project using function components)
+  - Over-engineering for the problem size (e.g., adding a message queue for a single background job)
+  - Under-engineering for the problem size (e.g., no error handling, no validation, no logging)
+- Do NOT flag personal stylistic preferences or "one true way" debates (tabs vs spaces, semicolons vs no-semicolons). Only flag patterns with broad community consensus against them.
+
+**H. Design Soundness**
+- Does the plan reflect a solid understanding of the existing codebase, or does it feel like a generic solution?
+- Are the proposed abstractions at the right level? Too abstract (over-general, YAGNI violation)? Too concrete (brittle, hard to extend)?
+- Will the design scale with the next 2-3 likely features? Or is it a dead end that will need refactoring?
+- Are there simpler approaches that would work with less complexity? Evaluate Occam's razor.
+- Error handling strategy: does the plan have one? Or does it assume everything succeeds?
+- Is the data flow coherent and traceable? Can you follow a request/event from entry to response without gaps?
+
 ### Step 5: Severity assignment
-Use heuristic:
-- **CRITICAL**: Violates constitution MUST, or requirement with zero coverage blocking baseline
-- **HIGH**: Duplicate/conflicting requirement, ambiguous security/performance attribute
-- **MEDIUM**: Terminology drift, missing non-functional task coverage
-- **LOW**: Style/wording improvements, minor redundancy
+Use heuristic — **filter out nitpicks** at every level:
+
+- **CRITICAL**: Requirement with zero task coverage blocking baseline, architectural integrity violation, security vulnerability, data integrity issue
+- **HIGH**: Design flaw that will cause maintainability pain, pattern misalignment with existing codebase, missing error handling chains, duplicated logic across module boundaries
+- **MEDIUM**: Terminology drift, missing non-functional task coverage, minor design concern that could degrade with future features
+- **LOW**: SKIP — do not report. These are stylistic preferences, subjective opinions, or issues with no real-world impact. If you find yourself writing a LOW finding, ask: "Would the project be measurably worse if this were left as-is?" If no, delete the finding.
+
+**NITPICK FILTER — Apply before reporting:**
+- If a finding is about formatting, line length, naming preference (not correctness), comment style, or personal taste → DELETE it, do not report.
+- If a finding is about a pattern that works but isn't your preferred approach → DELETE it.
+- If a finding requires deep domain knowledge you don't have → flag as QUESTION, not finding.
+- **Minimum bar**: every reported finding must have a demonstrable negative impact on correctness, security, performance, maintainability, or testability. If you cannot articulate which of these five is harmed, the finding is a nitpick — skip it.
 
 ### Step 6: Produce pre-implement report
 OUTPUT:
@@ -172,9 +234,29 @@ OUTPUT:
 ## Findings Table
 
 | ID | Category | Severity | Location | Summary | Recommendation |
-|----|----------|----------|----------|---------|----------------|
-| A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements... | Merge phrasing |
-...
+||----|----------|----------|----------|---------|----------------|
+|| A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements... | Merge phrasing |
+|...
+
+## Codebase Architecture Assessment
+
+| Aspect | Assessment | Risk Level |
+|--------|-----------|------------|
+| Pattern fit | Plan aligns with existing MVC layout | ✅ Low |
+| Integration points | New service connects via existing repository pattern | ✅ Low |
+| Directory conventions | tasks.md references src/feature/ — matches project layout | ✅ Low |
+| Pattern reuse | Plan creates new auth middleware — existing middleware in src/middleware/ not reused | ⚠️ Medium |
+
+## Best Practice Validation
+
+| Technology/Pattern | Research Finding | Status |
+|--------------------|-----------------|--------|
+| Next.js App Router auth | Next.js docs recommend middleware.ts for auth checks — plan uses getServerSession in each page | ⚠️ Consider middleware approach |
+| JWT refresh pattern | Industry consensus: refresh token rotation + blacklist — plan uses long-lived tokens | ❌ High — security risk |
+
+## Design Soundness Notes
+
+[Key observations about abstraction level, scalability, simplicity, data flow]
 
 ## Coverage Summary Table
 
@@ -199,6 +281,9 @@ OUTPUT:
 - Ambiguity Count: N
 - Duplication Count: N
 - Critical Issues: N
+- Codebase Fit: ✅ / ⚠️ / ❌
+- Best Practice Alerts: N
+- Design Soundness: ✅ / ⚠️ / ❌
 ```
 
 ### Step 7: Next actions (pre-implement)
@@ -262,12 +347,28 @@ CAPTURE git diff or file list showing what was implemented
 - Are there changelog entries or migration notes needed?
 
 **F. User-Defined Custom Gates** (post-implement)
-**G. Code Quality**
-- Naming conventions — consistent and descriptive?
-- Error handling — are failures caught and reported appropriately?
-- Duplication — are there copy-paste patterns that should be extracted?
-- Complexity — are there functions/modules that are too complex?
-- Security — obvious vulnerabilities (hardcoded secrets, injection vectors)?
+**G. Code Quality** — Focus on **structural and substantive** issues. Skip cosmetic preferences.
+
+- Architecture conformance — does the code structure match what plan.md described? Or did the implementation diverge in significant ways?
+- Layer/model boundaries — are layers properly separated? Are there imports that cross layer boundaries (e.g., UI layer importing data access)?
+- Error handling chains — are errors caught at appropriate boundaries? Or are there silent failures, bare excepts, or swallowed exceptions?
+- Security — hardcoded secrets, injection vulnerabilities, missing authentication/authorization checks, unvalidated input flowing to sensitive operations
+- Data integrity — are database operations transactional where needed? Race conditions? Missing validation before persistence?
+- Duplication at the structural level — copy-pasted modules, repeated business logic across services, parallel hierarchies that should be unified
+- Complexity hotspots — functions over 100 lines, modules over 500 lines, nested conditionals beyond 4 levels, excessive indirection (too many wrappers/delegates for what the code does)
+- Dependency direction — do high-level modules depend on low-level modules, or is there dependency inversion? Are there circular dependencies?
+- Public API surface — is the API/interface well-designed? Consistent naming, proper parameter validation, sensible defaults?
+- Concurrency — thread safety, shared mutable state, async/await usage patterns, missing cancellation support for long operations
+
+**NITPICK FILTER for post-implement** — Same rule as pre-implement (Step 5). Do NOT report:
+- Line length, whitespace, formatting, comment style, import ordering
+- Variable/function naming that is merely unconventional but clear
+- Minor redundancy that doesn't affect maintainability (2-3 line patterns)
+- Personal style preferences ("I would have written this differently")
+- Missing edge cases that the spec doesn't require and are unlikely in practice
+- Performance micro-optimizations with no demonstrated bottleneck
+
+Ask: "Is this finding in the top 5 things that should change about this code?" If no, delete it.
 
 **H. Test Quality** (if tests exist)
 - Do tests actually test the behaviors described in spec.md?
@@ -275,7 +376,13 @@ CAPTURE git diff or file list showing what was implemented
 - Are tests meaningful (assert behavior, not implementation)?
 
 ### Step 4: Severity assignment
-Same heuristic as pre-implement mode.
+Same heuristic as pre-implement mode — **filter out nitpicks**:
+- **CRITICAL**: Security vulnerability, data integrity issue, architecture violation, complete spec deviation
+- **HIGH**: Structural defect, error handling gap, missing validation chain, concurrency bug
+- **MEDIUM**: Minor design concern, documentation gap, test coverage gap on critical path
+- **LOW**: SKIP — do not report (nitpicks only)
+
+Apply the same **NITPICK FILTER** from pre-implement Step 5 before reporting any finding.
 
 ### Step 5: Produce post-implement report
 ```
@@ -292,12 +399,29 @@ Same heuristic as pre-implement mode.
 ## Constitution Alignment
 [If any violations]
 
-## Code Quality Findings
+## Critical Findings (must fix)
 
 | ID | Category | Severity | File | Finding | Suggestion |
 |----|----------|----------|------|---------|------------|
-| Q1 | Duplication | MEDIUM | src/auth.py:45-60 | Repeated validation logic | Extract to helper |
-...
+| Q1 | Architecture | CRITICAL | src/auth/service.go:45 | Auth bypass possible — no middleware check on admin routes | Add middleware guard |
+|...
+
+## Advisory Findings (should fix)
+
+| ID | Category | Severity | File | Finding | Suggestion |
+|----|----------|----------|------|---------|------------|
+| R1 | Error handling | HIGH | src/api/handler.go:120 | Database errors silently swallowed | Return 500 with error ID |
+|...
+
+[Nitpicks omitted — 0 reported]
+
+## Architecture Conformance
+
+| Plan Aspect | Implementation | Verdict |
+|-------------|---------------|---------|
+| Repository pattern | Data access via repository interfaces | ✅ Conforms |
+| Middleware auth chain | Route-level middleware applied | ✅ Conforms |
+| Layered separation | UI imports from services layer | ⚠️ UI imports data access directly in 2 places |
 
 ## Metrics
 - Requirements fulfilled: N/Total
@@ -412,7 +536,8 @@ Pre-implement:
 Post-implement:
 - **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)
 - **BLOCKED** if: No implementation code detected
-- **WARN** if: constitution.md missing — cannot check constitutional alignment
+- **NOTE**: constitution.md not found at project root — constitutional alignment
+  checks skipped. This is a project-level gap, not a feature blocker.
 
 Closed-review:
 - **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)

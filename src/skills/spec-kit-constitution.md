@@ -1,6 +1,7 @@
 ---
 name: spec-kit-constitution
-description: Load when the user says 'spec-kit constitution', 'speckit constitution', 'spec-kit principles', 'speckit principles', "create constitution", "create project principles", or "set up project principles" — Phase 0 project setup. Three modes: brownfield (auto-detect from existing code), free-text (describe your project in a sentence, agent maps to purpose/arch/principles), and guided wizard (3-level decision tree with 9 purposes × 25 architecture options).
+description: >
+  Load when the user says 'spec-kit constitution', 'speckit constitution', 'spec-kit principles', 'speckit principles', "create constitution", "create project principles", or "set up project principles" — Phase 0 project setup. Three modes: brownfield (auto-detect from existing code), free-text (describe your project in a sentence, agent maps to purpose/arch/principles), and guided wizard (3-level decision tree with 9 purposes × 25 architecture options).
 version: 2.1.0
 author: Hermes Agent
 license: MIT
@@ -558,6 +559,19 @@ ELSE (single project):
 - **MAJOR** (1.x.x → 2.0.0): Backward-incompatible governance changes
 - **MINOR** (x.1.x → x.2.0): New principles
 - **PATCH** (x.x.1 → x.x.2): Clarifications
+
+
+### MCP state sync (optional, when MCP server is configured)
+
+After creating the artifact(s) and before committing, sync project-level
+constitution state to the MCP server. This uses the project-level tool
+(not feature-level advance_phase) because the constitution is a one-time
+project bootstrap, not a per-feature phase.
+
+```text
+CALL mcp_spec_kit_project_set_constitution(status="present", principles='{"key": "value", ...}')
+# principles is optional — pass parsed constitution principles as JSON object
+```
 
 ### Append to history.md and Commit
 

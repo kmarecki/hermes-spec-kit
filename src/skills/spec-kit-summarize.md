@@ -308,6 +308,19 @@ REPORT:
   - New bugs created (if any gap was ❌ Not Done)
 ```
 
+
+### MCP state sync (optional, when MCP server is configured)
+
+Before the final commit, sync the close state to the MCP server:
+
+```text
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="close.md", status="present")
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=6, artifacts_created=["close.md"])
+CALL mcp_spec_kit_close_feature(feature="[feature]")
+```
+
+If MCP is not available, skip.
+
 ### Step 12: Append to history.md and Step 13: Commit (combined)
 
 **Order is critical: history.md FIRST, then commit.**
@@ -403,7 +416,6 @@ BLOCKER: A feature CANNOT enter Complete state without Phase 6 completing.
 - [ ] ✅ Resolved deviations patched into spec.md and plan.md (with user approval)
 - [ ] ❌ Not Done gaps converted to new bug entries in bugs.md (if any, full mode only)
 - [ ] Report delivered to user with spec health score and artifact state
-- **Commit**: `$COMMIT_HASH` (auto — `git log` for details)
 
 ## Next Skills
 

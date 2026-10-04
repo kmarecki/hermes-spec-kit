@@ -70,7 +70,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
 After every skill completes that created or modified any markdown document:
 
 1. **history.md is already ready** (pre-action check #5 already ensured it exists). Append an entry for each document created or modified:
-   - Format: `## [ISO_TIMESTAMP] | [Phase Name] → Complete` with skill, artifacts, commit hash, notes
+   - Format: `## [ISO_TIMESTAMP] | [Phase Name] → Complete` with skill, artifacts, notes
    - See `spec-kit/references/history-tracking.md` for the exact format
    - This is NOT optional — if you skip this, the process log will be missing
 
@@ -127,10 +127,16 @@ Follow the Shared Commit Procedure in spec-kit/references/preflight.md:
 
 This ensures the 3-step pattern (append → guard → commit) is defined in ONE place, not copy-pasted across every skill. See each skill's section for the phase-specific phase name, artifacts, and commit message.
 
-3. **Additive-safe editing**. During design phases (0-3), you may freely iterate — rewrite, restructure, refactor spec/plan/tasks as needed. The review skill may propose changes freely. Each design phase skill commits its artifacts immediately (no batching).
-   
-   During implementation and bugfix phases (4+), the additive-safe rule tightens: never delete or reorder existing entries in bugs.md, tasks.md, plan.md, spec.md, clarify.md, close.md, or implementation-summary.md. You MAY modify existing entries — update status fields, amend text, correct inaccuracies — but the modification must be minimal (change only the specific field or section needed). Never restructure or refactor a document beyond what's required for the change. New entries (new bugs, tasks, plan sections) always append at the end. The goal: preserve every existing bug ID, task ID, and requirement — only update what the current change demands.
-   
+3. **No Complete Overwrite — Strict at EVERY phase**. No phase is exempt. Spec artifacts (constitution.md, spec.md, plan.md, tasks.md, bugs.md, clarify.md, close.md, implementation-summary.md, history.md) MUST never be completely overwritten. Every modification must be additive (append new sections, insert new entries) or targeted-edit (update specific fields).
+
+   - **Before any write**: ALWAYS load the existing file first to check if it has substantive content (>=50 lines of spec content).
+   - **If the file has substantive content**: NEVER copy a template over it, never rewrite it from scratch, never rewrite >=50% of its lines.
+   - **Allowed**: Append new sections, insert new entries between existing ones, modify specific lines/fields, update status markers (e.g. marking a task [X], changing a bug status to verified).
+   - **Forbidden**: Replacing all functional requirements, deleting existing task/bug IDs, reformatting the entire document, restructuring sections not relevant to the current change.
+   - **history.md is append-only**: NEVER edit or delete past entries. Always append new entries.
+
+   > This rule is UNIVERSAL. It applies during constitution, specify, clarify, plan, tasks, review, implement, test, and close phases. There is no "free iteration" phase. The only exception is first creation (file does not exist yet).
+
    If you return to modify spec/plan during test or bugfix phases: commit those changes immediately after editing, following the same per-document commit pattern.
 
 4. **Ordering**: bugs.md entries must be ascending by BUG-NNN. tasks.md entries must be ascending by T###. New entries append with the next sequential ID.

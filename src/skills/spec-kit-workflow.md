@@ -1,6 +1,7 @@
 ---
 name: spec-kit-workflow
-description: Load when the user says 'spec-kit bugfix [feature]', 'speckit bugfix [feature]', 'spec-kit fix [feature]', 'speckit fix [feature]', 'spec-kit reopen [feature]', 'speckit reopen [feature]', 'spec-kit implement [feature]', 'speckit implement [feature]', 'spec-kit plan [feature]', 'speckit plan [feature]', 'spec-kit close [feature]', 'speckit close [feature]', 'spec-kit specify [feature]', 'speckit specify [feature]', 'spec-kit status [feature]', 'speckit status [feature]', or any 'spec-kit ...' or 'speckit ...' workflow routing command. Also triggers on natural phrases: "fix bugs in [feature]", "bugfix [feature]", "bugfixing [feature]", "continue bugfixing", "reopen [feature]", "implement [feature]", "plan [feature]", "close [feature]", "create a spec", "specify [feature]", "what phase is [feature] in". Routes to the correct phase skill.
+description: >
+  Load when the user says 'spec-kit bugfix [feature]', 'speckit bugfix [feature]', 'spec-kit fix [feature]', 'speckit fix [feature]', 'spec-kit reopen [feature]', 'speckit reopen [feature]', 'spec-kit implement [feature]', 'speckit implement [feature]', 'spec-kit plan [feature]', 'speckit plan [feature]', 'spec-kit close [feature]', 'speckit close [feature]', 'spec-kit specify [feature]', 'speckit specify [feature]', 'spec-kit status [feature]', 'speckit status [feature]', or any 'spec-kit ...' or 'speckit ...' workflow routing command. Also triggers on natural phrases: "fix bugs in [feature]", "bugfix [feature]", "bugfixing [feature]", "continue bugfixing", "reopen [feature]", "implement [feature]", "plan [feature]", "close [feature]", "create a spec", "specify [feature]", "what phase is [feature] in". Routes to the correct phase skill.
 version: 1.1.0
 author: Hermes Agent
 license: MIT
@@ -38,12 +39,12 @@ IF feature name is provided (e.g., "003-user-auth"):
 
 || Phase | Skill | Purpose | Prerequisite |
 ||:------|:------|:--------|:-------------|
-|| 0 | `spec-kit-constitution` | Project principles | None |
-|| 1 | `spec-kit-specify` | Feature spec | Constitution |
+|| **Project** | `spec-kit-constitution` | Project principles (one-time setup) | None |
+|| 1 | `spec-kit-specify` | Feature spec | None (project bootstrap already checked) |
 || 1.5 | `spec-kit-clarify` | Iterative clarification | Spec |
-|| 2 | `spec-kit-plan` | Technical plan | Spec + Constitution |
+|| 2 | `spec-kit-plan` | Technical plan | Spec |
 || 3 | `spec-kit-tasks` | Task breakdown | Plan |
-|| 3.5 | `spec-kit-review` | Quality gate (optional) | Tasks |
+|| 3.5 | `spec-kit-review` | Quality gate (optional) | Pre: spec+plan+tasks / Post: spec+code |
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
 || **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
@@ -53,20 +54,71 @@ IF feature name is provided (e.g., "003-user-auth"):
 
 > **Important**: Phase 6 (Close/Summarize) is **mandatory** before a feature can enter Complete state. After the bugfix loop finishes (all bugs verified), the user is prompted to run Phase 6.
 
+## Project Bootstrap Gate (one-time project setup)
+
+Before routing to any feature skill, check whether the project has been
+bootstrapped. This is a one-time gate, not a per-feature prerequisite.
+
+```text
+IF specs/constitution.md NOT EXISTS at project root:
+  NOTE: "No project constitution found. This is one-time project setup,
+         not a per-feature requirement. Routing to spec-kit-constitution
+         to create it."
+  ROUTE to: spec-kit-constitution
+  HALT (constitution skill will handle the rest)
+
+IF specs/constitution.md EXISTS:
+  NOTE: "Project bootstrapped — constitution exists at specs/constitution.md.
+         Skipping all future constitution checks for this session."
+  PROCEED to routing.
+```
+
+> **Important**: The constitution gate runs ONCE per session. Once the
+> constitution is detected, no feature-level skill ever checks it again.
+> The constitution is project-level context, not a feature-level prerequisite.
+
 ## Routing Logic
 
-Each skill BLOCKS if prerequisites are not met:
-- `spec-kit-constitution`: No prerequisites (phase 0)
-- `spec-kit-specify`: Requires `constitution.md`
+Each skill BLOCKS if prerequisites are not met. Note that constitution.md
+is NOT listed here — it is a project-level bootstrap gate checked above:
+
+- `spec-kit-specify`: No feature-level prerequisites (creates the feature directory)
 - `spec-kit-clarify`: Requires `spec.md`
-- `spec-kit-plan`: Requires `spec.md` + `constitution.md`
+- `spec-kit-plan`: Requires `spec.md` only
 - `spec-kit-tasks`: Requires `plan.md` + `spec.md`
-- `spec-kit-review`: Requires `spec.md` (at minimum — richer analysis if plan.md/tasks.md also exist)
+- `spec-kit-review` (pre-implement): Requires `spec.md` + `plan.md` + `tasks.md`
+- `spec-kit-review` (post-implement): Requires `spec.md` + implementation code
 - `spec-kit-implement`: Requires `tasks.md`
 - `spec-kit-test`: Requires `spec.md` (or existing implementation)
   Bugfix prerequisite: `bugs.md` with at least one open bug
 - `spec-kit-summarize`: Requires `tasks.md`
 - `spec-kit-refresh`: No prerequisites (standalone)
+
+## Constitution Context Injection
+
+After passing the bootstrap gate, inject constitution principles into
+feature skills as **guidance, not gates**:
+
+```text
+WHEN routing to spec-kit-plan, spec-kit-specify, spec-kit-implement,
+     spec-kit-test, or spec-kit-review:
+  IF specs/constitution.md EXISTS:
+    PREPEND to the target skill's briefing:
+      "Project constitution is at specs/constitution.md.
+       Key principles relevant to this phase:
+       - [principle]: [value]  (from constitution.md)
+
+       Use these as guidance during this phase. They are project-wide
+       standards — not per-feature gates. If a principle doesn't apply
+       to this specific feature, proceed without it.
+       The constitution is also checked by spec-kit-review for
+       alignment enforcement — this skill creates, not gates."
+
+  IF specs/constitution.md NOT EXISTS:
+    (Silently skip context injection — the bootstrap gate already
+     blocked routing if constitution is missing. This case should
+     not be reached.)
+```
 
 ### New Feature
 - User says: "Create a spec for [description]"
@@ -134,20 +186,20 @@ WHEN user says "[feature] is done" or tries to start a new feature for the same 
 
 Check for artifacts to determine current phase:
 
-|| Artifacts Present | Current Phase |
-||:-----------------|:-------------|
-|| `constitution.md` only | Ready to Specify |
-|| `spec.md` exists | Specified |
-|| `clarify.md` exists | Clarifying/Clarified |
-|| `plan.md` exists | Planning/Planned |
-|| `tasks.md` exists | Tasking/Tasked |
-|| `tasks.md` with completions | Implementing |
-|| `bugs.md` with open bugs | Testing (bugfix loop) |
-|| `bugs.md` all verified | Testing complete — **must close** |
-|| `implementation-summary.md` exists | Summarized — complete |
-|| `close.md` exists | Closed — complete |
-|| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
-|| All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
+| Artifacts Present | Current Phase |
+|:-----------------|:-------------|
+| `constitution.md` only (project root) | Bootstrapped — ready to specify |
+| `spec.md` exists | Specified |
+| `clarify.md` exists | Clarifying/Clarified |
+| `plan.md` exists | Planning/Planned |
+| `tasks.md` exists | Tasking/Tasked |
+| `tasks.md` with completions | Implementing |
+| `bugs.md` with open bugs | Testing (bugfix loop) |
+| `bugs.md` all verified | Testing complete — **must close** |
+| `implementation-summary.md` exists | Summarized — complete |
+| `close.md` exists | Closed — complete |
+| `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
+| All tasks complete + all bugs verified + (implementation-summary.md or close.md) | **Complete** |
 
 > **Drift detection**: When entering any phase for an existing feature that has `implementation-summary.md` or `close.md`, read its Spec State / Artifact State table. If any artifact is `⚠️ needs review` or `❌ outdated`, emit a warning: "Artifact drift detected — spec/plan may not reflect current code. Run 'refresh [feature]' to reconcile."
 
@@ -230,7 +282,6 @@ You MUST determine the current phase before any tool call. Each phase has strict
 
 | Phase | Allowed to Write | Code-Editing Tools | Detect By |
 |-------|-----------------|-------------------|-----------|
-| **Constitution** | `constitution.md` only | BLOCKED | `specs/constitution.md` exists, no `spec.md` |
 | **Specify** | `spec.md` only | BLOCKED | `specs/NNN-name/spec.md` exists, no `plan.md` |
 | **Clarify** | `clarify.md`, `spec.md` (amend) | BLOCKED | `clarify.md` exists |
 | **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md` | BLOCKED | `plan.md` exists, no `tasks.md` |
@@ -241,6 +292,10 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Reopen** | `bugs.md` (create if missing), source code (fix loop) | ALLOWED (same as bugfix) | `close.md` exists, user says "reopen" |
 | **Summarize / Close** | `implementation-summary.md`, `close.md`, `spec.md` (patch deviations), `plan.md` (patch deviations), `tasks.md` (finalize), `bugs.md` (finalize) | BLOCKED | `implementation-summary.md` and `close.md` both missing |
 | **Refresh** | `spec.md`, `plan.md`, `data-model.md`, `contracts/*` (per-item approval) | BLOCKED | User says "refresh" |
+
+> **Note**: Constitution is NOT listed as a phase above — it is project-level
+> setup, not a feature phase. The bootstrap gate in the workflow orchestrator
+> handles it before any feature routing occurs.
 
 > **Bugfix loop**: reuses Plan, Tasks, and Implement — same permissions, just with `bugs.md` as additional input context.
 > **Summarize/Close** gains `spec.md` and `plan.md` write access to patch intentional deviations.

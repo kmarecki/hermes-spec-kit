@@ -45,6 +45,13 @@ IF bugfix mode (reopened bugfix):
   NOTE: "Bugfix mode — tasks.md already exists with completed tasks. Will append new bugfix tasks only."
   LOAD existing specs/[feature]/tasks.md
   LOAD bugs.md, plan.md bugfix sections
+ELIF specs/[feature]/tasks.md EXISTS:
+  BLOCK: "tasks.md already exists for [feature]. The No Complete Overwrite rule
+          forbids overwriting it. If you need to add bugfix tasks, run the
+          relevant workflow instead.
+          Route: 'bugfix [feature]' for bugfix additions,
+                 'reopen [feature]' for reopening a closed feature."
+  HALT
 ELSE:
   LOAD spec-kit/templates/tasks-template.md
   COPY spec-kit/templates/tasks-template.md → specs/[feature]/tasks.md
@@ -94,6 +101,17 @@ Phase dependencies, parallel execution opportunities.
 
 ### Note on commits
 Report: task count, phases, TDD mode, parallel tasks, bugfix tasks
+
+
+### MCP state sync (optional, when MCP server is configured)
+
+After creating the artifact(s) and before committing, sync workflow state
+to the MCP server so it stays consistent across phases.
+
+```text
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="tasks.md", status="present")
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=3, artifacts_created=["tasks.md"])
+```
 
 ### Append to history.md and Commit
 
