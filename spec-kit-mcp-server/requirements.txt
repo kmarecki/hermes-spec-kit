@@ -1,0 +1,4 @@
+# Pin <2: mcp 2.x renamed FastMCP to MCPServer and broke server.py's import.
+# See https://py.sdk.modelcontextprotocol.io/v2/migration/#fastmcp-renamed-to-mcpserver
+mcp<2
+pyyaml

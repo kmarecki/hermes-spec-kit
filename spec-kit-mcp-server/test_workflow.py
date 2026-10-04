@@ -2,7 +2,7 @@
 """Workflow integration tests for the MCP server.
 
 Tests phase transitions, prerequisite enforcement, bug lifecycle,
-reopen flow, and error cases — all via the mcp SDK client.
+reopen flow, project state, and error cases — all via the mcp SDK client.
 
 Run:  python3 spec-kit-mcp-server/test_workflow.py
 """
@@ -79,18 +79,17 @@ def with_session(fn):
 
 
 async def test_happy_path_forward(session):
-    """Full forward cycle: init → phase 0 → 1 → 2 → 3 → 4 → 5 → 6 → close."""
+    """Full forward cycle: init (phase 1) → 2 → 3 → 4 → 5 → 6 → close."""
     print("\n═══ Happy path: full forward cycle ═══")
 
     # Init
     r = await session.call_tool("init_feature", {"feature": "test-feat"})
     d = json.loads(r.content[0].text)
     check("init_feature succeeds", d["success"])
-    check("  starts at phase 0", d["state"]["current_phase"] == 0)
+    check("  starts at phase 1 (specify)", d["state"]["current_phase"] == 1)
     check("  status is active", d["state"]["status"] == "active")
 
     phases = [
-        (0, ["constitution.md"], 1),
         (1, ["spec.md"], 2),
         (2, ["plan.md"], 3),
         (3, ["tasks.md"], 4),
@@ -127,26 +126,27 @@ async def test_prerequisite_enforcement(session):
     r = await session.call_tool("init_feature", {"feature": "prereq-test"})
     assert json.loads(r.content[0].text)["success"]
 
-    # Try to advance from phase 0 to 2 (skip phase 1 — needs spec.md)
-    r = await session.call_tool("advance_phase", {
-        "feature": "prereq-test", "from_phase": 0, "artifacts_created": []
-    })
-    d = json.loads(r.content[0].text)
-    check("advance 0->1 succeeds (only needs constitution)", d["success"])
-
-    # Now try to advance from 1 to 3 (skip phase 2 — needs plan.md)
+    # Try to advance from phase 1 to 3 (skip phase 2 — needs plan.md)
     r = await session.call_tool("advance_phase", {
         "feature": "prereq-test", "from_phase": 1, "artifacts_created": ["spec.md"]
     })
     d = json.loads(r.content[0].text)
     check("advance 1->2 succeeds (spec.md provided)", d["success"])
 
-    # Try to advance from 2 to 4 (skip phase 3 — needs tasks.md)
+    # Try to advance from phase 2 to 4 (skip phase 3 — needs tasks.md)
     r = await session.call_tool("advance_phase", {
         "feature": "prereq-test", "from_phase": 2, "artifacts_created": ["plan.md"]
     })
     d = json.loads(r.content[0].text)
     check("advance 2->3 succeeds (plan.md provided)", d["success"])
+
+    # Cannot advance from phase 3 to 5 (skips phase 4 — implement must be done first)
+    r = await session.call_tool("advance_phase", {
+        "feature": "prereq-test", "from_phase": 3, "artifacts_created": ["tasks.md"]
+    })
+    d = json.loads(r.content[0].text)
+    # This should succeed because phase 4 has no artifact prerequisite
+    check("advance 3->4 succeeds (tasks.md provided)", d["success"])
 
 
 async def test_wrong_phase_rejected(session):
@@ -180,7 +180,7 @@ async def test_missing_feature(session):
     d = json.loads(r.content[0].text)
     check("get_feature_state on missing returns error", "error" in d)
 
-    r = await session.call_tool("advance_phase", {"feature": "nope", "from_phase": 0})
+    r = await session.call_tool("advance_phase", {"feature": "nope", "from_phase": 1})
     d = json.loads(r.content[0].text)
     check("advance_phase on missing returns error", "error" in d)
 
@@ -192,7 +192,7 @@ async def test_reopen_flow(session):
     assert json.loads(r.content[0].text)["success"]
 
     # Fast-forward to close
-    for f, arts in [(0, ["constitution.md"]), (1, ["spec.md"]), (2, ["plan.md"]),
+    for f, arts in [(1, ["spec.md"]), (2, ["plan.md"]),
                      (3, ["tasks.md"]), (4, []), (5, ["bugs.md"])]:
         r = await session.call_tool("advance_phase", {
             "feature": "reopen-test", "from_phase": f, "artifacts_created": arts
@@ -209,7 +209,6 @@ async def test_reopen_flow(session):
     check("  new_status is reopened", d["new_status"] == "reopened")
 
     # Close again
-    # reopened feature advances 5->6 then closes
     r = await session.call_tool("advance_phase", {
         "feature": "reopen-test", "from_phase": 5, "artifacts_created": []
     })
@@ -220,10 +219,10 @@ async def test_reopen_flow(session):
     d4 = json.loads(r.content[0].text)
     check("close reopened feature succeeds", d4["success"])
 
-    # Cannot reopen twice
+    # Can reopen again
     r = await session.call_tool("reopen_feature", {"feature": "reopen-test"})
     d5 = json.loads(r.content[0].text)
-    check("reopen already-closed feature works again", d5["success"])
+    check("reopen feature again works", d5["success"])
 
 
 async def test_reopen_non_closed_rejected(session):
@@ -263,40 +262,73 @@ async def test_get_next_actions_progression(session):
     r = await session.call_tool("init_feature", {"feature": "actions-test"})
     assert json.loads(r.content[0].text)["success"]
 
-    # Phase 0 — should show advance_to_specify
+    # Phase 1 — should show advance_to_plan
     r = await session.call_tool("get_next_actions", {"feature": "actions-test"})
     d = json.loads(r.content[0].text)
     actions = [a["action"] for a in d.get("available_actions", [])]
-    check("phase 0: advance_to_specify available", "advance_to_specify" in actions)
-    check("phase 0: no close yet", "close_feature" not in actions)
+    check("phase 1: advance_to_plan available", "advance_to_plan" in actions)
+    check("phase 1: no close yet", "close_feature" not in actions)
 
     # Advance through phases
-    for f, arts in [(0, ["constitution.md"]), (1, ["spec.md"]), (2, ["plan.md"]),
+    for f, arts in [(1, ["spec.md"]), (2, ["plan.md"]),
                      (3, ["tasks.md"]), (4, [])]:
         await session.call_tool("advance_phase", {
             "feature": "actions-test", "from_phase": f, "artifacts_created": arts
         })
 
-    # Phase 5 — should show close_feature (no bugs, so close available)
+    # Phase 5 — bug routing is bugs.md-based (file), not MCP state.
+    # The server's get_next_actions no longer reports bug actions; close
+    # gating on "all bugs verified" lives in the skills parsing bugs.md.
     r = await session.call_tool("get_next_actions", {"feature": "actions-test"})
     d = json.loads(r.content[0].text)
     actions = [a["action"] for a in d.get("available_actions", [])]
-    check("phase 5: close_feature available (no bugs)", "close_feature" in actions)
+    check("phase 5: advance_to_close available", "advance_to_close" in actions)
+
+
+async def test_project_state(session):
+    """Project-level status and set_constitution tools."""
+    print("\n═══ Project state ═══")
+
+    # Initially absent
+    r = await session.call_tool("project_status", {})
+    d = json.loads(r.content[0].text)
+    check("project_status returns version 2", d["version"] == 2)
+    check("  constitution is absent initially", d["constitution"] == "absent")
+
+    # Set constitution
+    r = await session.call_tool("project_set_constitution", {
+        "status": "present",
+        "principles": '{"testing": "A", "linting": "B"}'
+    })
+    d = json.loads(r.content[0].text)
+    check("project_set_constitution succeeds", d["success"])
+    check("  status is present", d["constitution"] == "present")
+    check("  principles stored", d["principles"].get("testing") == "A")
+
+    # Verify via project_status
+    r = await session.call_tool("project_status", {})
+    d = json.loads(r.content[0].text)
+    check("  constitution reflected in project_status", d["constitution"] == "present")
 
 
 async def test_auto_detect_features(session):
-    """Auto-detect registers features from specs/ directory."""
+    """Auto-detect registers features from specs/ directory and detects project constitution."""
     print("\n═══ Auto-detect ═══")
-    # Create a temporary specs dir with some artifacts
     orig_cwd = os.getcwd()
     tmpdir = tempfile.mkdtemp(prefix="spec-kit-test-")
     try:
         os.chdir(tmpdir)
-        specs_dir = Path(tmpdir) / "specs" / "auto-feat"
-        specs_dir.mkdir(parents=True)
-        (specs_dir / "spec.md").write_text("# spec")
-        (specs_dir / "plan.md").write_text("# plan")
-        (specs_dir / "tasks.md").write_text("# tasks")
+        # Create project-level constitution
+        specs_root = Path(tmpdir) / "specs"
+        specs_root.mkdir(parents=True)
+        (specs_root / "constitution.md").write_text("# Project Constitution")
+
+        # Create feature directory
+        feat_dir = specs_root / "auto-feat"
+        feat_dir.mkdir(parents=True)
+        (feat_dir / "spec.md").write_text("# spec")
+        (feat_dir / "plan.md").write_text("# plan")
+        (feat_dir / "tasks.md").write_text("# tasks")
 
         # Re-init session in new cwd
         params = StdioServerParameters(
@@ -312,6 +344,7 @@ async def test_auto_detect_features(session):
                 d = json.loads(r.content[0].text)
                 check("auto_detect found features", d["features_detected"] >= 1)
                 check("  auto-feat registered", "auto-feat" in d["features"])
+                check("  project constitution detected", d["project"]["constitution"] == "present")
 
                 # Check detected phase — spec+plan+tasks = phase 4 (implement ready)
                 r2 = await s2.call_tool("get_feature_state", {"feature": "auto-feat"})
@@ -350,6 +383,7 @@ async def main():
         test_happy_path_forward,
         test_prerequisite_enforcement,
         test_reopen_flow,
+        test_project_state,
         test_auto_detect_features,
     ]
 

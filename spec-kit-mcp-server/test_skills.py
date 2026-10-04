@@ -349,6 +349,63 @@ def test_workflow_diagram_phases():
               f"missing phase {name} in workflow")
 
 
+def _server_tool_names():
+    """Extract @mcp.tool(name=...) names from server.py via regex (no mcp import needed)."""
+    server = REPO / "spec-kit-mcp-server" / "server.py"
+    if not server.exists():
+        return None
+    return set(re.findall(r'@mcp\.tool\(name="([^"]+)"\)', server.read_text()))
+
+
+def test_mcp_tool_names_match_server():
+    """Every mcp_spec_kit_* tool named in a skill/doc must exist in server.py — and vice versa.
+
+    Guards against skill files referencing removed/renamed tools (happened with
+    log_bug after adc6b79) and against the server gaining tools the docs never
+    mention. The known-removed tools are asserted absent everywhere.
+    """
+    print("\n═══ MCP tool-name drift ═══")
+    server_tools = _server_tool_names()
+    if server_tools is None:
+        check("server.py found", False, "spec-kit-mcp-server/server.py missing")
+        return
+
+    REMOVED_TOOLS = {"log_bug", "set_bug_status", "set_bug_plan_ref"}
+
+    # 1. Removed tools must not exist in the server
+    for t in sorted(REMOVED_TOOLS):
+        check(f"server has no '{t}' tool (removed)", t not in server_tools)
+
+    # 2. Every mcp_spec_kit_* mention in skills/ + docs maps to a real server tool
+    doc_dirs = [
+        SKILLS_DIR,
+        REPO / "spec-kit-mcp-server",   # README.md, *.py docstrings excluded below
+    ]
+    doc_files = []
+    for d in doc_dirs:
+        doc_files.extend(d.rglob("*.md"))
+    doc_files.extend([REPO / "README.md", REPO / "AGENT.md", REPO / "user-guide.md"])
+
+    pattern = re.compile(r'mcp_spec_kit_([a-z_]+)')
+    bad = []
+    for f in doc_files:
+        content = f.read_text()
+        for m in pattern.finditer(content):
+            tool = m.group(1)
+            if tool not in server_tools:
+                bad.append(f"{f.relative_to(REPO)}: mcp_spec_kit_{tool}")
+    check("all mcp_spec_kit_* doc mentions exist in server", not bad,
+          "; ".join(bad[:8]))
+
+    # 3. Every server tool is mentioned somewhere in the docs
+    mentioned = set()
+    for f in doc_files:
+        mentioned.update(pattern.findall(f.read_text()))
+    unmentioned = server_tools - mentioned
+    check("every server tool is documented", not unmentioned,
+          f"undocumented tools: {sorted(unmentioned)}")
+
+
 def test_skills_yaml_parse():
     """All frontmatter YAML parses correctly (no syntax errors)."""
     print("\n═══ YAML parse check ═══")
@@ -391,6 +448,7 @@ def main():
         test_umbrella_coverage,
         test_no_loose_reference_files,
         test_workflow_diagram_phases,
+        test_mcp_tool_names_match_server,
     ]
 
     for t in tests:

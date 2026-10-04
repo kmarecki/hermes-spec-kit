@@ -5,6 +5,10 @@ Provides structured state tools for the spec-kit workflow.
 Uses the mcp Python SDK (FastMCP) for proper stdio transport.
 State stored in specs/.spec-kit/state.json.
 
+KEY DESIGN: Project-level state (constitution) is separate from
+feature-level state. Features start at phase 1 (specify) — the
+constitution is a one-time project bootstrap, not a per-feature phase.
+
 Dependency: pip install mcp  (auto-installed by install.sh venv)
 """
 
@@ -30,8 +34,9 @@ PHASES = {
 
 PHASE_NAMES = {v["name"]: k for k, v in PHASES.items()}
 
+# Feature-level prerequisites only. Constitution is NOT a feature prerequisite
+# — it is project-level state checked by the workflow orchestrator.
 PREREQUISITES = {
-    1: [(0, "constitution.md")],
     2: [(1, "spec.md")],
     3: [(2, "plan.md"), (1, "spec.md")],
     4: [(3, "tasks.md")],
@@ -41,13 +46,28 @@ PREREQUISITES = {
 
 
 def _default_state():
-    return {"features": {}, "version": 1}
+    return {
+        "version": 2,
+        "project": {
+            "constitution": "absent",
+            "principles": {},
+        },
+        "features": {},
+    }
 
 
 def _load_state():
     if STATE_FILE.exists():
         try:
-            return json.loads(STATE_FILE.read_text())
+            data = json.loads(STATE_FILE.read_text())
+            # Migrate legacy v1 state (features-only) to v2 (project + features)
+            if data.get("version", 1) < 2:
+                data["version"] = 2
+                if "project" not in data:
+                    data["project"] = {"constitution": "absent", "principles": {}}
+                if "features" not in data:
+                    data["features"] = data.get("features", {})
+            return data
         except (json.JSONDecodeError, OSError):
             pass
     return _default_state()
@@ -55,7 +75,12 @@ def _load_state():
 
 def _save_state(state):
     STATE_DIR.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+    # Atomic write: a crash mid-write must not corrupt state.json (a torn file
+    # would make _load_state silently return a fresh default state, losing all
+    # feature tracking). Write to a temp file, then atomically replace.
+    tmp = STATE_FILE.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(state, indent=2))
+    tmp.replace(STATE_FILE)
 
 
 def _get_feature(state, feature):
@@ -81,6 +106,10 @@ def _validate_advance(feature, state, from_phase, to_phase):
     if current != from_phase:
         return False, f"Current phase is {current} ({PHASES[current]['name']}), not {from_phase}"
 
+    # Constitution phase (0) is project-level — features should never advance from it
+    if from_phase == 0:
+        return False, "Phase 0 (constitution) is project-level — use project_set_constitution, not feature advance_phase"
+
     prereqs = PREREQUISITES.get(to_phase, [])
     for req_phase, req_artifact in prereqs:
         if req_phase > current:
@@ -99,9 +128,47 @@ mcp = FastMCP("spec-kit-workflow")
 # ── Tools ──────────────────────────────────────────────────────────────────
 
 
+@mcp.tool(name="project_status")
+def project_status() -> str:
+    """Get project-level workflow state — constitution status, principles.
+
+    Use this to check whether the project has been bootstrapped before
+    routing to feature skills.
+    """
+    state = _load_state()
+    proj = state["project"]
+    return json.dumps({
+        "version": state["version"],
+        "constitution": proj["constitution"],
+        "principles": proj.get("principles", {}),
+    })
+
+
+@mcp.tool(name="project_set_constitution")
+def project_set_constitution(status: str = "present", principles: str = "") -> str:
+    """Set project constitution status after creation/review.
+
+    Args:
+        status: 'present' or 'absent'
+        principles: Optional JSON string of parsed principle key-value pairs
+    """
+    state = _load_state()
+    state["project"]["constitution"] = status
+    if principles:
+        try:
+            state["project"]["principles"] = json.loads(principles)
+        except json.JSONDecodeError:
+            return json.dumps({"error": "principles must be valid JSON object", "status": status})
+    _save_state(state)
+    return json.dumps({"success": True, "constitution": status, "principles": state["project"].get("principles", {})})
+
+
 @mcp.tool(name="init_feature")
 def init_feature(feature: str, name: str = None, mode: str = "specify") -> str:
     """Initialize a new feature in the workflow state.
+
+    Features start at phase 1 (specify). The constitution is project-level
+    state tracked separately — see project_status tool.
 
     Args:
         feature: Feature ID (e.g., 003-user-auth)
@@ -113,10 +180,11 @@ def init_feature(feature: str, name: str = None, mode: str = "specify") -> str:
     if feature in state["features"]:
         return json.dumps({"error": f"Feature '{feature}' already exists", "state": _get_feature(state, feature)})
 
+    # Features start at phase 1 (specify) — constitution is project-level
     state["features"][feature] = {
         "name": name,
         "mode": mode,
-        "current_phase": 0,
+        "current_phase": 1,
         "status": "active",
         "artifacts": {},
         "bugs": [],
@@ -165,24 +233,11 @@ def get_next_actions(feature: str) -> str:
         else:
             actions.append({"action": f"advance_to_{name}", "phase": next_phase, "blocked": True, "reason": reason})
 
-    open_bugs = [b for b in f.get("bugs", []) if b.get("status") == "open"]
-    if open_bugs:
-        needs_plan = any(b.get("plan_ref") is None for b in open_bugs)
-        if needs_plan:
-            actions.append({"action": "bugfix_plan", "description": "Plan bugfix sections for unplanned bugs"})
-        actions.append({"action": "bugfix_tasks", "description": "Generate bugfix tasks (BF-###)"})
-        actions.append({"action": "bugfix_implement", "description": "Implement bugfix tasks"})
+    # Bug state lives in bugs.md (file-based, single source of truth).
+    # The MCP server cannot see bug status — bugfix/verify routing is done
+    # by parsing bugs.md in the skills, not here.
 
-    resolved_bugs = [b for b in f.get("bugs", []) if b.get("status") == "resolved"]
-    if resolved_bugs:
-        actions.append({"action": "verify_bugs", "bug_ids": [b["bug_id"] for b in resolved_bugs], "description": "Mark resolved bugs as verified"})
-
-    if phase == 5:
-        all_verified = all(b.get("status") == "verified" for b in f.get("bugs", []))
-        if not f.get("bugs") or all_verified:
-            actions.append({"action": "close_feature", "description": "Generate close document (mandatory)"})
-
-    return json.dumps({"current_phase": phase, "phase_name": PHASES[phase]["name"], "status": f["status"], "available_actions": actions, "open_bugs": len(open_bugs)})
+    return json.dumps({"current_phase": phase, "phase_name": PHASES[phase]["name"], "status": f["status"], "available_actions": actions})
 
 
 @mcp.tool(name="advance_phase")
@@ -201,6 +256,10 @@ def advance_phase(feature: str, from_phase: int, artifacts_created: list[str] = 
         return json.dumps({"error": f"Feature '{feature}' not found"})
     if f["current_phase"] != from_phase:
         return json.dumps({"error": f"Phase mismatch: expected {from_phase}, current is {f['current_phase']}"})
+
+    # Phase 0 is project-level — features use project_set_constitution instead
+    if from_phase == 0:
+        return json.dumps({"error": "Phase 0 (constitution) is project-level — use project_set_constitution tool instead"})
 
     to_phase = from_phase + 1
 
@@ -256,7 +315,7 @@ def reopen_feature(feature: str) -> str:
     f["last_transition"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     _save_state(state)
 
-    return json.dumps({"success": True, "feature": feature, "new_status": "reopened", "current_phase": f["current_phase"], "next": "log_bug or bugfix_plan"})
+    return json.dumps({"success": True, "feature": feature, "new_status": "reopened", "current_phase": f["current_phase"], "next": "Write bugs to bugs.md via spec-kit-test, or run 'bugfix [feature]'"})
 
 
 @mcp.tool(name="close_feature")
@@ -302,6 +361,9 @@ def update_artifact(feature: str, artifact: str, status: str = "present") -> str
 def auto_detect_features(feature: str = None) -> str:
     """Scan specs/ directory and reconcile state — auto-registers unknown features.
 
+    Detects project-level constitution from specs/constitution.md (not per-feature).
+    Detects feature phase from per-feature artifact files.
+
     Args:
         feature: Optional feature ID to scan (scans all if omitted)
     """
@@ -310,6 +372,14 @@ def auto_detect_features(feature: str = None) -> str:
     if not specs_dir.exists():
         return json.dumps({"error": "specs/ directory not found"})
 
+    # Detect project-level constitution
+    proj_constitution = specs_dir / "constitution.md"
+    if proj_constitution.exists():
+        state["project"]["constitution"] = "present"
+    else:
+        state["project"]["constitution"] = "absent"
+
+    # Detect features
     feature_dirs = [d for d in specs_dir.iterdir() if d.is_dir() and d.name != ".spec-kit"]
     found = []
 
@@ -324,8 +394,11 @@ def auto_detect_features(feature: str = None) -> str:
                 if p.suffix == ".md":
                     artifacts_present.add(p.name)
 
-            detected_phase = 0
+            # Phase 0 (constitution) is project-level — features start at phase 1
+            detected_phase = 1
             for phase_num, phase_info in sorted(PHASES.items()):
+                if phase_num == 0:
+                    continue  # skip project-level phase for feature detection
                 all_present = all((art in artifacts_present) for art in phase_info["artifacts"])
                 if all_present:
                     detected_phase = phase_num
@@ -343,7 +416,12 @@ def auto_detect_features(feature: str = None) -> str:
             found.append(fid)
 
     _save_state(state)
-    return json.dumps({"success": True, "features_detected": len(found), "features": list(state["features"].keys())})
+    return json.dumps({
+        "success": True,
+        "features_detected": len(found),
+        "features": list(state["features"].keys()),
+        "project": {"constitution": state["project"]["constitution"]},
+    })
 
 
 # ── Entry point ────────────────────────────────────────────────────────────
