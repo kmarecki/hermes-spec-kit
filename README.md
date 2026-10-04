@@ -55,7 +55,7 @@ scripts/
   install.sh             # Installs to ~/.hermes/skills/ + MCP config
   uninstall.sh           # Full clean uninstall (skills, MCP, config)
 spec-kit-mcp-server/
-  server.py              # MCP server — 12 tools, pure Python stdlib
+  server.py              # MCP server — 11 tools, Python + mcp SDK (<2)
   README.md              # MCP server docs
   test_server.py         # Smoke test
 ```
@@ -133,19 +133,18 @@ in the user-guide.
 
 An MCP server (`spec-kit-mcp-server/server.py`) provides deterministic workflow state
 management — replacing LLM-based phase/artifact detection with structured JSON-RPC calls
-over stdio. 12 tools exposed as `mcp_spec_kit_*` in Hermes.
+over stdio. 11 tools exposed as `mcp_spec_kit_*` in Hermes.
 
 **Tools:**
 
 | Tool | Purpose |
 |------|---------|
 | `init_feature` | Register a new feature in state |
-| `get_feature_state` | Get current phase, artifacts, bugs |
+| `get_feature_state` | Get current phase, artifacts |
 | `get_next_actions` | Available actions from current state |
 | `advance_phase` | Validate and transition to next phase |
-| `log_bug` | Log bug (returns `next_suggested`) |
-| `set_bug_status` | Update bug status |
-| `set_bug_plan_ref` | Link bug to plan section |
+| `project_status` | Get project-level state (constitution) |
+| `project_set_constitution` | Mark constitution as present after creation |
 | `list_features` | List all registered features |
 | `reopen_feature` | Reopen closed feature |
 | `close_feature` | Close feature after Phase 6 |
@@ -154,8 +153,14 @@ over stdio. 12 tools exposed as `mcp_spec_kit_*` in Hermes.
 
 **State file**: `specs/.spec-kit/state.json` (per-project).
 
-**Dependency**: Requires the [mcp Python SDK](https://pypi.org/project/mcp/) (`pip install mcp`).
-The install script auto-installs it in a venv at `~/.hermes-venv/`.
+**Bug tracking is file-based**: bugs live in `specs/NNN-name/bugs.md` — the single
+source of truth. The MCP server intentionally has no bug tools; bugfix routing
+parses bugs.md directly.
+
+**Dependency**: Requires the [mcp Python SDK](https://pypi.org/project/mcp/) pinned
+to `<2` (`mcp 2.x` renamed FastMCP → MCPServer and breaks this server). Install
+from `spec-kit-mcp-server/requirements.txt`; the install script auto-installs it
+in a venv at `~/.hermes-venv/`.
 
 **Fallback**: When the MCP server is not configured, all skills fall back to
 filesystem-based artifact detection — backward compatible, no skill changes needed.
@@ -190,7 +195,7 @@ python3 test_skills.py
 Run both together:
 
 ```bash
-pip install mcp pyyaml
+pip install -r spec-kit-mcp-server/requirements.txt
 python3 spec-kit-mcp-server/test_workflow.py && python3 spec-kit-mcp-server/test_skills.py
 ```
 

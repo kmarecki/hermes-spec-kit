@@ -809,12 +809,11 @@ The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`F
 | Tool | Purpose |
 |------|---------|
 | `mcp_spec_kit_init_feature` | Register a new feature |
-| `mcp_spec_kit_get_feature_state` | Get current phase, artifacts, bugs |
+| `mcp_spec_kit_get_feature_state` | Get current phase, artifacts |
 | `mcp_spec_kit_get_next_actions` | Available actions from current state |
 | `mcp_spec_kit_advance_phase` | Validate and transition to next phase |
-| `mcp_spec_kit_log_bug` | Log bug — returns `next_suggested` |
-| `mcp_spec_kit_set_bug_status` | Update bug status |
-| `mcp_spec_kit_set_bug_plan_ref` | Link bug to plan section |
+| `mcp_spec_kit_project_status` | Get project-level state (constitution) |
+| `mcp_spec_kit_project_set_constitution` | Mark constitution as present after creation |
 | `mcp_spec_kit_list_features` | List all registered features |
 | `mcp_spec_kit_reopen_feature` | Reopen closed feature |
 | `mcp_spec_kit_close_feature` | Close feature after Phase 6 |
@@ -826,10 +825,13 @@ The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`F
 - **Deterministic**: State is stored, not inferred — survives context compaction
 - **Enforced transitions**: `advance_phase` rejects invalid moves (wrong phase, missing
   prerequisites)
-- **Auto-chain**: `log_bug` returns `next_suggested: "bugfix_plan"` — the LLM does not
-  guess what to do next
 - **Backward compatible**: When the MCP server is not configured, every skill falls back
   to filesystem-based detection. No skill changes needed.
+
+Bug tracking is deliberately NOT in the MCP server: `bugs.md` is the single
+source of truth and is written directly by `spec-kit-test`. Earlier versions had
+`log_bug`/`set_bug_status`/`set_bug_plan_ref` tools, but they let the agent bypass
+the bugs.md write and user-confirmation step — they were removed (adc6b79).
 
 ### Installation
 

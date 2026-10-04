@@ -45,6 +45,13 @@ IF bugfix mode (reopened bugfix):
   NOTE: "Bugfix mode — tasks.md already exists with completed tasks. Will append new bugfix tasks only."
   LOAD existing specs/[feature]/tasks.md
   LOAD bugs.md, plan.md bugfix sections
+ELIF specs/[feature]/tasks.md EXISTS:
+  BLOCK: "tasks.md already exists for [feature]. The No Complete Overwrite rule
+          forbids overwriting it. If you need to add bugfix tasks, run the
+          relevant workflow instead.
+          Route: 'bugfix [feature]' for bugfix additions,
+                 'reopen [feature]' for reopening a closed feature."
+  HALT
 ELSE:
   LOAD spec-kit/templates/tasks-template.md
   COPY spec-kit/templates/tasks-template.md → specs/[feature]/tasks.md

@@ -158,8 +158,8 @@ if [ -f "$MCP_SERVER_DIR/server.py" ]; then
     if [ ! -f "$MCP_VENV/bin/python3" ]; then
       echo "  -> Creating venv at $MCP_VENV..."
       python3 -m venv "$MCP_VENV"
-      echo "  -> Installing mcp SDK (pip install mcp)..."
-      "$MCP_VENV/bin/pip" install mcp
+      echo "  -> Installing mcp SDK (from requirements.txt, mcp pinned <2)..."
+      "$MCP_VENV/bin/pip" install -r "$MCP_SERVER_DIR/requirements.txt"
     fi
     if "$MCP_VENV/bin/python3" -c "import mcp" 2>/dev/null; then
       MCP_PYTHON="$MCP_VENV/bin/python3"
@@ -206,7 +206,7 @@ EOF
   else
     echo "  -> WARNING: mcp Python package not available."
     echo "     Hermes needs it for MCP support. Install manually:"
-    echo "     python3 -m venv ~/.hermes-venv && ~/.hermes-venv/bin/pip install mcp"
+    echo "     python3 -m venv ~/.hermes-venv && ~/.hermes-venv/bin/pip install -r $MCP_SERVER_DIR/requirements.txt"
   fi
 fi
 

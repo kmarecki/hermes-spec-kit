@@ -115,7 +115,7 @@ Installed via `./scripts/install.sh` — see `src/templates/` for the full list:
 
 ## MCP Server (optional)
 
-Spec-kit includes a **deterministic workflow MCP server** that replaces LLM-based state detection with structured tools. When enabled, the server enforces phase transitions, provides auto-chaining after bug logging, and survives context compaction.
+Spec-kit includes a **deterministic workflow MCP server** that replaces LLM-based state detection with structured tools. When enabled, the server enforces phase transitions, validates prerequisites, and survives context compaction.
 
 See `spec-kit-mcp-server/README.md` for setup and usage. Enable by adding to `~/.hermes/config.yaml`:
 
@@ -126,7 +126,7 @@ mcp_servers:
     args: ["~/.hermes/skills/spec-kit/mcp-server/server.py"]
 ```
 
-12 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_log_bug`, etc.
+11 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_project_status`, etc.
 (In Hermes the tools appear with the `mcp_spec_kit_` prefix — call them by this full name.)
 
 ## ⚠️ MCP Tool Usage Rules — Critical

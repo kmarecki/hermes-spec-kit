@@ -393,4 +393,5 @@ Report:
 - `spec-kit-tasks` has not been run
 
 **WARN** if:
-- `spec-kit-constitution` has not been run — proceeding without constitutional gates
+- Project constitution not found — proceeding without constitutional guidance.
+  This is a project-level gap, not a feature blocker.
