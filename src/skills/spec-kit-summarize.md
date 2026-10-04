@@ -416,7 +416,6 @@ BLOCKER: A feature CANNOT enter Complete state without Phase 6 completing.
 - [ ] ✅ Resolved deviations patched into spec.md and plan.md (with user approval)
 - [ ] ❌ Not Done gaps converted to new bug entries in bugs.md (if any, full mode only)
 - [ ] Report delivered to user with spec health score and artifact state
-- **Commit**: `$COMMIT_HASH` (auto — `git log` for details)
 
 ## Next Skills
 

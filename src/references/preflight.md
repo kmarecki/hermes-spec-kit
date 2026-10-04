@@ -70,7 +70,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
 After every skill completes that created or modified any markdown document:
 
 1. **history.md is already ready** (pre-action check #5 already ensured it exists). Append an entry for each document created or modified:
-   - Format: `## [ISO_TIMESTAMP] | [Phase Name] → Complete` with skill, artifacts, commit hash, notes
+   - Format: `## [ISO_TIMESTAMP] | [Phase Name] → Complete` with skill, artifacts, notes
    - See `spec-kit/references/history-tracking.md` for the exact format
    - This is NOT optional — if you skip this, the process log will be missing
 

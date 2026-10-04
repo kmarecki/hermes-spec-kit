@@ -8,7 +8,6 @@ Every spec feature directory maintains `specs/[feature]/history.md` — an appen
 ## [ISO_TIMESTAMP] | [Phase Name] → Complete
 - **Skill**: spec-kit-[skill-name]
 - **Artifacts**: [comma-separated list of files created or modified]
-- **Commit**: [commit hash from git rev-parse HEAD, or "N/A" if no commit]
 - **Notes**: [optional — key decisions, deviations, or notable events]
 ```
 
@@ -18,9 +17,14 @@ Every spec feature directory maintains `specs/[feature]/history.md` — an appen
 ## 2026-06-08T10:00:00 | Phase 1 → Complete
 - **Skill**: spec-kit-specify
 - **Artifacts**: specs/001-user-auth/spec.md
-- **Commit**: a1b2c3d4
 - **Notes**: OAuth2 with JWT tokens, 3 user stories
 ```
+
+> **No commit hashes**: history entries deliberately do NOT record commit hashes.
+> Feature branches are squash-merged, so pre-merge hashes don't exist in the
+> target branch's history — recording them is dead data. Traceability comes
+> from the phase name + timestamp + commit message convention (`spec(phase-N): [feature] ...`),
+> which survive the squash.
 
 ## How to Use
 
@@ -36,7 +40,6 @@ APPEND entry:
   ## [$(date -u +"%Y-%m-%dT%H:%M:%SZ")] | [Phase] → Complete
   - **Skill**: spec-kit-[skill]
   - **Artifacts**: [files]
-  - **Commit**: $(git rev-parse HEAD 2>/dev/null || echo "N/A")
   - **Notes**: [summary of what was done]
 ```
 

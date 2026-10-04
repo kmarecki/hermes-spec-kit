@@ -11,11 +11,15 @@ IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
   COMMIT_MSG="<message>"
   git add <paths>
   git commit -m "$COMMIT_MSG" --no-verify
-  COMMIT_HASH=$(git rev-parse HEAD)
-  NOTE: "Committed as $COMMIT_HASH"
+  NOTE: "Committed"
 ELSE
   NOTE: "Not a git repository — skipping automatic commit"
 ```
+
+> **Do not capture the commit hash for history.md** — history entries record no
+> commit hashes (feature branches are squash-merged; pre-merge hashes are dead
+> data). The commit message itself (`spec(phase-N): [feature] ...`) is the
+> traceability link.
 
 ## Per-Skill Usage
 
@@ -40,7 +44,6 @@ ELSE
 ## Rules
 
 - Always `--no-verify` (pre-commit hooks may block spec artifacts)
-- Hash is captured for history.md traceability
 - Silently skip if not a git repo
 - Never commit broken state during Implement (tests must pass first)
 - Additive-safe: never delete or reorder existing entries. Only append new, or modify specific fields minimally.
