@@ -1,427 +1,614 @@
 #!/usr/bin/env python3
-"""spec-kit MCP server — deterministic workflow orchestration.
+"""spec-kit MCP server — derive-and-enforce workflow service.
 
-Provides structured state tools for the spec-kit workflow.
-Uses the mcp Python SDK (FastMCP) for proper stdio transport.
-State stored in specs/.spec-kit/state.json.
+DESIGN (v3): the server keeps NO state of its own. Every call derives the
+feature's phase and artifact status from the files under specs/<feature>/ at
+that moment. A persisted state file (v2's specs/.spec-kit/state.json) proved
+to be a second source of truth that drifted from the artifacts (30 of 34
+features out of sync in one deployment) and collided on every merge. Files on
+disk are the single source of truth; this server reads them and enforces.
 
-KEY DESIGN: Project-level state (constitution) is separate from
-feature-level state. Features start at phase 1 (specify) — the
-constitution is a one-time project bootstrap, not a per-feature phase.
+What the server is for — the things an LLM agent does badly and a script does
+perfectly:
+  * phase derivation and prerequisite validation (advance_phase, get_feature_state)
+  * sequential id allocation (next_id: BUG / T / BF)
+  * artifact schema lint (lint_artifacts: bugs.md, tasks.md, history.md)
+  * real timestamps (timestamp)
+  * the history-before-commit guard (history_guard)
+  * a ten-line phase card to re-read after context compaction (get_next_actions)
 
-Dependency: pip install mcp  (auto-installed by install.sh venv)
+Bug tracking stays file-based — bugs.md is the single source of truth and this
+server never edits it; it only reads and lints.
+
+Dependency: pip install "mcp<2"  (auto-installed by install.sh venv)
 """
 
-import json
 import datetime
+import json
+import re
+import subprocess
 from pathlib import Path
+
 from mcp.server.fastmcp import FastMCP
 
-# ── State ──────────────────────────────────────────────────────────────────
-
-STATE_DIR = Path("specs/.spec-kit")
-STATE_FILE = STATE_DIR / "state.json"
+SPECS_DIR = Path("specs")
+LEGACY_STATE_FILE = SPECS_DIR / ".spec-kit" / "state.json"
 
 PHASES = {
     0: {"name": "constitution", "artifacts": ["constitution.md"]},
-    1: {"name": "specify",       "artifacts": ["spec.md"]},
-    2: {"name": "plan",          "artifacts": ["plan.md"]},
-    3: {"name": "tasks",         "artifacts": ["tasks.md"]},
-    4: {"name": "implement",     "artifacts": []},
-    5: {"name": "test",          "artifacts": ["bugs.md"]},
-    6: {"name": "close",         "artifacts": ["close.md"]},
+    1: {"name": "specify",      "artifacts": ["spec.md"]},
+    2: {"name": "plan",         "artifacts": ["plan.md"]},
+    3: {"name": "tasks",        "artifacts": ["tasks.md"]},
+    4: {"name": "implement",    "artifacts": []},
+    5: {"name": "test",         "artifacts": ["bugs.md"]},
+    6: {"name": "close",        "artifacts": ["close.md"]},
 }
 
-PHASE_NAMES = {v["name"]: k for k, v in PHASES.items()}
-
-# Feature-level prerequisites only. Constitution is NOT a feature prerequisite
-# — it is project-level state checked by the workflow orchestrator.
+# Artifact required ON DISK before a feature may stand in the given phase.
 PREREQUISITES = {
-    2: [(1, "spec.md")],
-    3: [(2, "plan.md"), (1, "spec.md")],
-    4: [(3, "tasks.md")],
-    5: [(4, None)],
-    6: [(4, None), (5, None)],
+    2: ["spec.md"],
+    3: ["spec.md", "plan.md"],
+    4: ["spec.md", "plan.md", "tasks.md"],
+    5: ["tasks.md"],
+    6: ["tasks.md"],
 }
 
+CLOSE_DOCS = ("close.md", "implementation-summary.md")
+TRACKED_ARTIFACTS = [
+    "spec.md", "clarify.md", "plan.md", "research.md", "data-model.md",
+    "quickstart.md", "tasks.md", "bugs.md", "decisions.md", "history.md",
+    "close.md", "implementation-summary.md",
+]
 
-def _default_state():
+BUG_STATUSES = {"open", "in-progress", "claimed", "verified", "superseded"}
+LEGACY_BUG_STATUSES = {"resolved": "claimed", "fixed": "claimed"}
+VERIFIED_BY_RE = re.compile(r"^(user|ci:\S+|review:\S+)$")
+
+_BUG_HEADER_RE = re.compile(r"^### (BUG-(\d+)):", re.M)
+_TASK_RE = re.compile(r"^- \[( |x|X)\] ((?:T|BF-?)(\d+))", re.M)
+_HISTORY_ENTRY_RE = re.compile(r"^## \[?([0-9T:\-+.Z]+)\]? *\| *(.*)$", re.M)
+
+
+# ── Derivation ─────────────────────────────────────────────────────────────
+
+
+def _now():
+    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat()
+
+
+def _feature_dir(feature):
+    return SPECS_DIR / feature
+
+
+def _parse_bugs(text):
+    """Return list of {id, num, status, raw_status, verified_by} from bugs.md text."""
+    bugs = []
+    headers = list(_BUG_HEADER_RE.finditer(text))
+    for i, m in enumerate(headers):
+        end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
+        body = text[m.end():end]
+        # the Summary table may follow the last bug — cut at the separator
+        body = body.split("\n---", 1)[0]
+        sm = re.search(r"\*\*Status\*\*:\s*([A-Za-z-]*)", body)
+        raw = (sm.group(1).strip().lower() if sm else "")
+        status = LEGACY_BUG_STATUSES.get(raw, raw)
+        vm = re.search(r"\*\*Verified-by\*\*:\s*([^\n]*)", body)
+        verified_by = vm.group(1).strip() if vm else ""
+        if verified_by.startswith("[") or verified_by in ("", "—", "-"):
+            verified_by = ""
+        bugs.append({"id": m.group(1), "num": int(m.group(2)), "status": status,
+                     "raw_status": raw, "verified_by": verified_by})
+    return bugs
+
+
+def _parse_tasks(text):
+    tasks = []
+    for m in _TASK_RE.finditer(text):
+        tasks.append({"id": m.group(2), "done": m.group(1) in "xX",
+                      "kind": "BF" if m.group(2).startswith("BF") else "T",
+                      "num": int(m.group(3))})
+    return tasks
+
+
+def _derive(feature):
+    """Derive the feature's state from its files. None when the directory is absent."""
+    fd = _feature_dir(feature)
+    if not fd.is_dir():
+        return None
+    present = {a for a in TRACKED_ARTIFACTS if (fd / a).exists()}
+    contracts = sorted(p.name for p in (fd / "contracts").glob("*")) if (fd / "contracts").is_dir() else []
+
+    bugs = _parse_bugs((fd / "bugs.md").read_text(errors="replace")) if "bugs.md" in present else []
+    tasks = _parse_tasks((fd / "tasks.md").read_text(errors="replace")) if "tasks.md" in present else []
+    open_bugs = [b for b in bugs if b["status"] in ("open", "in-progress")]
+    claimed = [b for b in bugs if b["status"] == "claimed"]
+    closed_on_disk = any(c in present for c in CLOSE_DOCS)
+
+    if not {"spec.md"} <= present:
+        phase, status = 1, "new"
+    elif "plan.md" not in present:
+        phase, status = 2, "active"
+    elif "tasks.md" not in present:
+        phase, status = 3, "active"
+    elif closed_on_disk:
+        if open_bugs:
+            phase, status = 5, "reopened"
+        else:
+            phase, status = 6, "closed"
+    elif tasks and all(t["done"] for t in tasks) or "bugs.md" in present:
+        phase, status = 5, "active"
+    else:
+        phase, status = 4, "active"
+
     return {
-        "version": 2,
-        "project": {
-            "constitution": "absent",
-            "principles": {},
-        },
-        "features": {},
+        "feature": feature,
+        "current_phase": phase,
+        "phase_name": PHASES[phase]["name"],
+        "status": status,
+        "artifacts": {a: ("present" if a in present else "absent") for a in TRACKED_ARTIFACTS},
+        "contracts": contracts,
+        "tasks": {"total": len(tasks), "done": sum(t["done"] for t in tasks),
+                  "bugfix": sum(t["kind"] == "BF" for t in tasks)},
+        "bugs": {"total": len(bugs), "open": len(open_bugs), "claimed": len(claimed),
+                 "verified": sum(b["status"] == "verified" for b in bugs),
+                 "superseded": sum(b["status"] == "superseded" for b in bugs)},
+        "derived_at": _now(),
     }
 
 
-def _load_state():
-    if STATE_FILE.exists():
-        try:
-            data = json.loads(STATE_FILE.read_text())
-            # Migrate legacy v1 state (features-only) to v2 (project + features)
-            if data.get("version", 1) < 2:
-                data["version"] = 2
-                if "project" not in data:
-                    data["project"] = {"constitution": "absent", "principles": {}}
-                if "features" not in data:
-                    data["features"] = data.get("features", {})
-            return data
-        except (json.JSONDecodeError, OSError):
-            pass
-    return _default_state()
+def _phase_card(state):
+    """Ten lines to re-read after context compaction."""
+    f = state["feature"]
+    phase = state["current_phase"]
+    allowed = {
+        1: "spec.md only — no code",
+        2: "plan.md, research.md, data-model.md, contracts/*, quickstart.md — no code",
+        3: "tasks.md only — no code",
+        4: "source code, tasks.md [X] marks, bugs.md status→claimed with Evidence",
+        5: "bugs.md only — log before fix; verified needs an oracle",
+        6: "close.md / implementation-summary.md, plan.md Current Design, spec/plan deviation patches",
+    }[phase]
+    gate = {
+        1: "spec.md written → commit spec(phase-1)",
+        2: "plan artifacts written → commit spec(phase-2)",
+        3: "tasks.md written, TDD question asked → commit spec(phase-3)",
+        4: "phase tests output: saved, tasks [X], history entry with Implemented-by → commit per phase; full regression → output: + ci:",
+        5: f"{state['bugs']['open']} open, {state['bugs']['claimed']} claimed-unverified → verify with user/ci/other-agent or run 'bugfix {f}'",
+        6: "every bug verified/superseded, Evidence table filled → one commit spec(phase-6)",
+    }[phase]
+    lines = [
+        f"PHASE CARD — {f}",
+        f"phase: {phase} ({state['phase_name']})  status: {state['status']}",
+        f"allowed writes: {allowed}",
+        f"next gate: {gate}",
+        f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF)",
+        f"bugs: {state['bugs']['open']} open · {state['bugs']['claimed']} claimed · {state['bugs']['verified']} verified",
+        "rules: history entry BEFORE commit · additive-only · evidence before claims (evidence.md)",
+        "ids: call next_id before adding a BUG/T/BF · lint_artifacts before every commit",
+        "ask: an ASK you cannot put to a human is an ASSUMPTION — record it in decisions.md",
+        f"derived from files at {state['derived_at']} — the files are the truth, not this card",
+    ]
+    return "\n".join(lines)
 
 
-def _save_state(state):
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    # Atomic write: a crash mid-write must not corrupt state.json (a torn file
-    # would make _load_state silently return a fresh default state, losing all
-    # feature tracking). Write to a temp file, then atomically replace.
-    tmp = STATE_FILE.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(state, indent=2))
-    tmp.replace(STATE_FILE)
+def _json(obj):
+    return json.dumps(obj, ensure_ascii=False)
 
 
-def _get_feature(state, feature):
-    f = state["features"].get(feature)
-    if f is None:
-        return None
-    for p in PHASES.values():
-        for art in p["artifacts"]:
-            if art not in f.get("artifacts", {}):
-                f.setdefault("artifacts", {})[art] = "absent"
-    return f
-
-
-def _validate_advance(feature, state, from_phase, to_phase):
-    """Validate a phase transition. Returns (ok, reason)."""
-    f = _get_feature(state, feature)
-    if f is None:
-        return False, f"Feature '{feature}' not initialized"
-    if f["status"] == "closed":
-        return False, f"Feature '{feature}' is closed — use reopen"
-
-    current = f["current_phase"]
-    if current != from_phase:
-        return False, f"Current phase is {current} ({PHASES[current]['name']}), not {from_phase}"
-
-    # Constitution phase (0) is project-level — features should never advance from it
-    if from_phase == 0:
-        return False, "Phase 0 (constitution) is project-level — use project_set_constitution, not feature advance_phase"
-
-    prereqs = PREREQUISITES.get(to_phase, [])
-    for req_phase, req_artifact in prereqs:
-        if req_phase > current:
-            phase_name = PHASES[req_phase]["name"]
-            return False, f"Prerequisite not met: phase {req_phase} ({phase_name}) must be complete first"
-        if req_artifact:
-            if f["artifacts"].get(req_artifact) not in ("present", "verified"):
-                return False, f"Prerequisite not met: {req_artifact} must exist"
-
-    return True, None
+def _not_found(feature):
+    available = sorted(d.name for d in SPECS_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")) if SPECS_DIR.is_dir() else []
+    return _json({"error": f"Feature '{feature}' not found", "available_features": available})
 
 
 mcp = FastMCP("spec-kit-workflow")
 
 
-# ── Tools ──────────────────────────────────────────────────────────────────
+# ── Project-level tools ────────────────────────────────────────────────────
 
 
 @mcp.tool(name="project_status")
 def project_status() -> str:
-    """Get project-level workflow state — constitution status, principles.
-
-    Use this to check whether the project has been bootstrapped before
-    routing to feature skills.
+    """Project-level status derived from files: constitution present?, feature count,
+    whether a legacy specs/.spec-kit/state.json still exists (it is ignored — delete it).
     """
-    state = _load_state()
-    proj = state["project"]
-    return json.dumps({
-        "version": state["version"],
-        "constitution": proj["constitution"],
-        "principles": proj.get("principles", {}),
+    features = sorted(d.name for d in SPECS_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")) if SPECS_DIR.is_dir() else []
+    return _json({
+        "version": 3,
+        "constitution": "present" if (SPECS_DIR / "constitution.md").exists() else "absent",
+        "git_conventions": "present" if (SPECS_DIR / "git-conventions.md").exists() else "absent",
+        "features": len(features),
+        "legacy_state_file": LEGACY_STATE_FILE.exists(),
+        "note": "state is derived from files on every call; nothing is persisted by this server",
     })
 
 
 @mcp.tool(name="project_set_constitution")
 def project_set_constitution(status: str = "present", principles: str = "") -> str:
-    """Set project constitution status after creation/review.
+    """Confirm the constitution after writing it. Nothing is stored: the call checks that
+    specs/constitution.md exists (status 'present') or does not ('absent') and reports.
 
     Args:
-        status: 'present' or 'absent'
-        principles: Optional JSON string of parsed principle key-value pairs
+        status: 'present' or 'absent' — must match the file on disk
+        principles: Optional JSON object of parsed principles (validated, echoed back)
     """
-    state = _load_state()
-    state["project"]["constitution"] = status
+    exists = (SPECS_DIR / "constitution.md").exists()
+    actual = "present" if exists else "absent"
+    parsed = {}
     if principles:
         try:
-            state["project"]["principles"] = json.loads(principles)
+            parsed = json.loads(principles)
         except json.JSONDecodeError:
-            return json.dumps({"error": "principles must be valid JSON object", "status": status})
-    _save_state(state)
-    return json.dumps({"success": True, "constitution": status, "principles": state["project"].get("principles", {})})
+            return _json({"error": "principles must be valid JSON object", "constitution": actual})
+    if status != actual:
+        return _json({"error": f"specs/constitution.md is {actual} on disk, not '{status}' — write the file first", "constitution": actual})
+    return _json({"success": True, "constitution": actual, "principles": parsed})
+
+
+# ── Feature tools ──────────────────────────────────────────────────────────
 
 
 @mcp.tool(name="init_feature")
 def init_feature(feature: str, name: str = None, mode: str = "specify") -> str:
-    """Initialize a new feature in the workflow state.
-
-    Features start at phase 1 (specify). The constitution is project-level
-    state tracked separately — see project_status tool.
+    """Create specs/<feature>/ with a history.md header. Fails if the directory exists.
 
     Args:
         feature: Feature ID (e.g., 003-user-auth)
         name: Human-readable name (defaults to feature ID)
-        mode: specify, bugfix, or reopen
+        mode: specify, bugfix, or reopen (recorded in the history header only)
     """
-    name = name or feature
-    state = _load_state()
-    if feature in state["features"]:
-        return json.dumps({"error": f"Feature '{feature}' already exists", "state": _get_feature(state, feature)})
-
-    # Features start at phase 1 (specify) — constitution is project-level
-    state["features"][feature] = {
-        "name": name,
-        "mode": mode,
-        "current_phase": 1,
-        "status": "active",
-        "artifacts": {},
-        "bugs": [],
-        "last_transition": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "history_count": 0,
-    }
-    _save_state(state)
-    return json.dumps({"success": True, "state": _get_feature(state, feature)})
+    fd = _feature_dir(feature)
+    if fd.exists():
+        return _json({"error": f"Feature '{feature}' already exists", "state": _derive(feature)})
+    fd.mkdir(parents=True)
+    (fd / "history.md").write_text(f"# Process History: {name or feature}\n\n> mode: {mode} · created {_now()}\n")
+    return _json({"success": True, "state": _derive(feature)})
 
 
 @mcp.tool(name="get_feature_state")
 def get_feature_state(feature: str) -> str:
-    """Get current workflow state for a feature — phase, artifacts, bugs, status.
+    """Derive the feature's phase, status, artifacts, task and bug counts from its files.
 
     Args:
         feature: Feature ID
     """
-    state = _load_state()
-    f = _get_feature(state, feature)
-    if f is None:
-        return json.dumps({"error": f"Feature '{feature}' not found", "available_features": list(state["features"].keys())})
-    return json.dumps({"state": f})
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    return _json({"state": state, "phase_card": _phase_card(state)})
 
 
 @mcp.tool(name="get_next_actions")
 def get_next_actions(feature: str) -> str:
-    """Get available actions from current phase — includes advance, bugfix, verify, close.
+    """Available actions from the derived phase, plus the ten-line PHASE CARD. Call this
+    after context compaction and before any write.
 
     Args:
         feature: Feature ID
     """
-    state = _load_state()
-    f = _get_feature(state, feature)
-    if f is None:
-        return json.dumps({"error": f"Feature '{feature}' not found"})
-
-    phase = f["current_phase"]
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    phase, status = state["current_phase"], state["status"]
     actions = []
+    if status == "closed":
+        actions.append({"action": "reopen_feature", "description": "Reopen for bugfixing (log bugs via spec-kit-test first)"})
+    elif phase < 6:
+        nxt = phase + 1
+        ok, reason = _validate_phase(state, nxt)
+        a = {"action": f"advance_to_{PHASES[nxt]['name']}", "phase": nxt,
+             "description": f"Advance to phase {nxt} ({PHASES[nxt]['name']})"}
+        if not ok:
+            a.update({"blocked": True, "reason": reason})
+        actions.append(a)
+    if state["bugs"]["open"]:
+        actions.append({"action": "bugfix", "description": f"'bugfix {feature}' — {state['bugs']['open']} open bug(s)"})
+    if state["bugs"]["claimed"]:
+        actions.append({"action": "verify", "description": f"{state['bugs']['claimed']} claimed bug(s) need an oracle (user / ci / review:<other-agent>)"})
+    if phase == 6 and status != "closed":
+        actions.append({"action": "close_feature", "description": "Write close.md / implementation-summary.md"})
+    return _json({"current_phase": phase, "phase_name": state["phase_name"], "status": status,
+                  "available_actions": actions, "phase_card": _phase_card(state)})
 
-    if phase < 6 and f["status"] in ("active",):
-        next_phase = phase + 1
-        name = PHASES[next_phase]["name"]
-        ok, reason = _validate_advance(feature, state, phase, next_phase)
-        if ok:
-            actions.append({"action": f"advance_to_{name}", "phase": next_phase, "description": f"Advance to phase {next_phase} ({name})"})
-        else:
-            actions.append({"action": f"advance_to_{name}", "phase": next_phase, "blocked": True, "reason": reason})
 
-    # Bug state lives in bugs.md (file-based, single source of truth).
-    # The MCP server cannot see bug status — bugfix/verify routing is done
-    # by parsing bugs.md in the skills, not here.
-
-    return json.dumps({"current_phase": phase, "phase_name": PHASES[phase]["name"], "status": f["status"], "available_actions": actions})
+def _validate_phase(state, to_phase):
+    fd = _feature_dir(state["feature"])
+    for art in PREREQUISITES.get(to_phase, []):
+        if not (fd / art).exists():
+            return False, f"Prerequisite not met: {art} must exist"
+    if to_phase == 6:
+        bugs_file = fd / "bugs.md"
+        if bugs_file.exists():
+            bugs = _parse_bugs(bugs_file.read_text(errors="replace"))
+            blocking = [b["id"] for b in bugs if b["status"] in ("open", "in-progress")]
+            if blocking:
+                return False, f"Prerequisite not met: open bugs {blocking} — run bugfix first"
+    return True, None
 
 
 @mcp.tool(name="advance_phase")
 def advance_phase(feature: str, from_phase: int, artifacts_created: list[str] = None) -> str:
-    """Advance to the next phase. Validates prerequisites and artifact state.
+    """Validate that the feature may leave `from_phase`: the derived phase must be
+    from_phase (or already from_phase + 1, since the artifacts were just written) and
+    every artifact named in artifacts_created plus the next phase's prerequisites must
+    exist on disk. Nothing is written — the artifacts ARE the state.
 
     Args:
         feature: Feature ID
-        from_phase: Current phase number (validated against stored state)
-        artifacts_created: Artifact files created (e.g., spec.md, plan.md)
+        from_phase: The phase the skill believes it is completing
+        artifacts_created: Artifact files the skill wrote (verified to exist)
     """
     artifacts_created = artifacts_created or []
-    state = _load_state()
-    f = _get_feature(state, feature)
-    if f is None:
-        return json.dumps({"error": f"Feature '{feature}' not found"})
-    if f["current_phase"] != from_phase:
-        return json.dumps({"error": f"Phase mismatch: expected {from_phase}, current is {f['current_phase']}"})
-
-    # Phase 0 is project-level — features use project_set_constitution instead
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
     if from_phase == 0:
-        return json.dumps({"error": "Phase 0 (constitution) is project-level — use project_set_constitution tool instead"})
-
+        return _json({"error": "Phase 0 (constitution) is project-level — use project_set_constitution"})
+    if state["status"] == "closed":
+        return _json({"error": f"Feature '{feature}' is closed — use reopen"})
+    # The skill calls this AFTER writing its artifacts, so the files may already
+    # place the feature in from_phase + 1. Anything else is a mismatch.
+    if state["current_phase"] not in (from_phase, from_phase + 1):
+        return _json({"error": f"Phase mismatch: expected {from_phase}, derived phase is {state['current_phase']} ({state['phase_name']}) from the files on disk"})
+    fd = _feature_dir(feature)
+    missing = [a for a in artifacts_created if not (fd / a).exists()]
+    if missing:
+        return _json({"error": f"artifacts_created not on disk: {missing} — write the file before syncing"})
     to_phase = from_phase + 1
-
-    # Mark explicitly provided artifacts
-    for art in artifacts_created:
-        f["artifacts"][art] = "present"
-
-    # Auto-mark required artifacts for the completed phase (if still absent)
-    for art in PHASES[from_phase]["artifacts"]:
-        if f["artifacts"].get(art) == "absent":
-            f["artifacts"][art] = "present"
-
-    # Validate after artifacts are updated
-    ok, reason = _validate_advance(feature, state, from_phase, to_phase)
+    ok, reason = _validate_phase(state, to_phase)
     if not ok:
-        return json.dumps({"error": reason})
-
-    f["current_phase"] = to_phase
-    f["last_transition"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    f["history_count"] = f.get("history_count", 0) + 1
-    _save_state(state)
-
-    return json.dumps({"success": True, "from_phase": from_phase, "to_phase": to_phase, "phase_name": PHASES[to_phase]["name"], "artifacts_updated": artifacts_created, "state": _get_feature(state, feature)})
+        return _json({"error": reason})
+    # Re-derive: the written artifacts may already move the feature forward.
+    after = _derive(feature)
+    return _json({"success": True, "from_phase": from_phase, "to_phase": to_phase,
+                  "phase_name": PHASES[to_phase]["name"], "artifacts_verified": artifacts_created,
+                  "state": after, "phase_card": _phase_card(after)})
 
 
 @mcp.tool(name="list_features")
 def list_features() -> str:
-    """List all registered features with phase, status, and bug counts."""
-    state = _load_state()
+    """List every specs/<feature>/ directory with derived phase, status and bug counts."""
+    if not SPECS_DIR.is_dir():
+        return _json({"error": "specs/ directory not found"})
     result = []
-    for fid, f in state["features"].items():
-        open_bugs = len([b for b in f.get("bugs", []) if b.get("status") == "open"])
-        result.append({"feature": fid, "name": f.get("name", fid), "phase": f["current_phase"], "phase_name": PHASES[f["current_phase"]]["name"], "status": f["status"], "open_bugs": open_bugs})
-    return json.dumps({"features": result})
+    for d in sorted(SPECS_DIR.iterdir()):
+        if d.is_dir() and not d.name.startswith("."):
+            s = _derive(d.name)
+            result.append({"feature": d.name, "phase": s["current_phase"], "phase_name": s["phase_name"],
+                           "status": s["status"], "open_bugs": s["bugs"]["open"], "claimed_bugs": s["bugs"]["claimed"]})
+    return _json({"features": result})
 
 
 @mcp.tool(name="reopen_feature")
 def reopen_feature(feature: str) -> str:
-    """Reopen a closed feature for bugfixing.
+    """Check that a feature can be reopened (it must be closed on disk) and return the
+    reopen branch pattern. Reopening is materialised by logging an open bug in bugs.md
+    via spec-kit-test — this call writes nothing.
 
     Args:
         feature: Feature ID
     """
-    state = _load_state()
-    f = _get_feature(state, feature)
-    if f is None:
-        return json.dumps({"error": f"Feature '{feature}' not found"})
-    if f["status"] not in ("closed",):
-        return json.dumps({"error": f"Feature '{feature}' is not closed (status: {f['status']})"})
-
-    f["status"] = "reopened"
-    f["current_phase"] = 5
-    f["last_transition"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    _save_state(state)
-
-    return json.dumps({"success": True, "feature": feature, "new_status": "reopened", "current_phase": f["current_phase"], "next": "Write bugs to bugs.md via spec-kit-test, or run 'bugfix [feature]'"})
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    if state["status"] not in ("closed", "reopened"):
+        return _json({"error": f"Feature '{feature}' is not closed (status: {state['status']})"})
+    return _json({"success": True, "feature": feature, "status": state["status"],
+                  "next": "Log the bug(s) in bugs.md via spec-kit-test (Status: open), then run 'bugfix [feature]'",
+                  "branch_hint": "{original_prefix}/" + feature + "{reopen_suffix}"})
 
 
 @mcp.tool(name="close_feature")
 def close_feature(feature: str) -> str:
-    """Mark feature as closed after Phase 6 completes.
+    """Validate the close: a close document exists, no bug is open/in-progress, and every
+    verified bug carries a Verified-by oracle. Reports claimed-unverified bugs. Writes nothing.
 
     Args:
         feature: Feature ID
     """
-    state = _load_state()
-    f = _get_feature(state, feature)
-    if f is None:
-        return json.dumps({"error": f"Feature '{feature}' not found"})
-    if f["current_phase"] < 6:
-        return json.dumps({"error": f"Feature '{feature}' is at phase {f['current_phase']} — must complete phase 6 first"})
-
-    f["status"] = "closed"
-    f["last_transition"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    _save_state(state)
-    return json.dumps({"success": True, "feature": feature, "status": "closed"})
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    fd = _feature_dir(feature)
+    if not any((fd / c).exists() for c in CLOSE_DOCS):
+        return _json({"error": f"Feature '{feature}' has no close.md / implementation-summary.md — write it first (phase {state['current_phase']})"})
+    problems = []
+    unverified = []
+    if (fd / "bugs.md").exists():
+        for b in _parse_bugs((fd / "bugs.md").read_text(errors="replace")):
+            if b["status"] in ("open", "in-progress"):
+                problems.append(f"{b['id']} is {b['status']}")
+            elif b["status"] == "claimed":
+                unverified.append(b["id"])
+            elif b["status"] == "verified" and not VERIFIED_BY_RE.match(b["verified_by"]):
+                problems.append(f"{b['id']} is verified without a Verified-by oracle")
+    if problems:
+        return _json({"error": "Cannot close: " + "; ".join(problems)})
+    return _json({"success": True, "feature": feature, "status": "closed",
+                  "claimed_unverified": unverified,
+                  "note": "list claimed_unverified bugs in the close document" if unverified else "all bugs verified or superseded"})
 
 
 @mcp.tool(name="update_artifact")
 def update_artifact(feature: str, artifact: str, status: str = "present") -> str:
-    """Update artifact status (present, absent, verified).
+    """Confirm an artifact's status against disk after writing it. 'present'/'verified'
+    require the file to exist; 'absent' requires it not to. Nothing is stored.
 
     Args:
         feature: Feature ID
         artifact: Artifact filename (e.g., spec.md, plan.md)
         status: present, absent, or verified
     """
-    state = _load_state()
-    f = _get_feature(state, feature)
-    if f is None:
-        return json.dumps({"error": f"Feature '{feature}' not found"})
-
-    f["artifacts"][artifact] = status
-    _save_state(state)
-    return json.dumps({"success": True, "feature": feature, "artifact": artifact, "status": status})
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    exists = (_feature_dir(feature) / artifact).exists()
+    if status in ("present", "verified") and not exists:
+        return _json({"error": f"{artifact} is not on disk — write it before syncing"})
+    if status == "absent" and exists:
+        return _json({"error": f"{artifact} exists on disk — it is not absent"})
+    return _json({"success": True, "feature": feature, "artifact": artifact, "status": status})
 
 
 @mcp.tool(name="auto_detect_features")
 def auto_detect_features(feature: str = None) -> str:
-    """Scan specs/ directory and reconcile state — auto-registers unknown features.
-
-    Detects project-level constitution from specs/constitution.md (not per-feature).
-    Detects feature phase from per-feature artifact files.
+    """Scan specs/ and report every feature's derived state. Also reports whether a legacy
+    specs/.spec-kit/state.json is present (ignored; delete it and gitignore the directory).
 
     Args:
         feature: Optional feature ID to scan (scans all if omitted)
     """
-    state = _load_state()
-    specs_dir = Path("specs")
-    if not specs_dir.exists():
-        return json.dumps({"error": "specs/ directory not found"})
-
-    # Detect project-level constitution
-    proj_constitution = specs_dir / "constitution.md"
-    if proj_constitution.exists():
-        state["project"]["constitution"] = "present"
-    else:
-        state["project"]["constitution"] = "absent"
-
-    # Detect features
-    feature_dirs = [d for d in specs_dir.iterdir() if d.is_dir() and d.name != ".spec-kit"]
-    found = []
-
-    for fd in feature_dirs:
-        fid = fd.name
-        if feature and fid != feature:
-            continue
-        f = _get_feature(state, fid)
-        if f is None:
-            artifacts_present = set()
-            for p in fd.iterdir():
-                if p.suffix == ".md":
-                    artifacts_present.add(p.name)
-
-            # Phase 0 (constitution) is project-level — features start at phase 1
-            detected_phase = 1
-            for phase_num, phase_info in sorted(PHASES.items()):
-                if phase_num == 0:
-                    continue  # skip project-level phase for feature detection
-                all_present = all((art in artifacts_present) for art in phase_info["artifacts"])
-                if all_present:
-                    detected_phase = phase_num
-
-            state["features"][fid] = {
-                "name": fid,
-                "mode": "specify",
-                "current_phase": detected_phase,
-                "status": "active",
-                "artifacts": {a: "present" if a in artifacts_present else "absent" for p in PHASES.values() for a in p["artifacts"]},
-                "bugs": [],
-                "last_transition": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "history_count": 0,
-            }
-            found.append(fid)
-
-    _save_state(state)
-    return json.dumps({
+    if not SPECS_DIR.is_dir():
+        return _json({"error": "specs/ directory not found"})
+    found = {}
+    for d in sorted(SPECS_DIR.iterdir()):
+        if d.is_dir() and not d.name.startswith(".") and (feature is None or d.name == feature):
+            found[d.name] = _derive(d.name)
+    return _json({
         "success": True,
         "features_detected": len(found),
-        "features": list(state["features"].keys()),
-        "project": {"constitution": state["project"]["constitution"]},
+        "features": list(found.keys()),
+        "states": found,
+        "project": {"constitution": "present" if (SPECS_DIR / "constitution.md").exists() else "absent"},
+        "legacy_state_file": LEGACY_STATE_FILE.exists(),
     })
+
+
+# ── Enforcement tools ──────────────────────────────────────────────────────
+
+
+@mcp.tool(name="next_id")
+def next_id(feature: str, kind: str) -> str:
+    """Allocate the next sequential id by scanning the files: kind 'BUG' (bugs.md),
+    'T' (tasks.md T###) or 'BF' (tasks.md BF-###). Call before adding an entry.
+
+    Args:
+        feature: Feature ID
+        kind: BUG | T | BF
+    """
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    fd = _feature_dir(feature)
+    kind = kind.upper()
+    if kind == "BUG":
+        nums = [b["num"] for b in _parse_bugs((fd / "bugs.md").read_text(errors="replace"))] if (fd / "bugs.md").exists() else []
+        fmt = "BUG-{:03d}"
+    elif kind in ("T", "BF"):
+        tasks = _parse_tasks((fd / "tasks.md").read_text(errors="replace")) if (fd / "tasks.md").exists() else []
+        nums = [t["num"] for t in tasks if t["kind"] == kind]
+        fmt = "T{:03d}" if kind == "T" else "BF-{:03d}"
+    else:
+        return _json({"error": "kind must be BUG, T or BF"})
+    n = (max(nums) + 1) if nums else 1
+    return _json({"success": True, "kind": kind, "next_id": fmt.format(n), "existing": len(nums)})
+
+
+@mcp.tool(name="lint_artifacts")
+def lint_artifacts(feature: str) -> str:
+    """Lint bugs.md, tasks.md and history.md against the spec-kit schema: status vocabulary,
+    Verified-by on verified bugs, Evidence on claimed bugs, ascending ids, summary-table
+    counts, history header present. Returns findings; call before every commit.
+
+    Args:
+        feature: Feature ID
+    """
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    fd = _feature_dir(feature)
+    findings = []
+
+    if (fd / "bugs.md").exists():
+        text = (fd / "bugs.md").read_text(errors="replace")
+        bugs = _parse_bugs(text)
+        nums = [b["num"] for b in bugs]
+        if nums != sorted(nums) or len(set(nums)) != len(nums):
+            findings.append({"file": "bugs.md", "severity": "error", "msg": f"BUG ids not strictly ascending: {nums}"})
+        for b in bugs:
+            if b["raw_status"] not in BUG_STATUSES:
+                sev = "warning" if b["raw_status"] in LEGACY_BUG_STATUSES else "error"
+                findings.append({"file": "bugs.md", "severity": sev, "msg": f"{b['id']}: status '{b['raw_status'] or '(empty)'}' not in {sorted(BUG_STATUSES)}"})
+            if b["status"] == "verified" and not VERIFIED_BY_RE.match(b["verified_by"]):
+                findings.append({"file": "bugs.md", "severity": "error", "msg": f"{b['id']}: verified without Verified-by (user | ci:<id> | review:<agent>)"})
+            if b["status"] == "claimed":
+                blk = text.split(f"### {b['id']}:", 1)[1].split("\n### ", 1)[0]
+                if not re.search(r"\*\*Evidence\*\*:\s*(?!\[)(output:|probe:)", blk):
+                    findings.append({"file": "bugs.md", "severity": "warning", "msg": f"{b['id']}: claimed without Evidence (output:/probe:)"})
+        if "## Summary" in text:
+            summary = text.split("## Summary", 1)[1]
+            rows = set(re.findall(r"^\| (BUG-\d+) ", summary, re.M))
+            missing = [b["id"] for b in bugs if b["id"] not in rows]
+            if missing:
+                findings.append({"file": "bugs.md", "severity": "error", "msg": f"Summary table missing rows for {missing}"})
+            tm = re.search(r"\*\*Total Bugs\*\*:\s*(\d+)", summary)
+            if tm and int(tm.group(1)) != len(bugs):
+                findings.append({"file": "bugs.md", "severity": "error", "msg": f"Total Bugs says {tm.group(1)}, found {len(bugs)}"})
+
+    if (fd / "tasks.md").exists():
+        tasks = _parse_tasks((fd / "tasks.md").read_text(errors="replace"))
+        for kind in ("T", "BF"):
+            nums = [t["num"] for t in tasks if t["kind"] == kind]
+            if nums != sorted(nums):
+                findings.append({"file": "tasks.md", "severity": "error", "msg": f"{kind} ids not ascending: {nums}"})
+            dup = {n for n in nums if nums.count(n) > 1}
+            if dup:
+                findings.append({"file": "tasks.md", "severity": "error", "msg": f"duplicate {kind} ids: {sorted(dup)}"})
+
+    if (fd / "history.md").exists():
+        if not (fd / "history.md").read_text(errors="replace").lstrip().startswith("#"):
+            findings.append({"file": "history.md", "severity": "warning", "msg": "missing title header"})
+    elif state["current_phase"] > 1 or state["status"] != "new":
+        findings.append({"file": "history.md", "severity": "error", "msg": "history.md missing — every feature with artifacts must have one"})
+
+    errors = sum(f["severity"] == "error" for f in findings)
+    return _json({"success": errors == 0, "errors": errors, "warnings": len(findings) - errors, "findings": findings})
+
+
+@mcp.tool(name="timestamp")
+def timestamp() -> str:
+    """The real current UTC time (ISO 8601, seconds). Use it for every history entry,
+    evidence file header and date field — never type a timestamp from memory.
+    """
+    return _json({"utc": _now()})
+
+
+@mcp.tool(name="history_guard")
+def history_guard(feature: str, phase: str) -> str:
+    """Pre-commit guard: is there a history.md entry mentioning `phase` that is newer than
+    the last commit touching specs/<feature>/? Returns ok=false with the reason otherwise.
+
+    Args:
+        feature: Feature ID
+        phase: Text that must appear in the entry header (e.g. 'Phase 2', 'BF-014', 'Regression')
+    """
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    hist = _feature_dir(feature) / "history.md"
+    if not hist.exists():
+        return _json({"ok": False, "reason": "history.md missing"})
+    entries = [(m.group(1), m.group(2)) for m in _HISTORY_ENTRY_RE.finditer(hist.read_text(errors="replace"))]
+    matching = [(ts, hdr) for ts, hdr in entries if phase.lower() in hdr.lower()]
+    if not matching:
+        return _json({"ok": False, "reason": f"no history entry mentions '{phase}'", "entries": len(entries)})
+    try:
+        last_commit = subprocess.run(["git", "log", "-1", "--format=%cI", "--", str(_feature_dir(feature))],
+                                     capture_output=True, text=True, check=False).stdout.strip()
+    except OSError:
+        last_commit = ""
+    newest_ts = max(ts for ts, _ in matching)
+    if last_commit:
+        try:
+            lc = datetime.datetime.fromisoformat(last_commit.replace("Z", "+00:00"))
+            et = datetime.datetime.fromisoformat(newest_ts.replace("Z", "+00:00"))
+            if et.tzinfo is None:
+                et = et.replace(tzinfo=datetime.timezone.utc)
+            if et < lc:
+                return _json({"ok": False, "reason": f"newest '{phase}' entry ({newest_ts}) predates the last commit ({last_commit}) — append a new entry",
+                              "matching_entries": len(matching)})
+        except ValueError:
+            pass
+    return _json({"ok": True, "matching_entries": len(matching), "newest": newest_ts, "last_commit": last_commit or None})
 
 
 # ── Entry point ────────────────────────────────────────────────────────────

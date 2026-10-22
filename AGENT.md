@@ -20,7 +20,7 @@ For users, see `user-guide.md` (workflow docs) and `README.md` (quick start).
 | Author | Hermes Agent |
 | Maturity | Active development — `feat/mcp-orchestrator` branch |
 | Source of truth for specs | `specs/` directory in consumer projects |
-| Source of truth for state | `specs/.spec-kit/state.json` (MCP) OR filesystem artifact detection (fallback) |
+| Source of truth for state | the files under `specs/<feature>/` — derived by the MCP server (v3) or by the skills' phase-detection table (fallback) |
 
 ---
 
@@ -49,7 +49,7 @@ The system has three operational layers plus an optional MCP state layer:
 ├──────────────────────────────────────────────────────────────┤
 │              MCP State Management Layer (optional)            │
 │  FastMCP stdio server — 11 tools for deterministic state     │
-│  State stored in specs/.spec-kit/state.json                  │
+│  No stored state — derived from specs/<feature>/ per call     │
 │  Fallback: filesystem-based artifact detection               │
 │  All skills backward-compatible with or without MCP          │
 └──────────────────────────────────────────────────────────────┘
@@ -158,9 +158,10 @@ Phase 6 (close)        — needs implement + test (phases 4 + 5)
 
 ### Phase Transitions via MCP
 
-When the MCP server is active, every phase transition goes through
-`mcp_spec_kit_advance_phase` which validates feature-level prerequisites,
-updates artifact status, and records the transition timestamp.
+When the MCP server is active, every phase transition is **validated** by
+`mcp_spec_kit_advance_phase` against the files on disk (derived phase must
+match, required artifacts must exist). The server writes nothing — the
+artifacts are the state.
 
 **Rule**: Only the skill that OWNS a phase transition may call `advance_phase`.
 The specify skill advances 1→2. The constitution skill does NOT call
@@ -173,25 +174,31 @@ outside its owning skill context.
 
 ### Location
 - Source: `spec-kit-mcp-server/server.py`
-- Installed to: `~/.hermes/skills/spec-kit/mcp-server/server.py`
-- State file: `specs/.spec-kit/state.json` (per-project)
+- Installed to: `~/.hermes/skills/spec-kit/mcp-server/server.py` (Claude Code symlinks to it)
+- State: **none** — derived from `specs/<feature>/` on every call (v3). A legacy
+  `specs/.spec-kit/state.json` is ignored; consumer projects should delete it
+  and gitignore `specs/.spec-kit/`.
 - Framework: FastMCP (stdin/stdout transport)
 
 ### MCP Tools (prefixed `mcp_spec_kit_` in Hermes)
 
 | Tool | Purpose | When to Call |
 |------|---------|-------------|
-| `init_feature` | Register new feature in state (starts at phase 1) | In specify skill when creating a new feature |
-| `get_feature_state` | Get phase, artifacts, bugs for a feature | Phase detection, status queries |
-| `get_next_actions` | Available actions from current phase | After any phase work, to show user what's next |
-| `advance_phase` | Validate and transition to next phase | In the phase skill that owns the transition |
-| `project_status` | Get project-level state (constitution status) | Workflow orchestrator bootstrap check |
-| `project_set_constitution` | Mark constitution as present after creation | In constitution skill (NOT advance_phase) |
-| `list_features` | List all registered features | Status queries, diagnostics |
-| `reopen_feature` | Reopen closed feature | Reopen flow |
-| `close_feature` | Mark feature closed | After Phase 6 close is written |
-| `update_artifact` | Sync artifact status independently | After writing an artifact file |
-| `auto_detect_features` | Scan specs/ dir, reconcile state. Detects project constitution from `specs/constitution.md` | First-use, drift recovery |
+| `init_feature` | Create `specs/<feature>/` + history.md header | In specify skill when creating a new feature |
+| `get_feature_state` | Derived phase, status, artifacts, task/bug counts + phase card | Phase detection, status queries |
+| `get_next_actions` | Available actions + the ten-line **phase card** | Before any write; after context compaction |
+| `advance_phase` | Validate a transition against the files (writes nothing) | In the phase skill that owns the transition |
+| `project_status` | Constitution/git-conventions present?, feature count, legacy state file? | Workflow bootstrap check |
+| `project_set_constitution` | Confirm `specs/constitution.md` exists (stores nothing) | In constitution skill |
+| `list_features` | Every feature's derived phase/status/bug counts | Status queries, diagnostics |
+| `reopen_feature` | Check closed-on-disk, return branch hint (writes nothing) | Reopen flow |
+| `close_feature` | Validate close: close doc exists, no open bugs, verified bugs have Verified-by; lists claimed-unverified | Before the Phase 6 commit |
+| `update_artifact` | Confirm an artifact is on disk (or absent) | After writing an artifact file |
+| `auto_detect_features` | Derived state of every feature; flags a legacy state.json | First-use, diagnostics |
+| `next_id` | Next BUG-NNN / T### / BF-### by scanning the files | Before adding an entry |
+| `lint_artifacts` | Schema lint of bugs.md / tasks.md / history.md | Before every commit |
+| `timestamp` | Real UTC time | Every history entry and evidence file |
+| `history_guard` | Is there a fresh history entry for this phase since the last commit? | Pre-commit guard |
 
 ### Critical MCP Rules
 
@@ -207,17 +214,21 @@ outside its owning skill context.
 - **Constitution is project state** — features never check or advance it. The
   `project_status` tool is read-only for all skills except `spec-kit-constitution`.
 - **Fallback** — when MCP is not configured, all skills fall back to filesystem
-  artifact detection. No code changes needed.
+  artifact detection, `date -u` for timestamps and manual id counting.
+- **No persistence** — the server never writes under `specs/` except
+  `init_feature` (directory + history header). If a tool "succeeds", it means
+  the files already prove the state; if it errors, fix the files.
 
 ### MCP Error Handling
 
 The server returns JSON with either `{"success": true, ...}` or
 `{"error": "...", ...}`. Skills must check for `"error"` key before proceeding.
 Common errors:
-- `"Feature 'X' not found"` — call `init_feature` first
-- `"Phase mismatch"` — feature is in a different phase than expected
-- `"Feature 'X' is closed"` — must `reopen_feature` first
-- `"Prerequisite not met"` — required artifact is absent
+- `"Feature 'X' not found"` — `specs/X/` does not exist; `init_feature` creates it
+- `"Phase mismatch"` — the files put the feature in a different phase than the skill assumed
+- `"not on disk"` — the skill claimed an artifact it never wrote
+- `"Feature 'X' is closed"` — log an open bug via spec-kit-test to reopen
+- `"Prerequisite not met"` — required artifact is absent or bugs are open
 
 ---
 
@@ -368,8 +379,8 @@ Run validation tests before committing to catch:
 | Skill directory | `<name>/SKILL.md` | `spec-kit-plan/SKILL.md` |
 | Template | `<name>-template.md` | `spec-template.md` |
 | Reference | `<name>.md` | `preflight.md` |
-| State dir | `specs/.spec-kit/` | per-project |
-| State file | `specs/.spec-kit/state.json` | per-project |
+| Evidence dir | `specs/<feature>/evidence/` | per-feature, committed |
+| (legacy) State file | `specs/.spec-kit/state.json` | ignored since v3 — delete + gitignore |
 
 ### Git Conventions
 

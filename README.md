@@ -132,27 +132,35 @@ in the user-guide.
 
 ## MCP Server (Optional)
 
-An MCP server (`spec-kit-mcp-server/server.py`) provides deterministic workflow state
-management — replacing LLM-based phase/artifact detection with structured JSON-RPC calls
-over stdio. 11 tools exposed as `mcp_spec_kit_*` in Hermes.
+An MCP server (`spec-kit-mcp-server/server.py`) is a **derive-and-enforce** service: it
+keeps no state, derives every feature's phase from the files under `specs/<feature>/` on
+each call, and does the things an agent does badly — id allocation, artifact lint, real
+timestamps, the history-before-commit guard, and a ten-line phase card to re-read after
+context compaction. 15 tools exposed as `mcp_spec_kit_*` in Hermes (`mcp__spec-kit__*` in
+Claude Code).
 
 **Tools:**
 
 | Tool | Purpose |
 |------|---------|
-| `init_feature` | Register a new feature in state |
-| `get_feature_state` | Get current phase, artifacts |
-| `get_next_actions` | Available actions from current state |
-| `advance_phase` | Validate and transition to next phase |
-| `project_status` | Get project-level state (constitution) |
-| `project_set_constitution` | Mark constitution as present after creation |
-| `list_features` | List all registered features |
-| `reopen_feature` | Reopen closed feature |
-| `close_feature` | Close feature after Phase 6 |
-| `update_artifact` | Update artifact status |
-| `auto_detect_features` | Scan specs/ dir, reconcile state |
+| `init_feature` | Create `specs/<feature>/` with a history.md header |
+| `get_feature_state` | Derived phase, artifacts, task/bug counts, phase card |
+| `get_next_actions` | Available actions + the phase card |
+| `advance_phase` | Validate a transition against the files (writes nothing) |
+| `project_status` | Constitution present?, feature count, legacy state file? |
+| `project_set_constitution` | Confirm `specs/constitution.md` exists |
+| `list_features` | Every feature's derived state |
+| `reopen_feature` | Check closed, return branch hint |
+| `close_feature` | Validate the close (bugs verified with Verified-by; lists claimed-unverified) |
+| `update_artifact` | Confirm an artifact is on disk |
+| `auto_detect_features` | Derived state of all features |
+| `next_id` | Next BUG / T / BF id by scanning the files |
+| `lint_artifacts` | Schema lint of bugs.md, tasks.md, history.md |
+| `timestamp` | Real UTC time |
+| `history_guard` | Fresh history entry since the last commit? |
 
-**State file**: `specs/.spec-kit/state.json` (per-project).
+**State file**: none. The files are the state. A legacy `specs/.spec-kit/state.json` is
+ignored — delete it and add `specs/.spec-kit/` to `.gitignore` (the gitignore template does).
 
 **Bug tracking is file-based**: bugs live in `specs/NNN-name/bugs.md` — the single
 source of truth. The MCP server intentionally has no bug tools; bugfix routing
@@ -171,7 +179,7 @@ Activate in Hermes with `/reload-mcp`.
 
 **Claude Code**: `install-claude.sh` registers the same server at user scope
 (`claude mcp add -s user spec-kit …`); the tools appear as `mcp__spec-kit__<tool>`.
-Both agents read and write the same `specs/.spec-kit/state.json`.
+Both agents derive the same state from the same files; nothing is persisted.
 
 Full docs: [spec-kit-mcp-server/README.md](spec-kit-mcp-server/README.md)
 

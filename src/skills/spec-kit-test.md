@@ -65,6 +65,8 @@ User describes in natural language. Agent structures into:
 
 Status vocabulary and the oracle rule: `spec-kit/references/evidence.md` (open → in-progress → claimed → verified; legacy resolved/fixed = claimed).
 
+**Id**: with MCP, `mcp_spec_kit_next_id(feature, kind="BUG")` gives the number; without MCP, highest existing + 1.
+
 **Smart insert**: INSERT the new bug entry BEFORE the `---` separator that precedes `## Summary`. Then UPDATE the Summary table: add a row for the new bug, increment counts, and correct the open/in-progress/resolved/verified tallies. Never place new bugs after `---` or inside `## Summary`.
 
 After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
@@ -93,6 +95,11 @@ ELSE:
 ```
 IF all bugs verified:
   REPORT: "All bugs verified — run 'close [feature]' to complete."
+```
+
+### MCP checks (optional, when MCP server is configured)
+```text
+CALL mcp_spec_kit_lint_artifacts(feature="[feature]")   # status vocabulary, Verified-by, summary table — 0 errors before commit
 ```
 
 ### Append to history.md and Commit

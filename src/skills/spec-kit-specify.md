@@ -76,14 +76,16 @@ Populate with:
 Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
 
 
-### MCP state sync (optional, when MCP server is configured)
+### MCP checks (optional, when MCP server is configured)
 
-After creating the artifact(s) and before committing, sync workflow state
-to the MCP server so it stays consistent across phases.
+The server keeps no state — it derives the phase from the files and validates.
+After writing the artifact(s) and before committing:
 
 ```text
-CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="spec.md", status="present")
-CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=1, artifacts_created=["spec.md"])
+CALL mcp_spec_kit_init_feature(feature="[feature]", name="[name]")   # creates the dir + history.md header (skip if it exists)
+CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="spec.md", status="present")   # confirms the file is on disk
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=1, artifacts_created=["spec.md"])   # validates; returns the phase card
+CALL mcp_spec_kit_lint_artifacts(feature="[feature]")   # must report 0 errors before the commit
 ```
 
 ### Append to history.md and Commit

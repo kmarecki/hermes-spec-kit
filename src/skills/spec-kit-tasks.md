@@ -95,6 +95,7 @@ For each open bug: CREATE BF-### task, include test task to verify fix
 ### Generate task breakdown
 Organize by phase: Setup → Foundational → User Stories → Polish.
 Format: `T### [P] [US#] Description — file/path.ext`
+Ids: with MCP, `mcp_spec_kit_next_id(feature, kind="T")` / `kind="BF"` allocates the next number — never count by hand; without MCP, read the highest existing id and add one.
 
 ### Document dependencies
 Phase dependencies, parallel execution opportunities.
@@ -103,14 +104,15 @@ Phase dependencies, parallel execution opportunities.
 Report: task count, phases, TDD mode, parallel tasks, bugfix tasks
 
 
-### MCP state sync (optional, when MCP server is configured)
+### MCP checks (optional, when MCP server is configured)
 
-After creating the artifact(s) and before committing, sync workflow state
-to the MCP server so it stays consistent across phases.
+The server keeps no state — it derives the phase from the files and validates.
+After writing the artifact(s) and before committing:
 
 ```text
 CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="tasks.md", status="present")
-CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=3, artifacts_created=["tasks.md"])
+CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=3, artifacts_created=["tasks.md"])   # validates; returns the phase card
+CALL mcp_spec_kit_lint_artifacts(feature="[feature]")   # ascending T/BF ids, 0 errors
 ```
 
 ### Append to history.md and Commit

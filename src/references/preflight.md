@@ -43,12 +43,16 @@ Run these checks in order. If any check fails, stop and report before proceeding
      CREATE specs/git-conventions.md from spec-kit/templates/git-conventions-template.md
      NOTE: "Created specs/git-conventions.md with default conventions. Edit to customise for this project."
 
-4. WORKFLOW LOAD CHECK — code-writing phase only
-   IF you are about to call write_file, patch, or terminal(build/test):
-     IF spec-kit-workflow is NOT loaded:
-       BLOCK: "Must load spec-kit-workflow first for branch guardrails
-               and phase routing. Run: skill_view(name='spec-kit-workflow')"
-       HALT
+4. PHASE CARD CHECK — before any write
+   IF the MCP server is configured:
+     CALL mcp_spec_kit_get_next_actions(feature) and READ the phase card —
+     it names the phase, the allowed writes and the next gate. Re-read it
+     after every context compaction.
+   ELSE:
+     DERIVE the phase from the files (workflow skill, "Phase Detection")
+     and state it in one line before writing.
+   IF you are about to edit source code and the phase is not Implement:
+     BLOCK — route through the workflow (bugfix / implement).
 
 5. HISTORY LOG CHECK — BEFORE creating or modifying any markdown document
    IF you are about to create or modify any markdown document in specs/[feature]/:
@@ -110,6 +114,10 @@ After every skill completes that created or modified any markdown document:
    READ specs/[feature]/history.md
    IF the entry for this phase is NOT recorded:
      BLOCK: "Cannot commit — history.md is missing the [phase] entry. Append first."
+
+2b. LINT (MCP): CALL mcp_spec_kit_lint_artifacts(feature) — 0 errors; and
+    CALL mcp_spec_kit_history_guard(feature, phase) — ok. Without MCP, re-read
+    bugs.md/tasks.md ids and statuses by eye.
 
 3. COMMIT:
    Follow the auto-commit template for this phase:

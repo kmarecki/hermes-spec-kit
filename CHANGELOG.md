@@ -8,6 +8,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **MCP server v3 — derive-and-enforce, no persisted state.** `state.json` was a
+  second source of truth that drifted (30 of 34 features out of sync in one
+  deployment) and conflicted on every merge. Every tool now derives the phase
+  from `specs/<feature>/` on each call and writes nothing (`init_feature`
+  creates the directory + history header only). `advance_phase`,
+  `close_feature`, `update_artifact`, `project_set_constitution` validate
+  against disk. New enforcement tools: `next_id`, `lint_artifacts`,
+  `timestamp`, `history_guard`; `get_next_actions`/`get_feature_state` return a
+  ten-line phase card to re-read after compaction. Legacy `state.json` is
+  flagged and ignored; gitignore template ignores `specs/.spec-kit/`. Tests
+  rewritten against real files in temp projects.
+
 ### Added
 
 - **Evidence of Done** (`src/references/evidence.md`) — every gate needs an

@@ -333,18 +333,25 @@ If you are in ANY other phase (Constitution, Specify, Clarify, Plan, Tasks, Revi
 - Bugfixes must follow: "bugfix [feature]" → plan → tasks → implement
 
 
-### MCP state sync (optional, when MCP server is configured)
+### MCP checks (optional, when MCP server is configured)
 
-After each phase commit and before the final regression commit, sync workflow state
-to the MCP server. The implement phase is complex (multiple commits), so sync only once
-at the end after the regression fix:
+The server derives the phase from the files; it stores nothing. Use it as the
+enforcement service during this long phase:
 
 ```text
-CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="tasks.md", status="present")
-CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=4, artifacts_created=[])
+AFTER context compaction or at the start of every sub-phase:
+  CALL mcp_spec_kit_get_next_actions(feature="[feature]")   # re-read the PHASE CARD
+BEFORE adding a BF-### task or a BUG-NNN entry:
+  CALL mcp_spec_kit_next_id(feature="[feature]", kind="BF" | "BUG")
+BEFORE every commit:
+  CALL mcp_spec_kit_timestamp()                               # the history entry's time
+  CALL mcp_spec_kit_history_guard(feature="[feature]", phase="Phase N" | "BF-###" | "Regression")   # must be ok
+  CALL mcp_spec_kit_lint_artifacts(feature="[feature]")        # 0 errors
+AFTER the full regression:
+  CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=4, artifacts_created=[])
 ```
 
-If MCP is not available, skip — the phase is tracked via filesystem artifacts.
+If MCP is not available, skip — the phase is tracked via filesystem artifacts; count ids by reading the files and take the time from `date -u`.
 
 ### Step 9: Append to history.md (before every commit)
 

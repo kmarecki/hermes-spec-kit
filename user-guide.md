@@ -789,49 +789,51 @@ user resolution.
 
 ## MCP Server (Optional)
 
-An MCP server delivers deterministic workflow state management. Instead of the LLM
-inferring the current phase, artifact status, and bug state from file presence — which
-drifts after context compaction — the server stores state in a structured JSON file
-(`specs/.spec-kit/state.json`) and enforces valid transitions.
+An MCP server acts as a **derive-and-enforce** service. It keeps no state: on every call it
+derives the current phase from the files under `specs/<feature>/` and validates against them.
+It exists for the things an agent does badly — allocating the next id, linting `bugs.md` and
+`tasks.md`, stamping real times, guarding that `history.md` was written before the commit — and
+to hand back a ten-line **phase card** that survives context compaction.
 
 ### How it works
 
 ```
-Hermes ─→ mcp_spec_kit_* tools ─→ MCP Server (server.py)
-                                         ↓
-                                   state.json
+Hermes / Claude Code ─→ mcp_spec_kit_* tools ─→ MCP Server (server.py)
+                                                        ↓ reads only
+                                              specs/<feature>/*.md
 ```
 
-The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`FastMCP`) for stdio transport — compatible with Hermes' built-in MCP client.
+The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`FastMCP`) for stdio transport. Nothing is persisted; a legacy `specs/.spec-kit/state.json` is ignored and should be deleted and gitignored.
 
 ### Tools provided
 
 | Tool | Purpose |
 |------|---------|
-| `mcp_spec_kit_init_feature` | Register a new feature |
-| `mcp_spec_kit_get_feature_state` | Get current phase, artifacts |
-| `mcp_spec_kit_get_next_actions` | Available actions from current state |
-| `mcp_spec_kit_advance_phase` | Validate and transition to next phase |
-| `mcp_spec_kit_project_status` | Get project-level state (constitution) |
-| `mcp_spec_kit_project_set_constitution` | Mark constitution as present after creation |
-| `mcp_spec_kit_list_features` | List all registered features |
-| `mcp_spec_kit_reopen_feature` | Reopen closed feature |
-| `mcp_spec_kit_close_feature` | Close feature after Phase 6 |
-| `mcp_spec_kit_update_artifact` | Update artifact status |
-| `mcp_spec_kit_auto_detect_features` | Scan specs/ dir, reconcile state |
+| `mcp_spec_kit_init_feature` | Create `specs/<feature>/` with a history.md header |
+| `mcp_spec_kit_get_feature_state` | Derived phase, artifacts, task/bug counts, phase card |
+| `mcp_spec_kit_get_next_actions` | Available actions + the phase card |
+| `mcp_spec_kit_advance_phase` | Validate a transition against the files (writes nothing) |
+| `mcp_spec_kit_project_status` | Constitution present?, feature count, legacy state file? |
+| `mcp_spec_kit_project_set_constitution` | Confirm `specs/constitution.md` exists |
+| `mcp_spec_kit_list_features` | Every feature's derived state |
+| `mcp_spec_kit_reopen_feature` | Check the feature is closed; return the branch hint |
+| `mcp_spec_kit_close_feature` | Validate the close (no open bugs, verified bugs have Verified-by) |
+| `mcp_spec_kit_update_artifact` | Confirm an artifact is on disk |
+| `mcp_spec_kit_auto_detect_features` | Derived state of all features |
+| `mcp_spec_kit_next_id` | Next BUG / T / BF id |
+| `mcp_spec_kit_lint_artifacts` | Schema lint of bugs.md, tasks.md, history.md |
+| `mcp_spec_kit_timestamp` | Real UTC time |
+| `mcp_spec_kit_history_guard` | Fresh history entry since the last commit? |
 
 ### Benefits
 
-- **Deterministic**: State is stored, not inferred — survives context compaction
-- **Enforced transitions**: `advance_phase` rejects invalid moves (wrong phase, missing
-  prerequisites)
-- **Backward compatible**: When the MCP server is not configured, every skill falls back
-  to filesystem-based detection. No skill changes needed.
+- **No drift**: nothing to keep in sync — the files are the state
+- **Enforced transitions**: `advance_phase` and `close_feature` reject moves the files do not support
+- **Mechanical hygiene**: ids, statuses, timestamps and the history guard are checked by code, not by prose
+- **Backward compatible**: without the server every skill falls back to filesystem detection, `date -u` and manual id counting
 
 Bug tracking is deliberately NOT in the MCP server: `bugs.md` is the single
-source of truth and is written directly by `spec-kit-test`. Earlier versions had
-`log_bug`/`set_bug_status`/`set_bug_plan_ref` tools, but they let the agent bypass
-the bugs.md write and user-confirmation step — they were removed (adc6b79).
+source of truth and is written directly by `spec-kit-test`. The server only reads it.
 
 ### Installation
 
@@ -861,10 +863,9 @@ When the MCP server is available (its tools exist in the Hermes toolset), skills
 defer to it for state queries and transitions. When unavailable, the same skills
 use the filesystem-based detection and routing from the table above.
 
-The `spec-kit-test` skill treats MCP availability specially:
-- With MCP: after logging bugs, calls `mcp_spec_kit_get_next_actions` and
-  **auto-chains** to plan → tasks → implement for the bugfix loop
-- Without MCP: suggests "bugfix [feature]" as before
+`spec-kit-test` logs bugs and stops in both modes; with MCP it allocates the
+BUG id with `mcp_spec_kit_next_id` and lints before committing. The user
+starts the fix loop with "bugfix [feature]".
 
 ---
 
@@ -1002,9 +1003,9 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 
 ### Artifact Detection (Phase Detection)
 
-When the MCP server is configured, `mcp_spec_kit_get_feature_state` is the
-**single source of truth** for current phase, artifact status, and bug state.
-The table below is used as fallback when the MCP server is not available.
+When the MCP server is configured, `mcp_spec_kit_get_feature_state` derives the
+current phase, artifact status and bug counts from the files below — the same
+table, applied by code. Use it (or the table) before any write.
 
 | Artifacts present | Current phase |
 |-------------------|---------------|

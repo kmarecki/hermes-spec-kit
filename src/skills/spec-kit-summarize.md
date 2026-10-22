@@ -323,14 +323,14 @@ REPORT:
 ```
 
 
-### MCP state sync (optional, when MCP server is configured)
+### MCP checks (optional, when MCP server is configured)
 
-Before the final commit, sync the close state to the MCP server:
+Before the final commit (the server derives and validates; it stores nothing):
 
 ```text
 CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="close.md", status="present")
-CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=6, artifacts_created=["close.md"])
-CALL mcp_spec_kit_close_feature(feature="[feature]")
+CALL mcp_spec_kit_close_feature(feature="[feature]")   # error if any bug is open/in-progress or verified without Verified-by; lists claimed_unverified
+CALL mcp_spec_kit_lint_artifacts(feature="[feature]")
 ```
 
 If MCP is not available, skip.

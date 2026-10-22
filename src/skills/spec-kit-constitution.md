@@ -563,14 +563,12 @@ ELSE (single project):
 
 ### MCP state sync (optional, when MCP server is configured)
 
-After creating the artifact(s) and before committing, sync project-level
-constitution state to the MCP server. This uses the project-level tool
-(not feature-level advance_phase) because the constitution is a one-time
-project bootstrap, not a per-feature phase.
+After writing the file and before committing, confirm it with the project-level
+tool (the server checks that specs/constitution.md exists; it stores nothing):
 
 ```text
 CALL mcp_spec_kit_project_set_constitution(status="present", principles='{"key": "value", ...}')
-# principles is optional — pass parsed constitution principles as JSON object
+# principles is optional — echoed back after JSON validation
 ```
 
 ### Append to history.md and Commit

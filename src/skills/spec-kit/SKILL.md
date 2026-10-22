@@ -116,7 +116,7 @@ Installed via `./scripts/install.sh` — see `src/templates/` for the full list:
 
 ## MCP Server (optional)
 
-Spec-kit includes a **deterministic workflow MCP server** that replaces LLM-based state detection with structured tools. When enabled, the server enforces phase transitions, validates prerequisites, and survives context compaction.
+Spec-kit includes a **derive-and-enforce MCP server**. It keeps no state: every call derives the feature's phase from the files under `specs/<feature>/` and validates. It is there for the things an agent does badly — id allocation (`next_id`), artifact lint (`lint_artifacts`), real timestamps (`timestamp`), the history-before-commit guard (`history_guard`) and a ten-line phase card to re-read after context compaction (`get_next_actions`). A legacy `specs/.spec-kit/state.json` is ignored — delete it and add `specs/.spec-kit/` to `.gitignore`.
 
 See `spec-kit-mcp-server/README.md` for setup and usage. Enable by adding to `~/.hermes/config.yaml`:
 
@@ -127,7 +127,7 @@ mcp_servers:
     args: ["~/.hermes/skills/spec-kit/mcp-server/server.py"]
 ```
 
-11 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_project_status`, etc.
+15 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_get_next_actions`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_next_id`, `mcp_spec_kit_lint_artifacts`, `mcp_spec_kit_timestamp`, `mcp_spec_kit_history_guard`, `mcp_spec_kit_project_status`, etc.
 (In Hermes the tools appear with the `mcp_spec_kit_` prefix — call them by this full name.)
 
 ## ⚠️ MCP Tool Usage Rules — Critical
@@ -136,12 +136,12 @@ MCP tools are available globally, but they MUST only be called within their
 designated skill context:
 
 - `mcp_spec_kit_advance_phase` — ONLY call within the phase skill that owns the
-  transition (e.g., `spec-kit-constitution` calls advance 0→1). Never advance
-  a phase outside its owning skill.
+  transition. It validates against the files and writes nothing; an error means
+  an artifact is missing or you are not in the phase you think you are.
 - `mcp_spec_kit_update_artifact` — ONLY call after writing the artifact file.
-  The file must exist before you sync its status.
-- All other MCP tools — Follow the instructions in the phase skill that loaded
-  you. If no phase skill is loaded, do NOT call MCP tools for state changes.
+  The server checks the file exists.
+- `mcp_spec_kit_next_id`, `lint_artifacts`, `timestamp`, `history_guard`,
+  `get_next_actions` — read-only helpers; call them freely, and always before a commit.
 
 Bug tracking (`bugs.md`) is purely file-based — no MCP tools for that. Write
 bugs to `bugs.md` via `spec-kit-test`, which is the single source of truth.
