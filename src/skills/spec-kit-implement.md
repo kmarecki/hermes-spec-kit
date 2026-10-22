@@ -29,6 +29,7 @@ metadata:
 3. **GREEN** — write the simplest code; run only this phase's tests; save `evidence/<phase>-green.txt`; run the build (TypeScript must compile).
 4. Mark the phase's tasks `[X]`; bug fixes → `bugs.md` Status `claimed` + `Evidence:` (never `verified`).
 5. History record (`mcp_spec_kit_append_history` or `spec-kit/scripts/spec-kit-log.sh`: phase, skill, agent, artifacts, tests, evidence, commit, note ≤ 25 words) → MCP `mcp_spec_kit_history_guard` + `mcp_spec_kit_lint_artifacts` → commit `feat: [feature] Phase N - [name]` (bugfix: `fix: [feature] BF-### - description`).
+- Pure logic: test first. Legacy code without tests: characterisation test first (`evidence/<TASK>-characterisation.txt`), then change. Untestable item → note it beside the task; the close flags it unverified.
 - No commits during RED; no per-task regression runs; a non-parallel task that cannot complete → HALT and report.
 - New bug found mid-fix → log it in `bugs.md` (`mcp_spec_kit_next_id(kind="BUG")`), do not fix inline (trivial test-only fixes excepted).
 

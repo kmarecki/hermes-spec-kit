@@ -206,6 +206,16 @@ async def test_next_id_and_lint(s, root):
     write(root, "f5", "plan.md", "# plan\n\n## Current Design\n\nbuilt\n")
     d = await call(s, "lint_artifacts", {"feature": "f5"})
     check("  with Current Design → no warning", not any("Current Design" in f["msg"] for f in d["findings"]))
+    write(root, "f5", "tasks.md", "# Tasks\n- [x] T001 [TEST] tests — t.py\n- [x] T002 [SEAM] rates — src/r.py\n- [ ] T003 later — src/l.py\n")
+    d = await call(s, "lint_artifacts", {"feature": "f5"})
+    msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("[SEAM] done without probe → warning", "T002 [SEAM]" in msgs)
+    check("[TEST] done without red file → warning", "T001 [TEST]" in msgs)
+    write(root, "f5", "evidence/T002-probe-rates.txt", "cmd\nresult\n")
+    write(root, "f5", "evidence/core-red.txt", "cmd\nFAILED\n")
+    d = await call(s, "lint_artifacts", {"feature": "f5"})
+    msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("  with probe + red files → no warnings", "[SEAM]" not in msgs and "[TEST]" not in msgs, msgs)
 
 
 async def test_timestamp_and_history_guard(s, root):

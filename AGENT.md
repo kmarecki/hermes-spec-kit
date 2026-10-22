@@ -397,7 +397,8 @@ Run validation tests before committing to catch:
 
 - **Design phases (0-3)**: Each phase commits immediately — no batch.
 - **Implementation (Phase 4)**: One commit per implement sub-phase.
-  All tests RED first, all code GREEN, then commit.
+  All tests RED first (run saved under `evidence/`), `[SEAM]` tasks probed
+  against the real system first, all code GREEN (run saved), then commit.
 - **Bugfix sub-rounds**: Separate phase commits by default (`bugfix`);
   opt-in batch via `quickfix`.
 - **Phase 6 close**: ONE commit — patched spec/plan + close.md.

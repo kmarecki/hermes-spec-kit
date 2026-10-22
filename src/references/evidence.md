@@ -20,6 +20,18 @@ Why: the same model writes the code, the tests, the fixtures and the review. Its
 
 `specs/[feature]/evidence/` — committed with the feature. One file per item, named `<ID>-<label>.<ext>`, e.g. `BF-014-red.txt`, `BF-014-probe-exchange-rates.txt`, `T012-tests.txt`. Each file starts with the command that produced it and the UTC time.
 
+## RED, GREEN and fixtures (the checkable TDD rules)
+
+| Rule | File |
+|------|------|
+| A `[TEST]` task's failing run is saved before implementation code is written | `evidence/<phase-or-task>-red.txt` |
+| A `[SEAM]` task starts with a read-only probe of the real system; the fixture matches its shape | `evidence/<TASK>-probe-<seam>.txt` |
+| Legacy code without tests: pin current behaviour first | `evidence/<TASK>-characterisation.txt` |
+| The phase's passing run | `evidence/<phase>-green.txt` |
+| The full regression | `evidence/regression-<date>.txt` + `ci:<run-id>` |
+
+`lint_artifacts` warns when a `[SEAM]` task is marked done without a probe file, or a `[TEST]` task is done with no RED file in `evidence/`.
+
 ## Status vocabulary (bugs.md)
 
 | Status | Set by | Meaning |

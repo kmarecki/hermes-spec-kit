@@ -10,6 +10,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **TDD rules that can be checked.** The "Iron Law" (delete code written
+  before the test) is replaced by file-based rules: a `[TEST]` task's RED run
+  is saved under `specs/[feature]/evidence/` before implementation; a `[SEAM]`
+  task (database function, HTTP contract, file format, external service) starts
+  with a read-only probe of the real system and its fixture must match the
+  probe's shape; legacy code gets a characterisation test first; GREEN and the
+  regression runs are saved too. tasks template documents `[TEST]`/`[SEAM]`;
+  `lint_artifacts` warns on `[SEAM]` done without a probe file and `[TEST]`
+  done without a RED file.
+
 - **plan.md: Current Design + ADR rounds.** The plan template gains a
   `## Current Design` section (≤ 1 page, what is built; regenerated at every
   close and by refresh — the only replaced section) and a `## Rounds (ADR log)`

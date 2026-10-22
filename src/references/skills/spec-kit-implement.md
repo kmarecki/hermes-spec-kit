@@ -157,8 +157,8 @@ Execute the entire phase as a batch, not task-by-task:
        - Real code, not mocks (unless truly unavoidable)
        - Test behavior, not implementation
     
-    b. RUN the specific test to verify RED:
-       terminal("pytest tests/test_file.py::test_name -v")
+    b. RUN the specific test to verify RED and SAVE the output:
+       terminal("pytest tests/test_file.py::test_name -v | tee specs/[feature]/evidence/<phase>-red.txt")
        CONFIRM:
          - Test fails (not errors from typos)
          - Fails because the feature is missing
@@ -171,8 +171,8 @@ Execute the entire phase as a batch, not task-by-task:
        - Cheating is OK (hardcode, copy-paste — fix in refactor)
     
   After ALL implementation tasks in this phase are written:
-    b. RUN ONLY the tests relevant to this phase (NOT full suite):
-       terminal("pytest tests/test_auth.py -v")   # phase-specific test file(s)
+    b. RUN ONLY the tests relevant to this phase (NOT full suite) and SAVE the output:
+       terminal("pytest tests/test_auth.py -v | tee specs/[feature]/evidence/<phase>-green.txt")
        CONFIRM:
          - All tests for this phase pass ✓
          - Do NOT run full test suite yet
@@ -280,7 +280,8 @@ IF npm run build / tsc --noEmit / go build / cargo build is available:
 ## Implementation Rules (TDD Enforcement)
 
 - **Phase-level TDD**: All tests for a phase are written and verified RED first, then all code is written and verified GREEN. One commit per phase.
-- **RED verification is mandatory**: Every test must run and fail before implementation code is written. Without RED, the test proves nothing.
+- **RED verification is mandatory and saved**: Every test must run and fail before implementation code is written, and the run is saved under `evidence/`. Without a saved RED, the test proves nothing.
+- **Seams need probes**: `[SEAM]` tasks start with a real-data probe; the fixture matches its shape.
 - **GREEN verification at phase level**: After all implementation code, run the phase's tests to confirm green.
 - **No per-task commits**: Commit once per phase boundary, not after each individual test or task.
 - **No per-task regression runs**: Only run relevant tests for the current phase. Full suite runs once after all phases.
@@ -288,20 +289,17 @@ IF npm run build / tsc --noEmit / go build / cargo build is available:
 - **TDD bypass**: If the user explicitly bypassed TDD, skip all automated test steps. The summary will note the bypass.
 - **Build after GREEN**: TypeScript projects MUST build — Vitest/Jest swallow type errors.
 
-### Iron Law: Why Tests Must Come First
+### Checkable TDD rules (replace the old "Iron Law")
 
-**If you wrote code before the test → delete it. Start over.** No exceptions without user permission.
+"Delete code written before the test" is a rule no agent follows and nobody can check. These can be checked:
 
-```
-Excuse                      | Reality
-----------------------------|-------------------------------------------
-"Too simple to test"        | Simple code breaks. Test takes 30s.
-"I'll test after"           | Tests-after pass immediately → prove nothing.
-"Already manually tested"   | Ad-hoc ≠ systematic. No record, can't re-run.
-"Deleting X hours wasteful" | Sunk cost. Keep unverified code = tech debt.
-"TDD is dogmatic"           | TDD finds bugs pre-commit, prevents regressions.
-"Tests after same goal"     | Tests-after = "what does it do?" Tests-first = "what should it do?"
-```
+1. **RED is a file, not a sentence.** Every `[TEST]` task's failing run is saved as `specs/[feature]/evidence/<phase-or-task>-red.txt` (command + output) before any implementation code is written. A RED that was not saved did not happen.
+2. **Seams get real-shape fixtures.** A task marked `[SEAM]` (database function, HTTP contract, file format, external service) starts with a read-only probe of the real system — `evidence/<TASK>-probe-<seam>.txt` (command + result). The fixture used by the test must have the same shape (columns, rows per key, types). A hand-built fixture without a probe is how a fix passes green and fails in production.
+3. **Pure logic: test first.** Functions without external seams are written test-first as before.
+4. **Legacy code without tests: characterisation first.** Pin the current behaviour with a test that passes, save it as `evidence/<TASK>-characterisation.txt`, then change the code and update the expectation.
+5. **GREEN is a file too.** The phase's passing run is saved as `evidence/<phase>-green.txt`; the full regression as `evidence/regression-<date>.txt` (+ `ci:<run-id>` when a pipeline exists).
+
+What cannot be tested (visual layout, race condition, external dependency) is noted next to the task in tasks.md and verified manually; the close flags it as unverified.
 
 In bugfix mode: Update bugs.md Status after fixing a bug (set to "claimed" with Evidence — never "verified")
 

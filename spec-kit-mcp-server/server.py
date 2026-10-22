@@ -545,7 +545,18 @@ def lint_artifacts(feature: str) -> str:
                 findings.append({"file": "bugs.md", "severity": "error", "msg": f"Total Bugs says {tm.group(1)}, found {len(bugs)}"})
 
     if (fd / "tasks.md").exists():
-        tasks = _parse_tasks((fd / "tasks.md").read_text(errors="replace"))
+        tasks_text = (fd / "tasks.md").read_text(errors="replace")
+        tasks = _parse_tasks(tasks_text)
+        evidence = [p.name for p in (fd / "evidence").glob("*")] if (fd / "evidence").is_dir() else []
+        for line in tasks_text.splitlines():
+            m = _TASK_RE.match(line)
+            if not m or m.group(1) not in "xX":
+                continue
+            tid = m.group(2)
+            if "[SEAM]" in line and not any(e.startswith(f"{tid}-probe") for e in evidence):
+                findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [SEAM] marked done without evidence/{tid}-probe-*.txt"})
+            if "[TEST]" in line and not any("-red" in e for e in evidence):
+                findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [TEST] marked done but no *-red* file in evidence/"})
         for kind in ("T", "BF"):
             nums = [t["num"] for t in tasks if t["kind"] == kind]
             if nums != sorted(nums):
