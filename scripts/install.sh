@@ -201,26 +201,12 @@ if [ -f "$MCP_SERVER_DIR/server.py" ]; then
     mkdir -p "$(dirname "$CONFIG_FILE")"
     [ -f "$CONFIG_FILE" ] || touch "$CONFIG_FILE"
 
-    # Remove any existing spec-kit block from mcp_servers (3 lines)
-    sed -i '/^  spec-kit:/{
-      N;N;d
-    }' "$CONFIG_FILE" 2>/dev/null || true
-
-    # If mcp_servers section is now empty (no remaining entries), remove it
-    sed -i '/^mcp_servers:$/{
-      N
-      /^mcp_servers:\n$/d
-    }' "$CONFIG_FILE" 2>/dev/null || true
-
-    # Append fresh config entry
-    cat >> "$CONFIG_FILE" << EOF
-
-mcp_servers:
-  spec-kit:
-    command: "$MCP_PYTHON"
-    args: ["$MCP_SERVER_DST/server.py"]
-EOF
-    echo "  -> Added spec-kit MCP server entry"
+    # Replace the spec-kit entry by indentation (never by line count — a block
+    # written with a YAML list for args is 4 lines, not 3), keep other servers,
+    # reuse an existing mcp_servers: key. See scripts/hermes-mcp-config.py.
+    cp "$CONFIG_FILE" "$CONFIG_FILE.spec-kit-backup"
+    python3 "$PROJECT_DIR/scripts/hermes-mcp-config.py" add "$CONFIG_FILE" "$MCP_PYTHON" "$MCP_SERVER_DST/server.py"
+    echo "  -> spec-kit MCP server entry written (backup: $CONFIG_FILE.spec-kit-backup)"
     echo "  -> Activate in Hermes with: /reload-mcp"
   else
     echo "  -> WARNING: mcp Python package not available."

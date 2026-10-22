@@ -8,6 +8,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **install.sh / uninstall.sh corrupted `~/.hermes/config.yaml`** when the
+  `spec-kit` MCP block was written with `args:` as a YAML list (4 lines): the
+  line-count `sed` left a dangling `- …server.py` line and appended a second
+  `mcp_servers:` key. Replaced by `scripts/hermes-mcp-config.py`, which edits
+  by indentation, keeps other servers, reuses an existing `mcp_servers:` key
+  and backs the file up first.
+
 ### Changed
 
 - **Hygiene.** (1) Assumptions log: `decisions-template.md` and preflight

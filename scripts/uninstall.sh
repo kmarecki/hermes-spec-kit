@@ -68,16 +68,8 @@ if [ -f "$CONFIG_FILE" ]; then
     cp "$CONFIG_FILE" "$CONFIG_FILE.spec-kit-backup"
     echo "  Backed up config to: $CONFIG_FILE.spec-kit-backup"
 
-    # Remove spec-kit block (3 lines: spec-kit:, command:, args:)
-    sed -i '/^  spec-kit:/{
-      N;N;d
-    }' "$CONFIG_FILE" 2>/dev/null || true
-
-    # Remove empty mcp_servers section (no entries left)
-    sed -i '/^mcp_servers:$/{
-      N
-      /^mcp_servers:\n$/d
-    }' "$CONFIG_FILE" 2>/dev/null || true
+    # Remove the spec-kit block by indentation; drops mcp_servers: only when empty
+    python3 "$(cd "$(dirname "$0")" && pwd)/hermes-mcp-config.py" remove "$CONFIG_FILE"
 
     echo "  Removed spec-kit entry from ~/.hermes/config.yaml"
   fi
