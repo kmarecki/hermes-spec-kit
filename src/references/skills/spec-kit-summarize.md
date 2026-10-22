@@ -19,7 +19,7 @@
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
 
 ## Git Commit Guidelines
-See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`. Branch guard handled by preflight.md.
+See `spec-kit/references/auto-commit.md`. Commits run the project's hooks (never `--no-verify`). Branch guard handled by preflight.md.
 
 
 **When to run**:

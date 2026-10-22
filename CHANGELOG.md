@@ -10,6 +10,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Hygiene.** (1) Assumptions log: `decisions-template.md` and preflight
+  check 6 — an ASK that no human answered is recorded as an *assumption* with
+  the alternative not taken, never as a self-made ruling; real rulings quote
+  the user; reviews read `decisions.md` first and the close lists open
+  assumptions. (2) `--no-verify` removed everywhere: hooks are the project's
+  guardrails. (3) Commit granularity: one commit per phase carrying its
+  status-only document changes; spec-before-code only for requirement or
+  design-intent changes.
+
 - **TDD rules that can be checked.** The "Iron Law" (delete code written
   before the test) is replaced by file-based rules: a `[TEST]` task's RED run
   is saved under `specs/[feature]/evidence/` before implementation; a `[SEAM]`

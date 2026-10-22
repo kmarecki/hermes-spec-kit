@@ -10,7 +10,7 @@ Project-specific overrides: Create `specs/git-conventions.md` in your project ro
 IF `git rev-parse --git-dir > /dev/null 2>&1`; THEN
   COMMIT_MSG="<message>"
   git add <paths>
-  git commit -m "$COMMIT_MSG" --no-verify
+  git commit -m "$COMMIT_MSG"
   NOTE: "Committed"
 ELSE
   NOTE: "Not a git repository — skipping automatic commit"
@@ -43,7 +43,8 @@ ELSE
 
 ## Rules
 
-- Always `--no-verify` (pre-commit hooks may block spec artifacts)
+- **Never `--no-verify`.** Hooks are the project's guardrails; if one blocks a spec artifact, fix the hook (or its path filter), do not bypass it.
+- **Spec before code only for intent.** A change to requirements or design intent (spec.md FRs, plan decisions) is committed before the code that follows it. Status-only document changes (task `[X]`, bug status, history entry, evidence files) ride the phase's code commit — one commit per phase boundary, documentation included.
 - Silently skip if not a git repo
 - Never commit broken state during Implement (tests must pass first)
 - Additive-safe: never delete or reorder existing entries. Only append new, or modify specific fields minimally.

@@ -61,6 +61,15 @@ Run these checks in order. If any check fails, stop and report before proceeding
      ENSURE specs/[feature]/history.md EXISTS (create with header if missing)
      NOTE: "history.md is the process log for this feature. Every markdown
             change MUST be recorded here BEFORE the next commit."
+
+6. ASSUMPTIONS CHECK — at every ASK / PROMPT / WAIT
+   IF a human answered: RECORD a `ruling` in specs/[feature]/decisions.md quoting their words.
+   IF no human can answer (unattended run, compaction lost the answer, the
+   question was never put): do NOT invent an answer and call it a ruling —
+     RECORD an `assumption` in decisions.md (question, what you take, the
+     alternative not taken), create the file from
+     spec-kit/templates/decisions-template.md if missing, and continue.
+   Reviews read decisions.md first; the close lists assumptions still unconfirmed.
 ```
 
 ## Quick summary for fast reference
@@ -69,6 +78,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
 - Bug mode blocks code? ✓ (open bugs → BLOCK, route through bugfix)
 - Bug logged before fix? ✓ (unlogged bug → BLOCK, route to spec-kit-test)
 - Phase card read (MCP) or phase derived from files before any write? ✓
+- Unanswered ASK recorded as an assumption in decisions.md, not as a ruling? ✓
 - history.md exists for this feature? ✓ (created if missing)
 
 ## Post-Completion Requirements (MANDATORY)
@@ -92,7 +102,7 @@ After every skill completes that created or modified any markdown document:
    ```
    Only proceed to commit after history.md is verified complete.
    - **Spec/plan changes that alter requirements or design intent** → MUST be committed BEFORE any related code. This preserves the causal chain: spec describes what → code implements it. Never commit spec changes as a side-effect of a code commit.
-   - **Status-only updates** (bug verified, task marked [X], bug status changed) → CAN share a commit with code. These document what the code did, not what it should do.
+   - **Status-only updates** (bug verified, task marked [X], bug status changed, history entry, evidence files) → ride the phase's code commit. One commit per phase boundary carries its own documentation; do not split a phase into a doc commit and a code commit.
    - **Bugfix sub-round documents** (new plan section for new bugs, new tasks for new bugs):
      - `bugfix` (default): plan gets its own commit, tasks get its own commit, implementation commits per fix.
      - `quickfix` (user opt-in): plan + tasks + fix batched in one commit. Plan ref and task entry ALWAYS exist.
@@ -127,7 +137,9 @@ After every skill completes that created or modified any markdown document:
    Follow the auto-commit template for this phase:
    - Scope: [artifacts scope]
    - Message: [commit message template]
-   git commit -m "[message]" --no-verify
+   git commit -m "[message]"
+   (the project's hooks run — never --no-verify; a hook that blocks a spec
+    artifact is a hook to fix, not to bypass)
 ```
 
 Skills MUST replace their full "Append to history.md and Commit" section with:

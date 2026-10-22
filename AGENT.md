@@ -391,6 +391,7 @@ Run validation tests before committing to catch:
 | Template | `<name>-template.md` | `spec-template.md` |
 | Reference | `<name>.md` | `preflight.md` |
 | Evidence dir | `specs/<feature>/evidence/` | per-feature, committed |
+| Assumptions log | `specs/<feature>/decisions.md` | per-feature; unanswered ASKs as assumptions, rulings quoted |
 | (legacy) State file | `specs/.spec-kit/state.json` | ignored since v3 — delete + gitignore |
 
 ### Git Conventions
@@ -402,7 +403,11 @@ Run validation tests before committing to catch:
 - **Bugfix sub-rounds**: Separate phase commits by default (`bugfix`);
   opt-in batch via `quickfix`.
 - **Phase 6 close**: ONE commit — patched spec/plan + close.md.
-- **--no-verify**: Always skip pre-commit hooks (they may block spec artifacts).
+- **Never --no-verify**: hooks are the project's guardrails; fix a hook that
+  blocks a spec artifact instead of bypassing it.
+- **One commit per phase, documentation included**: status-only document
+  changes (task [X], bug status, history entry, evidence) ride the phase's
+  code commit; only requirement/design-intent changes are committed first.
 - **Commit messages**: Follow `auto-commit.md` patterns per skill.
   Template: `spec(phase-N): [feature] description` for spec phases,
   `feat:` / `fix:` for code phases.

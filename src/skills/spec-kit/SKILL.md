@@ -109,6 +109,7 @@ Installed via `./scripts/install.sh` — see `src/templates/` for the full list:
 
 - `references/preflight.md` — Pre-action self-check (branch, mode, logged bug, conventions, phase card, history)
 - `references/skills/<skill>.md` — the full procedure behind each one-screen skill
+- `templates/decisions-template.md` — the assumptions log: every unanswered ASK is an assumption with the alternative not taken; rulings quote the user
 - `references/evidence.md` — Evidence of Done: oracles (user / ci / other-agent review / probe / output), the claimed→verified status split, the author/reviewer split
 - `references/auto-commit.md` — Standard commit patterns across all phases
 - `references/history-tracking.md` — Process history design rationale

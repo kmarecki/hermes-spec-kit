@@ -57,6 +57,7 @@ EXPECTED_TEMPLATES = {
     "close-template.md",
     "constitution-template.md",
     "data-model-template.md",
+    "decisions-template.md",
     "git-conventions-template.md",
     "gitignore-template.md",
     "history-template.md",

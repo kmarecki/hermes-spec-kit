@@ -19,7 +19,7 @@
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
 
 ## Git Commit Guidelines
-See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`. Branch guard handled by preflight.md.
+See `spec-kit/references/auto-commit.md`. Commits run the project's hooks (never `--no-verify`). Branch guard handled by preflight.md.
 
 Note: Each design phase skill (constitution, specify, clarify, plan, tasks) commits its own artifacts individually. Implement does NOT re-commit them.
 
@@ -63,7 +63,7 @@ After GREEN is confirmed, record the bugfix in history.md and commit:
 
 3. **Append to history.md**: Write an entry to `specs/[feature]/history.md` noting which BUG-NNN was fixed, the evidence files, and `Implemented-by: <agent>`.
 4. **Pre-commit guard**: READ `specs/[feature]/history.md` — confirm the BF-### entry is recorded. If missing, BLOCK.
-5. **Commit**: `git commit -m "fix: [feature] BF-### - description" --no-verify`
+5. **Commit**: `git commit -m "fix: [feature] BF-### - description"`
 
 This "read first" step prevents the common AI-agent trap where code is changed based on a bug report alone without verifying root cause against the actual code. The Plan Ref (from spec-kit-plan) gives the analysis; this step validates it against live code.
 
@@ -189,7 +189,7 @@ After marking tasks complete, record the phase in history.md and commit:
 1. **Record test count**: Note the number of tests run and passed for this phase.
 2. **Append to history.md**: Write an entry to `specs/[feature]/history.md` with the test pass status and task completion count.
 3. **Pre-commit guard**: READ `specs/[feature]/history.md` — confirm the phase entry is recorded. If missing, BLOCK — must append before commit.
-4. **Commit the phase**: `git add -A && git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify`
+4. **Commit the phase**: `git add -A && git commit -m "feat: [feature] Phase N - [Phase Name]"`
 
 ```
   ═══ Done with this phase ═══
@@ -216,7 +216,7 @@ After marking tasks complete: append to history.md, run pre-commit guard, then c
 
 ```text
     git add -A
-    git commit -m "feat: [feature] Phase N - [Phase Name]" --no-verify
+    git commit -m "feat: [feature] Phase N - [Phase Name]"
 ```
 
 ### Step 5: Progress reporting
@@ -266,7 +266,7 @@ After all regressions fixed:
 2. IF all pass:
    - **Append to history.md**: Write a regression fix entry to `specs/[feature]/history.md` noting BF-REGRESSION-001 resolved.
    - **Pre-commit guard**: READ `specs/[feature]/history.md` — confirm the regression entry is recorded. If missing, BLOCK.
-   - Commit: `git commit -m "fix: [feature] BF-REGRESSION-001 - fix regressions" --no-verify`
+   - Commit: `git commit -m "fix: [feature] BF-REGRESSION-001 - fix regressions"`
    - MARK BF-REGRESSION-001 as [X] in tasks.md
    - REPORT: "All regressions fixed. All N tests pass."
 
