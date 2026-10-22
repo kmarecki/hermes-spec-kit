@@ -316,8 +316,15 @@ LOAD specs/[feature]/spec.md (REQUIRED)
 LOAD specs/[feature]/constitution.md (IF EXISTS)
 LOAD specs/[feature]/plan.md (IF EXISTS)
 LOAD specs/[feature]/tasks.md (IF EXISTS)
+LOAD specs/[feature]/evidence/ listing and the Evidence: lines of bugs.md (IF EXISTS)
 
 CAPTURE git diff or file list showing what was implemented
+
+AUTHOR CHECK (evidence.md — author/reviewer split):
+  READ Implemented-by from the implement entries in history.md
+  IF it names THIS agent: LABEL the report "self-review by <agent>" — it cannot be
+    cited as review:<agent> verification; recommend the other agent reviews.
+  ELSE: LABEL the report "review:<this agent>" — it may verify claims.
 ```
 
 ### Step 3: Code quality checks
@@ -374,6 +381,8 @@ Ask: "Is this finding in the top 5 things that should change about this code?" I
 - Do tests actually test the behaviors described in spec.md?
 - Are there tests for edge cases from the spec?
 - Are tests meaningful (assert behavior, not implementation)?
+- **Fixture reality**: for every external seam (database function, HTTP contract, file format), does a `probe:` file exist and does the test fixture match its shape? A hand-built fixture with no probe is a HIGH finding — it is how fixes pass green and fail in production.
+- **Evidence present**: do the phase commits and the regression reference `output:`/`ci:` files? Missing evidence is reported as "unverified", not assumed.
 
 ### Step 4: Severity assignment
 Same heuristic as pre-implement mode — **filter out nitpicks**:
@@ -387,6 +396,9 @@ Apply the same **NITPICK FILTER** from pre-implement Step 5 before reporting any
 ### Step 5: Produce post-implement report
 ```
 # Post-Implement Review: [Feature]
+
+**Reviewer**: review:<agent> | self-review by <agent> (not citable as verification)
+**Implemented-by**: <agent> (from history.md)
 
 ## Spec Fulfillment
 

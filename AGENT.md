@@ -386,6 +386,16 @@ Run validation tests before committing to catch:
 - **Branch guardrails**: Block git operations on main/master. Preflight check #1
   enforces this.
 
+### Evidence of Done (Universal)
+
+`src/references/evidence.md`. The agent's own statement is never evidence. Gates
+name an oracle: `user`, `ci:<run-id>`, `review:<other-agent>`; claims carry
+`output:`/`probe:` files under `specs/[feature]/evidence/`. Bug statuses:
+`open → in-progress → claimed → verified(+Verified-by)`; the implementing agent
+never sets `verified`. History records `Implemented-by`; review labels itself
+`review:<agent>` or `self-review`. With two agents installed, the implementer
+does not review.
+
 ### Additive-Only Rule (Universal, All Phases)
 
 **Never overwrite a spec artifact that already has substantive content.**

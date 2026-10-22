@@ -31,6 +31,9 @@ See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`. Branch guar
 
 Note: Each design phase skill (constitution, specify, clarify, plan, tasks) commits its own artifacts individually. Implement does NOT re-commit them.
 
+## Evidence of Done
+Load `spec-kit/references/evidence.md`. Your own statement that tests pass is not evidence. Every phase commit carries an `output:` file of the phase test run under `specs/[feature]/evidence/`; the full regression carries `output:` plus `ci:<run-id>` when a pipeline exists; every bug you fix becomes `claimed` (never `verified`) with its `Evidence:` list; every external seam you touch (database function, HTTP contract, file format) gets a `probe:` file from the real system. History entries record `Implemented-by: <agent>`.
+
 
 **Bugfix mode**: When tasks.md contains bugfix tasks (prefixed with BF-###), executes them alongside regular tasks.
 
@@ -56,11 +59,17 @@ For each BF-### task:
      - Run it → confirm it fails (proves the bug exists)
   2. GREEN — Apply the minimal fix
      - Run the test → confirm it passes
+     - SAVE the run output: specs/[feature]/evidence/BF-###-green.txt
+     - For every external seam the fix touches: run a read-only probe against
+       the real system/data, SAVE command + result as evidence/BF-###-probe-<seam>.txt,
+       and confirm the fixture used by the test has the SAME SHAPE as the probe result
+  2b. CLAIM — in bugs.md set Status: claimed, fill Evidence: with the output:/probe:
+       files. NEVER set verified — that needs an oracle (evidence.md).
 ```
 
 After GREEN is confirmed, record the bugfix in history.md and commit:
 
-3. **Append to history.md**: Write an entry to `specs/[feature]/history.md` noting which BUG-NNN was fixed and that tests pass.
+3. **Append to history.md**: Write an entry to `specs/[feature]/history.md` noting which BUG-NNN was fixed, the evidence files, and `Implemented-by: <agent>`.
 4. **Pre-commit guard**: READ `specs/[feature]/history.md` — confirm the BF-### entry is recorded. If missing, BLOCK.
 5. **Commit**: `git commit -m "fix: [feature] BF-### - description" --no-verify`
 
@@ -245,9 +254,14 @@ IF tdd_bypassed:
 Detect and run the test framework. Then handle results:
 
 **If all tests pass:**
-1. REPORT: "All N tests pass. Feature implementation verified."
-2. **Append to history.md**: Write a full regression pass entry to `specs/[feature]/history.md`.
-3. PROCEED to Step 8 (build verification)
+1. SAVE the full run output: specs/[feature]/evidence/regression-<UTC date>.txt
+2. IF a CI pipeline exists: queue it on this commit and record `ci:<run-id>` + result
+   (the run may finish later — the history entry then names the run id, and the close
+   skill checks its result). IF no pipeline: the regression stays a CLAIM until the
+   other agent or the user verifies it.
+3. REPORT: "All N tests pass (output:<path>, ci:<id>|no pipeline)." — never "verified" without an oracle.
+4. **Append to history.md**: full regression entry with the evidence references and `Implemented-by: <agent>`.
+5. PROCEED to Step 8 (build verification)
 
 **If any tests fail:**
 Classify each failure as NEW (implementation incomplete) or PRE-EXISTING (regression). Create umbrella bugfix task BF-REGRESSION-001 in tasks.md.
@@ -297,7 +311,7 @@ Excuse                      | Reality
 "Tests after same goal"     | Tests-after = "what does it do?" Tests-first = "what should it do?"
 ```
 
-In bugfix mode: Update bugs.md Status after fixing a bug (set to "resolved")
+In bugfix mode: Update bugs.md Status after fixing a bug (set to "claimed" with Evidence — never "verified")
 
 ## Phase Guardrail — STRICT
 
@@ -364,6 +378,10 @@ Report:
 ## Done When
 
 - [ ] All phases completed and committed
+- [ ] Evidence: every phase commit references an `output:` file; the full regression references `output:` and `ci:<run-id>` (or states "no pipeline — unverified claim")
+- [ ] Evidence: every external seam touched has a `probe:` file and the test fixture matches its shape
+- [ ] In bugfix mode: every fixed bug is `claimed` with Evidence — none set to `verified` by this skill
+- [ ] history.md entries carry `Implemented-by: <agent>`
 - [ ] TDD mode (if active): Every test was verified RED before implementation
 - [ ] TDD mode (if active): Every phase's tests verified GREEN before commit
 - [ ] TDD mode (if active): Full regression suite passes — all tests green

@@ -63,6 +63,8 @@ User describes in natural language. Agent structures into:
 - **Status**: open
 ```
 
+Status vocabulary and the oracle rule: `spec-kit/references/evidence.md` (open → in-progress → claimed → verified; legacy resolved/fixed = claimed).
+
 **Smart insert**: INSERT the new bug entry BEFORE the `---` separator that precedes `## Summary`. Then UPDATE the Summary table: add a row for the new bug, increment counts, and correct the open/in-progress/resolved/verified tallies. Never place new bugs after `---` or inside `## Summary`.
 
 After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
@@ -76,7 +78,15 @@ When user finishes logging → count open bugs:
 
 ### Mark bugs as verified
 ```
-FIND bug → SET Status: verified → REPORT
+FIND bug
+REQUIRE an oracle (evidence.md): the user says it is fixed (quote them),
+  a CI run id with a green result, or a review report by the OTHER agent.
+IF the only source is the implementing agent's own claim:
+  REFUSE: "BUG-NNN is claimed, not verified — needs user / ci:<id> / review:<other-agent>."
+ELSE:
+  SET Status: verified
+  SET Verified-by: user | ci:<run-id> | review:<agent>
+  REPORT
 ```
 
 ### Completion check
@@ -95,7 +105,7 @@ Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
 
 ## Common Pitfalls
 1. **Fixing before logging**: Procedural lock. Log first, fix later. Violating this causes workflow corruption.
-2. **Setting bugs to resolved/verified preemptively**: Only the user marks a bug verified — after they test the fix.
+2. **Setting bugs to verified preemptively**: `verified` needs an oracle — the user, a CI run, or the other agent's review. The agent that fixed the bug may only set `claimed`.
 3. **Skipping confirmation**: After each bug entry, confirm with user. They may have additional details.
 
 ## Prerequisite Enforcement

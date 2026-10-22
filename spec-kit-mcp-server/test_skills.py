@@ -71,6 +71,7 @@ EXPECTED_REFERENCES = {
     "auto-commit.md",
     "constitution-principles.md",
     "constitution-tables.md",
+    "evidence.md",
     "history-tracking.md",
     "preflight.md",
 }

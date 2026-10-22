@@ -57,12 +57,22 @@
 | E2E tests | N | [scope] |
 | Contract tests | N | [if applicable] |
 
+## Evidence
+
+| Gate | Oracle | Reference |
+|------|--------|-----------|
+| Full regression | ci:<run-id> / output:<path> | [link or ❌ unverified] |
+| External seams | probe:<path> per seam | [list] |
+| Review | review:<agent> / self-review | [report] |
+
+> Rules: `spec-kit/references/evidence.md`. A row without an oracle is reported as **unverified**.
+
 ## Known Issues & Bugs
 
-| Bug ID | Severity | Status | Summary |
-|--------|----------|--------|---------|
-| BUG-001 | minor | resolved | [short description] |
-| BUG-002 | critical | verified | [short description] |
+| Bug ID | Severity | Status | Verified-by | Summary |
+|--------|----------|--------|-------------|---------|
+| BUG-001 | minor | claimed | — (unverified) | [short description] |
+| BUG-002 | critical | verified | ci:816 | [short description] |
 
 ## Gap Analysis — Plan vs Implementation
 

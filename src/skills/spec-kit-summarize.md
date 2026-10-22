@@ -105,13 +105,27 @@ IF all tasks are complete:
 IF bugs.md EXISTS:
   SCAN all bugs:
     COUNT total bugs
-    COUNT verified
-    COUNT resolved
-    COUNT open
+    COUNT verified (with Verified-by)
+    COUNT claimed (legacy resolved/fixed count as claimed)
+    COUNT open / in-progress
 
-  IF all bugs verified or resolved:
-    SET any open bugs to Status: verified
-    WRITE updated bugs.md
+  NEVER change a bug's status here — this skill has no oracle.
+  IF any bug is open or in-progress:
+    BLOCK: "Cannot close — N bugs still open. Run 'bugfix [feature]'."
+  IF any bug is claimed without Verified-by:
+    LIST them in the close document under "Unverified claims" and set the
+    bugs.md row of the Artifact State table to ⚠️ N claimed-unverified.
+    The feature may still close, but the close says so in plain words.
+```
+
+### Collect evidence (evidence.md)
+```
+FOR the full regression: find output:/ci: references in history.md and evidence/
+FOR each external seam named in plan.md or touched per git diff: find its probe: file
+FOR the review: read Implemented-by from history.md and the review report's label
+  (review:<other-agent> counts; self-review does not)
+FILL the Evidence table of the close/summary template.
+A gate with no oracle is written as ❌ unverified — never omitted, never upgraded.
 ```
 
 ### Compare code against spec and plan (git diff)
@@ -138,8 +152,8 @@ IDENTIFY:
 *Skip in lightweight close mode*
 ```
 FOR EACH requirement/story/entity/contract in spec.md and plan.md:
-  VERDICT:
-    ✅ Resolved  — implemented as planned (code exists, tests pass)
+  VERDICT (a ✅ needs an evidence reference — output:/ci:/probe:/review:/user; without one the item is ⚠️ at best):
+    ✅ Resolved  — implemented as planned (code exists, tests pass, evidence named)
     ✅ Resolved  — intentional deviation (code differs from plan, rationale documented)
     ⚠️ Acknowledged — deferred (not critical, tracked for future)
     ❌ Not Done  — missing with no documented reason (should be added to bugs.md or new spec)
@@ -412,7 +426,9 @@ BLOCKER: A feature CANNOT enter Complete state without Phase 6 completing.
 - [ ] Output generated: implementation-summary.md (full) or close.md (lightweight)
 - [ ] Spec health score computed and included
 - [ ] All tasks marked complete in tasks.md
-- [ ] All bugs marked verified in bugs.md
+- [ ] No bug open or in-progress; claimed-unverified bugs listed in the close document
+- [ ] Evidence table filled; unverified gates written as ❌ unverified
+- [ ] No bug status changed by this skill
 - [ ] ✅ Resolved deviations patched into spec.md and plan.md (with user approval)
 - [ ] ❌ Not Done gaps converted to new bug entries in bugs.md (if any, full mode only)
 - [ ] Report delivered to user with spec health score and artifact state

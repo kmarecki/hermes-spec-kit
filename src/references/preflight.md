@@ -17,7 +17,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
      HALT
    
 2. MODE DETECTION — STRICT
-   IF specs/[feature]/bugs.md EXISTS with Status: open entries:
+   IF specs/[feature]/bugs.md EXISTS with Status: open or in-progress entries:
      BLOCK: "You are in bugfix mode. Cannot write code directly — bugs must go through the workflow.
              Route: 'bugfix [feature]' → plan → tasks → implement."
      HALT
@@ -66,6 +66,8 @@ Run these checks in order. If any check fails, stop and report before proceeding
 - history.md exists for this feature? ✓ (created if missing)
 
 ## Post-Completion Requirements (MANDATORY)
+
+0. **Evidence before claims** — see `spec-kit/references/evidence.md`. Any "tests pass", "fixed" or "verified" in a report, history entry or bug status must name its oracle or evidence file; otherwise write "claimed" / "unverified".
 
 After every skill completes that created or modified any markdown document:
 

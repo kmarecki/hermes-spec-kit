@@ -636,7 +636,7 @@ say "bugfix [feature]" to start the fix loop.
 **Bug format**: Each bug gets an ID (BUG-NNN), severity
 (critical/major/minor/trivial), area, steps to reproduce, expected vs actual
 result, Requires Clarification flag, and status
-(open/in-progress/resolved/verified).
+(open/in-progress/claimed/verified/superseded — `claimed` is the agent's word, `verified` needs a user, CI or other-agent oracle; see Evidence of Done).
 
 **Plan Ref enforcement**: During bugfix, each open bug must have a Plan Ref
 linking to the plan section that addresses it — no Plan Ref, no implementation.

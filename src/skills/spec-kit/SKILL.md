@@ -108,6 +108,7 @@ Installed via `./scripts/install.sh` — see `src/templates/` for the full list:
 ## References
 
 - `references/preflight.md` — Pre-action self-check (branch, mode, workflow, history)
+- `references/evidence.md` — Evidence of Done: oracles (user / ci / other-agent review / probe / output), the claimed→verified status split, the author/reviewer split
 - `references/auto-commit.md` — Standard commit patterns across all phases
 - `references/history-tracking.md` — Process history design rationale
 - `references/constitution-principles.md` — 12 principles × 3 options with pros/cons

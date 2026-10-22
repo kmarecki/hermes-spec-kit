@@ -10,6 +10,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Evidence of Done** (`src/references/evidence.md`) — every gate needs an
+  oracle the agent did not author (`user`, `ci:<run-id>`, `review:<other-agent>`)
+  or evidence files (`output:`, `probe:` under `specs/[feature]/evidence/`).
+  Bug status split `claimed` (agent's word) vs `verified` (+`Verified-by`);
+  legacy `resolved`/`fixed` read as `claimed`. The implementing agent never
+  sets `verified`; summarize never changes statuses and lists unverified
+  claims. History records `Implemented-by`; review labels `review:<agent>` or
+  `self-review`. External seams require a real-data `probe:` whose shape the
+  test fixture must match.
+
 - **Claude Code edition** (`scripts/install-claude.sh`) — installs the same
   skills for Claude Code from the same `src/skills/*.md` sources (generated
   `~/.claude/skills/<name>/SKILL.md` with Hermes tool names translated and a

@@ -195,6 +195,7 @@ Check for artifacts to determine current phase:
 | `tasks.md` exists | Tasking/Tasked |
 | `tasks.md` with completions | Implementing |
 | `bugs.md` with open bugs | Testing (bugfix loop) |
+| `bugs.md` with `claimed` bugs only | Awaiting verification — user / CI / other-agent review |
 | `bugs.md` all verified | Testing complete — **must close** |
 | `implementation-summary.md` exists | Summarized — complete |
 | `close.md` exists | Closed — complete |
@@ -241,7 +242,7 @@ AFTER the current round completes and all original BF-### tasks are verified:
 ```
 
 ### Bugfix loop completion — user decides when to close
-After all bugs in bugs.md have Status: verified:
+After all bugs in bugs.md have Status: verified (each with a Verified-by oracle — `spec-kit/references/evidence.md`; `claimed` is not verified):
 ```text
   SUGGEST: "All N bugs verified. Ready to close? Say 'close [feature]' to
             generate a close document, or 'add bug' to log more bugs."

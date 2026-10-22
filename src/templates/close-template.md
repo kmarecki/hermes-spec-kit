@@ -15,8 +15,16 @@
 | `spec.md` | ✅ current / ⚠️ needs review / ❌ outdated |
 | `plan.md` | ✅ current / ⚠️ needs review / ❌ outdated |
 | `tasks.md` | ✅ all complete / ⚠️ N remaining |
-| `bugs.md` | ✅ all verified / ⚠️ N open |
+| `bugs.md` | ✅ all verified / ⚠️ N open / ⚠️ N claimed-unverified |
 | `implementation-summary.md` | ✅ complete / ❌ not generated |
+
+## Evidence
+
+| Gate | Oracle | Reference |
+|------|--------|-----------|
+| Full regression | ci:<run-id> / output:<path> | [link or ❌ unverified] |
+| Bug fixes | Verified-by per bug | [N verified / N claimed-unverified] |
+| Review | review:<agent> / self-review | [report] |
 
 ## Key Decisions
 - **[Decision]**: [Rationale]
