@@ -222,6 +222,19 @@ async def test_timestamp_and_history_guard(s, root):
     d = await call(s, "history_guard", {"feature": "f6", "phase": "Phase 1"})
     check("fresh entry → ok", d["ok"] is True)
 
+    print("\n═══ append_history ═══")
+    d = await call(s, "append_history", {"feature": "f6", "phase": "Phase 2", "skill": "spec-kit-plan", "agent": "claude",
+                                         "artifacts": "plan.md", "commit": "spec(phase-2): f6 plan", "note": "short note"})
+    check("append_history writes a stamped entry", d.get("success") and d["timestamp"].endswith("+00:00"))
+    text = (Path(root) / "specs/f6/history.md").read_text()
+    check("  entry has the fixed fields", "| Phase 2 | spec-kit-plan | claude" in text and "- Evidence: none — unverified" in text)
+    d = await call(s, "history_guard", {"feature": "f6", "phase": "Phase 2"})
+    check("  guard sees the new entry", d["ok"] is True)
+    d = await call(s, "append_history", {"feature": "f6", "phase": "Phase 3", "skill": "s", "agent": "a", "note": " ".join(["w"] * 26)})
+    check("note over 25 words → error", "max 25" in d.get("error", ""))
+    d = await call(s, "append_history", {"feature": "f6", "phase": "Phase 3", "skill": "s", "agent": "a", "artifacts": " ".join(["f"] * 70)})
+    check("entry over 60 words → error", "max 60" in d.get("error", ""))
+
 
 # ── Runner ─────────────────────────────────────────────────────────────────
 

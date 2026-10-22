@@ -63,16 +63,14 @@ Every phase skill is a **one-screen checklist**; its complete procedure lives in
 
 ## Workflow Tracking
 
-Every spec directory maintains `specs/NNN-name/history.md` — an append-only process log. Each phase skill appends one entry on completion:
+Every spec directory maintains `specs/NNN-name/history.md` — an append-only **record** (not a story). Each phase skill appends one fixed-field entry via `mcp_spec_kit_append_history` or `spec-kit/scripts/spec-kit-log.sh`, which stamp the real time and cap the entry at 60 words:
 
 ```markdown
-## [ISO_TIMESTAMP] | Phase N → [Name] → Complete
-- **Skill**: [skill-name]
-- **Artifacts**: [files created/updated]
-- **Notes**: [key decisions, user input, deviations]
+## <UTC timestamp> | Phase N — name | spec-kit-<skill> | <agent>
+- Artifacts: … · - Tests: … · - Evidence: … · - Commit: … · - Note: ≤ 25 words
 ```
 
-**Phase detection shortcut**: Read `history.md` last `→ Complete` line instead of scanning directory artifacts. See `references/history-tracking.md` for the full design.
+Narrative belongs in `implementation-summary.md`. Format and rules: `references/history-tracking.md`.
 
 ## Template Path Convention
 
@@ -130,7 +128,7 @@ mcp_servers:
     args: ["~/.hermes/skills/spec-kit/mcp-server/server.py"]
 ```
 
-15 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_get_next_actions`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_next_id`, `mcp_spec_kit_lint_artifacts`, `mcp_spec_kit_timestamp`, `mcp_spec_kit_history_guard`, `mcp_spec_kit_project_status`, etc.
+16 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_get_next_actions`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_next_id`, `mcp_spec_kit_lint_artifacts`, `mcp_spec_kit_timestamp`, `mcp_spec_kit_history_guard`, `mcp_spec_kit_project_status`, etc.
 (In Hermes the tools appear with the `mcp_spec_kit_` prefix — call them by this full name.)
 
 ## ⚠️ MCP Tool Usage Rules — Critical

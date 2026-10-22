@@ -23,6 +23,7 @@ The things an LLM agent does badly and a script does perfectly:
 | Are bugs.md / tasks.md / history.md well-formed (statuses, Verified-by, ids, summary counts) | `lint_artifacts` |
 | What time is it (never type a timestamp from memory) | `timestamp` |
 | Is there a fresh history entry for this phase since the last commit | `history_guard` |
+| Append the history record with the real time and a word cap | `append_history` |
 
 ## Quick Start
 
@@ -34,7 +35,7 @@ The things an LLM agent does badly and a script does perfectly:
 Hermes: `/reload-mcp`, then `/toolsets` should list `mcp_spec_kit_*`.
 Claude Code: restart; tools appear as `mcp__spec-kit__*`.
 
-## MCP Tools (15)
+## MCP Tools (16)
 
 | Tool | Purpose | Writes |
 |------|---------|--------|
@@ -53,6 +54,7 @@ Claude Code: restart; tools appear as `mcp__spec-kit__*`.
 | `lint_artifacts` | Schema lint: status vocabulary (open/in-progress/claimed/verified/superseded; legacy resolved/fixed = warning), Verified-by on verified, Evidence on claimed, ascending ids, summary rows and totals, history header | — |
 | `timestamp` | UTC now, ISO 8601 | — |
 | `history_guard` | A history.md entry mentioning `phase` exists and is newer than the last commit touching the feature | — |
+| `append_history` | Append one fixed-field entry (timestamp \| phase \| skill \| agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words; ≤ 60 words total) with the real UTC time | history.md |
 
 > Hermes prefixes tools with `mcp_spec_kit_`; Claude Code with `mcp__spec-kit__`.
 

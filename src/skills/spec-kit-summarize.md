@@ -21,7 +21,7 @@ metadata:
 ## Before writing
 - Run `spec-kit/references/preflight.md`. Requires `tasks.md`. Load spec, plan, tasks, bugs, constitution, data-model, contracts, research, quickstart, clarify, history, `evidence/`, `decisions.md` (as present). TDD bypass noted from tasks.md.
 - Mode: "close" → `spec-kit/templates/close-template.md`; "summarize" or default → `spec-kit/templates/implementation-summary-template.md`. Reopen (close doc exists) → APPEND a dated section, never overwrite; a requirement that got worse → **WAIT** for the user.
-- Output length follows the git diff (`git diff {branch_source} --name-status`), not the size of the spec.
+- Output length follows the git diff (`git diff {branch_source} --name-status`), not the size of the spec. The **narrative** of the feature (decisions, deviations, what went wrong) belongs here — history.md holds only the fixed-field record.
 
 ## Steps
 1. Tasks: count done/remaining; mark completed ones `[X]` only. Bugs: count; **never change a status** here. Open/in-progress bug → **BLOCK** ("run bugfix"). `claimed` without `Verified-by` → list under *Unverified claims*, bugs.md row ⚠️.

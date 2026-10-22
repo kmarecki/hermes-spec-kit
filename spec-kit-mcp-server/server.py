@@ -572,6 +572,43 @@ def timestamp() -> str:
     return _json({"utc": _now()})
 
 
+@mcp.tool(name="append_history")
+def append_history(feature: str, phase: str, skill: str, agent: str, artifacts: str = "none",
+                   tests: str = "none", evidence: str = "none — unverified", commit: str = "n/a",
+                   note: str = "-") -> str:
+    """Append one fixed-field entry to specs/<feature>/history.md with the REAL UTC time.
+    The entry is the record, not the story: note ≤ 25 words, whole entry ≤ 60 words.
+
+    Args:
+        feature: Feature ID
+        phase: Phase label (e.g. 'Phase 2', 'Phase 4 — Core', 'BF-014', 'Regression', 'Phase 6')
+        skill: The skill that completed (e.g. spec-kit-plan)
+        agent: hermes | claude | <human name> — read later as Implemented-by
+        artifacts: Comma-separated files created or modified
+        tests: '<command> → N passed, M failed' or 'none'
+        evidence: 'output:…; probe:…; ci:…; review:…' or 'none — unverified'
+        commit: The commit message that follows this entry
+        note: ≤ 25 words — the one fact a reader needs
+    """
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    if len(note.split()) > 25:
+        return _json({"error": f"note has {len(note.split())} words — max 25; narrative belongs in implementation-summary.md"})
+    body = (f"- Artifacts: {artifacts or 'none'}\n- Tests: {tests or 'none'}\n- Evidence: {evidence or 'none — unverified'}\n"
+            f"- Commit: {commit or 'n/a'}\n- Note: {note or '-'}\n")
+    words = len(body.split())
+    if words > 60:
+        return _json({"error": f"entry body has {words} words — max 60; shorten artifacts/tests/evidence/note"})
+    ts = _now()
+    hist = _feature_dir(feature) / "history.md"
+    if not hist.exists():
+        hist.write_text(f"# Process History: {feature}\n")
+    with hist.open("a", encoding="utf-8") as fh:
+        fh.write(f"\n## {ts} | {phase} | {skill} | {agent}\n{body}")
+    return _json({"success": True, "timestamp": ts, "file": str(hist), "words": words})
+
+
 @mcp.tool(name="history_guard")
 def history_guard(feature: str, phase: str) -> str:
     """Pre-commit guard: is there a history.md entry mentioning `phase` that is newer than

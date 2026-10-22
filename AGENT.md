@@ -199,6 +199,7 @@ outside its owning skill context.
 | `lint_artifacts` | Schema lint of bugs.md / tasks.md / history.md | Before every commit |
 | `timestamp` | Real UTC time | Every history entry and evidence file |
 | `history_guard` | Is there a fresh history entry for this phase since the last commit? | Pre-commit guard |
+| `append_history` | Append a fixed-field, time-stamped, word-capped history entry | End of every phase / bugfix / regression / close |
 
 ### Critical MCP Rules
 

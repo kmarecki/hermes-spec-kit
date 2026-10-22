@@ -78,8 +78,8 @@ Run these checks in order. If any check fails, stop and report before proceeding
 After every skill completes that created or modified any markdown document:
 
 1. **history.md is already ready** (pre-action check #5 already ensured it exists). Append an entry for each document created or modified:
-   - Format: `## [ISO_TIMESTAMP] | [Phase Name] → Complete` with skill, artifacts, notes
-   - See `spec-kit/references/history-tracking.md` for the exact format
+   - Fixed fields only (timestamp | phase | skill | agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words)
+   - See `spec-kit/references/history-tracking.md` for the exact format and the appender
    - This is NOT optional — if you skip this, the process log will be missing
 
 2. **PRE-COMMIT GUARD — Verify history.md is updated**
@@ -108,9 +108,11 @@ After every skill completes that created or modified any markdown document:
 **Every skill that creates or modifies markdown artifacts MUST follow this procedure instead of re-implementing it.**
 
 ```text
-1. APPEND to specs/[feature]/history.md:
-   - Phase: [Phase Name]
-   - Artifact: [comma-separated list of artifacts created/modified]
+1. APPEND the fixed-field record to specs/[feature]/history.md
+   (format: spec-kit/references/history-tracking.md — never type the time yourself):
+   - MCP: mcp_spec_kit_append_history(feature, phase, skill, agent, artifacts, tests, evidence, commit, note)
+   - no MCP: spec-kit/scripts/spec-kit-log.sh <feature> "<phase>" <skill> <agent> --artifacts … --tests … --evidence … --commit … --note …
+   Note ≤ 25 words; the narrative goes to implementation-summary.md at close.
 
 2. PRE-COMMIT GUARD:
    READ specs/[feature]/history.md

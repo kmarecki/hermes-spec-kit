@@ -218,6 +218,7 @@ link_or_copy() {
 link_or_copy "$HERMES_SPEC_KIT/references" "$CLAUDE_SKILLS_DIR/spec-kit/references" "$PROJECT_DIR/src/references" "spec-kit/references"
 link_or_copy "$HERMES_SPEC_KIT/templates"  "$CLAUDE_SKILLS_DIR/spec-kit/templates"  "$PROJECT_DIR/src/templates"  "spec-kit/templates"
 link_or_copy "$HERMES_SPEC_KIT/mcp-server" "$CLAUDE_SKILLS_DIR/spec-kit/mcp-server" "$PROJECT_DIR/spec-kit-mcp-server" "spec-kit/mcp-server"
+link_or_copy "$HERMES_SPEC_KIT/scripts"    "$CLAUDE_SKILLS_DIR/spec-kit/scripts"    "$PROJECT_DIR/src/scripts"            "spec-kit/scripts"
 for hdir in "$HERMES_SKILLS_DIR"/spec-kit-*/references; do
   [ -d "$hdir" ] || continue
   sname=$(basename "$(dirname "$hdir")")

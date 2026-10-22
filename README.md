@@ -136,7 +136,7 @@ An MCP server (`spec-kit-mcp-server/server.py`) is a **derive-and-enforce** serv
 keeps no state, derives every feature's phase from the files under `specs/<feature>/` on
 each call, and does the things an agent does badly — id allocation, artifact lint, real
 timestamps, the history-before-commit guard, and a ten-line phase card to re-read after
-context compaction. 15 tools exposed as `mcp_spec_kit_*` in Hermes (`mcp__spec-kit__*` in
+context compaction. 16 tools exposed as `mcp_spec_kit_*` in Hermes (`mcp__spec-kit__*` in
 Claude Code).
 
 **Tools:**
@@ -158,6 +158,7 @@ Claude Code).
 | `lint_artifacts` | Schema lint of bugs.md, tasks.md, history.md |
 | `timestamp` | Real UTC time |
 | `history_guard` | Fresh history entry since the last commit? |
+| `append_history` | Append a fixed-field, time-stamped, word-capped history entry |
 
 **State file**: none. The files are the state. A legacy `specs/.spec-kit/state.json` is
 ignored — delete it and add `specs/.spec-kit/` to `.gitignore` (the gitignore template does).

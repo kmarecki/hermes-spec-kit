@@ -10,6 +10,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **history.md is a record, not a story.** Fixed-field entries (timestamp |
+  phase | skill | agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words;
+  ≤ 60 words total), appended by the new `append_history` MCP tool or the
+  shipped `spec-kit/scripts/spec-kit-log.sh` — both stamp the real UTC time.
+  Narrative moves to implementation-summary.md. `history-tracking.md` and the
+  template rewritten; the Shared Commit Procedure uses the appender.
+
 - **Skill diet.** Every `src/skills/<skill>.md` is now a one-screen checklist
   (≈40 lines: phase, persona, purpose, before-writing, steps, done-when, next);
   the full procedure moved to `src/references/skills/<skill>.md` and is loaded on

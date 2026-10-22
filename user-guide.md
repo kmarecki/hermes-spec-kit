@@ -824,6 +824,7 @@ The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`F
 | `mcp_spec_kit_lint_artifacts` | Schema lint of bugs.md, tasks.md, history.md |
 | `mcp_spec_kit_timestamp` | Real UTC time |
 | `mcp_spec_kit_history_guard` | Fresh history entry since the last commit? |
+| `mcp_spec_kit_append_history` | Append a fixed-field, time-stamped, word-capped history entry |
 
 ### Benefits
 

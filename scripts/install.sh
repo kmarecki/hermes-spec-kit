@@ -98,6 +98,16 @@ for ref in "$PROJECT_DIR"/src/references/*.md; do
     cp "$ref" "$REFERENCES_DIR/$ref_name"
   fi
 done
+# Shell helpers (no-MCP fallbacks, e.g. spec-kit-log.sh)
+if [ -d "$PROJECT_DIR/src/scripts" ]; then
+  mkdir -p "$SKILLS_DIR/spec-kit/scripts"
+  for sh in "$PROJECT_DIR"/src/scripts/*.sh; do
+    [ -f "$sh" ] || continue
+    echo "  Installing script: $(basename "$sh")"
+    cp "$sh" "$SKILLS_DIR/spec-kit/scripts/$(basename "$sh")"
+    chmod +x "$SKILLS_DIR/spec-kit/scripts/$(basename "$sh")"
+  done
+fi
 # Full per-skill procedures (loaded on demand by the one-screen SKILL.md files)
 if [ -d "$PROJECT_DIR/src/references/skills" ]; then
   mkdir -p "$REFERENCES_DIR/skills"
