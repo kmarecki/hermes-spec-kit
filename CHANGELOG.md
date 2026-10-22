@@ -6,6 +6,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Claude Code edition** (`scripts/install-claude.sh`) — installs the same
+  skills for Claude Code from the same `src/skills/*.md` sources (generated
+  `~/.claude/skills/<name>/SKILL.md` with Hermes tool names translated and a
+  "Claude Code edition" header), symlinks `references/`, `templates/` and
+  `mcp-server/` to the installed Hermes tree so both agents read identical
+  shared files, and registers the spec-kit MCP server for Claude Code at user
+  scope (`mcp__spec-kit__<tool>`). Enables dual-agent hand-offs on one `specs/`
+  tree (e.g. Claude Code: specify → plan → tasks; Hermes: implement).
+  `--no-mcp` and `--uninstall` flags.
+
 ## [2.0.0] — 2026-07-10
 
 Version 2 adds an MCP server for deterministic workflow state management,

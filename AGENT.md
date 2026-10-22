@@ -309,6 +309,18 @@ The install script:
 6. Auto-configures `~/.hermes/config.yaml` with MCP server entry
 7. Cleans up old skill formats (flat `.md` files, renamed/obsolete directories)
 
+**Claude Code edition** — `./scripts/install-claude.sh` generates
+`~/.claude/skills/<name>/SKILL.md` from the SAME `src/skills/*.md` (frontmatter
+reduced to `name`/`description`/`argument-hint`; `terminal`→`Bash`,
+`write_file`/`patch`→`Write`/`Edit`, `read_file`→`Read`, `search_files`→`Grep`/`Glob`,
+`skill_view`→`Skill`, `mcp_spec_kit_*`→`mcp__spec-kit__*`; `spec-kit/references/…`
+paths resolved to `~/.claude/skills/spec-kit/references/…`), symlinks
+`references/`, `templates/`, `mcp-server/` and per-skill `references/` to
+`~/.hermes/skills/…`, and runs `claude mcp add -s user spec-kit …`. The transform
+lives in that one script — when you add a Hermes tool name or a new shared path to
+a skill, extend the `subs` table there and re-run both installers. Never edit
+`~/.claude/skills/spec-kit*/SKILL.md` by hand.
+
 ### Testing
 
 **MCP server workflow tests** (11 tests):

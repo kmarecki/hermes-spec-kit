@@ -9,6 +9,7 @@ Spec-driven development for Hermes Agent. 11 skills implementing a structured ph
 git clone https://github.com/kmarecki/hermes-spec-kit.git
 cd hermes-spec-kit
 ./scripts/install.sh          # copies skills + templates + MCP server to ~/.hermes/skills/
+./scripts/install-claude.sh   # (optional) the same skills for Claude Code → ~/.claude/skills/
 
 # 2. Reload skills and MCP in your Hermes session
 /reload-skills                # or start a new session
@@ -168,7 +169,45 @@ filesystem-based artifact detection — backward compatible, no skill changes ne
 **Installation**: `install.sh` copies the server and auto-configures via `hermes mcp add`.
 Activate in Hermes with `/reload-mcp`.
 
+**Claude Code**: `install-claude.sh` registers the same server at user scope
+(`claude mcp add -s user spec-kit …`); the tools appear as `mcp__spec-kit__<tool>`.
+Both agents read and write the same `specs/.spec-kit/state.json`.
+
 Full docs: [spec-kit-mcp-server/README.md](spec-kit-mcp-server/README.md)
+
+## Claude Code (dual-agent use)
+
+The same skills install for **Claude Code** from the same sources, so Hermes and
+Claude Code can hand phases to each other on one `specs/` tree — e.g. Claude Code
+runs `/spec-kit-specify`, `/spec-kit-plan`, `/spec-kit-tasks`, Hermes runs
+`spec-kit implement`, Claude Code runs `/spec-kit-summarize`.
+
+```bash
+./scripts/install-claude.sh            # → ~/.claude/skills/spec-kit*/SKILL.md + MCP registration
+./scripts/install-claude.sh --no-mcp   # skills only
+./scripts/install-claude.sh --uninstall
+```
+
+What the installer does:
+
+1. Transforms each `src/skills/*.md` into a Claude Code `SKILL.md` — frontmatter
+   reduced to `name` / `description` / `argument-hint`, Hermes tool names translated
+   (`terminal` → `Bash`, `write_file`/`patch` → `Write`/`Edit`, `read_file` → `Read`,
+   `search_files` → `Grep`/`Glob`, `skill_view` → `Skill`, `mcp_spec_kit_*` →
+   `mcp__spec-kit__*`), shared-file paths resolved, and a "Claude Code edition" note
+   added under the title (arguments, how to load another skill, tool mapping).
+2. **Symlinks** `references/`, `templates/` and `mcp-server/` to the installed Hermes
+   tree (`~/.hermes/skills/spec-kit/…`), including per-skill `references/` folders —
+   one source of truth, so what Hermes reads is what Claude Code reads. Falls back to
+   copying from `src/` when Hermes is not installed.
+3. Registers the MCP state server for Claude Code at user scope (skipped with `--no-mcp`
+   or when already registered).
+
+Invoke in Claude Code as `/spec-kit-specify <feature>`, `/spec-kit-plan <feature>`, …
+(`$ARGUMENTS` carries the feature) or by the same natural phrases as in Hermes.
+Restart Claude Code after installing. Re-run the installer after editing any
+`src/skills/*.md` — the generated files say so in their header and must not be
+edited by hand.
 
 ## Running Tests
 
