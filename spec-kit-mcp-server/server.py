@@ -554,6 +554,10 @@ def lint_artifacts(feature: str) -> str:
             if dup:
                 findings.append({"file": "tasks.md", "severity": "error", "msg": f"duplicate {kind} ids: {sorted(dup)}"})
 
+    if (fd / "plan.md").exists() and any((fd / c).exists() for c in CLOSE_DOCS):
+        if "## Current Design" not in (fd / "plan.md").read_text(errors="replace"):
+            findings.append({"file": "plan.md", "severity": "warning", "msg": "closed feature without a '## Current Design' section — regenerate it at close"})
+
     if (fd / "history.md").exists():
         if not (fd / "history.md").read_text(errors="replace").lstrip().startswith("#"):
             findings.append({"file": "history.md", "severity": "warning", "msg": "missing title header"})

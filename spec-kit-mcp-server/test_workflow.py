@@ -200,6 +200,12 @@ async def test_next_id_and_lint(s, root):
         "- **Verified-by**: [user / ci:<run-id> / review:<other-agent>]", "- **Verified-by**: user"))
     d = await call(s, "lint_artifacts", {"feature": "f5"})
     check("clean artifacts lint ok", d["success"] is True, json.dumps(d["findings"]))
+    write(root, "f5", "close.md")
+    d = await call(s, "lint_artifacts", {"feature": "f5"})
+    check("closed feature without Current Design → warning", any("Current Design" in f["msg"] for f in d["findings"]) and d["success"] is True)
+    write(root, "f5", "plan.md", "# plan\n\n## Current Design\n\nbuilt\n")
+    d = await call(s, "lint_artifacts", {"feature": "f5"})
+    check("  with Current Design → no warning", not any("Current Design" in f["msg"] for f in d["findings"]))
 
 
 async def test_timestamp_and_history_guard(s, root):

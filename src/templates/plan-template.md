@@ -8,6 +8,16 @@
 
 [Extract from feature spec: primary requirement + technical approach from research]
 
+## Current Design
+
+> **Regenerated, never appended.** This section describes what is BUILT, in at most one page.
+> It is rewritten by `spec-kit-summarize` at every close (and may be refreshed by
+> `spec-kit-refresh`); the original design and every bugfix round stay below as dated
+> records. A reader who wants the truth reads this section; a reader who wants the
+> history reads the rounds.
+
+[Until the first close: "Not yet built — see the sections below for the intended design."]
+
 ## Technical Context
 
 - **Language/Version:** [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
@@ -51,3 +61,15 @@ Fill ONLY if Constitution Check has violations that must be justified.
 | :--- | :--- | :--- |
 | [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
 | [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+
+## Rounds (ADR log)
+
+> Every bugfix / reopen round appends ONE dated section here — never edits an earlier one.
+> A round states what it supersedes, so a contradiction between sections is resolved by date.
+
+### Round 1 — [YYYY-MM-DD] — [trigger: BUG-NNN, …] — supersedes: [§ names or "nothing"]
+
+- **Context**: [what was wrong — one or two sentences, cite the bug ids]
+- **Decision**: [what changes in the design]
+- **Consequences**: [what else moves; what stays]
+- **Plan Ref**: [the bugs.md Plan Ref value for each bug in this round]

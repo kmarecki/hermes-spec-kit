@@ -10,6 +10,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **plan.md: Current Design + ADR rounds.** The plan template gains a
+  `## Current Design` section (≤ 1 page, what is built; regenerated at every
+  close and by refresh — the only replaced section) and a `## Rounds (ADR log)`
+  section where each bugfix/reopen round appends one dated entry (Context /
+  Decision / Consequences / Plan Ref) naming what it supersedes. Append-only
+  plans no longer contradict themselves across rounds. `lint_artifacts` warns
+  when a closed feature's plan lacks the section.
+
 - **history.md is a record, not a story.** Fixed-field entries (timestamp |
   phase | skill | agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words;
   ≤ 60 words total), appended by the new `append_history` MCP tool or the

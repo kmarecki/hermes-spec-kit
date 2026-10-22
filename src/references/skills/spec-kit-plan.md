@@ -81,7 +81,7 @@ Generate `quickstart.md`: key validation scenarios.
 Choose template: Single project (`src/`, `tests/`) / Web app / Mobile + API.
 
 ### Bugfix planning (bugfix mode)
-For each open bug: analyze root cause, append bugfix section to plan.md (do NOT remove existing plan content), set Plan Ref in bugs.md.
+For each open bug: analyze root cause, append ONE dated round under `## Rounds (ADR log)` at the end of plan.md (`### Round N — <date> — <BUG ids> — supersedes: <§ or nothing>` with Context / Decision / Consequences / Plan Ref), set Plan Ref in bugs.md. Do NOT touch `## Current Design` — the close regenerates it from what was built.
 
 **Additive-safe**: Append new bugfix sections at the end of plan.md. Never delete existing plan sections. You may modify existing sections minimally (e.g. mark a section as superseded by a bugfix). If a new fix contradicts an existing plan section, ask the user for guidance.
 

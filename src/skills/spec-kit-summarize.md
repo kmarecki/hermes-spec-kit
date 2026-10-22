@@ -28,7 +28,7 @@ metadata:
 2. **Evidence table** (`spec-kit/references/evidence.md`): regression `output:`/`ci:`, a `probe:` per external seam, review label (`review:<agent>` or self-review). No oracle → ❌ unverified, written, never omitted.
 3. Gap analysis (full mode): each FR / story / entity / contract → ✅ Resolved (needs an evidence ref) / ⚠️ Acknowledged (reason) / ❌ Not Done. Health = (resolved + acknowledged) / total.
 4. Intentional deviations → propose each spec/plan patch; **WAIT** for approval; rejected → ⚠️ needs review.
-5. **Regenerate `plan.md` → `## Current Design`** (≤ 1 page, what was built) and mark superseded round sections. Assumptions from `decisions.md` → list those still unconfirmed.
+5. **Regenerate `plan.md` → `## Current Design`** (≤ 1 page, what is BUILT — the one section that is rewritten, not appended); rounds stay as dated records. Assumptions from `decisions.md` → list those still unconfirmed.
 6. ❌ Not Done gaps (full mode) → new `open` bugs in bugs.md (`mcp_spec_kit_next_id`). Write the document; fill Artifact/Spec State tables.
 
 ## Done when

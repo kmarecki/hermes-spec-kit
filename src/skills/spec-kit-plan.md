@@ -29,7 +29,7 @@ metadata:
 3. `research.md`: decision → rationale → alternatives, per technology choice. Generate only what the feature needs.
 4. `data-model.md` (entities, fields, relations, validation, state transitions); `contracts/` (API/command schemas); `quickstart.md` (key validation scenarios). Name every **external seam** (database function, HTTP contract, file format) the feature touches — implement will probe each one.
 5. Project structure: single / web / mobile+API.
-6. Bugfix mode: per open bug, root cause → append a bugfix section at the END of `plan.md` → set `Plan Ref` in `bugs.md`. Never delete sections; a contradiction with an existing section → ask the user.
+6. Bugfix mode: per open bug, root cause → append ONE dated round under `## Rounds (ADR log)` at the END of `plan.md`: `### Round N — <date> — <BUG ids> — supersedes: <§ or nothing>` with Context / Decision / Consequences / Plan Ref → set `Plan Ref` in `bugs.md`. Never edit earlier rounds or `## Current Design` (the close regenerates it); a contradiction with the current design → say so in *supersedes* and ask the user.
 
 ## Done when
 - [ ] All needed plan artifacts written; bugfix mode: appended only.

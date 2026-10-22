@@ -218,6 +218,16 @@ WAIT for user approval before applying.
 
 If user rejects a proposed patch → mark that artifact as `⚠️ needs review` in the Spec State table (not auto-updated).
 
+### Step 7b: Regenerate the plan's Current Design
+```
+REWRITE plan.md `## Current Design` (the ONLY section that is replaced, not appended):
+  <= 1 page; what is built now — components, data flow, seams, the decisions that hold
+  Source: the code (git diff), the rounds in `## Rounds (ADR log)`, the gap analysis
+  Earlier rounds stay untouched; a round superseded by a later one is NOT edited —
+  the Current Design simply no longer describes it
+NOTE in the close document: "plan.md Current Design regenerated"
+```
+
 ### Step 8: Collect implementation details
 ```
 IDENTIFY:

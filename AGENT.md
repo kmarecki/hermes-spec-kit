@@ -429,6 +429,9 @@ or targeted-edit (update specific lines/fields).
 - **Forbidden**: Delete existing entries, renumber IDs, reformat entire file,
   replace >50% of lines.
 - **Exception**: First creation (file doesn't exist yet) — may write from template.
+- **Exception**: `plan.md` `## Current Design` is REGENERATED at close (and by
+  refresh) — the one section that is replaced. Bugfix rounds append dated
+  ADR-style sections under `## Rounds (ADR log)` and name what they supersede.
 - **history.md is append-only**: Never edit or delete past entries.
 
 Preflight.md section 3 enforces this with a 50-line threshold check.
