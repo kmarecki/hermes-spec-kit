@@ -13,103 +13,26 @@ metadata:
 
 # spec-kit-specify
 
-**Task Persona**: Adopt the mindset of a curious detail-gatherer. Your job is to extract every relevant detail from the user before writing anything. Ask clarifying questions. Probe edge cases. Challenge vague statements. A complete spec answers WHAT and WHY — the HOW comes later. Every requirement must be testable.
+**Phase**: 1 · **Persona**: curious detail-gatherer — extract WHAT and WHY; every requirement testable; the HOW comes later.
+**Purpose**: create `specs/[feature]/spec.md` — functional requirements (FR-###), user scenarios, success criteria, entities, edge cases. No implementation details, no technology choices.
+**Full procedure**: `spec-kit/references/skills/spec-kit-specify.md` — read a section when a step below is unclear.
+**Not for**: tiny unambiguous changes (typo, rename) — implement directly.
 
-**Phase**: 1
+## Before writing
+- Run `spec-kit/references/preflight.md` (branch, mode, logged-bug check, git conventions, phase card, history.md).
+- Do not load `spec-kit-workflow` here — it is for routing commands (bugfix / reopen / status) only.
 
-**Purpose**: Create or update a feature specification at `specs/[feature]/spec.md`. Defines **WHAT** users need and **WHY** — the feature, refactoring, or enhancement in full detail. Captures functional requirements (FR-###), user scenarios, success criteria, entities, and edge cases. 
+## Steps
+1. **BLOCK** if `specs/[feature]/spec.md` exists (No Complete Overwrite) → say: run `bugfix [feature]` or `reopen [feature]`.
+2. Parse the description into actors, actions, data, constraints. Empty description → error.
+3. Short name (2–4 words, action-noun) + next sequential number → `specs/NNN-short-name/` (MCP: `mcp_spec_kit_init_feature`).
+4. Copy `spec-kit/templates/spec-template.md`; fill User Scenarios (P1/P2/P3, Given/When/Then), FR-### (testable, technology-agnostic), Success Criteria (measurable), Key Entities (domain only), Edge Cases.
+5. At most 3 `[NEEDS CLARIFICATION]` markers — more means the scope is too vague: ask first. Priority: scope > security > UX > technical. Simple feature → one paragraph + 2–3 FRs.
 
-**No implementation details, no code, no technology choices.** The spec describes what the system should do, not how to build it. Architecture decisions, data models, and technical approach belong in the Plan phase.
+## Done when
+- [ ] spec.md written, FR-### sequential, nothing deleted.
+- [ ] MCP (optional): `mcp_spec_kit_update_artifact(spec.md)` · `mcp_spec_kit_advance_phase(from_phase=1)` · `mcp_spec_kit_lint_artifacts` → 0 errors.
+- [ ] history.md entry appended, then commit — Shared Commit Procedure in `spec-kit/references/preflight.md`: scope `specs/[feature]/spec.md`, message `spec(phase-1): [feature] spec`.
 
-**When NOT to use**: For tiny unambiguous changes (typo fix, rename), skip straight to implementation.
-
-**Routing**: Load this skill when the user says "create a spec for [feature]" or "specify [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
-
-
-**Artifacts**:
-- `specs/[feature]/spec.md`
-
-## Pre-flight
-Load and follow `spec-kit/references/preflight.md` before any action in this skill.
-
-## Execution
-
-### Validate prerequisites
-```
-IF specs/[feature]/spec.md EXISTS:
-  BLOCK: "spec.md for [feature] already exists. The No Complete Overwrite rule
-          forbids overwriting it. If you need to modify the spec for bugfix,
-          run: 'bugfix [feature]' or 'reopen [feature]'."
-  HALT
-```
-
-### Parse user description
-- Extract: actors, actions, data, constraints
-- If empty: ERROR "No feature description provided"
-
-### Generate short name
-2-4 word action-noun format: "user-auth", "oauth2-api-integration"
-
-### Create feature directory
-```
-DETERMINE prefix (next sequential number: 001, 002...)
-CREATE: specs/[###]-[short-name]/
-```
-
-### Generate spec.md
-Copy `spec-kit/templates/spec-template.md` → `specs/[feature]/spec.md`
-
-Populate with:
-- **User Scenarios**: P1/P2/P3 with Given/When/Then
-- **Functional Requirements**: FR-001, FR-002... — testable, technology-agnostic
-- **Success Criteria**: Measurable outcomes
-- **Key Entities**: Domain objects only (no implementation)
-- **Edge Cases**: Error conditions, boundaries
-
-### Apply constraints
-- MAX 3 `[NEEDS CLARIFICATION]` markers
-- NO implementation details (tech stack, frameworks, APIs)
-- Prioritize: scope > security > UX > technical
-
-
-### Note on commits
-Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
-
-
-### MCP checks (optional, when MCP server is configured)
-
-The server keeps no state — it derives the phase from the files and validates.
-After writing the artifact(s) and before committing:
-
-```text
-CALL mcp_spec_kit_init_feature(feature="[feature]", name="[name]")   # creates the dir + history.md header (skip if it exists)
-CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="spec.md", status="present")   # confirms the file is on disk
-CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=1, artifacts_created=["spec.md"])   # validates; returns the phase card
-CALL mcp_spec_kit_lint_artifacts(feature="[feature]")   # must report 0 errors before the commit
-```
-
-### Append to history.md and Commit
-
-Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
-- Phase: Phase 1 — Specify
-- Artifact: `specs/[feature]/spec.md`
-- Scope: `specs/[feature]/spec.md`
-- Message: `"spec(phase-1): [feature] spec"`
-
-### Done When
-- [ ] spec.md created with FR-### requirements numbered sequentially
-- [ ] No existing content deleted; modifications minimal (additive-safe)
-- [ ] history.md entry appended
-- [ ] Committed
-
-## Completion
-- Feature directory path, spec file path
-- Propose: `spec-kit-clarify` or `spec-kit-plan`
-
-## Common Pitfalls
-1. **Implementation details in spec**: Focus on user value. Move architecture decisions to the Plan phase.
-2. **Too many `[NEEDS CLARIFICATION]` markers**: Keep to 3 max. If more, the feature scope is too vague — clarify with the user first.
-3. **Over-specifying**: For simple features, a single paragraph + 2-3 FRs is enough. Don't force full template on trivial changes.
-
-## Prerequisite Enforcement
-**BLOCKED** if: spec.md for this feature already exists (No Complete Overwrite rule).
+## Next
+Propose `spec-kit-clarify` (markers remain) or `spec-kit-plan`.

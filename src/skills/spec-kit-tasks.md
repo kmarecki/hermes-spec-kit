@@ -13,122 +13,27 @@ metadata:
 
 # spec-kit-tasks
 
-**Task Persona**: Adopt the mindset of a system architect and philosopher. Every requirement must become concrete, executable work. Break down the design into granular, ordered tasks — each one maps to a requirement and produces a verifiable deliverable. No gaps, no assumptions.
+**Phase**: 3 · **Persona**: architect turning design into concrete, ordered, verifiable work — no gaps, no assumptions.
+**Purpose**: create `specs/[feature]/tasks.md` — tests first per phase, then implementation; every task has an exact file path.
+**Full procedure**: `spec-kit/references/skills/spec-kit-tasks.md`.
+**Not for**: one-step changes — implement directly.
 
-**Phase**: 3
+## Before writing
+- Run `spec-kit/references/preflight.md`. **BLOCK** if `plan.md` or `spec.md` is missing.
+- Load `plan.md`, `spec.md`, `data-model.md`, `contracts/`. `tasks.md` exists and not bugfix mode → **BLOCK** (route `bugfix`/`reopen`). Bugfix mode → load `tasks.md`, `bugs.md`, plan bugfix sections; append only.
 
-**Purpose**: Create `specs/[feature]/tasks.md` — an executable task list. Tests generated first, then implementation tasks. No mandatory 1:1 mapping between tests and tasks. User may explicitly bypass TDD.
+## Steps
+1. New file: copy `spec-kit/templates/tasks-template.md`.
+2. **ASK** the user: TDD or skip tests? Skip → header `> **TDD**: Bypassed by user request`. Never assume.
+3. Phases: Setup → Foundational → User Stories → Polish. Format `T### [P] [US#] Description — file/path.ext`. Test tasks `[TEST]` first in each phase; no forced 1:1 test↔task.
+4. Map every FR-### and user story to tasks; mark tasks touching an external seam `[SEAM]` (they need a real-data probe fixture — see `spec-kit/references/evidence.md`).
+5. Bugfix mode: per open bug a `BF-###` task + its verifying test; insert BEFORE `## Dependencies & Execution Order`; never delete tasks; duplicate id → ask.
+6. Ids: MCP `mcp_spec_kit_next_id(kind="T"|"BF")`; without MCP, highest existing + 1. Document phase dependencies and parallel opportunities.
 
-**When NOT to use**: For one-step changes (single file edit) — just implement directly.
+## Done when
+- [ ] Every task has a file path; `[TEST]`/`[SEAM]`/`[P]` markers set; TDD question answered.
+- [ ] MCP (optional): `mcp_spec_kit_update_artifact(tasks.md)` · `mcp_spec_kit_advance_phase(from_phase=3)` · `mcp_spec_kit_lint_artifacts` → 0 errors (ascending ids).
+- [ ] history.md entry, then commit — Shared Commit Procedure in `spec-kit/references/preflight.md`: scope `specs/[feature]/tasks.md`; message `spec(phase-3): [feature] tasks` (bugfix: `spec(phase-3): [feature] bugfix tasks (BUG-NNN, …)`).
 
-**Routing**: Load this skill when the user says "generate tasks for [feature]" or "break down [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
-
-
-**Artifacts**: `specs/[feature]/tasks.md`
-
-## Pre-flight
-Load and follow `spec-kit/references/preflight.md` before any action in this skill.
-
-## Execution
-
-### Validate prerequisites
-```
-IF specs/[feature]/plan.md NOT EXISTS: ERROR "Run spec-kit-plan first"
-IF specs/[feature]/spec.md NOT EXISTS: ERROR "Run spec-kit-specify first"
-```
-
-### Load context
-```
-LOAD specs/[feature]/plan.md, spec.md, data-model.md, contracts/
-
-IF bugfix mode (reopened bugfix):
-  NOTE: "Bugfix mode — tasks.md already exists with completed tasks. Will append new bugfix tasks only."
-  LOAD existing specs/[feature]/tasks.md
-  LOAD bugs.md, plan.md bugfix sections
-ELIF specs/[feature]/tasks.md EXISTS:
-  BLOCK: "tasks.md already exists for [feature]. The No Complete Overwrite rule
-          forbids overwriting it. If you need to add bugfix tasks, run the
-          relevant workflow instead.
-          Route: 'bugfix [feature]' for bugfix additions,
-                 'reopen [feature]' for reopening a closed feature."
-  HALT
-ELSE:
-  LOAD spec-kit/templates/tasks-template.md
-  COPY spec-kit/templates/tasks-template.md → specs/[feature]/tasks.md
-```
-
-### Determine TDD mode
-```
-ASK user: "Generate test tasks (TDD) or skip tests?"
-IF skip:
-  SET tdd_bypassed = true
-  ADD header to tasks.md: "> **TDD**: Bypassed by user request"
-```
-
-### Generate test tasks first (TDD mode)
-For each phase, tests BEFORE implementation:
-```
-Phase N:
-  T001 [TEST] Write tests for login          — tests/test_auth.py
-  T002        Implement login                 — src/auth.py
-```
-
-Rules:
-- All test tasks for a phase come first
-- No mandatory 1:1: one test can cover multiple tasks, one task can have multiple tests
-- Group tests by phase boundary, not implementation granularity
-- Mark test tasks with `[TEST]`
-
-### Map requirements to tasks
-```
-For each FR-###: IDENTIFY implementing tasks
-For each User Story: MAP scenarios to test tasks, entities to model tasks
-```
-
-### Map bugfix tasks (bugfix mode)
-```
-For each open bug: CREATE BF-### task, include test task to verify fix
-```
-
-**Additive-safe**: Insert new bugfix tasks BEFORE the final `## Dependencies & Execution Order` section. Never delete existing tasks. You may update task status fields (e.g. mark tasks as completed). If a new bugfix task has the same ID as an existing one, ask the user how to resolve. The `## Dependencies` and `## Verification` sections (if present) must remain as the last sections — never insert anything after them.
-
-### Generate task breakdown
-Organize by phase: Setup → Foundational → User Stories → Polish.
-Format: `T### [P] [US#] Description — file/path.ext`
-Ids: with MCP, `mcp_spec_kit_next_id(feature, kind="T")` / `kind="BF"` allocates the next number — never count by hand; without MCP, read the highest existing id and add one.
-
-### Document dependencies
-Phase dependencies, parallel execution opportunities.
-
-### Note on commits
-Report: task count, phases, TDD mode, parallel tasks, bugfix tasks
-
-
-### MCP checks (optional, when MCP server is configured)
-
-The server keeps no state — it derives the phase from the files and validates.
-After writing the artifact(s) and before committing:
-
-```text
-CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="tasks.md", status="present")
-CALL mcp_spec_kit_advance_phase(feature="[feature]", from_phase=3, artifacts_created=["tasks.md"])   # validates; returns the phase card
-CALL mcp_spec_kit_lint_artifacts(feature="[feature]")   # ascending T/BF ids, 0 errors
-```
-
-### Append to history.md and Commit
-
-Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
-- Phase: Phase 3 — Tasks
-- Artifact: `specs/[feature]/tasks.md`
-- Scope: `specs/[feature]/tasks.md`
-- Message: `"spec(phase-3): [feature] tasks"`
-
-## Completion
-
-## Common Pitfalls
-1. **Missing file paths**: Every task needs an exact file path — otherwise the implement skill can't execute it.
-2. **Forcing 1:1 test-to-task**: Integration tests cover multiple tasks. Edge case tests cover one function. Let the test structure follow the behavior, not the task IDs.
-3. **Not asking about TDD bypass**: Always ask the user at task generation time. Don't assume.
-
-## Prerequisite Enforcement
-**BLOCKED** if: plan.md or spec.md does not exist.
+## Next
+Report task count, phases, TDD mode, parallel and bugfix tasks. Propose `spec-kit-review` (optional) or `spec-kit-implement`; bugfix mode routes to `spec-kit-implement` automatically.

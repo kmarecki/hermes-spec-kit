@@ -1,0 +1,76 @@
+# spec-kit-refresh — full procedure
+
+> **Loaded on demand.** The one-screen `spec-kit-refresh` SKILL.md is the entry point; this file holds the complete
+> procedure (every branch, template field and pitfall). Read the section you need, not the whole file.
+> Tool names: Hermes (`terminal`, `write_file`, `patch`, `read_file`, `skill_view`) — Claude Code maps them to
+> `Bash`, `Write`/`Edit`, `Read`, `Skill`; MCP tools are `mcp_spec_kit_*` / `mcp__spec-kit__*`.
+
+**Task Persona**: Adopt the mindset of an auditor reconciling intent with reality. Artifacts drift from code over time — bring them back into alignment without over-correcting. Be precise: flag what changed, propose updates, get approval.
+
+**Phase**: N/A (standalone)
+
+**Purpose**: Reconcile spec/plan artifacts with actual code without generating a summary or close document. For manual code changes or mid-stream alignment.
+
+**When NOT to use**: To close a feature — use `spec-kit-summarize` instead.
+
+**Routing**: Load this skill when the user says "refresh [feature]" or "sync spec for [feature]". Standalone — no prerequisite routing needed.
+ To verify fresh implementation — the implement skill's batch commit already captures the design.
+
+**Prerequisites**: `specs/[feature]/spec.md` must exist.
+
+## Pre-flight
+Load and follow `spec-kit/references/preflight.md` before any action in this skill.
+
+## Execution
+
+### Load artifacts and code state
+```
+LOAD specs/[feature]/spec.md, plan.md (IF EXISTS), data-model.md, contracts/
+RUN: git diff {branch_source} --name-status
+  (branch_source from specs/git-conventions.md, default: main)
+```
+
+### Identify discrepancies
+```
+For each FR-###: compare spec description against actual code.
+Classify: Match / Mismatch / Missing / Unplanned
+```
+
+### Present discrepancies to user (max 5 per session)
+```
+"spec.md says: [excerpt]"
+"Code does:   [actual behavior]"
+"→ Update spec to match code? (yes/no)"
+```
+
+### Refresh plan.md and data-model.md
+Same per-item approval for architecture, data model, and contract discrepancies.
+
+### Append to history.md and Commit
+
+Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+- Phase: Refresh
+- Artifact: patched `spec.md`/`plan.md`
+- Scope: patched spec artifacts
+- Message: `"spec(refresh): [feature] reconcile artifacts"`
+
+## Completion
+### Done When
+- [ ] Each patch approved by user before applying
+- [ ] Additive-safe: spec/plan entries never deleted; modifications are minimal field updates
+- [ ] history.md entry appended (pre-commit guard verified)
+- [ ] Committed
+
+## Common Pitfalls
+
+1. **Using refresh instead of close**: Refresh doesn't generate a close document. The feature won't be marked complete.
+2. **Bulk patching without user approval**: Each discrepancy needs explicit yes/no. Don't auto-approve.
+
+## Key Difference from Summary
+
+| Aspect | summarize | refresh |
+|--------|-----------|---------|
+| Output | summary/close document | In-place patches |
+| Gap analysis | Full matrix | Per-item yes/no |
+| Spec health | Computed | Not computed |
+| When | End of feature | Mid-stream alignment |

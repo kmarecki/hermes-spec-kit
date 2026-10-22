@@ -315,7 +315,7 @@ The install script:
 1. Copies each `src/skills/*.md` → `~/.hermes/skills/<name>/SKILL.md`
 2. Copies umbrella `src/skills/spec-kit/SKILL.md` → `~/.hermes/skills/spec-kit/SKILL.md`
 3. Copies templates to `~/.hermes/skills/spec-kit/templates/`
-4. Copies references to `~/.hermes/skills/spec-kit/references/`
+4. Copies references to `~/.hermes/skills/spec-kit/references/` (incl. `references/skills/` — the full per-skill procedures)
 5. Copies MCP server to `~/.hermes/skills/spec-kit/mcp-server/server.py`
 6. Auto-configures `~/.hermes/config.yaml` with MCP server entry
 7. Cleans up old skill formats (flat `.md` files, renamed/obsolete directories)
@@ -355,6 +355,16 @@ umbrella coverage, reference inventory, workflow diagram phases.
 ```bash
 cd spec-kit-mcp-server && python3 test_workflow.py && python3 test_skills.py
 ```
+
+### Skill shape (one screen + full procedure)
+
+Each `src/skills/<skill>.md` is a one-screen checklist (≤ 110 lines, validated by
+`test_skills.py`): phase, persona, purpose, before-writing checks, steps, done-when
+gates, next. The complete procedure lives in `src/references/skills/<skill>.md`
+and is read on demand. Edit both when behaviour changes; the checklist is what
+the agent holds in context across a long phase, the reference is the detail.
+Phase skills do not load `spec-kit-workflow`; preflight carries the guardrails
+and the MCP phase card carries the state.
 
 ### After modifying skills/templates
 

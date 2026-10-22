@@ -6,6 +6,8 @@ Run these checks in order. If any check fails, stop and report before proceeding
 
 ## Checks
 
+> Keep this file and the one-screen SKILL.md in context; open `spec-kit/references/skills/<skill>.md` only for the step you are on. After a context compaction, re-run checks 1–5 and re-read the phase card.
+
 ```
 1. BRANCH CHECK
    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
@@ -66,7 +68,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
 - Not on main/master? ✓
 - Bug mode blocks code? ✓ (open bugs → BLOCK, route through bugfix)
 - Bug logged before fix? ✓ (unlogged bug → BLOCK, route to spec-kit-test)
-- Workflow loaded before code? ✓
+- Phase card read (MCP) or phase derived from files before any write? ✓
 - history.md exists for this feature? ✓ (created if missing)
 
 ## Post-Completion Requirements (MANDATORY)

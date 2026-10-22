@@ -98,6 +98,15 @@ for ref in "$PROJECT_DIR"/src/references/*.md; do
     cp "$ref" "$REFERENCES_DIR/$ref_name"
   fi
 done
+# Full per-skill procedures (loaded on demand by the one-screen SKILL.md files)
+if [ -d "$PROJECT_DIR/src/references/skills" ]; then
+  mkdir -p "$REFERENCES_DIR/skills"
+  for ref in "$PROJECT_DIR"/src/references/skills/*.md; do
+    [ -f "$ref" ] || continue
+    echo "  Installing full procedure: skills/$(basename "$ref")"
+    cp "$ref" "$REFERENCES_DIR/skills/$(basename "$ref")"
+  done
+fi
 
 # --- SOUL.md prompt ---
 SOUL_TEMPLATE="$TEMPLATES_DIR/soul-template.md"

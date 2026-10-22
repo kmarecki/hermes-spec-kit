@@ -10,6 +10,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Skill diet.** Every `src/skills/<skill>.md` is now a one-screen checklist
+  (≈40 lines: phase, persona, purpose, before-writing, steps, done-when, next);
+  the full procedure moved to `src/references/skills/<skill>.md` and is loaded on
+  demand. Phase skills no longer ask to load `spec-kit-workflow` — preflight
+  carries the guardrails and the MCP phase card carries the state. Per-phase
+  instruction load drops from 6–10 k tokens to roughly 2.7 k (most of it the
+  shared preflight). `test_skills.py`
+  enforces the ≤ 110-line limit and the pointer to the full procedure; both
+  installers ship `references/skills/`.
+
 - **MCP server v3 — derive-and-enforce, no persisted state.** `state.json` was a
   second source of truth that drifted (30 of 34 features out of sync in one
   deployment) and conflicted on every merge. Every tool now derives the phase

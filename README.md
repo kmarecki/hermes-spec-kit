@@ -48,8 +48,8 @@ src/
   skills/                # Skill source files (11 .md + 1 umbrella directory)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
   templates/             # Template source files (13 templates, all *-template.md)
-  references/            # Reference files (5: preflight, auto-commit, history-tracking,
-                         #   constitution-tables, constitution-principles)
+  references/            # preflight, auto-commit, evidence, history-tracking, constitution-*
+    skills/              # Full procedure per skill — loaded on demand by the one-screen SKILL.md
   skills/
     spec-kit-bugfix/      [removed] — function absorbed into spec-kit-workflow
 scripts/

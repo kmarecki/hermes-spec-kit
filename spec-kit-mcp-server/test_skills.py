@@ -102,8 +102,8 @@ def collect_skill_names():
 
 
 def collect_refs_in_text(text):
-    """Find all `spec-kit/references/*` references in text."""
-    return set(re.findall(r'`(?:spec-kit/)?references/([^`]+)`', text))
+    """Find all `spec-kit/references/*` references in text (placeholders like <skill>.md skipped)."""
+    return {r for r in re.findall(r'`(?:spec-kit/)?references/([^`]+)`', text) if '<' not in r}
 
 
 def collect_templates_in_text(text):
@@ -205,7 +205,7 @@ def test_phase_coverage():
 def test_reference_files_exist():
     """Every reference mentioned in skill content exists in references/."""
     print("\n═══ Reference files ═══")
-    existing_refs = {p.name for p in REFERENCES_DIR.glob("*.md")}
+    existing_refs = {str(p.relative_to(REFERENCES_DIR)) for p in REFERENCES_DIR.rglob("*.md")}
 
     for name in sorted(ALL_SKILLS):
         if name == UMBRELLA_DIR:
@@ -330,12 +330,21 @@ def test_umbrella_coverage():
 
 
 def test_no_loose_reference_files():
-    """No extra/missing files in references/ directory."""
+    """No extra/missing files in references/ (top level); references/skills/ mirrors the skill set."""
     print("\n═══ Reference inventory ═══")
     existing = {p.name for p in REFERENCES_DIR.glob("*.md")}
     check("no unexpected reference files", existing == EXPECTED_REFERENCES,
           f"extra: {existing - EXPECTED_REFERENCES}, "
           f"missing: {EXPECTED_REFERENCES - existing}")
+    full = {p.stem for p in (REFERENCES_DIR / "skills").glob("spec-kit-*.md")}
+    expected_full = ALL_SKILLS - {UMBRELLA_DIR}
+    check("references/skills/ has one full procedure per skill", full == expected_full,
+          f"extra: {full - expected_full}, missing: {expected_full - full}")
+    for name in sorted(expected_full):
+        skill_text = (SKILLS_DIR / f"{name}.md").read_text()
+        check(f"{name}: SKILL.md points at its full procedure", f"spec-kit/references/skills/{name}.md" in skill_text)
+        lines = skill_text.count("\n")
+        check(f"{name}: SKILL.md is one screen (<= 110 lines)", lines <= 110, f"{lines} lines")
 
 
 def test_workflow_diagram_phases():

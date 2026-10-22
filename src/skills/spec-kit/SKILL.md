@@ -40,7 +40,7 @@ Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → 
 
 ## Phase Reference
 
-Load `spec-kit-workflow` for the full routing table, prerequisite checks, phase detection, and guardrails.
+Every phase skill is a **one-screen checklist**; its complete procedure lives in `spec-kit/references/skills/<skill>.md` and is loaded on demand. Phase skills carry their own guardrails through preflight — load `spec-kit-workflow` only for routing commands (bugfix, quickfix, reopen, close, status).
 
 | Phase | Skill | Purpose |
 |-------|-------|---------|
@@ -82,12 +82,14 @@ All skills reference templates as `spec-kit/templates/<name>-template.md` — NO
 
 ```text
 src/
-  skills/                # Skill source files (12 .md + umbrella directory)
+  skills/                # One-screen skills (11 .md + umbrella directory)
     spec-kit/SKILL.md    # This file
-  templates/             # Template source files (13 templates, all *-template.md)
-  references/            # Reference files (5: preflight, auto-commit, etc.)
+  references/            # preflight, auto-commit, evidence, history-tracking, constitution-*
+    skills/              # Full procedure per skill (loaded on demand)
+  templates/             # 13 templates, all *-template.md
 scripts/
-  install.sh             # Copies src/* to ~/.hermes/skills/
+  install.sh             # Hermes edition → ~/.hermes/skills/
+  install-claude.sh      # Claude Code edition → ~/.claude/skills/
 ```
 
 Skills and templates are maintained in the project directory and installed via `./scripts/install.sh`. Do not edit files in `~/.hermes/skills/` directly.
@@ -107,7 +109,8 @@ Installed via `./scripts/install.sh` — see `src/templates/` for the full list:
 
 ## References
 
-- `references/preflight.md` — Pre-action self-check (branch, mode, workflow, history)
+- `references/preflight.md` — Pre-action self-check (branch, mode, logged bug, conventions, phase card, history)
+- `references/skills/<skill>.md` — the full procedure behind each one-screen skill
 - `references/evidence.md` — Evidence of Done: oracles (user / ci / other-agent review / probe / output), the claimed→verified status split, the author/reviewer split
 - `references/auto-commit.md` — Standard commit patterns across all phases
 - `references/history-tracking.md` — Process history design rationale

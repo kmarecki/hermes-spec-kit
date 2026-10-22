@@ -211,7 +211,7 @@ link_or_copy() {
     ln -sfn "$target" "$link"
     echo "  Linking $label -> $target"
   elif [ -n "$fallback_src" ] && [ -d "$fallback_src" ]; then
-    rm -f "$link"; mkdir -p "$link"; cp "$fallback_src"/* "$link"/
+    rm -f "$link"; mkdir -p "$link"; cp -r "$fallback_src"/. "$link"/
     echo "  Copying $label from $fallback_src (Hermes tree not found)"
   fi
 }
