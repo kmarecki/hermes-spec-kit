@@ -80,10 +80,62 @@ ELSE:
   REPORT
 ```
 
+### Accept mode — one round of the acceptance loop
+
+Triggered by `accept [feature]`, or routed automatically after the last implement phase
+(and after every bugfix round) when spec.md defines `**AC-###**` criteria. The full rules,
+command keys and stop conditions: `spec-kit/references/acceptance.md`.
+
+```text
+PREREQUISITES: every task [X]; spec.md has ACs; tasks.md tags every automated AC
+  (mcp_spec_kit_lint_artifacts → no "has no '[TEST] [AC-###]' task" errors)
+N = (rounds in acceptance.md) + 1;  COMMIT = git rev-parse --short HEAD
+COMMANDS = specs/merge-checklist.md acceptance_* keys
+  missing → add them from spec-kit/templates/merge-checklist-template.md, filled from the
+  project's test scripts; ASK the user to confirm once (then the loop runs unattended)
+
+1. RUN acceptance_fast (the FULL unit + integration + component suites — also the regression)
+2. E2E_SPECS = files on this feature's [TEST] [AC-###] tasks whose AC level is e2e
+   IF E2E_SPECS AND acceptance_e2e_ready exits 0:
+     RUN acceptance_e2e with {specs} = E2E_SPECS   (never the full e2e suite)
+   ELSE: those ACs come back "deferred" — not a failure; the final review handles them
+3. FOR each command / probe AC: run its check → evidence/acceptance-r<N>-AC-###.txt,
+   first line "RESULT: PASS" or "RESULT: FAIL", then the command and output
+4. SAVE the console output → evidence/acceptance-r<N>.txt (command + UTC time on top)
+5. CALL mcp_spec_kit_acceptance_status(feature, results="<acceptance_*_results globs>", round=N)
+6. APPEND "## Round N — <UTC> — <agent>" to acceptance.md (spec-kit/templates/acceptance-template.md):
+   **Result**, **Commit**: COMMIT, counts, the matrix, regressions, frozen changes, Next
+
+7. IF Result == PASS:  REPORT "Acceptance PASS (round N) — route the final review."
+   IF Result == STOPPED (a frozen test changed): ASK — revert the test, or approve a refreeze
+   IF Result == FAIL:
+     FOR each fail / missing AC and each regression:
+       IF an open / in-progress / claimed bug already names it (Area: AC-### or the test):
+         SET it back to open — "failed again in acceptance round N" (append the new Actual)
+       ELSE LOG a new bug (id: mcp_spec_kit_next_id kind="BUG"):
+         Severity major (critical when it is a security/data AC), Area: AC-###,
+         Description: observed vs the AC's Then, Steps: its Given/When, Actual: the first
+         failing assertion, Expected: the Then, Source: acceptance round N, Status: open
+       No per-bug confirmation inside the loop — the failing test is the evidence; the round
+       lists every bug it logged so the user sees them.
+     STOP CONDITIONS — ASK the user instead of continuing:
+       - N == acceptance_max_rounds (default 5)
+       - the same ACs failed with the same first assertion in rounds N-1 and N (no progress)
+       - the fix would need a spec change or a frozen-test change
+       - the run could not execute (build broken, service missing) twice in a row
+     ELSE: REPORT "Acceptance FAIL (round N): BUG-… — bugfix chain next" and hand to
+       spec-kit-workflow 'bugfix [feature]' (plan → tasks → implement), which routes
+       'accept [feature]' again when implement finishes.
+```
+
+Bugs the loop fixed stay `claimed` (Evidence: `output:evidence/acceptance-r<N>.txt`); they
+become `verified` only with an oracle — a green `ci:<run-id>` of the acceptance suite on that
+commit, the user, or `review:<other-agent>`.
+
 ### Completion check
 ```
-IF all bugs verified:
-  REPORT: "All bugs verified — run 'close [feature]' to complete."
+IF all bugs verified (or no bugs) AND (no ACs OR the latest acceptance round is PASS):
+  REPORT: "Run 'final review [feature]', then 'close [feature]'."
 ```
 
 ### MCP checks (optional, when MCP server is configured)
@@ -94,10 +146,10 @@ CALL mcp_spec_kit_lint_artifacts(feature="[feature]")   # status vocabulary, Ver
 ### Append to history.md and Commit
 
 Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
-- Phase: Phase 5 — Testing
-- Artifact: `specs/[feature]/bugs.md`
-- Scope: `specs/[feature]/bugs.md`
-- Message: `"spec(phase-5): [feature] bug log"`
+- Phase: Phase 5 — Testing (accept mode: `Acceptance R<N>`)
+- Artifact: `specs/[feature]/bugs.md` (accept mode: + `acceptance.md`, `evidence/acceptance-r<N>*`)
+- Scope: `specs/[feature]/`
+- Message: `"spec(phase-5): [feature] bug log"` (accept mode: `"spec(phase-5): [feature] acceptance round N (RESULT a/b)"`)
 
 ## Common Pitfalls
 1. **Fixing before logging**: Procedural lock. Log first, fix later. Violating this causes workflow corruption.

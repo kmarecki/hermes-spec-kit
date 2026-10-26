@@ -352,6 +352,129 @@ async def test_size_final_review_adr_and_diff_scan(s, root):
     check("project_status reports adr_dir and merge checklist", d["adr_dir"] == "records" and d["merge_checklist"] == "absent")
 
 
+ACC_SPEC = """# Spec
+
+**Size**: M
+
+- **FR-001**: System MUST save rules
+- **FR-002**: System MUST flag overdue tasks
+- **FR-003**: System MUST export
+
+### User Story 1
+- **AC-001** (FR-001) Given rules, When saved, Then stored — Verify: integration
+- **AC-002** (FR-002) Given a late task, When listed, Then flagged — Verify: unit
+- **AC-003** (FR-001, FR-002) Given the settings page, When saved, Then the grid updates — Verify: e2e (spans SPA + BFF + auth)
+- **AC-004** (FR-002) Given the migration, When applied to an empty DB, Then it succeeds — Verify: command
+- **AC-005** (FR-001) Given the card, When viewed, Then it matches the design — Verify: manual (visual)
+"""
+
+ACC_TASKS = """# Tasks
+- [x] T001 [TEST] [AC-001] rules integration test — tests/RulesTests.cs
+- [x] T002 [TEST] [AC-002] overdue unit test — tests/OverdueTests.cs
+- [x] T003 [TEST] [AC-003] e2e — cypress/e2e/overdue.cy.ts
+- [x] T004 rules handler — src/Rules.cs
+"""
+
+JUNIT = """<?xml version="1.0"?>
+<testsuites><testsuite name="s">
+  <testcase classname="OverdueTests" name="AC002_late_task_is_flagged"/>
+  <testcase classname="OverdueTests" name="other test"{reg}</testcase>
+</testsuite></testsuites>
+"""
+
+TRX = """<?xml version="1.0"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><Results>
+  <UnitTestResult testName="RulesTests.AC001_rules_are_stored" outcome="{o}"/>
+</Results></TestRun>
+"""
+
+
+async def test_acceptance(s, root):
+    print("\n═══ acceptance criteria: lint / next_id / freeze / status / gates ═══")
+    git(root, "init", "-q", "-b", "main")
+    write(root, "f10", "spec.md", ACC_SPEC.replace(" — Verify: e2e (spans SPA + BFF + auth)", " — Verify: e2e"))
+    write(root, "f10", "plan.md")
+    write(root, "f10", "tasks.md", ACC_TASKS.replace("- [x] T001 [TEST] [AC-001] rules integration test — tests/RulesTests.cs\n", "- [x] T001 [TEST] [AC-009] stray — tests/RulesTests.cs\n"))
+    write(root, "f10", "history.md", "# Process History: f10\n")
+    d = await call(s, "lint_artifacts", {"feature": "f10"})
+    msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("lint: e2e without a reason → error", "AC-003: Verify: e2e needs a reason" in msgs, msgs)
+    check("lint: automated AC without a [TEST] task → error", "AC-001 (Verify: integration) has no" in msgs)
+    check("lint: task tagged with an unknown AC → error", "[AC-009] tagged on a task but not defined" in msgs)
+    check("lint: FR without an AC → warning", "FR-003" in msgs)
+    write(root, "f10", "spec.md", ACC_SPEC)
+    write(root, "f10", "tasks.md", ACC_TASKS)
+    d = await call(s, "next_id", {"feature": "f10", "kind": "AC"})
+    check("next_id AC → AC-006", d.get("next_id") == "AC-006")
+
+    d = await call(s, "acceptance_freeze", {"feature": "f10"})
+    check("freeze before the tests exist → error", "write the tests" in d.get("error", ""))
+    for f in ("tests/RulesTests.cs", "tests/OverdueTests.cs"):
+        (Path(root) / f).parent.mkdir(parents=True, exist_ok=True)
+        (Path(root) / f).write_text("// " + f + "\n")
+    d = await call(s, "acceptance_freeze", {"feature": "f10"})
+    check("freeze hashes the AC test files", d.get("success") and d["frozen"] == 2, json.dumps(d))
+    (Path(root) / "cypress/e2e").mkdir(parents=True)
+    (Path(root) / "cypress/e2e/overdue.cy.ts").write_text("it('AC-003')\n")
+    d = await call(s, "acceptance_freeze", {"feature": "f10"})
+    check("  later phase: freeze is additive", d.get("success") and d["added"] == ["cypress/e2e/overdue.cy.ts"] and d["frozen"] == 3)
+
+    (Path(root) / "results").mkdir()
+    (Path(root) / "results/unit.xml").write_text(JUNIT.format(reg=">"))
+    (Path(root) / "results/int.trx").write_text(TRX.format(o="Failed"))
+    d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1})
+    m = {r["ac"]: r["outcome"] for r in d["matrix"]}
+    check("status: TRX failure → fail, JUnit pass → pass", m["AC-001"] == "fail" and m["AC-002"] == "pass", json.dumps(m))
+    check("status: e2e not run → deferred, manual → manual, command without evidence → missing",
+          m["AC-003"] == "deferred" and m["AC-005"] == "manual" and m["AC-004"] == "missing")
+    check("status: result FAIL", d["result"] == "FAIL")
+    (Path(root) / "results/int.trx").write_text(TRX.format(o="Passed"))
+    write(root, "f10", "evidence/acceptance-r1-AC-004.txt", "RESULT: PASS\ncmd: dotnet ef database update\n")
+    d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1})
+    check("status: all automated pass → PASS", d["result"] == "PASS" and d["counts"]["pass"] == 3, json.dumps(d["counts"]))
+    (Path(root) / "results/unit.xml").write_text(JUNIT.format(reg="><failure/>"))
+    d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1})
+    check("status: an untagged failing test is a regression → FAIL", d["result"] == "FAIL" and d["regression_count"] == 1)
+    (Path(root) / "results/unit.xml").write_text(JUNIT.format(reg=">"))
+
+    (Path(root) / "tests/OverdueTests.cs").write_text("// weakened\n")
+    d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1})
+    check("status: a frozen test changed → STOPPED", d["result"] == "STOPPED" and d["frozen_changed"] == ["tests/OverdueTests.cs"])
+    d = await call(s, "lint_artifacts", {"feature": "f10"})
+    check("lint: frozen test changed → error", any("frozen acceptance tests changed" in f["msg"] for f in d["findings"]))
+    d = await call(s, "acceptance_freeze", {"feature": "f10"})
+    check("freeze refuses a changed file without refreeze", "changed" in d.get("error", ""))
+    d = await call(s, "acceptance_freeze", {"feature": "f10", "refreeze": True})
+    check("  refreeze without a reason → error", "reason" in d.get("error", ""))
+    d = await call(s, "acceptance_freeze", {"feature": "f10", "refreeze": True, "reason": "user: rename of the API, ruling 4"})
+    check("  refreeze with the user's reason → ok", d.get("success") and d["refrozen"] == ["tests/OverdueTests.cs"])
+
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "impl")
+    head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=root, capture_output=True, text=True).stdout.strip()
+    write(root, "f10", "review-final.md", FINAL.format(n=1, v="READY", c=head))
+    d = await call(s, "advance_phase", {"feature": "f10", "from_phase": 5})
+    check("5→6 blocked without an acceptance round", "acceptance.md" in d.get("error", ""), json.dumps(d))
+    d = await call(s, "get_next_actions", {"feature": "f10"})
+    check("next actions offer 'accept'", any(a["action"] == "accept" for a in d["available_actions"]))
+    check("phase card shows the AC count", "acceptance: 5 ACs · not run" in d["phase_card"])
+    write(root, "f10", "acceptance.md", f"# Acceptance\n\n## Round 1 — x\n\n**Result**: FAIL\n**Commit**: {head}\n")
+    d = await call(s, "advance_phase", {"feature": "f10", "from_phase": 5})
+    check("5→6 blocked by a FAIL round", "every automated AC must pass" in d.get("error", ""))
+    with open(Path(root) / "specs/f10/acceptance.md", "a") as fh:
+        fh.write(f"\n## Round 2 — y\n\n**Result**: PASS\n**Commit**: {head}\n")
+    d = await call(s, "advance_phase", {"feature": "f10", "from_phase": 5})
+    check("5→6 ok with a fresh PASS round + READY review", d.get("success"), json.dumps(d))
+    (Path(root) / "src").mkdir(); (Path(root) / "src/Rules.cs").write_text("// change\n")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "code after acceptance")
+    write(root, "f10", "close.md", "# Close\n\n## Architecture Decisions\n\nnone\n")
+    d = await call(s, "close_feature", {"feature": "f10"})
+    check("close refuses a stale acceptance round", "re-run 'accept" in d.get("error", ""), json.dumps(d))
+    write(root, "f10", "acceptance.md", "# Acceptance\n\n## Round 1 — x\n\nnothing\n")
+    d = await call(s, "lint_artifacts", {"feature": "f10"})
+    msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("lint: acceptance round without Result / Commit → errors", "**Result**" in msgs and "**Commit**" in msgs)
+
+
 # ── Runner ─────────────────────────────────────────────────────────────────
 
 
@@ -374,7 +497,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan]:
+              test_size_final_review_adr_and_diff_scan, test_acceptance]:
         try:
             await run_in_tmp(t)
         except Exception as e:

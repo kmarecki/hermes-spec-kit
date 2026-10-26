@@ -29,6 +29,8 @@ Why: the same model writes the code, the tests, the fixtures and the review. Its
 | Legacy code without tests: pin current behaviour first | `evidence/<TASK>-characterisation.txt` |
 | The phase's passing run | `evidence/<phase>-green.txt` |
 | The full regression | `evidence/regression-<date>.txt` + `ci:<run-id>` |
+| Acceptance tests are frozen after their RED run; changes need the user | `evidence/acceptance-freeze.json` |
+| An acceptance round | `evidence/acceptance-r<N>.txt` (+ `acceptance-r<N>-AC-###.txt` per command/probe AC) |
 
 `lint_artifacts` warns when a `[SEAM]` task is marked done without a probe file, or a `[TEST]` task is done with no RED file in `evidence/`.
 
@@ -58,7 +60,8 @@ With both agents installed, the default is: whoever implemented does not review.
 | Gate | Minimum evidence |
 |------|------------------|
 | Implement phase commit | `output:` of the phase's test run |
-| Full regression (implement step 7) | `output:` of the full run **and** `ci:<id>` when a pipeline exists |
+| Full regression (implement step 7) | `output:` of the full run **and** `ci:<id>` when a pipeline exists — for specs with ACs this is the acceptance round |
+| Acceptance round | `acceptance.md` round with Result + Commit; `output:evidence/acceptance-r<N>.txt`; the JUnit/TRX results it parsed; frozen AC tests unchanged (`evidence/acceptance-freeze.json`) |
 | Bug `claimed` | `output:` of the reproducing test now green; `probe:` for every external seam the fix touches |
 | Bug `verified` | `Verified-by:` oracle |
 | Final review (phase 5.5) | `review-final.md` round with Verdict + Reviewed-commit; `output:` of diff_scan, build, full test, lint; `ci:<id>` when a pipeline exists |

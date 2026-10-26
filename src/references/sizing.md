@@ -36,12 +36,14 @@ Tiny unambiguous changes (typo, rename, config value) skip spec-kit entirely.
 | tasks.md | flat list, TDD question still asked | phases | phases |
 | Specify → Plan → Tasks | **auto-chained** after the user confirms the spec; ONE commit `spec(phase-1-3)` | one commit per phase | one commit per phase |
 | Pre-implement review | skip | recommended | **required** before implement |
-| Implement (RED/GREEN evidence, seam probes) | same rules | same rules | same rules |
+| Acceptance criteria (`AC-###`, verify level) | ≥ 1 per FR, mostly unit | ≥ 1 per FR | ≥ 1 per FR + edge cases |
+| Implement (RED/GREEN evidence, seam probes, acceptance freeze) | same rules | same rules | same rules |
+| Acceptance loop (`accept`) | yes | yes | yes |
 | Final review (phase 5.5) | **required** — §1 spec conformance, §2 rules, §5 checklist; §3 without web research | **required**, full | **required**, full, by the other agent or a fresh-context subagent |
 | Close | `close` (lightweight) by default | user's choice | `summarize` (full gap analysis) by default |
 | ADR + AGENTS.md step at close | yes (usually "none met the bar") | yes | yes |
 
-The evidence rules, history records, log-before-fix and the final-review gate do **not**
+The evidence rules, history records, log-before-fix, the acceptance loop and the final-review gate do **not**
 shrink with the tier — they are what makes the result trustworthy at any size.
 
 ## Changing the tier

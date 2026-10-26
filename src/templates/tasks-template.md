@@ -10,6 +10,7 @@
 - **[P]**: Can run in parallel (different files, no dependencies)
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - **[TEST]**: A test task — written and run RED before the phase's implementation; the failing run is saved under `specs/[feature]/evidence/`
+- **[AC-###]**: On a `[TEST]` task — the test proves that acceptance criterion from spec.md; its test NAME carries the id (`AC003_…` / `'AC-003 …'`) so the acceptance run maps results back. Every automated AC needs one. Frozen after its RED run (`spec-kit/references/acceptance.md`)
 - **[SEAM]**: Touches an external seam (database function, HTTP contract, file format, external service) — starts with a read-only probe of the real system saved as `evidence/<ID>-probe-<seam>.txt`; the test fixture must match that shape
 - Include exact file paths in descriptions
 

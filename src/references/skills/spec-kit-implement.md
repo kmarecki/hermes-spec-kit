@@ -230,9 +230,31 @@ After each phase:
 - PROVIDE clear error messages with context
 - SUGGEST next steps if implementation cannot proceed
 
-### Step 7: Full regression run — all existing tests
+### Acceptance-test freeze (after every RED sub-phase)
 
-After ALL phases are complete and committed, run the ENTIRE test suite.
+```text
+IF the phase wrote [TEST] [AC-###] tasks:
+  AFTER the RED run is saved:
+    CALL mcp_spec_kit_acceptance_freeze(feature)   # SHA-256 of every AC test file → evidence/acceptance-freeze.json (additive)
+  From now on a frozen AC test changes ONLY with the user's approval:
+    ASK → ruling in decisions.md → acceptance_freeze(feature, refreeze=true, reason="<quoted>")
+  A GREEN step that "needs" to edit a frozen test is a signal the code is wrong, or the
+  spec is — STOP and ASK; never edit the test to make it pass.
+```
+Rules and tagging: `spec-kit/references/acceptance.md`.
+
+### Step 7: Full regression run — or the acceptance loop
+
+```text
+IF spec.md defines **AC-###** criteria:
+  The acceptance loop replaces this step (it runs the full fast suites — the regression —
+  plus this feature's e2e specs, maps results to ACs, logs failures as bugs and chains the
+  bugfix loop):
+  ROUTE: 'accept [feature]' → spec-kit-test (accept mode), spec-kit/references/acceptance.md
+  SKIP the rest of Step 7; Step 8 (build verification) still runs before routing.
+```
+
+Legacy spec without ACs: after ALL phases are complete and committed, run the ENTIRE test suite.
 
 ```text
 IF tdd_bypassed:

@@ -77,6 +77,12 @@ Document: language/version, dependencies, storage, test framework, platform, pro
 Evaluate: simplicity (≤3 projects), anti-abstraction (use framework directly), integration-first (contracts defined).
 If gate fails without justification → document as violation in plan.
 
+### Acceptance Test Strategy
+Fill `## Acceptance Test Strategy` in plan.md: one row per AC — level, harness, test file,
+what it needs to run (nothing / Docker / the running stack) and where its JUnit/TRX result
+lands. A level the codebase has no harness for yet → a Setup task in tasks.md, or ASK to
+lower/raise the level. `spec-kit/references/acceptance.md` §2.
+
 ### Research
 Generate `research.md`: decision → rationale → alternatives considered for each technology choice.
 

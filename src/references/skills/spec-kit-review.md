@@ -354,6 +354,15 @@ reason — never skipped, never assumed green.
 
 ### Step 4: §1 Spec conformance — requirement by requirement
 ```
+IF spec.md defines **AC-###** criteria:
+  READ the latest acceptance.md round: Result must be PASS and its Commit must cover the
+    reviewed code (mcp_spec_kit_get_feature_state → acceptance.round.stale false) — else
+    NOT READY with "run 'accept [feature]'"
+  FOR each deferred e2e AC: run its spec now if the stack is up (save
+    evidence/final-AC-###.txt), else ASK the user to run/confirm it — unverified blocks READY
+  FOR each manual AC: ASK the user; quote the answer in the round — unconfirmed blocks READY
+  Frozen tests: get_feature_state / lint must show no frozen_changed
+
 FOR each FR-###, SC-###, acceptance scenario and edge case in spec.md:
   FIND the code that implements it (path:line) and the test that proves it
   VERDICT: ✅ implemented + proven

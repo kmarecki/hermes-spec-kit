@@ -10,6 +10,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Acceptance criteria and the automatic acceptance loop** (`references/acceptance.md`).
+  spec.md criteria are `**AC-###** (FR-…) Given/When/Then — Verify: <level>`, the level being
+  the lowest that proves it (unit · integration · component · e2e (reason) · command · probe ·
+  manual (reason)). The plan maps each AC to a harness and test file; tasks tag the tests
+  `[TEST] [AC-###]` and test names carry the id. Implement freezes the acceptance tests after
+  their RED run (`acceptance_freeze`). After implement, `accept [feature]` (spec-kit-test
+  accept mode) runs the full fast suites plus only this feature's e2e specs (only when the
+  stack is up — else deferred), builds the AC matrix from JUnit/TRX (`acceptance_status`),
+  logs every failure as a bug and auto-chains the bugfix loop, round after round, until PASS
+  or a stop condition (5 rounds, no progress, spec or frozen-test change, run cannot
+  execute). `acceptance.md` rounds (Result + Commit) gate the final review and the close.
 - **Final review (phase 5.5) — mandatory merge gate.** `spec-kit-review` final mode replaces
   the optional post-implement review: requirement-by-requirement spec conformance (code
   `path:line` + proving test), every applicable constitution MUST / project rule verdicted,

@@ -47,6 +47,7 @@ style: conventional-commits    # conventional-commits | custom
 | Regression umbrella | `fix: {feature} BF-REGRESSION-001 - fix regressions` |
 | Bugfix (per task) | `fix: {feature} BF-{###} - description` |
 | Bug log | `spec(phase-5): {feature} bug log` |
+| Acceptance round | `spec(phase-5): {feature} acceptance round {N} ({RESULT} {a}/{b})` |
 | Final review | `spec(review): {feature} final review (verdict: {VERDICT})` |
 | Close/Summary | `spec(phase-6): {feature} summary (health: {N}%)` |
 | Refresh | `spec(refresh): {feature} reconcile artifacts` |

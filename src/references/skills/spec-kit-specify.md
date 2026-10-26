@@ -58,6 +58,17 @@ Populate with:
 - **Key Entities**: Domain objects only (no implementation)
 - **Edge Cases**: Error conditions, boundaries
 
+### Acceptance criteria
+```
+FOR each user scenario and each edge case that matters:
+  WRITE "- **AC-###** (FR-…) Given … When … Then … — Verify: <level>"
+    ids: mcp_spec_kit_next_id(kind="AC"), ascending, never renumbered
+    level: the LOWEST that can prove it — unit · integration · component · e2e (reason) ·
+           command · probe · manual (reason)   (spec-kit/references/acceptance.md §1)
+CHECK every FR-### is named by at least one AC (lint warns otherwise)
+Prefer an integration test of the API + a component test of the UI over one e2e test.
+```
+
 ### Ask for the size tier (ALWAYS)
 ```
 SCORE the signals in spec-kit/references/sizing.md (layers, files, seams, dependencies,

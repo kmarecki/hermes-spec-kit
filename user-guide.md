@@ -670,6 +670,22 @@ CRITICAL/HIGH or failing blocking check → logged as bugs → bugfix loop → n
 round records the reviewed commit; a later code commit makes it stale. The close refuses
 without a fresh READY round. Run it by the other agent, or a fresh-context sub-agent.
 
+### Acceptance criteria and the acceptance loop
+Every scenario in spec.md is an acceptance criterion with an id and a verify level:
+`**AC-003** (FR-002) Given … When … Then … — Verify: unit`. The level is the lowest that can
+prove it — unit, integration, component, e2e (with a reason), command, probe, manual (with a
+reason). The plan maps each AC to a harness and test file; its tests are ordinary `[TEST]`
+tasks tagged `[AC-003]`, written RED in the implement phase that delivers the behaviour and
+then **frozen** (checksummed) so the loop cannot pass by weakening them.
+
+After the last implement phase, `accept [feature]` runs automatically: the full unit,
+integration and component suites (this is also the regression run), this feature's own e2e
+specs only if the stack is up (otherwise deferred to the final review — the full e2e suite
+never runs in the loop), and any command/probe checks. Results (JUnit XML / TRX) map back to
+the ACs by the id in the test name. Failures become bugs, the bugfix chain runs, and the
+acceptance round repeats — until every automated AC passes, or it stops and asks after 5
+rounds, no progress, a needed spec or frozen-test change, or a run that cannot execute.
+
 ### Size tiers (S / M / L)
 Specify always asks for the tier, with its recommendation first. S trims the templates and
 chains specify → plan → tasks into one commit; M is the default; L adds the full artifact

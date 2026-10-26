@@ -24,7 +24,7 @@ metadata:
 - MCP (optional): `mcp_spec_kit_get_next_actions` → read the phase card now and after every context compaction.
 
 ## Per phase (Setup → Foundational → Core → Integration → Polish)
-1. **RED** — write every `[TEST]` task of the phase; run each; it must fail for the right reason. Save the run: `specs/[feature]/evidence/<phase>-red.txt`.
+1. **RED** — write every `[TEST]` task of the phase; run each; it must fail for the right reason. Save the run: `specs/[feature]/evidence/<phase>-red.txt`. Then **freeze** the phase's acceptance tests: `mcp_spec_kit_acceptance_freeze(feature)` — from now on a frozen `[AC-###]` test changes only with the user's approval (`spec-kit/references/acceptance.md`).
 2. `[SEAM]` tasks — before writing the fixture, run a read-only **probe** against the real system/data; save command + result as `evidence/<TASK>-probe-<seam>.txt`; the fixture must match that shape.
 3. **GREEN** — write the simplest code; run only this phase's tests; save `evidence/<phase>-green.txt`; run the build (TypeScript must compile).
 4. Mark the phase's tasks `[X]`; bug fixes → `bugs.md` Status `claimed` + `Evidence:` (never `verified`).
@@ -35,13 +35,13 @@ metadata:
 - A design question nobody can answer right now → `decisions.md` assumption (preflight check 7), never a self-made "ruling".
 
 ## After all phases
-6. Full regression: save `evidence/regression-<date>.txt`; queue CI when a pipeline exists and record `ci:<run-id>`; failures → one umbrella task `BF-REGRESSION-001`, fix, re-run, commit `fix: [feature] BF-REGRESSION-001 - fix regressions`.
+6. Spec has ACs → the **acceptance loop** replaces the full regression: route `accept [feature]` (`spec-kit-test`, accept mode) — it runs the full fast suites + this feature's e2e specs, logs failures as bugs and chains the bugfix loop until every automated AC passes. No ACs (legacy spec) → full regression as before: `evidence/regression-<date>.txt`, `ci:<run-id>` when a pipeline exists, failures → `BF-REGRESSION-001`.
 7. Build verification. MCP: `mcp_spec_kit_advance_phase(from_phase=4)`.
 
 ## Done when
-- [ ] Every phase committed with its `output:` evidence; regression has `output:` + `ci:` (or states "no pipeline — unverified claim").
+- [ ] Every phase committed with its `output:` evidence; acceptance tests frozen after their RED run; acceptance loop routed (or, no ACs, regression with `output:` + `ci:` / "no pipeline — unverified claim").
 - [ ] Every `[SEAM]` task has a `probe:` file matching its fixture. Every fixed bug is `claimed`, none `verified` by this skill.
 - [ ] All tasks `[X]` (status-only edits); history entries carry `Implemented-by`.
 
 ## Next
-Report phases, tests, regressions, build, evidence. Propose `spec-kit-test` (log bugs), then the **final review** (`spec-kit-review`, mandatory before close) by the **other** agent or a fresh-context sub-agent.
+Report phases, tests, build, evidence. Spec has ACs → `accept [feature]` (automatic). Then `spec-kit-test` for bugs the user finds, then the **final review** (`spec-kit-review`, mandatory before close) by the **other** agent or a fresh-context sub-agent.

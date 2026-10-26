@@ -196,7 +196,8 @@ Check for artifacts to determine current phase:
 | `tasks.md` with completions | Implementing |
 | `bugs.md` with open bugs | Testing (bugfix loop) |
 | `bugs.md` with `claimed` bugs only | Awaiting verification — user / CI / other-agent review |
-| `bugs.md` all verified (or no bugs), all tasks done, no `review-final.md` / latest round NOT READY / stale | **Final review due** |
+| all tasks done, spec.md has ACs, no PASS round in `acceptance.md` (or it is stale) | **Acceptance loop due** (`accept`) |
+| `bugs.md` all verified (or no bugs), all tasks done, acceptance PASS (or no ACs), no `review-final.md` / latest round NOT READY / stale | **Final review due** |
 | `review-final.md` latest round READY / READY-WITH-FOLLOWUPS, fresh | Ready to close — **must close** |
 | `implementation-summary.md` exists | Summarized — complete |
 | `close.md` exists | Closed — complete |
@@ -250,6 +251,13 @@ After all bugs in bugs.md have Status: verified (each with a Verified-by oracle 
   DO NOT auto-trigger close. The user decides when to advance.
   The close is MANDATORY before the feature can be marked complete.
 ```
+
+### Acceptance loop (automatic)
+- User says: "accept [feature]", "run acceptance for [feature]" — or implement finished and spec.md defines `**AC-###**` criteria
+- Route to: `spec-kit-test` (accept mode). FAIL → it logs bugs → AUTOMATICALLY route `bugfix [feature]` (plan → tasks → implement) → when implement finishes, AUTOMATICALLY route `accept [feature]` again
+- No user prompt between rounds. Stop and ASK only on a stop condition (max rounds, no progress, spec or frozen-test change, run cannot execute) — `spec-kit/references/acceptance.md` §6
+- PASS → route the final review (`spec-kit-review`)
+- Unattended questions → assumptions in decisions.md (preflight check 7)
 
 ### Test phase
 - User says: "Test [feature]"

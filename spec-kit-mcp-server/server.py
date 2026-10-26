@@ -19,6 +19,8 @@ perfectly:
   * the merge gate: the final review's verdict and freshness (close_feature) and a
     mechanical scan of the branch diff (diff_scan)
   * the size tier (S/M/L) read from spec.md, and ADR number allocation (next_id ADR)
+  * acceptance criteria: the AC → test → result matrix from spec.md, tasks.md and JUnit/TRX
+    results (acceptance_status), and the freeze of acceptance tests (acceptance_freeze)
 
 Bug tracking stays file-based — bugs.md is the single source of truth and this
 server never edits it; it only reads and lints.
@@ -27,9 +29,11 @@ Dependency: pip install "mcp<2"  (auto-installed by install.sh venv)
 """
 
 import datetime
+import hashlib
 import json
 import re
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
@@ -58,10 +62,15 @@ PREREQUISITES = {
 
 CLOSE_DOCS = ("close.md", "implementation-summary.md")
 FINAL_REVIEW = "review-final.md"
+ACCEPTANCE = "acceptance.md"
+FREEZE_FILE = "evidence/acceptance-freeze.json"
+AC_LEVELS = ("unit", "integration", "component", "e2e", "command", "probe", "manual")
+AC_TEST_LEVELS = ("unit", "integration", "component", "e2e")   # proven by a test result file
+AC_REASON_LEVELS = ("e2e", "manual")                           # need a written reason in spec.md
 TRACKED_ARTIFACTS = [
     "spec.md", "clarify.md", "plan.md", "research.md", "data-model.md",
     "quickstart.md", "tasks.md", "bugs.md", "decisions.md", "history.md",
-    FINAL_REVIEW, "close.md", "implementation-summary.md",
+    ACCEPTANCE, FINAL_REVIEW, "close.md", "implementation-summary.md",
 ]
 SIZES = ("S", "M", "L")
 VERDICTS = ("READY", "READY-WITH-FOLLOWUPS", "NOT READY")
@@ -80,6 +89,15 @@ _SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
 _ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
 _VERDICT_RE = re.compile(r"\*\*Verdict\*\*:\s*(READY-WITH-FOLLOWUPS|NOT READY|READY)\b")
 _REVIEWED_COMMIT_RE = re.compile(r"\*\*Reviewed-commit\*\*:\s*([0-9a-f]{7,40})\b")
+# spec.md: "- **AC-003** (FR-002) Given … When … Then … — Verify: integration"
+_AC_LINE_RE = re.compile(r"^.*\*\*AC-(\d{3})\*\*.*$", re.M)
+_AC_VERIFY_RE = re.compile(r"Verify:\s*`?([a-z0-9]+)`?(?:\s*\(([^)]*)\))?", re.I)
+# a test name carries the AC id: "AC-003 …", "AC003_…", "test_ac003_…"
+_AC_IN_NAME_RE = re.compile(r"(?<![A-Za-z0-9])AC[-_]?(\d{3})(?!\d)", re.I)
+_AC_TAG_RE = re.compile(r"\[AC-(\d{3})\]")
+_ACC_RESULT_RE = re.compile(r"\*\*Result\*\*:\s*(PASS|FAIL|STOPPED)\b")
+_ACC_COMMIT_RE = re.compile(r"\*\*Commit\*\*:\s*([0-9a-f]{7,40})\b")
+_PATH_TOKEN_RE = re.compile(r"[\w@.\-/]+/[\w@.\-]+\.[A-Za-z0-9]{1,6}")
 
 
 # ── Derivation ─────────────────────────────────────────────────────────────
@@ -172,6 +190,124 @@ def _parse_size(fd):
     return m.group(1) if m else None
 
 
+def _code_changed_since(commit):
+    """True when a commit after `commit` touches code outside specs/ (or `commit` is unknown);
+    None outside a git repository."""
+    if _git("rev-parse", "--git-dir")[0] != 0:
+        return None
+    rc, out = _git("log", "--format=%h", f"{commit}..HEAD", "--", ".", ":(exclude)specs")
+    if rc == 0:
+        return bool(out.strip())
+    return True  # the commit is gone (rebased/amended) — it no longer names this code
+
+
+def _parse_acs(fd):
+    """Acceptance criteria from spec.md: [{id, num, frs, level, reason}] in file order."""
+    spec = fd / "spec.md"
+    if not spec.exists():
+        return []
+    acs = []
+    for m in _AC_LINE_RE.finditer(spec.read_text(errors="replace")):
+        line = m.group(0)
+        vm = _AC_VERIFY_RE.search(line)
+        acs.append({"id": f"AC-{m.group(1)}", "num": int(m.group(1)),
+                    "frs": sorted(set(re.findall(r"FR-\d{3}", line))),
+                    "level": vm.group(1).lower() if vm else None,
+                    "reason": (vm.group(2) or "").strip() if vm else ""})
+    return acs
+
+
+def _ac_test_tasks(fd):
+    """{AC id: [task line, …]} for tasks.md lines carrying [TEST] and [AC-###]."""
+    tasks = fd / "tasks.md"
+    found = {}
+    if not tasks.exists():
+        return found
+    for line in tasks.read_text(errors="replace").splitlines():
+        if "[TEST]" in line:
+            for n in _AC_TAG_RE.findall(line):
+                found.setdefault(f"AC-{n}", []).append(line)
+    return found
+
+
+def _parse_results(paths):
+    """Test cases from JUnit XML and TRX files: [{name, outcome: pass|fail|skip, file}]."""
+    cases = []
+    for path in paths:
+        try:
+            root = ET.parse(path).getroot()
+        except (ET.ParseError, OSError):
+            continue
+        for el in root.iter():
+            tag = el.tag.rsplit("}", 1)[-1]
+            if tag == "testcase":                                 # JUnit (Vitest, Cypress, jest, pytest)
+                name = " ".join(filter(None, [el.get("classname"), el.get("name")]))
+                kids = {c.tag.rsplit("}", 1)[-1] for c in el}
+                outcome = "fail" if kids & {"failure", "error"} else "skip" if "skipped" in kids else "pass"
+                cases.append({"name": name, "outcome": outcome, "file": str(path)})
+            elif tag == "UnitTestResult":                         # TRX (dotnet test --logger trx)
+                o = (el.get("outcome") or "").lower()
+                outcome = "pass" if o == "passed" else "fail" if o in ("failed", "error", "timeout", "aborted") else "skip"
+                cases.append({"name": el.get("testName") or "", "outcome": outcome, "file": str(path)})
+    return cases
+
+
+def _freeze(fd):
+    f = fd / FREEZE_FILE
+    if not f.exists():
+        return None
+    try:
+        return json.loads(f.read_text())
+    except json.JSONDecodeError:
+        return None
+
+
+def _sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def _frozen_changed(fd):
+    """Frozen acceptance-test files whose content differs from the freeze (or that vanished)."""
+    fr = _freeze(fd)
+    if not fr:
+        return []
+    changed = []
+    for path, digest in fr.get("files", {}).items():
+        if not Path(path).exists() or _sha(path) != digest:
+            changed.append(path)
+    return changed
+
+
+def _acceptance_round(fd):
+    """The latest round of acceptance.md: result, commit, staleness."""
+    f = fd / ACCEPTANCE
+    if not f.exists():
+        return {"present": False, "rounds": 0, "result": None, "commit": None, "stale": None}
+    text = f.read_text(errors="replace")
+    rounds = list(_ROUND_RE.finditer(text))
+    last = text[rounds[-1].start():] if rounds else text
+    rm, cm = _ACC_RESULT_RE.search(last), _ACC_COMMIT_RE.search(last)
+    commit = cm.group(1) if cm else None
+    return {"present": True, "rounds": len(rounds), "result": rm.group(1) if rm else None,
+            "commit": commit, "stale": _code_changed_since(commit) if commit else None}
+
+
+def _acceptance_problem(fd):
+    """Why acceptance does not open the gate; None when it does or the spec has no ACs."""
+    if not _parse_acs(fd):
+        return None
+    ar = _acceptance_round(fd)
+    if not ar["present"]:
+        return f"no {ACCEPTANCE} — run the acceptance loop ('accept [feature]') first"
+    if ar["result"] != "PASS":
+        return f"{ACCEPTANCE}: latest round is {ar['result'] or 'without a **Result**'} — every automated AC must pass"
+    if ar["commit"] is None:
+        return f"{ACCEPTANCE}: latest round has no '**Commit**:' sha"
+    if ar["stale"]:
+        return f"{ACCEPTANCE}: code changed after the passing round's commit {ar['commit']} — re-run 'accept [feature]'"
+    return None
+
+
 def _final_review(fd):
     """The latest round of review-final.md: verdict, reviewed commit, and whether code changed since."""
     f = fd / FINAL_REVIEW
@@ -183,13 +319,7 @@ def _final_review(fd):
     vm = _VERDICT_RE.search(last)
     cm = _REVIEWED_COMMIT_RE.search(last)
     commit = cm.group(1) if cm else None
-    stale = None
-    if commit and _git("rev-parse", "--git-dir")[0] == 0:
-        rc, out = _git("log", "--format=%h", f"{commit}..HEAD", "--", ".", ":(exclude)specs")
-        if rc == 0:
-            stale = bool(out.strip())
-        elif rc > 0:
-            stale = True  # the reviewed commit is gone (rebased/amended) — the review no longer names this code
+    stale = _code_changed_since(commit) if commit else None
     return {"present": True, "rounds": len(rounds), "verdict": vm.group(1) if vm else None,
             "reviewed_commit": commit, "stale": stale}
 
@@ -250,6 +380,8 @@ def _derive(feature):
         "size": size or "M",
         "size_declared": size is not None,
         "final_review": _final_review(fd) if phase >= 5 else None,
+        "acceptance": ({"criteria": len(acs), "round": _acceptance_round(fd) if phase >= 5 else None}
+                       if (acs := _parse_acs(fd)) else None),
         "tasks": {"total": len(tasks), "done": sum(t["done"] for t in tasks),
                   "bugfix": sum(t["kind"] == "BF" for t in tasks)},
         "bugs": {"total": len(bugs), "open": len(open_bugs), "claimed": len(claimed),
@@ -283,6 +415,14 @@ def _phase_card(state):
     review_line = (f"final review: {fr.get('verdict') or 'missing verdict'} @ {fr.get('reviewed_commit') or '?'}"
                    f"{' — STALE, re-review' if fr.get('stale') else ''}" if fr.get("present")
                    else "final review: not run" if phase >= 5 else None)
+    acc = state.get("acceptance") or {}
+    if acc.get("round"):
+        r = acc["round"]
+        acc_line = (f"acceptance: {acc['criteria']} ACs · round {r['rounds']} {r['result'] or '?'} @ {r['commit'] or '?'}"
+                    f"{' — STALE, re-run accept' if r['stale'] else ''}" if r["present"]
+                    else f"acceptance: {acc['criteria']} ACs · not run — 'accept {f}' before the final review")
+    else:
+        acc_line = None
     lines = [
         f"PHASE CARD — {f}",
         f"phase: {phase} ({state['phase_name']})  status: {state['status']}  size: {state['size']}{'' if state['size_declared'] else ' (undeclared — treated as M)'}",
@@ -291,7 +431,7 @@ def _phase_card(state):
         f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF)",
         f"bugs: {state['bugs']['open']} open · {state['bugs']['claimed']} claimed · {state['bugs']['verified']} verified",
         "rules: history entry BEFORE commit · additive-only · evidence before claims (evidence.md)",
-        "ids: call next_id before adding a BUG/T/BF · lint_artifacts before every commit",
+        acc_line or "ids: call next_id before adding a BUG/T/BF · lint_artifacts before every commit",
         review_line or "ask: an ASK you cannot put to a human is an ASSUMPTION — record it in decisions.md",
         f"derived from files at {state['derived_at']} — the files are the truth, not this card",
     ]
@@ -413,7 +553,10 @@ def get_next_actions(feature: str) -> str:
         actions.append({"action": "bugfix", "description": f"'bugfix {feature}' — {state['bugs']['open']} open bug(s)"})
     if state["bugs"]["claimed"]:
         actions.append({"action": "verify", "description": f"{state['bugs']['claimed']} claimed bug(s) need an oracle (user / ci / review:<other-agent>)"})
-    if phase == 5 and not state["bugs"]["open"]:
+    acc_problem = _acceptance_problem(_feature_dir(feature)) if phase == 5 else None
+    if acc_problem:
+        actions.append({"action": "accept", "description": f"Run the acceptance loop — {acc_problem}"})
+    if phase == 5 and not state["bugs"]["open"] and not acc_problem:
         problem = _final_review_problem(state["final_review"])
         if problem:
             actions.append({"action": "final_review", "description": f"Run the final (merge-readiness) review — {problem}"})
@@ -435,7 +578,7 @@ def _validate_phase(state, to_phase):
             blocking = [b["id"] for b in bugs if b["status"] in ("open", "in-progress")]
             if blocking:
                 return False, f"Prerequisite not met: open bugs {blocking} — run bugfix first"
-        problem = _final_review_problem(_final_review(fd))
+        problem = _acceptance_problem(fd) or _final_review_problem(_final_review(fd))
         if problem:
             return False, f"Prerequisite not met: {problem}"
     return True, None
@@ -516,7 +659,7 @@ def reopen_feature(feature: str) -> str:
 @mcp.tool(name="close_feature")
 def close_feature(feature: str) -> str:
     """Validate the close: a close document exists with an `## Architecture Decisions`
-    section, the final review's latest verdict is READY / READY-WITH-FOLLOWUPS and no code
+    section, the latest acceptance round PASSes on the current code (when spec.md has ACs), the final review's latest verdict is READY / READY-WITH-FOLLOWUPS and no code
     changed after its reviewed commit, no bug is open/in-progress, and every verified bug
     carries a Verified-by oracle. Reports claimed-unverified bugs. Writes nothing.
 
@@ -534,9 +677,9 @@ def close_feature(feature: str) -> str:
     close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
     if "## Architecture Decisions" not in close_text:
         problems.append("close document has no '## Architecture Decisions' section (write 'none met the ADR bar' if so)")
-    problem = _final_review_problem(_final_review(fd))
-    if problem:
-        problems.append(problem)
+    for problem in (_acceptance_problem(fd), _final_review_problem(_final_review(fd))):
+        if problem:
+            problems.append(problem)
     if (fd / "bugs.md").exists():
         for b in _parse_bugs((fd / "bugs.md").read_text(errors="replace")):
             if b["status"] in ("open", "in-progress"):
@@ -607,7 +750,7 @@ def next_id(feature: str, kind: str) -> str:
 
     Args:
         feature: Feature ID
-        kind: BUG | T | BF | ADR (ADR scans the project's ADR directory, not the feature)
+        kind: BUG | T | BF | AC | ADR (ADR scans the project's ADR directory, not the feature)
     """
     state = _derive(feature)
     if state is None:
@@ -617,6 +760,9 @@ def next_id(feature: str, kind: str) -> str:
     if kind == "BUG":
         nums = [b["num"] for b in _parse_bugs((fd / "bugs.md").read_text(errors="replace"))] if (fd / "bugs.md").exists() else []
         fmt = "BUG-{:03d}"
+    elif kind == "AC":
+        nums = [a["num"] for a in _parse_acs(fd)]
+        fmt = "AC-{:03d}"
     elif kind == "ADR":
         adr_dir = _adr_dir()
         if adr_dir is None:
@@ -629,7 +775,7 @@ def next_id(feature: str, kind: str) -> str:
         nums = [t["num"] for t in tasks if t["kind"] == kind]
         fmt = "T{:03d}" if kind == "T" else "BF-{:03d}"
     else:
-        return _json({"error": "kind must be BUG, T, BF or ADR"})
+        return _json({"error": "kind must be BUG, T, BF, AC or ADR"})
     n = (max(nums) + 1) if nums else 1
     return _json({"success": True, "kind": kind, "next_id": fmt.format(n), "existing": len(nums)})
 
@@ -715,6 +861,44 @@ def lint_artifacts(feature: str) -> str:
         if nums != list(range(1, len(nums) + 1)):
             findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"rounds not numbered 1..N: {nums}"})
 
+    acs = _parse_acs(fd)
+    if acs:
+        nums = [a["num"] for a in acs]
+        if nums != sorted(nums) or len(set(nums)) != len(nums):
+            findings.append({"file": "spec.md", "severity": "error", "msg": f"AC ids not strictly ascending: {nums}"})
+        for a in acs:
+            if a["level"] not in AC_LEVELS:
+                findings.append({"file": "spec.md", "severity": "error", "msg": f"{a['id']}: 'Verify: <{'|'.join(AC_LEVELS)}>' missing or unknown ({a['level']})"})
+            elif a["level"] in AC_REASON_LEVELS and not a["reason"]:
+                findings.append({"file": "spec.md", "severity": "error", "msg": f"{a['id']}: Verify: {a['level']} needs a reason — 'Verify: {a['level']} (why no lower level can prove it)'"})
+        spec_text = (fd / "spec.md").read_text(errors="replace")
+        frs = sorted(set(re.findall(r"\*\*(FR-\d{3})\*\*", spec_text)))
+        covered = {fr for a in acs for fr in a["frs"]}
+        uncovered = [fr for fr in frs if fr not in covered]
+        if uncovered:
+            findings.append({"file": "spec.md", "severity": "warning", "msg": f"FRs no acceptance criterion names: {uncovered}"})
+        if (fd / "tasks.md").exists():
+            tagged = _ac_test_tasks(fd)
+            known = {a["id"] for a in acs}
+            for ac in sorted(set(tagged) - known):
+                findings.append({"file": "tasks.md", "severity": "error", "msg": f"[{ac}] tagged on a task but not defined in spec.md"})
+            for a in acs:
+                if a["level"] in AC_TEST_LEVELS and a["id"] not in tagged:
+                    findings.append({"file": "tasks.md", "severity": "error", "msg": f"{a['id']} (Verify: {a['level']}) has no '[TEST] [{a['id']}]' task"})
+        changed = _frozen_changed(fd)
+        if changed:
+            findings.append({"file": FREEZE_FILE, "severity": "error", "msg": f"frozen acceptance tests changed: {changed} — revert, or re-freeze with the user's approval (acceptance_freeze refreeze=true)"})
+
+    if (fd / ACCEPTANCE).exists():
+        text = (fd / ACCEPTANCE).read_text(errors="replace")
+        rounds = list(_ROUND_RE.finditer(text))
+        for i, m in enumerate(rounds):
+            body = text[m.start():rounds[i + 1].start() if i + 1 < len(rounds) else len(text)]
+            if not _ACC_RESULT_RE.search(body):
+                findings.append({"file": ACCEPTANCE, "severity": "error", "msg": f"Round {m.group(1)}: no '**Result**: PASS | FAIL | STOPPED'"})
+            if not _ACC_COMMIT_RE.search(body):
+                findings.append({"file": ACCEPTANCE, "severity": "error", "msg": f"Round {m.group(1)}: no '**Commit**: <sha>'"})
+
     if "spec.md" in state["artifacts"] and state["artifacts"]["spec.md"] == "present" and not state["size_declared"]:
         findings.append({"file": "spec.md", "severity": "warning", "msg": "no '**Size**: S | M | L' header line — treated as M"})
 
@@ -731,6 +915,118 @@ def lint_artifacts(feature: str) -> str:
 
     errors = sum(f["severity"] == "error" for f in findings)
     return _json({"success": errors == 0, "errors": errors, "warnings": len(findings) - errors, "findings": findings})
+
+
+@mcp.tool(name="acceptance_freeze")
+def acceptance_freeze(feature: str, refreeze: bool = False, reason: str = "") -> str:
+    """Record SHA-256 checksums of the acceptance-test files — the files named on tasks.md
+    lines that carry [TEST] and [AC-###] — in specs/<feature>/evidence/acceptance-freeze.json.
+    Call after each implement phase's RED run. Additive: files already frozen keep their
+    checksum; new ones are added. A frozen file that changed is an error unless
+    refreeze=true with the user's reason (record the ruling in decisions.md).
+
+    Args:
+        feature: Feature ID
+        refreeze: Re-hash changed frozen files (only with the user's approval)
+        reason: Why the frozen tests changed (required with refreeze)
+    """
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    fd = _feature_dir(feature)
+    tagged = _ac_test_tasks(fd)
+    if not tagged:
+        return _json({"error": "no tasks.md line carries both [TEST] and [AC-###] — tag the acceptance tests first"})
+    paths = sorted({tok for lines in tagged.values() for line in lines
+                    for tok in _PATH_TOKEN_RE.findall(line) if Path(tok).is_file()})
+    if not paths:
+        return _json({"error": "the [AC-###] test tasks name no existing file — write the tests (RED) first",
+                      "acs": sorted(tagged)})
+    fr = _freeze(fd) or {"files": {}, "history": []}
+    changed = [p for p in _frozen_changed(fd)]
+    if changed and not refreeze:
+        return _json({"error": f"frozen acceptance tests changed: {changed} — revert them, or refreeze with the user's approval",
+                      "changed": changed})
+    if refreeze and not reason.strip():
+        return _json({"error": "refreeze needs the user's reason"})
+    added = [p for p in paths if p not in fr["files"]]
+    for p in added + (changed if refreeze else []):
+        if Path(p).exists():
+            fr["files"][p] = _sha(p)
+        else:
+            fr["files"].pop(p, None)
+    _, head = _git("rev-parse", "--short", "HEAD")
+    fr["history"].append({"at": _now(), "commit": head.strip() or None, "added": added,
+                          "refrozen": changed if refreeze else [], "reason": reason.strip() or None})
+    out = fd / FREEZE_FILE
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(fr, indent=2) + "\n")
+    return _json({"success": True, "frozen": len(fr["files"]), "added": added,
+                  "refrozen": changed if refreeze else [], "file": str(out)})
+
+
+@mcp.tool(name="acceptance_status")
+def acceptance_status(feature: str, results: str = "", round: int = 0) -> str:
+    """The acceptance matrix: every AC in spec.md → its verify level, its [TEST] [AC-###] tasks,
+    and its outcome from test result files (JUnit XML or TRX; a test belongs to an AC when its
+    name carries the id — 'AC-003 …', 'AC003_…', 'test_ac003_…'). command/probe ACs read
+    evidence/acceptance-r<round>-AC-###.txt whose first line is 'RESULT: PASS' or 'RESULT: FAIL'.
+    Outcomes: pass · fail · missing (automated, no result) · deferred (e2e not run) · manual.
+    Also reports frozen tests that changed. Read-only; the accept loop writes acceptance.md.
+
+    Args:
+        feature: Feature ID
+        results: Comma-separated result files or globs, relative to the project root
+        round: Acceptance round number (for the command/probe evidence files)
+    """
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    fd = _feature_dir(feature)
+    acs = _parse_acs(fd)
+    if not acs:
+        return _json({"error": "spec.md defines no '**AC-###**' acceptance criteria"})
+    files = []
+    for pattern in [r.strip() for r in results.split(",") if r.strip()]:
+        matches = sorted(Path(".").glob(pattern)) if any(ch in pattern for ch in "*?[") else [Path(pattern)]
+        files.extend(m for m in matches if m.is_file())
+    cases = _parse_results(files)
+    by_ac = {}
+    for c in cases:
+        for n in _AC_IN_NAME_RE.findall(c["name"]):
+            by_ac.setdefault(f"AC-{n}", []).append(c)
+    tagged = _ac_test_tasks(fd)
+    matrix = []
+    for a in acs:
+        tests = by_ac.get(a["id"], [])
+        if a["level"] == "manual":
+            outcome = "manual"
+        elif a["level"] in ("command", "probe"):
+            ev = fd / "evidence" / f"acceptance-r{round}-{a['id']}.txt"
+            first = ev.read_text(errors="replace").splitlines()[0].strip().upper() if ev.exists() and ev.stat().st_size else ""
+            outcome = "pass" if first == "RESULT: PASS" else "fail" if first == "RESULT: FAIL" else "missing"
+        elif any(t["outcome"] == "fail" for t in tests):
+            outcome = "fail"
+        elif any(t["outcome"] == "pass" for t in tests):
+            outcome = "pass"
+        elif a["level"] == "e2e":
+            outcome = "deferred"
+        else:
+            outcome = "missing"
+        matrix.append({"ac": a["id"], "frs": a["frs"], "level": a["level"], "outcome": outcome,
+                       "tasks": len(tagged.get(a["id"], [])),
+                       "tests": [{"name": t["name"][:160], "outcome": t["outcome"]} for t in tests[:10]]})
+    counts = {k: sum(m["outcome"] == k for m in matrix) for k in ("pass", "fail", "missing", "deferred", "manual")}
+    changed = _frozen_changed(fd)
+    # the acceptance run is also the full regression: a failing test outside any AC fails the round
+    regressions = [c["name"][:160] for c in cases if c["outcome"] == "fail" and not _AC_IN_NAME_RE.search(c["name"])]
+    blocking = counts["fail"] + counts["missing"] + len(regressions)
+    result = "STOPPED" if changed else "PASS" if blocking == 0 else "FAIL"
+    _, head = _git("rev-parse", "--short", "HEAD")
+    return _json({"success": True, "result": result, "commit": head.strip() or None, "counts": counts,
+                  "matrix": matrix, "regressions": regressions[:30], "regression_count": len(regressions),
+                  "frozen_changed": changed, "result_files": [str(f) for f in files], "test_cases": len(cases),
+                  "note": "PASS = no automated AC failing or missing and no regression; deferred e2e and manual ACs go to the final review"})
 
 
 # Added lines matching these are reported by diff_scan. Kept to high-signal patterns: every

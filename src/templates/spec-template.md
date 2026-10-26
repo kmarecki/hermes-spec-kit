@@ -19,9 +19,9 @@
 
 **Independent Test:** [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
 
-**Acceptance Scenarios:**
-- Given [initial state], When [action], Then [expected outcome]
-- Given [initial state], When [action], Then [expected outcome]
+**Acceptance Criteria:** (ids, levels and rules: `spec-kit/references/acceptance.md`)
+- **AC-001** (FR-001) Given [initial state], When [action], Then [expected outcome] — Verify: unit | integration | component
+- **AC-002** (FR-002) Given [initial state], When [action], Then [expected outcome] — Verify: e2e ([why no lower level can prove it])
 
 ### User Story 2 - [Brief Title] (Priority: P2)
 
@@ -31,8 +31,8 @@
 
 **Independent Test:** [Describe how this can be tested independently]
 
-**Acceptance Scenarios:**
-- Given [initial state], When [action], Then [expected outcome]
+**Acceptance Criteria:**
+- **AC-003** (FR-003) Given [initial state], When [action], Then [expected outcome] — Verify: [level]
 
 ### User Story 3 - [Brief Title] (Priority: P3)
 
@@ -42,8 +42,8 @@
 
 **Independent Test:** [Describe how this can be tested independently]
 
-**Acceptance Scenarios:**
-- Given [initial state], When [action], Then [expected outcome]
+**Acceptance Criteria:**
+- **AC-004** (FR-004) Given [initial state], When [action], Then [expected outcome] — Verify: [level]
 
 [Add more user stories as needed, each with an assigned priority]
 
@@ -51,6 +51,11 @@
 
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
+
+An edge case that matters is an acceptance criterion too: give it the next `AC-###` under the
+story it belongs to. Every FR must be named by at least one AC. Verify levels: `unit`,
+`integration`, `component`, `e2e` (reason required), `command`, `probe`, `manual` (reason required)
+— always the LOWEST level that can prove the outcome.
 
 ## Requirements *(mandatory)*
 

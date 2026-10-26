@@ -37,6 +37,7 @@ ELSE
 | spec-kit-implement (bugfix, per-task) | Source code per bugfix fix | Bugfix template: `fix: [feature] BF-### - description` |
 | spec-kit-implement (bugfix sub-round quickfix) | plan section + tasks entry + fix | Quickfix template: `fix: [feature] BF-### - description (plan+tasks+fix)` |
 | spec-kit-test | `specs/[feature]/bugs.md` | Bug log template: `spec(phase-5): [feature] bug log` |
+| spec-kit-test (accept mode) | `acceptance.md`, `evidence/acceptance-r<N>*`, `bugs.md` | `spec(phase-5): [feature] acceptance round N (PASS|FAIL a/b)` |
 | spec-kit-review (pre-implement) | review report | Review template: `spec(review): [feature] review findings` |
 | spec-kit-review (final) | `review-final.md`, `evidence/final-*`, `bugs.md`, approved spec/plan patches | Final review template: `spec(review): [feature] final review (verdict: X)` |
 | spec-kit-specify (size S, chained) | `spec.md`, `plan.md`, `tasks.md` | `spec(phase-1-3): [feature] spec, plan, tasks` |

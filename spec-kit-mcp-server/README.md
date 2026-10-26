@@ -22,6 +22,8 @@ The things an LLM agent does badly and a script does perfectly:
 | Next BUG-NNN / T### / BF-### / project ADR number | `next_id` |
 | Is the branch mechanically mergeable (conflicts, secrets, forbidden files, focused tests, TODOs, unplanned files) | `diff_scan` |
 | Has the final review said READY on the current code | `get_feature_state.final_review`, `close_feature` |
+| Which acceptance criteria pass, fail, are missing or deferred — from JUnit/TRX results | `acceptance_status` |
+| Have the acceptance tests been weakened since their RED run | `acceptance_freeze`, `acceptance_status.frozen_changed`, `lint_artifacts` |
 | Are bugs.md / tasks.md / history.md well-formed (statuses, Verified-by, ids, summary counts) | `lint_artifacts` |
 | What time is it (never type a timestamp from memory) | `timestamp` |
 | Is there a fresh history entry for this phase since the last commit | `history_guard` |
@@ -49,10 +51,12 @@ Claude Code: restart; tools appear as `mcp__spec-kit__*`.
 | `project_set_constitution` | Confirm `specs/constitution.md` matches the claimed status | — |
 | `list_features` | Every feature's derived state | — |
 | `reopen_feature` | Feature is closed on disk → branch hint; reopening is materialised by an open bug in bugs.md | — |
-| `close_feature` | Close doc exists with `## Architecture Decisions`; latest `review-final.md` round is READY / READY-WITH-FOLLOWUPS and no code commit follows its Reviewed-commit; no open/in-progress bug; verified bugs carry Verified-by; returns claimed-unverified list | — |
+| `close_feature` | Close doc exists with `## Architecture Decisions`; latest `acceptance.md` round PASS and fresh (when spec.md has ACs); latest `review-final.md` round is READY / READY-WITH-FOLLOWUPS and no code commit follows its Reviewed-commit; no open/in-progress bug; verified bugs carry Verified-by; returns claimed-unverified list | — |
 | `update_artifact` | Named artifact exists (present/verified) or does not (absent) | — |
 | `auto_detect_features` | Derived state of all features; flags legacy `state.json` | — |
-| `next_id` | Scan files, return next id for kind BUG / T / BF; ADR → next 4-digit number in the project's ADR directory (`adr_dir` in git-conventions, else docs/adr, docs/decisions, …) | — |
+| `next_id` | Scan files, return next id for kind BUG / T / BF / AC; ADR → next 4-digit number in the project's ADR directory (`adr_dir` in git-conventions, else docs/adr, docs/decisions, …) | — |
+| `acceptance_freeze` | SHA-256 of every file named on a `[TEST] [AC-###]` task → `evidence/acceptance-freeze.json`; additive; a changed frozen file is an error unless `refreeze=true` with the user's reason | evidence/acceptance-freeze.json |
+| `acceptance_status` | AC matrix from spec.md (`**AC-###** … Verify: <level>`), tasks.md tags and JUnit/TRX result files (test names carry the id): pass / fail / missing / deferred (e2e) / manual, regressions (failing untagged tests), frozen tests changed → Result PASS / FAIL / STOPPED | — |
 | `diff_scan` | Branch diff vs base (`branch_source`): merge conflicts (`git merge-tree`), conflict markers, private keys, secret assignments, AWS keys, focused tests, debugger, TODO/FIXME, forbidden files (.pfx/.pem/.key/.bacpac/.env), files > 1 MB, changed files not named in spec/plan/tasks; specs/ excluded | — |
 | `lint_artifacts` | Schema lint: status vocabulary (open/in-progress/claimed/verified/superseded; legacy resolved/fixed = warning), Verified-by on verified, Evidence on claimed, ascending ids, summary rows and totals, history header, review-final.md rounds (Verdict + Reviewed-commit, numbering), spec.md Size line, close doc Architecture Decisions section | — |
 | `timestamp` | UTC now, ISO 8601 | — |

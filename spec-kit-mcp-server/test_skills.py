@@ -53,6 +53,7 @@ ALL_SKILLS = set(PHASE_SKILLS.values()) | NON_PHASE_SKILLS | {UMBRELLA_DIR}
 
 EXPECTED_TEMPLATES = {
     "AGENTS-template.md",
+    "acceptance-template.md",
     "adr-template.md",
     "merge-checklist-template.md",
     "review-final-template.md",
@@ -72,6 +73,7 @@ EXPECTED_TEMPLATES = {
 }
 
 EXPECTED_REFERENCES = {
+    "acceptance.md",
     "auto-commit.md",
     "constitution-principles.md",
     "constitution-tables.md",

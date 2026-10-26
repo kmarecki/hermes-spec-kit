@@ -43,12 +43,12 @@ The system has three operational layers plus an optional MCP state layer:
 ├──────────────────────────────────────────────────────────────┤
 │              Artifact & Storage Layer                         │
 │  Markdown files in specs/ — additive-only, never overwritten │
-│  Templates in spec-kit/templates/ — 17 templates             │
-│  References in spec-kit/references/ — 7 shared files         │
+│  Templates in spec-kit/templates/ — 18 templates             │
+│  References in spec-kit/references/ — 8 shared files         │
 │  history.md — append-only process log per feature            │
 ├──────────────────────────────────────────────────────────────┤
 │              MCP State Management Layer (optional)            │
-│  FastMCP stdio server — 17 tools, no stored state            │
+│  FastMCP stdio server — 19 tools, no stored state            │
 │  No stored state — derived from specs/<feature>/ per call     │
 │  Fallback: filesystem-based artifact detection               │
 │  All skills backward-compatible with or without MCP          │
@@ -75,7 +75,7 @@ The system has three operational layers plus an optional MCP state layer:
 
 | Mode | When | Trigger | Phase Sequence | User Involvement |
 |------|------|---------|---------------|-----------------|
-| **Specify** (default) | New feature, low uncertainty | "Create a spec for..." | Constitution → Specify (asks Size S/M/L) → [Clarify] → Plan → Tasks → [Review] → Implement → Test → Final review → Close | Manual — user says "plan", "implement", etc.; size S auto-chains specify → plan → tasks |
+| **Specify** (default) | New feature, low uncertainty | "Create a spec for..." | Constitution → Specify (asks Size S/M/L; ACs with ids + verify level) → [Clarify] → Plan → Tasks → [Review] → Implement → Accept loop (auto) → Test → Final review → Close | Manual — user says "plan", "implement", etc.; size S auto-chains specify → plan → tasks |
 | **Bugfix** | Working feature with known bugs | "bugfix [feature]" | Auto-chain: Plan → Tasks → Implement → Test → Final review → Close | Minimal — inner loop is automatic |
 | **Reopen** | Closed feature needs more work | "reopen [feature]" | Creates bugfix branch from main, preserves original close, routes through bugfix loop | Additive-only edits; must close again |
 
@@ -197,6 +197,8 @@ outside its owning skill context.
 | `update_artifact` | Confirm an artifact is on disk (or absent) | After writing an artifact file |
 | `auto_detect_features` | Derived state of every feature; flags a legacy state.json | First-use, diagnostics |
 | `next_id` | Next BUG-NNN / T### / BF-### by scanning the files; next ADR number in the project's ADR dir | Before adding an entry / an ADR |
+| `acceptance_freeze` | Checksum the `[TEST] [AC-###]` test files after their RED run; refuse silent changes | Implement, after each RED sub-phase |
+| `acceptance_status` | AC → test → result matrix from spec.md, tasks.md and JUnit/TRX files; regressions; frozen changes | Accept mode (each loop round) |
 | `diff_scan` | Mechanical merge-readiness scan of the branch diff (conflicts, secrets, forbidden files, focused tests, TODOs, unplanned files) | Final review (phase 5.5) |
 | `lint_artifacts` | Schema lint of bugs.md / tasks.md / history.md | Before every commit |
 | `timestamp` | Real UTC time | Every history entry and evidence file |
@@ -262,7 +264,7 @@ hermes-spec-kit/
 │   │   ├── spec-kit-refresh.md       # Standalone — artifact reconciliation
 │   │   └── spec-kit/
 │   │       └── SKILL.md              # Umbrella skill — overview only
-│   ├── templates/                    # 17 template files (*-template.md)
+│   ├── templates/                    # 18 template files (*-template.md)
 │   │   ├── spec-template.md
 │   │   ├── plan-template.md
 │   │   ├── tasks-template.md
@@ -276,7 +278,7 @@ hermes-spec-kit/
 │   │   ├── AGENTS-template.md
 │   │   ├── git-conventions-template.md
 │   │   └── gitignore-template.md
-│   └── references/                   # 7 shared files + skills/ (full procedures)
+│   └── references/                   # 8 shared files + skills/ (full procedures)
 │       ├── preflight.md              # Pre-action self-check (branch, mode, workflow, history)
 │       ├── auto-commit.md            # Standard commit patterns per phase
 │       ├── history-tracking.md       # Process history design rationale
@@ -284,7 +286,7 @@ hermes-spec-kit/
 │       └── constitution-tables.md    # Wizard tables and brownfield detection data
 │
 ├── spec-kit-mcp-server/              # MCP server (Python, FastMCP)
-│   ├── server.py                     # 17 tools, Python + mcp SDK (<2)
+│   ├── server.py                     # 19 tools, Python + mcp SDK (<2)
 │   ├── test_workflow.py              # MCP integration tests in temp git projects
 │   ├── test_skills.py                # skill/template/reference integrity checks
 │   ├── test_server.py                # Test runner entry point

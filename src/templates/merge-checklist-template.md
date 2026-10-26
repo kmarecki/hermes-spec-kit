@@ -19,6 +19,16 @@ test:          [the FULL suite, e.g. dotnet test | npm test -- --watch=false]
 lint:          [e.g. npm run lint]
 format_check:  [e.g. dotnet format --verify-no-changes | npm run prettier:diff]
 extra:         [any other command that must pass, e.g. architecture tests]
+
+# Acceptance loop (spec-kit/references/acceptance.md) — results must be JUnit XML or TRX
+acceptance_fast:          [the FULL unit + integration + component suites writing results, e.g.
+                           dotnet test --logger "trx;LogFileName=acc.trx" && npm test -- --reporter=junit --outputFile=test-results/acc.xml]
+acceptance_fast_results:  [comma-separated globs, e.g. **/TestResults/acc.trx, test-results/acc.xml]
+acceptance_e2e:           [ONE feature's specs only — {specs} is replaced, e.g.
+                           npx cypress run --spec {specs} --reporter junit --reporter-options mochaFile=test-results/e2e-[hash].xml]
+acceptance_e2e_results:   [e.g. test-results/e2e-*.xml]
+acceptance_e2e_ready:     [exit 0 when the stack is up, e.g. curl -sf http://localhost:4200 >/dev/null]
+acceptance_max_rounds:    5
 ```
 
 ## Generic gate (always checked)

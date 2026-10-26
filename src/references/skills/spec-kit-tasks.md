@@ -77,6 +77,16 @@ For each FR-###: IDENTIFY implementing tasks
 For each User Story: MAP scenarios to test tasks, entities to model tasks
 ```
 
+### Map acceptance criteria to test tasks
+```
+FOR each AC in spec.md with level unit / integration / component / e2e:
+  ≥ 1 task "T### [TEST] [AC-###] … — <test file from the plan's Acceptance Test Strategy>"
+  in the phase that delivers the behaviour; the test NAME must carry the id
+  (AC003_… / 'AC-003 …' / test_ac003_…)
+FOR each command / probe AC: a task that writes the check, tagged [AC-###]
+mcp_spec_kit_lint_artifacts → no "[AC-###] has no [TEST] task" errors
+```
+
 ### Map bugfix tasks (bugfix mode)
 ```
 For each open bug: CREATE BF-### task, include test task to verify fix

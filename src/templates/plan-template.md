@@ -40,6 +40,16 @@
 
 [Insert specific gates from constitution: Simplicity, Anti-Abstraction, etc.]
 
+## Acceptance Test Strategy
+
+> One row per AC in spec.md (`spec-kit/references/acceptance.md`). The level is the lowest
+> that can prove it; e2e only with the spec's reason. Size S: the table may be the whole section.
+
+| AC | Level | Harness | Test file | Needs | Result source |
+|----|-------|---------|-----------|-------|---------------|
+| AC-001 | integration | [e.g. WebApplicationFactory + Testcontainers] | [path] | Docker | TRX / JUnit path |
+| AC-002 | e2e | [Cypress] | [cypress/e2e/<feature>.cy.ts] | running stack | junit e2e-*.xml |
+
 ## Project Structure
 
 ### Documentation (this feature)
