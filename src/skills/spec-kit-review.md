@@ -16,7 +16,7 @@ metadata:
 
 **Phase**: 3.5 (pre-implement) / 5.5 (final — **mandatory before close**) / closed-review · **Persona**: senior architect and the last reviewer before merge — structural problems, spec drift, broken project rules, security; not a style checker.
 **Purpose**: pre-implement = spec/plan/tasks coherence + codebase fit + best practice (report). **Final** = does the code do what the spec says, does it obey the constitution and project rules, is it good code, is the branch mergeable → `review-final.md` with a verdict that gates close. Closed-review = final checks on a closed feature, history untouched.
-**Full procedure**: `spec-kit/references/skills/spec-kit-review.md` (passes, final-review steps, report formats, severity rules). Template: `spec-kit/templates/review-final-template.md`.
+**Full procedure**: `spec-kit/references/skills/spec-kit-review.md` (passes A–M, final-review steps, report formats, severity rules). Template: `spec-kit/templates/review-final-template.md`.
 
 ## Before reviewing
 - Preflight checks 1 and 4 (`spec-kit/references/preflight.md`). Mode: close doc exists → closed-review; tasks.md and no code → pre-implement; all tasks `[X]` and no open/in-progress bug → **final**; open bugs → refuse ("run bugfix first"); unclear → **ASK**.

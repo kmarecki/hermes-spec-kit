@@ -6,7 +6,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
 
 ## Checks
 
-> Keep this file and the one-screen SKILL.md in context; open `spec-kit/references/skills/<skill>.md` only for the step you are on. After a context compaction, re-run checks 1–5 and re-read the phase card.
+> Keep this file and the one-screen SKILL.md in context; open `spec-kit/references/skills/<skill>.md` only for the step you are on. After a context compaction, re-run checks 1–6 and re-read the phase card.
 
 ```
 1. BRANCH CHECK
@@ -45,7 +45,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
      CREATE specs/git-conventions.md from spec-kit/templates/git-conventions-template.md
      NOTE: "Created specs/git-conventions.md with default conventions. Edit to customise for this project."
 
-4. PHASE CARD CHECK — before any write
+5. PHASE CARD CHECK — before any write
    IF the MCP server is configured:
      CALL mcp_spec_kit_get_next_actions(feature) and READ the phase card —
      it names the phase, the allowed writes and the next gate. Re-read it
@@ -56,13 +56,13 @@ Run these checks in order. If any check fails, stop and report before proceeding
    IF you are about to edit source code and the phase is not Implement:
      BLOCK — route through the workflow (bugfix / implement).
 
-5. HISTORY LOG CHECK — BEFORE creating or modifying any markdown document
+6. HISTORY LOG CHECK — BEFORE creating or modifying any markdown document
    IF you are about to create or modify any markdown document in specs/[feature]/:
      ENSURE specs/[feature]/history.md EXISTS (create with header if missing)
      NOTE: "history.md is the process log for this feature. Every markdown
             change MUST be recorded here BEFORE the next commit."
 
-6. ASSUMPTIONS CHECK — at every ASK / PROMPT / WAIT
+7. ASSUMPTIONS CHECK — at every ASK / PROMPT / WAIT
    IF a human answered: RECORD a `ruling` in specs/[feature]/decisions.md quoting their words.
    IF no human can answer (unattended run, compaction lost the answer, the
    question was never put): do NOT invent an answer and call it a ruling —
@@ -87,7 +87,7 @@ Run these checks in order. If any check fails, stop and report before proceeding
 
 After every skill completes that created or modified any markdown document:
 
-1. **history.md is already ready** (pre-action check #5 already ensured it exists). Append an entry for each document created or modified:
+1. **history.md is already ready** (pre-action check 6 already ensured it exists). Append an entry for each document created or modified:
    - Fixed fields only (timestamp | phase | skill | agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words)
    - See `spec-kit/references/history-tracking.md` for the exact format and the appender
    - This is NOT optional — if you skip this, the process log will be missing

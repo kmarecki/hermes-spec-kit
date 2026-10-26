@@ -13,9 +13,9 @@ This skill does NOT execute phases itself. It routes requests to the correct pha
 
 ## Pre-flight: Project Readiness
 
-Load and follow `spec-kit/references/preflight.md` before any routing action. Preflight handles branch guardrails (checks #1, #4), mode detection (#2), unlogged bug check (#3), git conventions (#4 renamed), workflow load check (#5), and history.md readiness (#6).
+Load and follow `spec-kit/references/preflight.md` before any routing action. Preflight handles the branch guard (check 1), mode detection (2), the unlogged-bug check (3), git conventions (4), the phase card (5), history.md readiness (6) and the assumptions log (7).
 
-> **Note**: If you already have preflight loaded from a prior skill call, you do not need to reload it. Re-run checks #1 and #4 as a quick sanity check, then proceed directly to routing.
+> **Note**: If you already have preflight loaded from a prior skill call, you do not need to reload it. Re-run checks 1 and 4 as a quick sanity check, then proceed directly to routing.
 
 With the MCP server configured, `mcp_spec_kit_get_next_actions(feature)` returns the derived phase, the available actions and a ten-line **phase card** — call it first for any feature command, and again after context compaction. `mcp_spec_kit_list_features()` answers "what phase is X in" for the whole project. The server derives everything from the files and stores nothing.
 

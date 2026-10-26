@@ -15,7 +15,7 @@
 
 **When NOT to use**: For tiny unambiguous changes (typo fix, rename), skip straight to implementation.
 
-**Routing**: Load this skill when the user says "create a spec for [feature]" or "specify [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "create a spec for [feature]" or "specify [feature]".
 
 
 **Artifacts**:
@@ -73,7 +73,7 @@ ASK the user — every time, even when the answer looks obvious:
 WRITE "**Size**: <answer> — <reason>" in the spec.md header
 RECORD a ruling in decisions.md quoting the answer; the user picked a tier other than the
   recommendation → note the recommendation too. No human to ask → record RECOMMENDED as an
-  assumption (preflight check 6) and continue.
+  assumption (preflight check 7) and continue.
 ```
 
 ### Size S: auto-chain
@@ -88,10 +88,6 @@ IF Size == S AND the user has confirmed the spec:
 - MAX 3 `[NEEDS CLARIFICATION]` markers
 - NO implementation details (tech stack, frameworks, APIs)
 - Prioritize: scope > security > UX > technical
-
-
-### Note on commits
-Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
 
 
 ### MCP checks (optional, when MCP server is configured)

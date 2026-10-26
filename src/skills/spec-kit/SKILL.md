@@ -10,15 +10,6 @@ Spec-driven development for Hermes Agent. Specifications drive code, not the oth
 
 **For phase routing (bugfix, implement, plan, reopen, close), load `spec-kit-workflow` instead.** The workflow skill handles all routing decisions based on artifact state and trigger phrases. This skill only documents the overall workflow, conventions, and project structure.
 
-## ⚠️ Critical Approach Rule: Read First, Build Second
-
-**ALWAYS read the source repository design documents before implementing a skill or template that mirrors an existing system.** This prevents creating simplified approximations instead of faithful implementations.
-
-When a user asks to implement parity with an existing system:
-1. Read the actual source design docs, templates, and workflows FIRST
-2. Analyze all commands, templates, and their exact structures
-3. Only then build or update templates
-
 ## Core Workflow
 
 ```text
@@ -76,22 +67,6 @@ Narrative belongs in `implementation-summary.md`. Format and rules: `references/
 ## Template Path Convention
 
 All skills reference templates as `spec-kit/templates/<name>-template.md` — NOT bare paths like `templates/<name>.md`. This ensures correct resolution regardless of Hermes profile or working directory.
-
-## Project Structure
-
-```text
-src/
-  skills/                # One-screen skills (11 .md + umbrella directory)
-    spec-kit/SKILL.md    # This file
-  references/            # preflight, auto-commit, evidence, history-tracking, constitution-*
-    skills/              # Full procedure per skill (loaded on demand)
-  templates/             # 13 templates, all *-template.md
-scripts/
-  install.sh             # Hermes edition → ~/.hermes/skills/
-  install-claude.sh      # Claude Code edition → ~/.claude/skills/
-```
-
-Skills and templates are maintained in the project directory and installed via `./scripts/install.sh`. Do not edit files in `~/.hermes/skills/` directly.
 
 ## Git Branch Naming
 

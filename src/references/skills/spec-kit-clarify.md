@@ -13,7 +13,7 @@
 
 **When NOT to use**: For straightforward specs with no ambiguities — proceed to Plan directly.
 
-**Routing**: Load this skill when the user says "clarify [feature]" or "resolve ambiguities". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "clarify [feature]" or "resolve ambiguities".
  Do NOT ask questions for the sake of process.
 
 **Artifacts**:

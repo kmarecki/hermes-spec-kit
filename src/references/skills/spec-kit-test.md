@@ -13,13 +13,10 @@
 
 **When NOT to use**: During implementation or before the full regression run (Step 7 of implement) completes.
 
-**Routing**: Load this skill when the user says "test [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "test [feature]".
 
 ## Pre-flight
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
-
-## Git Commit Guidelines
-See `spec-kit/references/auto-commit.md`. Commits run the project's hooks (never `--no-verify`). Branch guard handled by preflight.md.
 
 
 **Artifacts**: `specs/[feature]/bugs.md`

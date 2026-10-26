@@ -22,7 +22,7 @@ third mode for reviewing already-closed features without altering history:
 
 **Artifacts**: pre-implement — a report (the project may keep it as `review.md`); final — `specs/[feature]/review-final.md` (rounds appended), `evidence/final-*.txt`, bug entries in `bugs.md` for blocking findings
 
-**Routing**: Load this skill when the user says "review [feature]", "analyze [feature]", or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "review [feature]", "analyze [feature]", or "quality check [feature]".
 
 **Task Persona**: Adopt the mindset of a senior architect doing a critical design review. You are not a style checker — you look for **structural problems, design flaws, security risks, and architectural misalignments** that would cause real pain if left unfixed. Every finding must be actionable and backed by evidence. Use web search to research current best practices for the project's tech stack when evaluating architecture or implementation quality. Ask yourself: *"Will this cause a problem in production? Will this be hard to maintain? Is there a simpler, more robust approach?"* If the answer to all three is no, the finding is probably a nitpick — skip it. Does this hold up under scrutiny?
 
@@ -178,14 +178,14 @@ WHEN specs/constitution.md does NOT exist:
 - Bugfix tasks without verification/regression test tasks
 - Unclear mapping between bug and fix approach
 
-**F. Codebase Architecture Analysis** (new — pre-implement)
+**K. Codebase Architecture Analysis** (pre-implement)
 - Scan the project's existing directory tree and module structure to understand current architecture patterns (layers, module boundaries, framework conventions, dependency injection style, testing patterns)
 - Evaluate whether the planned architecture/design in plan.md fits the existing codebase — does it follow the same patterns or introduce new ones? If new patterns are proposed, is the justification compelling?
 - Identify integration risk points — where the new feature connects to existing code. Are the interfaces clean? Are existing modules being modified in a way that could cause regressions?
 - Check if the plan reuses existing abstractions or reinvents them. Is there already a utility, mixin, or service that does what the plan proposes?
 - For each file path referenced in tasks.md: does the path follow the existing project layout conventions? Or does it introduce a new directory structure that doesn't match?
 
-**G. Best Practice Validation** (new — pre-implement)
+**L. Best Practice Validation** (pre-implement)
 - For each major technology or pattern in the plan, briefly research (web search) current recommended practices. Example questions:
   - "Does framework X recommend this approach for Y in 2026?"
   - "Is this pattern considered best practice or is there a newer recommended alternative?"
@@ -197,7 +197,7 @@ WHEN specs/constitution.md does NOT exist:
   - Under-engineering for the problem size (e.g., no error handling, no validation, no logging)
 - Do NOT flag personal stylistic preferences or "one true way" debates (tabs vs spaces, semicolons vs no-semicolons). Only flag patterns with broad community consensus against them.
 
-**H. Design Soundness**
+**M. Design Soundness** (pre-implement)
 - Does the plan reflect a solid understanding of the existing codebase, or does it feel like a generic solution?
 - Are the proposed abstractions at the right level? Too abstract (over-general, YAGNI violation)? Too concrete (brittle, hard to extend)?
 - Will the design scale with the next 2-3 likely features? Or is it a dead end that will need refactoring?

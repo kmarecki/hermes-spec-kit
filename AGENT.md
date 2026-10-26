@@ -43,12 +43,12 @@ The system has three operational layers plus an optional MCP state layer:
 ├──────────────────────────────────────────────────────────────┤
 │              Artifact & Storage Layer                         │
 │  Markdown files in specs/ — additive-only, never overwritten │
-│  Templates in spec-kit/templates/ — 13 templates             │
-│  References in spec-kit/references/ — 5 shared files         │
+│  Templates in spec-kit/templates/ — 17 templates             │
+│  References in spec-kit/references/ — 7 shared files         │
 │  history.md — append-only process log per feature            │
 ├──────────────────────────────────────────────────────────────┤
 │              MCP State Management Layer (optional)            │
-│  FastMCP stdio server — 11 tools for deterministic state     │
+│  FastMCP stdio server — 17 tools, no stored state            │
 │  No stored state — derived from specs/<feature>/ per call     │
 │  Fallback: filesystem-based artifact detection               │
 │  All skills backward-compatible with or without MCP          │
@@ -262,7 +262,7 @@ hermes-spec-kit/
 │   │   ├── spec-kit-refresh.md       # Standalone — artifact reconciliation
 │   │   └── spec-kit/
 │   │       └── SKILL.md              # Umbrella skill — overview only
-│   ├── templates/                    # 13 template files (*-template.md)
+│   ├── templates/                    # 17 template files (*-template.md)
 │   │   ├── spec-template.md
 │   │   ├── plan-template.md
 │   │   ├── tasks-template.md
@@ -276,7 +276,7 @@ hermes-spec-kit/
 │   │   ├── AGENTS-template.md
 │   │   ├── git-conventions-template.md
 │   │   └── gitignore-template.md
-│   └── references/                   # 5 shared reference files
+│   └── references/                   # 7 shared files + skills/ (full procedures)
 │       ├── preflight.md              # Pre-action self-check (branch, mode, workflow, history)
 │       ├── auto-commit.md            # Standard commit patterns per phase
 │       ├── history-tracking.md       # Process history design rationale
@@ -284,9 +284,9 @@ hermes-spec-kit/
 │       └── constitution-tables.md    # Wizard tables and brownfield detection data
 │
 ├── spec-kit-mcp-server/              # MCP server (Python, FastMCP)
-│   ├── server.py                     # 11 tools, Python + mcp SDK (<2)
-│   ├── test_workflow.py              # 11 MCP integration tests (state machine)
-│   ├── test_skills.py                # 12 validation tests (skill file integrity)
+│   ├── server.py                     # 17 tools, Python + mcp SDK (<2)
+│   ├── test_workflow.py              # MCP integration tests in temp git projects
+│   ├── test_skills.py                # skill/template/reference integrity checks
 │   ├── test_server.py                # Test runner entry point
 │   └── README.md                     # MCP server docs
 │
@@ -337,7 +337,7 @@ a skill, extend the `subs` table there and re-run both installers. Never edit
 
 ### Testing
 
-**MCP server workflow tests** (11 tests):
+**MCP server workflow tests**:
 ```bash
 cd spec-kit-mcp-server
 python3 test_workflow.py
@@ -346,7 +346,7 @@ Tests: happy path forward, prerequisite enforcement, wrong phase rejection,
 duplicate feature, missing feature, reopen flow, reopen guard, update artifact,
 next actions progression, auto-detect features.
 
-**Skill validation tests** (12 checks):
+**Skill validation tests**:
 ```bash
 python3 spec-kit-mcp-server/test_skills.py
 ```
@@ -535,6 +535,8 @@ Follow the spec-kit workflow! This repo uses its own skills:
 ---
 
 ## Important Guardrails (CAUTION)
+
+0. **Read first, build second.** When a skill or template mirrors an existing system (upstream spec-kit, a project's ADR or review format), read its actual design docs, templates and workflows before writing — never build a simplified approximation from memory.
 
 1. **Never restructure existing working skills without explicit user consent.**
    One new file = one new file. Refactoring skills is a conversation, not an action.

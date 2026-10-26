@@ -13,13 +13,10 @@
 
 **When NOT to use**: For mid-stream alignment — use `spec-kit-refresh` instead.
 
-**Routing**: Load this skill when the user says "summarize [feature]" or "close [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "summarize [feature]" or "close [feature]".
 
 ## Pre-flight
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
-
-## Git Commit Guidelines
-See `spec-kit/references/auto-commit.md`. Commits run the project's hooks (never `--no-verify`). Branch guard handled by preflight.md.
 
 
 **When to run**:
@@ -320,17 +317,6 @@ PROPOSE each change as a targeted patch (old → new, one section at a time); WA
   apply only approved ones. Never reformat or rewrite the file.
 RECORD in the close document: "AGENTS.md: updated — <sections>" or
   "AGENTS.md: no change needed — <one-line reason>".
-```
-
-### Step 8: Collect implementation details
-```
-IDENTIFY:
-  - Files changed (from plan file paths, tasks, and git diff)
-  - Dependencies added
-  - Architecture decisions made during implementation
-  - Deviations from plan (with rationale — why they deviated)
-  - Test results (pass/fail counts)
-  - Known limitations or deferred work
 ```
 
 ### Step 9: Generate output document

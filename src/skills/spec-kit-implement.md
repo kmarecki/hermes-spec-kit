@@ -32,7 +32,7 @@ metadata:
 - Pure logic: test first. Legacy code without tests: characterisation test first (`evidence/<TASK>-characterisation.txt`), then change. Untestable item → note it beside the task; the close flags it unverified.
 - No commits during RED; no per-task regression runs; a non-parallel task that cannot complete → HALT and report.
 - New bug found mid-fix → log it in `bugs.md` (`mcp_spec_kit_next_id(kind="BUG")`), do not fix inline (trivial test-only fixes excepted).
-- A design question nobody can answer right now → `decisions.md` assumption (preflight check 6), never a self-made "ruling".
+- A design question nobody can answer right now → `decisions.md` assumption (preflight check 7), never a self-made "ruling".
 
 ## After all phases
 6. Full regression: save `evidence/regression-<date>.txt`; queue CI when a pipeline exists and record `ci:<run-id>`; failures → one umbrella task `BF-REGRESSION-001`, fix, re-run, commit `fix: [feature] BF-REGRESSION-001 - fix regressions`.

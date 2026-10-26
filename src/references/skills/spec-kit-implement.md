@@ -13,15 +13,13 @@
 
 **When NOT to use**: For spec-only changes (design iteration) — use `spec-kit-specify` or `spec-kit-plan`.
 
-**Routing**: Load this skill when the user says "implement [feature]" or "start implementation". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "implement [feature]" or "start implementation".
 
 ## Pre-flight
 Load and follow `spec-kit/references/preflight.md` before any action in this skill.
 
-## Git Commit Guidelines
-See `spec-kit/references/auto-commit.md`. Commits run the project's hooks (never `--no-verify`). Branch guard handled by preflight.md.
-
-Note: Each design phase skill (constitution, specify, clarify, plan, tasks) commits its own artifacts individually. Implement does NOT re-commit them.
+## Commits
+Each design phase skill (constitution, specify, clarify, plan, tasks) commits its own artifacts individually. Implement does NOT re-commit them.
 
 ## Evidence of Done
 Load `spec-kit/references/evidence.md`. Your own statement that tests pass is not evidence. Every phase commit carries an `output:` file of the phase test run under `specs/[feature]/evidence/`; the full regression carries `output:` plus `ci:<run-id>` when a pipeline exists; every bug you fix becomes `claimed` (never `verified`) with its `Evidence:` list; every external seam you touch (database function, HTTP contract, file format) gets a `probe:` file from the real system. History entries record `Implemented-by: <agent>`.

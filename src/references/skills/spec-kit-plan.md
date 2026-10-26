@@ -20,7 +20,7 @@ The plan must:
 
 **When NOT to use**: For trivial changes (typo fix, config change) — skip planning and go directly to implementation.
 
-**Routing**: Load this skill when the user says "plan [feature]" or "create plan for [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "plan [feature]" or "create plan for [feature]".
 
 
 **Artifacts**:
@@ -92,10 +92,6 @@ Choose template: Single project (`src/`, `tests/`) / Web app / Mobile + API.
 For each open bug: analyze root cause, append ONE dated round under `## Rounds (ADR log)` at the end of plan.md (`### Round N — <date> — <BUG ids> — supersedes: <§ or nothing>` with Context / Decision / Consequences / Plan Ref), set Plan Ref in bugs.md. Do NOT touch `## Current Design` — the close regenerates it from what was built.
 
 **Additive-safe**: Append new bugfix sections at the end of plan.md. Never delete existing plan sections. You may modify existing sections minimally (e.g. mark a section as superseded by a bugfix). If a new fix contradicts an existing plan section, ask the user for guidance.
-
-### Note on commits
-Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
-
 
 ### MCP checks (optional, when MCP server is configured)
 

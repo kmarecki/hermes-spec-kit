@@ -13,7 +13,7 @@
 
 **When NOT to use**: For one-step changes (single file edit) — just implement directly.
 
-**Routing**: Load this skill when the user says "generate tasks for [feature]" or "break down [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+**Routing**: Load this skill when the user says "generate tasks for [feature]" or "break down [feature]".
 
 
 **Artifacts**: `specs/[feature]/tasks.md`
@@ -93,8 +93,8 @@ Ids: with MCP, `mcp_spec_kit_next_id(feature, kind="T")` / `kind="BF"` allocates
 ### Document dependencies
 Phase dependencies, parallel execution opportunities.
 
-### Note on commits
-Report: task count, phases, TDD mode, parallel tasks, bugfix tasks
+### Report
+Task count, phases, TDD mode, parallel tasks, bugfix tasks
 
 
 ### MCP checks (optional, when MCP server is configured)
