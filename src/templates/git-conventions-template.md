@@ -42,13 +42,28 @@ style: conventional-commits    # conventional-commits | custom
 | Operation | Message |
 |-----------|---------|
 | Constitution | `spec(phase-0): constitution for {PROJECT}` |
-| Batch (start implement) | `spec: {feature} spec artifacts (spec, plan, tasks)` |
+| Spec + plan + tasks (size S) | `spec(phase-1-3): {feature} spec, plan, tasks` |
 | Implement phase | `feat: {feature} Phase {N} - {Phase Name}` |
 | Regression umbrella | `fix: {feature} BF-REGRESSION-001 - fix regressions` |
 | Bugfix (per task) | `fix: {feature} BF-{###} - description` |
 | Bug log | `spec(phase-5): {feature} bug log` |
+| Final review | `spec(review): {feature} final review (verdict: {VERDICT})` |
 | Close/Summary | `spec(phase-6): {feature} summary (health: {N}%)` |
 | Refresh | `spec(refresh): {feature} reconcile artifacts` |
+
+---
+
+## Documentation locations
+
+Used by the close (ADRs, AGENTS.md) and by the final review (merge checklist). Omit a key to
+use the default.
+
+```
+adr_dir: docs/adr               # default: first existing of docs/adr, docs/decisions, doc/adr, adr
+adr_index: docs/adr/README.md   # the ADR list to update; default: README.md / index.md in adr_dir
+agents_file: AGENTS.md          # the agent context file kept current at close (also CLAUDE.md if it restates it)
+merge_checklist: specs/merge-checklist.md
+```
 
 ---
 

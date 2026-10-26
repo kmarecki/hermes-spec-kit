@@ -85,7 +85,8 @@ For each open bug: CREATE BF-### task, include test task to verify fix
 **Additive-safe**: Insert new bugfix tasks BEFORE the final `## Dependencies & Execution Order` section. Never delete existing tasks. You may update task status fields (e.g. mark tasks as completed). If a new bugfix task has the same ID as an existing one, ask the user how to resolve. The `## Dependencies` and `## Verification` sections (if present) must remain as the last sections — never insert anything after them.
 
 ### Generate task breakdown
-Organize by phase: Setup → Foundational → User Stories → Polish.
+Size S: one flat phase — `[TEST]` tasks first, then implementation (`spec-kit/references/sizing.md`).
+Size M/L: organize by phase: Setup → Foundational → User Stories → Polish.
 Format: `T### [P] [US#] Description — file/path.ext`
 Ids: with MCP, `mcp_spec_kit_next_id(feature, kind="T")` / `kind="BF"` allocates the next number — never count by hand; without MCP, read the highest existing id and add one.
 

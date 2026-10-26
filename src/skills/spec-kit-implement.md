@@ -44,4 +44,4 @@ metadata:
 - [ ] All tasks `[X]` (status-only edits); history entries carry `Implemented-by`.
 
 ## Next
-Report phases, tests, regressions, build, evidence. Propose `spec-kit-test` (log bugs) or `spec-kit-review` by the **other** agent.
+Report phases, tests, regressions, build, evidence. Propose `spec-kit-test` (log bugs), then the **final review** (`spec-kit-review`, mandatory before close) by the **other** agent or a fresh-context sub-agent.

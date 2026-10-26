@@ -37,12 +37,13 @@ IF feature name is provided (e.g., "003-user-auth"):
 || 1.5 | `spec-kit-clarify` | Iterative clarification | Spec |
 || 2 | `spec-kit-plan` | Technical plan | Spec |
 || 3 | `spec-kit-tasks` | Task breakdown | Plan |
-|| 3.5 | `spec-kit-review` | Quality gate (optional) | Pre: spec+plan+tasks / Post: spec+code |
+|| 3.5 | `spec-kit-review` | Pre-implement review (optional S/M, required L) | spec+plan+tasks |
 || 4 | `spec-kit-implement` | Execute tasks | Tasks |
 || 5 | `spec-kit-test` | Testing & bug tracking | Implement (or spec for bugfix loop) |
-|| **6** | **`spec-kit-summarize`** | **Implementation summary / close** | **Implement + Test** |
+|| **5.5** | **`spec-kit-review` (final)** | **Merge-readiness review — mandatory** | **All tasks [X], no open bug** |
+|| **6** | **`spec-kit-summarize`** | **Close: summary, ADRs, AGENTS.md** | **Final review READY, not stale** |
 || — | **`spec-kit-refresh`** | **Lightweight artifact refresh** | **Any (standalone)** |
-|| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Close** (bugs.md with open bugs) |
+|| — | **Bugfix loop** | Test → [Clarify] → Plan → Tasks → [Review] → Implement → Test → **Final review** → **Close** (bugs.md with open bugs) |
 || — | **Quickfix** | Trivial bugfix: Plan section + tasks entry + fix in one batch commit (user opt-in, docs still exist) | bugfix sub-round with explicit "quickfix [feature]" |
 
 > **Important**: Phase 6 (Close/Summarize) is **mandatory** before a feature can enter Complete state. After the bugfix loop finishes (all bugs verified), the user is prompted to run Phase 6.
@@ -80,7 +81,8 @@ is NOT listed here — it is a project-level bootstrap gate checked above:
 - `spec-kit-plan`: Requires `spec.md` only
 - `spec-kit-tasks`: Requires `plan.md` + `spec.md`
 - `spec-kit-review` (pre-implement): Requires `spec.md` + `plan.md` + `tasks.md`
-- `spec-kit-review` (post-implement): Requires `spec.md` + implementation code
+- `spec-kit-review` (final): Requires `spec.md` + implementation code, every task `[X]`, no open/in-progress bug
+- `spec-kit-summarize`: additionally requires `review-final.md` whose latest round is READY / READY-WITH-FOLLOWUPS and not stale
 - `spec-kit-implement`: Requires `tasks.md`
 - `spec-kit-test`: Requires `spec.md` (or existing implementation)
   Bugfix prerequisite: `bugs.md` with at least one open bug
@@ -136,11 +138,16 @@ WHEN routing to spec-kit-plan, spec-kit-specify, spec-kit-implement,
 - User says: "Create constitution"
 - Propose routing to: `spec-kit-constitution`
 
-### Review (Optional — Pre-implement or Post-implement)
-- User says: "Analyze [feature]", "Review [feature]", or "Quality check [feature]"
-- When: Before implementation (cross-artifact consistency) OR after code + tests (code quality review)
-- Propose routing to: `spec-kit-review`
-- NOTE: This skill auto-detects whether to run pre-implement or post-implement mode based on available artifacts
+### Review — Pre-implement (optional; required for size L) and Final (mandatory)
+- User says: "Analyze [feature]", "Review [feature]", "Quality check [feature]", "Final review [feature]", "Is [feature] ready to merge"
+- Pre-implement: before code (cross-artifact consistency, codebase fit)
+- Final (phase 5.5): after implement + test, every task done and no open bug — spec conformance, constitution/project rules, code quality, merge checklist → `review-final.md` with a verdict. **The close refuses without a fresh READY / READY-WITH-FOLLOWUPS round.**
+- Route to: `spec-kit-review` (it detects the mode from the artifacts)
+
+### Size tiers
+- `spec.md` carries `**Size**: S | M | L` (`spec-kit/references/sizing.md`); specify always asks the user, recommendation first.
+- S: after the spec is confirmed, auto-chain plan → tasks; one commit for the three.
+- L: route the pre-implement review before implement; do not route implement until its CRITICAL findings are resolved.
 
 ### Implement
 - User says: "Implement [feature]"
@@ -189,7 +196,8 @@ Check for artifacts to determine current phase:
 | `tasks.md` with completions | Implementing |
 | `bugs.md` with open bugs | Testing (bugfix loop) |
 | `bugs.md` with `claimed` bugs only | Awaiting verification — user / CI / other-agent review |
-| `bugs.md` all verified | Testing complete — **must close** |
+| `bugs.md` all verified (or no bugs), all tasks done, no `review-final.md` / latest round NOT READY / stale | **Final review due** |
+| `review-final.md` latest round READY / READY-WITH-FOLLOWUPS, fresh | Ready to close — **must close** |
 | `implementation-summary.md` exists | Summarized — complete |
 | `close.md` exists | Closed — complete |
 | `close.md` + `bugs.md` with open bugs | **Reopened (bugfix in progress)** |
@@ -237,8 +245,8 @@ AFTER the current round completes and all original BF-### tasks are verified:
 ### Bugfix loop completion — user decides when to close
 After all bugs in bugs.md have Status: verified (each with a Verified-by oracle — `spec-kit/references/evidence.md`; `claimed` is not verified):
 ```text
-  SUGGEST: "All N bugs verified. Ready to close? Say 'close [feature]' to
-            generate a close document, or 'add bug' to log more bugs."
+  SUGGEST: "All N bugs verified. Run 'final review [feature]' (mandatory merge-readiness
+            review); when it says READY, 'close [feature]'. Or 'add bug' to log more bugs."
   DO NOT auto-trigger close. The user decides when to advance.
   The close is MANDATORY before the feature can be marked complete.
 ```
@@ -280,11 +288,11 @@ You MUST determine the current phase before any tool call. Each phase has strict
 | **Clarify** | `clarify.md`, `spec.md` (amend) | BLOCKED | `clarify.md` exists |
 | **Plan** | `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md` | BLOCKED | `plan.md` exists, no `tasks.md` |
 | **Tasks** | `tasks.md` only | BLOCKED | `tasks.md` exists, no completions |
-| **Review** | `tasks.md` only (closed-review mode, user approval) | BLOCKED | User says "review", "analyze", or "quality check" |
+| **Review** | pre: report · final: `review-final.md`, `evidence/final-*`, `bugs.md` (new entries), `specs/merge-checklist.md` (first use), approved spec/plan deviation patches · closed: `tasks.md` (approval) | BLOCKED (runs build/test/lint read-only) | User says "review", "final review", "analyze", or "quality check" |
 | **Implement** | source code, `tasks.md` (completions), `bugs.md` (mark resolved) | ALLOWED | `tasks.md` with pending tasks |
 | **Test** | `bugs.md` only | BLOCKED | `bugs.md` with open bugs |
 | **Reopen** | `bugs.md` (create if missing), source code (fix loop) | ALLOWED (same as bugfix) | `close.md` exists, user says "reopen" |
-| **Summarize / Close** | `implementation-summary.md`, `close.md`, `spec.md` (patch deviations), `plan.md` (patch deviations), `tasks.md` (finalize), `bugs.md` (finalize) | BLOCKED | `implementation-summary.md` and `close.md` both missing |
+| **Summarize / Close** | `implementation-summary.md`, `close.md`, `spec.md` (patch deviations), `plan.md` (patch deviations), `tasks.md` (finalize), `bugs.md` (new gap bugs), ADR files + ADR index, `AGENTS.md` / agent rule files (approved targeted patches) | BLOCKED | `implementation-summary.md` and `close.md` both missing |
 | **Refresh** | `spec.md`, `plan.md`, `data-model.md`, `contracts/*` (per-item approval) | BLOCKED | User says "refresh" |
 
 > **Note**: Constitution is NOT listed as a phase above — it is project-level

@@ -5,22 +5,22 @@
 > Tool names: Hermes (`terminal`, `write_file`, `patch`, `read_file`, `skill_view`) — Claude Code maps them to
 > `Bash`, `Write`/`Edit`, `Read`, `Skill`; MCP tools are `mcp_spec_kit_*` / `mcp__spec-kit__*`.
 
-**Phase**: 3.5 (Pre-implement optional gate) / 5.5 (Post-implement optional gate)
+**Phase**: 3.5 (Pre-implement gate — optional for S/M, required for L) / 5.5 (Final merge-readiness review — **mandatory before close**)
 
 **Purpose**: Provides quality checks at two points in the workflow, plus a
 third mode for reviewing already-closed features without altering history:
 
 1. **Pre-implement** (after tasks.md, before code): Verify spec/plan/tasks are coherent **and** analyze the existing codebase structure to evaluate whether the planned approach fits the project architecture and follows current best practices. READ-ONLY — outputs a report, no file changes.
 
-2. **Post-implement** (after tests green, before close): **Critical** code quality review — does the implementation match the constitution? Does it fulfill the spec? Is the architecture sound? Are there structural defects, security issues, or design debt introduced? Focuses on **important** findings; skips cosmetic/style nitpicks.
+2. **Final** (phase 5.5 — every task done, no open bug, before close): the merge gate. Does the code do what the spec says (requirement by requirement)? Does it obey the constitution and the project's rules? Is it good code by current practice? Is the branch mergeable (builds, full suite green, clean diff, conflict-free)? Writes a round to `specs/[feature]/review-final.md` whose **Verdict** and **Reviewed-commit** gate `close_feature`. Skips cosmetic nitpicks — but a broken explicit project rule is never a nitpick.
 
-3. **Closed-review** (feature is already closed): Same checks as post-implement but does NOT update history.md. If issues are found, offers to add refactoring tasks to tasks.md and reopen the feature.|
+3. **Closed-review** (feature is already closed): Same checks as final but does NOT update history.md. If issues are found, offers to add refactoring tasks to tasks.md and reopen the feature.
 
 **Prerequisites**:
 - Pre-implement mode: `spec.md` + `plan.md` + `tasks.md` must exist
-- Post-implement mode: `spec.md` + implemented code + passing tests
+- Final mode: `spec.md` + implemented code, every task `[X]`, no bug `open`/`in-progress`
 
-**Artifacts**: None (read-only analysis output)
+**Artifacts**: pre-implement — a report (the project may keep it as `review.md`); final — `specs/[feature]/review-final.md` (rounds appended), `evidence/final-*.txt`, bug entries in `bugs.md` for blocking findings
 
 **Routing**: Load this skill when the user says "review [feature]", "analyze [feature]", or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
 
@@ -41,14 +41,16 @@ DETECT current artifacts:
   IF tasks.md exists AND no implementation code exists:
     MODE = pre-implement (cross-artifact consistency + codebase architecture analysis)
 
-  IF tests have passed AND writeable source code exists AND no close.md:
-    MODE = post-implement (code quality review)
+  IF every task is [X] AND implementation code exists AND no close doc:
+    IF bugs.md has an open / in-progress bug:
+      REFUSE: "BUG-NNN is open — finish the bugfix loop, then run the final review."
+    MODE = final (merge-readiness review, phase 5.5)
 
-  IF both pre-implement and post-implement conditions match:
-    ASK user: "Run pre-implement review (spec/plan/tasks), post-implement review (code quality), or both?"
+  IF both pre-implement and final conditions match:
+    ASK user: "Run the pre-implement review (spec/plan/tasks) or the final review (code + merge readiness)?"
 
   IF mode is still undetermined:
-    ASK user: "Cannot auto-detect mode. Which review? (pre-implement / post-implement / closed-review)"
+    ASK user: "Cannot auto-detect mode. Which review? (pre-implement / final / closed-review)"
 ```
 
 ---
@@ -292,244 +294,202 @@ IF only LOW/MEDIUM:
 
 ---
 
-## Post-Implement Mode: Code Quality Review
+## Final Mode: Merge-Readiness Review (phase 5.5)
 
-### Step 1: Validate prerequisites
+The final review answers four questions, in this order, and writes the answers as one
+round of `specs/[feature]/review-final.md` (`spec-kit/templates/review-final-template.md`):
+
+1. Does the code do what the spec says?
+2. Does it obey the constitution and the project's rules?
+3. Is it good code by current practice for this stack?
+4. Can it be merged now?
+
+It is **mandatory**: `close_feature` and `advance_phase(5→6)` refuse a feature whose latest
+round is missing, says `NOT READY`, or names a commit older than the last code change.
+
+### Step 1: Reviewer and scope
 ```
-IF specs/[feature]/spec.md NOT EXISTS:
-  ERROR: "Run spec-kit-specify first — cannot review without requirements"
-IF no implementation code detected:
-  ERROR: "No implementation found — run spec-kit-implement first"
-```
+READ Implemented-by from the implement entries of history.md
+IF another agent is available (Hermes ↔ Claude Code): it runs this review → label review:<agent>
+ELIF the harness can start a fresh-context sub-agent (Claude Code: the Agent tool):
+  delegate the review to it with ONLY this procedure, the feature path and the base branch —
+  never the implementation transcript → label "self-review by <agent> (fresh context)"
+ELSE: label "self-review by <agent>"
+The label goes in the round header and in the close's Evidence table. A self-review still
+opens the merge gate, but it never counts as review:<agent> verification of a bug.
 
-### Step 2: Load context
-```
-LOAD specs/[feature]/spec.md (REQUIRED)
-LOAD specs/[feature]/constitution.md (IF EXISTS)
-LOAD specs/[feature]/plan.md (IF EXISTS)
-LOAD specs/[feature]/tasks.md (IF EXISTS)
-LOAD specs/[feature]/evidence/ listing and the Evidence: lines of bugs.md (IF EXISTS)
-
-CAPTURE git diff or file list showing what was implemented
-
-AUTHOR CHECK (evidence.md — author/reviewer split):
-  READ Implemented-by from the implement entries in history.md
-  IF it names THIS agent: LABEL the report "self-review by <agent>" — it cannot be
-    cited as review:<agent> verification; recommend the other agent reviews.
-  ELSE: LABEL the report "review:<this agent>" — it may verify claims.
-```
-
-### Step 3: Code quality checks
-
-**A. Architecture & Design**
-- Does the code structure follow the plan's architecture?
-- Are there architectural violations (layers bypassed, circular dependencies)?
-- Is the code in the correct locations per the plan?
-
-**B. Spec Fulfillment**
-- For each FR-### in spec.md: does the implementation satisfy it?
-- For each success criterion: is it demonstrably met?
-- Are there edge cases from the spec that are unhandled?
-
-**C. Constitution Alignment**
-- Does the code respect MUST principles from constitution.md?
-- Are there quality gates or standards that were skipped?
-
-**D. Naming Conventions** (post-implement)
-- Does the code follow project naming conventions?
-- Are file/module/function names consistent with plan.md?
-- Public API names match spec terminology?
-
-**E. Documentation Completeness** (post-implement)
-- Are there README, API docs, or inline docs that need updating?
-- If this feature adds or changes a public interface, is it documented?
-- Are there changelog entries or migration notes needed?
-
-**F. User-Defined Custom Gates** (post-implement)
-**G. Code Quality** — Focus on **structural and substantive** issues. Skip cosmetic preferences.
-
-- Architecture conformance — does the code structure match what plan.md described? Or did the implementation diverge in significant ways?
-- Layer/model boundaries — are layers properly separated? Are there imports that cross layer boundaries (e.g., UI layer importing data access)?
-- Error handling chains — are errors caught at appropriate boundaries? Or are there silent failures, bare excepts, or swallowed exceptions?
-- Security — hardcoded secrets, injection vulnerabilities, missing authentication/authorization checks, unvalidated input flowing to sensitive operations
-- Data integrity — are database operations transactional where needed? Race conditions? Missing validation before persistence?
-- Duplication at the structural level — copy-pasted modules, repeated business logic across services, parallel hierarchies that should be unified
-- Complexity hotspots — functions over 100 lines, modules over 500 lines, nested conditionals beyond 4 levels, excessive indirection (too many wrappers/delegates for what the code does)
-- Dependency direction — do high-level modules depend on low-level modules, or is there dependency inversion? Are there circular dependencies?
-- Public API surface — is the API/interface well-designed? Consistent naming, proper parameter validation, sensible defaults?
-- Concurrency — thread safety, shared mutable state, async/await usage patterns, missing cancellation support for long operations
-
-**NITPICK FILTER for post-implement** — Same rule as pre-implement (Step 5). Do NOT report:
-- Line length, whitespace, formatting, comment style, import ordering
-- Variable/function naming that is merely unconventional but clear
-- Minor redundancy that doesn't affect maintainability (2-3 line patterns)
-- Personal style preferences ("I would have written this differently")
-- Missing edge cases that the spec doesn't require and are unlikely in practice
-- Performance micro-optimizations with no demonstrated bottleneck
-
-Ask: "Is this finding in the top 5 things that should change about this code?" If no, delete it.
-
-**H. Test Quality** (if tests exist)
-- Do tests actually test the behaviors described in spec.md?
-- Are there tests for edge cases from the spec?
-- Are tests meaningful (assert behavior, not implementation)?
-- **Fixture reality**: for every external seam (database function, HTTP contract, file format), does a `probe:` file exist and does the test fixture match its shape? A hand-built fixture with no probe is a HIGH finding — it is how fixes pass green and fail in production.
-- **Evidence present**: do the phase commits and the regression reference `output:`/`ci:` files? Missing evidence is reported as "unverified", not assumed.
-
-### Step 4: Severity assignment
-Same heuristic as pre-implement mode — **filter out nitpicks**:
-- **CRITICAL**: Security vulnerability, data integrity issue, architecture violation, complete spec deviation
-- **HIGH**: Structural defect, error handling gap, missing validation chain, concurrency bug
-- **MEDIUM**: Minor design concern, documentation gap, test coverage gap on critical path
-- **LOW**: SKIP — do not report (nitpicks only)
-
-Apply the same **NITPICK FILTER** from pre-implement Step 5 before reporting any finding.
-
-### Step 5: Produce post-implement report
-```
-# Post-Implement Review: [Feature]
-
-**Reviewer**: review:<agent> | self-review by <agent> (not citable as verification)
-**Implemented-by**: <agent> (from history.md)
-
-## Spec Fulfillment
-
-| FR-ID | Status | Notes |
-|-------|--------|-------|
-| FR-001 | ✅ Fulfilled | Implemented as specified |
-| FR-002 | ⚠️ Partial | Missing error handling for edge case |
-| FR-003 | ❌ Missing | Not implemented |
-
-## Constitution Alignment
-[If any violations]
-
-## Critical Findings (must fix)
-
-| ID | Category | Severity | File | Finding | Suggestion |
-|----|----------|----------|------|---------|------------|
-| Q1 | Architecture | CRITICAL | src/auth/service.go:45 | Auth bypass possible — no middleware check on admin routes | Add middleware guard |
-|...
-
-## Advisory Findings (should fix)
-
-| ID | Category | Severity | File | Finding | Suggestion |
-|----|----------|----------|------|---------|------------|
-| R1 | Error handling | HIGH | src/api/handler.go:120 | Database errors silently swallowed | Return 500 with error ID |
-|...
-
-[Nitpicks omitted — 0 reported]
-
-## Architecture Conformance
-
-| Plan Aspect | Implementation | Verdict |
-|-------------|---------------|---------|
-| Repository pattern | Data access via repository interfaces | ✅ Conforms |
-| Middleware auth chain | Route-level middleware applied | ✅ Conforms |
-| Layered separation | UI imports from services layer | ⚠️ UI imports data access directly in 2 places |
-
-## Metrics
-- Requirements fulfilled: N/Total
-- Code quality issues: N (Critical/High/Medium/Low)
-- Constitution violations: N
-- Test coverage adequacy: Satisfactory / Needs improvement / Not assessed
-```
-### Step 6: Next actions — deviation resolution (post-implement)
-
-For each deviation found between code and spec/plan during post-implement review:
-
-```
-FOR each FR-### or plan section where code differs from spec/plan:
-  PRESENT the discrepancy to the user:
-    "FR-NNN in spec.md says: [original requirement]
-     Implementation does: [what code actually does]
-     
-     Options:
-     1. Update spec/plan to match implementation (intentional deviation — document it)
-     2. Keep spec/plan as-is — change code to match (create a bugfix task)
-     3. Skip for now (flag for Phase 6 close to resolve)"
-
-  WAIT for user decision before proceeding to the next discrepancy.
-
-  IF user picks 1:
-    PATCH spec.md or plan.md to reflect what was implemented
-    ADD note: "(Updated by post-implement review)"
-    NOTE: "spec.md updated — deviation documented."
-    These spec/plan patches will be committed by Phase 6 (summarize/close).
-
-  IF user picks 2:
-    ADD bug to bugs.md: "BUG-NNN: Implementation does not match spec FR-NNN"
-    NOTE: "Bug logged — run 'bugfix [feature]' to align implementation with spec."
-
-  IF user picks 3:
-    NOTE: "Deferred to Phase 6 close."
+BASE = merge_checklist base_branch, else branch_source in specs/git-conventions.md, else main
+SIZE = spec.md **Size** (absent → M)
+REVIEWED_COMMIT = git rev-parse --short HEAD   # recorded before anything else
 ```
 
-### Step 7: Next actions (non-deviation)
+### Step 2: Load
+```
+LOAD spec.md (FR-###, SC-###, user stories + acceptance scenarios, edge cases),
+     plan.md (Current Design / architecture / seams), tasks.md, data-model.md, contracts/,
+     decisions.md (every assumption is a review item), bugs.md, evidence/ listing
+LOAD specs/constitution.md — every MUST / SHOULD / numbered principle, and the
+     per-component sections for the layers this diff touches
+LOAD project rules: specs/merge-checklist.md (missing → create it from
+     spec-kit/templates/merge-checklist-template.md, fill the commands from AGENTS.md /
+     README / package scripts, ASK the user to confirm before using it), AGENTS.md and any
+     agent rule files the project keeps (e.g. CLAUDE.md, .claude/rules/, .cursor/rules/),
+     linters' configs
+RUN git diff --stat BASE...HEAD and git diff BASE...HEAD -- . ':(exclude)specs'
+```
+
+### Step 3: Mechanical checks (evidence first, judgement after)
+```
+CALL mcp_spec_kit_diff_scan(feature, base=BASE)   # without MCP: run the same checks by hand —
+   # git merge-tree --write-tree BASE HEAD, grep the added lines for secrets / conflict
+   # markers / focused tests / TODO, list forbidden and > 1 MB files, list unplanned files
+SAVE the result → evidence/final-diff-scan.txt (command + UTC time on top)
+FOR each command in merge-checklist ## Commands (build, test = the FULL suite, lint,
+    format_check, extra):
+  RUN it; SAVE → evidence/final-<name>.txt; note pass/fail and NEW warnings in changed files
+IF a CI pipeline exists: queue/locate the run for REVIEWED_COMMIT → record ci:<id> + result
+```
+A command that cannot run (missing tool, needs a service) is written as ❌ unverified with the
+reason — never skipped, never assumed green.
+
+### Step 4: §1 Spec conformance — requirement by requirement
+```
+FOR each FR-###, SC-###, acceptance scenario and edge case in spec.md:
+  FIND the code that implements it (path:line) and the test that proves it
+  VERDICT: ✅ implemented + proven
+           ⚠️ partial / implemented but unproven (no test, or only a self-authored fixture
+              where a probe: was required)
+           ❌ missing                                   → CRITICAL
+           ↔ implemented differently from the spec       → deviation (Step 8)
+FOR each contract in contracts/ and entity in data-model.md: compare with the code
+  (routes, status codes, payload fields, nullability, validation, persistence shape)
+FOR each changed file the diff_scan lists as unplanned, and any behaviour no
+  requirement asks for: in scope? (named by plan/tasks under another name) or scope creep
+  (→ HIGH if it changes behaviour, MEDIUM otherwise)
+```
+
+### Step 5: §2 Constitution and project rules
+```
+MAP the changed files to the constitution's components / layers
+FOR each MUST / principle / rule that applies to those layers, and each merge-checklist
+    P-item, and each rule in AGENTS.md / agent rule files that the diff could touch:
+  VERDICT ✅ respected / ❌ violated, with path:line evidence
+  Rules that do not apply → one line "n/a — <why>" (so the reader sees they were considered)
+A violated MUST or P-item = HIGH (CRITICAL when it is security, data integrity or a
+non-negotiable the project marks as such). Rules are binding here — this is the place the
+constitution is enforced; elsewhere it is guidance.
+```
+
+### Step 6: §3 Code quality & best practice, §4 Tests
+Check, on the changed code only:
+
+- Architecture conformance — the structure plan.md Current Design describes; layers not bypassed; dependency direction; no cycles
+- Error handling chains — failures caught at the right boundary; nothing swallowed; user-facing errors leak no internals
+- Security — secrets, injection, missing authentication/authorization, unvalidated input reaching sensitive operations, tenant/ownership checks
+- Data integrity — transactions where needed, races, validation before persistence, migrations
+- Concurrency — shared mutable state, async misuse, cancellation for long operations
+- Structural duplication — repeated business logic, parallel hierarchies, re-implemented utilities the codebase already has
+- Complexity hotspots — functions > ~100 lines, deep nesting, indirection that buys nothing
+- Public API surface — naming consistent with the spec, validation, sensible defaults, backwards compatibility
+- **Best practice** — for each framework/library the diff leans on, check current guidance (official docs, web search); flag deprecated APIs, known anti-patterns, over- and under-engineering. Skip the research for size S; still apply what you know.
+
+§4 Tests: do they assert the behaviour §1 names (not implementation details)? Edge cases from the spec? For every external seam, does a `probe:` file exist and does the fixture match its shape (missing = HIGH)? RED/GREEN evidence present for each implement phase? Regression run present?
+
+**NITPICK FILTER** — do NOT report: formatting, line length, import order, naming that is
+unconventional but clear, 2–3 line repetition, personal style, micro-optimisations without a
+measured problem, edge cases the spec does not require. Ask: "Is this in the top things that
+must change before merge?" If not, delete it.
+
+### Step 7: Severity, checklist, verdict
+- **CRITICAL**: requirement missing, security vulnerability, data loss/corruption, architecture violation, a non-negotiable rule broken
+- **HIGH**: violated constitution MUST / P-item, structural defect, error-handling gap, missing validation chain, concurrency bug, unprobed seam fixture, behaviour-changing scope creep
+- **MEDIUM**: design concern that degrades with the next features, test gap on a non-critical path, doc gap
+- **LOW**: do not report
+
+Fill the §5 checklist table: every generic G-item and project P-item, each with ✅/❌ and its
+evidence file. Then:
 
 ```
-IF mode == closed-review:
-  PRESENT findings to user
-  IF CRITICAL or HIGH issues exist:
-    PROMPT: "N issues found. Options:
-      1. Add refactoring tasks to tasks.md (no reopen)
-      2. Add tasks and reopen the feature (reopen [feature])
-      3. Note for future work, no changes"
-    IF user picks 1 or 2:
-      APPEND refactoring tasks to tasks.md for each issue
-      NOTE: "Refactoring tasks added to tasks.md."
-    IF user picks 2:
-      NOTE: "Feature needs reopening. Run 'reopen [feature]' to start the fix loop."
-    IF user picks 3:
-      NOTE: "Issues noted for future work. No changes made."
-  ELSE (only LOW/MEDIUM):
-    NOTE: "Minor issues found. No code changes needed."
-
-ELSE (normal pre/post-implement):
-  IF CRITICAL issues exist:
-    - Block: Resolve before closing feature
-    - Recommend adding bugs to bugs.md
-    - Proceed to bugfix cycle
-
-  IF only LOW/MEDIUM:
-    - User may proceed to close
-    - Note improvement suggestions for future
+IF any CRITICAL or HIGH, or any blocking checklist item ❌:  VERDICT = NOT READY
+ELIF any MEDIUM or non-blocking item ❌:                      VERDICT = READY-WITH-FOLLOWUPS
+ELSE:                                                         VERDICT = READY
+WRITE the round header: **Verdict**: <VERDICT> and **Reviewed-commit**: <REVIEWED_COMMIT>
 ```
+An unverified blocking item (command could not run) is ❌ unless the user explicitly accepts
+the risk — quote them in decisions.md and in the round.
+
+### Step 8: Deviations, bugs, follow-ups
+```
+FOR each ↔ deviation from Step 4:
+  PRESENT: "FR-NNN says: … / the code does: … — 1. update spec/plan (intentional),
+            2. change the code (log a bug), 3. defer to the close"
+  WAIT for the user. 1 → patch spec.md/plan.md now, note "(Updated by final review)";
+  2 → bug; 3 → listed for the close.
+FOR each CRITICAL / HIGH finding and each blocking checklist failure:
+  LOG a bug in bugs.md using the spec-kit-test entry format (Severity, Area, Description
+  observed vs expected, Steps, Status: open; id via mcp_spec_kit_next_id(kind="BUG")),
+  reference the round and finding id; confirm each with the user
+MEDIUM findings → §6 follow-ups (the close lists them; the user may log them as bugs)
+DRAFT the PR description in §6: what / why / how verified (evidence + ci) / risks / rollback
+```
+
+### Step 9: Report
+Report the verdict first, then: reviewer label, counts by severity, checklist failures,
+requirement coverage (✅/total), rules verdicted, bugs logged. NOT READY → "run
+`bugfix [feature]`, then the final review again (a new round)". READY / READY-WITH-FOLLOWUPS
+→ "run `close [feature]` or `summarize [feature]`".
+
+### Re-running
+Every run appends `## Round N+1`; earlier rounds stay. A round may say "Rounds 1 findings
+Q1–Q4 re-checked: fixed (evidence …)". Any code commit after the round's Reviewed-commit makes
+the round stale — the close will refuse it.
+
+---
+
+## Closed-Review Mode
+
+Same steps as the final mode, written as a report (not a round of review-final.md, no
+history entry). CRITICAL / HIGH → offer: add refactoring tasks to tasks.md, add them and
+reopen, or note for future work — only with the user's approval.
 
 ### Append to history.md and Commit
 
 ```text
 IF mode == closed-review:
   NOTE: "Review on closed feature — history.md not updated."
-ELSE:
+ELIF mode == pre-implement:
   Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
-  - Phase: Phase 3.5 or Phase 5.5 (mode-dependent) — Review
+  - Phase: Phase 3.5 — Review
   - Artifact: review report
-  - Scope: review findings
   - Message: `"spec(review): [feature] review findings"`
+ELSE (final):
+  CALL mcp_spec_kit_lint_artifacts(feature) — review-final.md rounds must carry Verdict + Reviewed-commit
+  Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
+  - Phase: Phase 5.5 — Final review
+  - Artifact: review-final.md, evidence/final-*.txt, bugs.md (if bugs were logged), patched spec/plan (approved deviations)
+  - Message: `"spec(review): [feature] final review (verdict: <VERDICT>)"`
+  This commit touches specs/ only, so it does not make the round stale.
 ```
 
 ## Completion
 
 Report:
-- Mode used: Pre-implement / Post-implement / Both
+- Mode used: Pre-implement / Final / Closed-review
 - Findings count by severity
-- Coverage percentage (pre-implement)
-- Spec fulfillment status (post-implement)
-- Overall recommendation: Proceed / Fix critical issues first
+- Coverage percentage (pre-implement) · requirement conformance ✅/total (final)
+- Final: **Verdict**, Reviewed-commit, checklist failures, bugs logged
+- Overall recommendation: Proceed / Fix first
 
 ## Next Skills
 
 - Pre-implement mode: Propose `spec-kit-implement` when all CRITICAL issues resolved
-- Post-implement mode: Propose `spec-kit-summarize` to close the feature
+- Final mode, READY / READY-WITH-FOLLOWUPS: Propose `spec-kit-summarize` (close)
+- Final mode, NOT READY: Propose `bugfix [feature]`, then the final review again
 - Closed-review mode: Propose `reopen [feature]` if issues need fixing
-- Either mode: Propose `spec-kit-specify` or `spec-kit-plan` to fix issues found
 - In bugfix mode: Propose `spec-kit-tasks` to add missing bugfix tasks
 
-**Re-running this skill**:
-1. Re-run the relevant detection passes based on mode
-2. COMPARE results against previous run
-3. Report only changes/new findings
-4. Preserve previous report for comparison
+**Re-running this skill**: pre-implement — compare with the previous report, report only
+changes. Final — always a new round (see "Re-running" in the final mode).
 
 ## Prerequisite Enforcement
 
@@ -537,11 +497,9 @@ Pre-implement:
 - **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)
 - **WARN** if: plan.md or tasks.md missing — analysis limited to what exists
 
-Post-implement:
-- **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)
-- **BLOCKED** if: No implementation code detected
-- **NOTE**: constitution.md not found at project root — constitutional alignment
-  checks skipped. This is a project-level gap, not a feature blocker.
+Final:
+- **BLOCKED** if: spec.md missing, no implementation code, a task not `[X]`, or a bug open/in-progress
+- **NOTE**: constitution.md missing → §2 checks project rule files and the merge checklist only; say so in the round
 
 Closed-review:
 - **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)
@@ -550,5 +508,8 @@ Closed-review:
 
 ## Key Constraint
 
-**READ-ONLY on source code** — This skill does NOT modify source code files. It only outputs a report.
+**READ-ONLY on source code** — This skill never modifies source code. It runs the project's
+build/test/lint commands (read-only on the tree) and writes only: the report /
+`review-final.md`, `evidence/final-*.txt`, bug entries in `bugs.md`, approved spec/plan
+deviation patches, and `specs/merge-checklist.md` on first use (with the user's confirmation).
 **Exception**: In closed-review mode, may append refactoring/remediation tasks to `tasks.md` with user approval.

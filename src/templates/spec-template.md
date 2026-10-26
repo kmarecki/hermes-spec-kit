@@ -3,7 +3,11 @@
 **Feature Branch**: [###-feature-name]
 **Created**: [DATE]
 **Status**: Draft
+**Size**: [S | M | L] — [one-line reason; see spec-kit/references/sizing.md]
 **Input**: User description: "[USER DESCRIPTION]"
+
+> **Size S**: keep only one user story, the FRs, Success Criteria and Edge Cases — delete the
+> unused sections instead of leaving placeholders.
 
 ## User Scenarios & Testing *(mandatory)*
 

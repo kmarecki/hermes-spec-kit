@@ -16,6 +16,9 @@ perfectly:
   * real timestamps (timestamp)
   * the history-before-commit guard (history_guard)
   * a ten-line phase card to re-read after context compaction (get_next_actions)
+  * the merge gate: the final review's verdict and freshness (close_feature) and a
+    mechanical scan of the branch diff (diff_scan)
+  * the size tier (S/M/L) read from spec.md, and ADR number allocation (next_id ADR)
 
 Bug tracking stays file-based — bugs.md is the single source of truth and this
 server never edits it; it only reads and lints.
@@ -54,19 +57,29 @@ PREREQUISITES = {
 }
 
 CLOSE_DOCS = ("close.md", "implementation-summary.md")
+FINAL_REVIEW = "review-final.md"
 TRACKED_ARTIFACTS = [
     "spec.md", "clarify.md", "plan.md", "research.md", "data-model.md",
     "quickstart.md", "tasks.md", "bugs.md", "decisions.md", "history.md",
-    "close.md", "implementation-summary.md",
+    FINAL_REVIEW, "close.md", "implementation-summary.md",
 ]
+SIZES = ("S", "M", "L")
+VERDICTS = ("READY", "READY-WITH-FOLLOWUPS", "NOT READY")
+PASSING_VERDICTS = ("READY", "READY-WITH-FOLLOWUPS")
+ADR_DIR_CANDIDATES = ("docs/adr", "docs/decisions", "doc/adr", "adr", "docs/architecture/decisions")
 
 BUG_STATUSES = {"open", "in-progress", "claimed", "verified", "superseded"}
 LEGACY_BUG_STATUSES = {"resolved": "claimed", "fixed": "claimed"}
 VERIFIED_BY_RE = re.compile(r"^(user|ci:\S+|review:\S+)$")
 
 _BUG_HEADER_RE = re.compile(r"^### (BUG-(\d+)):", re.M)
-_TASK_RE = re.compile(r"^- \[( |x|X)\] ((?:T|BF-?)(\d+))", re.M)
+# "- [X] T001 …" (template) and "- T001 [X] …" (id first) are both task lines.
+_TASK_RE = re.compile(r"^- (?:\[(?P<pre>[ xX])\] )?(?P<id>(?:T|BF-?)(?P<num>\d+))\b(?: \[(?P<post>[ xX])\])?", re.M)
 _HISTORY_ENTRY_RE = re.compile(r"^## \[?([0-9T:\-+.Z]+)\]? *\| *(.*)$", re.M)
+_SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
+_ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
+_VERDICT_RE = re.compile(r"\*\*Verdict\*\*:\s*(READY-WITH-FOLLOWUPS|NOT READY|READY)\b")
+_REVIEWED_COMMIT_RE = re.compile(r"\*\*Reviewed-commit\*\*:\s*([0-9a-f]{7,40})\b")
 
 
 # ── Derivation ─────────────────────────────────────────────────────────────
@@ -101,13 +114,99 @@ def _parse_bugs(text):
     return bugs
 
 
+def _task_mark(m):
+    """The checkbox of a _TASK_RE match ('x', 'X', ' '), or None when the line has none."""
+    return m.group("pre") if m.group("pre") is not None else m.group("post")
+
+
 def _parse_tasks(text):
     tasks = []
     for m in _TASK_RE.finditer(text):
-        tasks.append({"id": m.group(2), "done": m.group(1) in "xX",
-                      "kind": "BF" if m.group(2).startswith("BF") else "T",
-                      "num": int(m.group(3))})
+        mark = _task_mark(m)
+        if mark is None:
+            continue
+        tasks.append({"id": m.group("id"), "done": mark in "xX",
+                      "kind": "BF" if m.group("id").startswith("BF") else "T",
+                      "num": int(m.group("num"))})
     return tasks
+
+
+def _git(*args):
+    """Run git in the project root; (returncode, stdout). (-1, '') when git is unavailable."""
+    try:
+        r = subprocess.run(["git", *args], capture_output=True, text=True, check=False)
+        return r.returncode, r.stdout
+    except OSError:
+        return -1, ""
+
+
+def _conventions():
+    """key: value pairs from specs/git-conventions.md (branch_source, adr_dir, …). Empty when absent."""
+    f = SPECS_DIR / "git-conventions.md"
+    if not f.exists():
+        return {}
+    pairs = re.findall(r"^\s*([a-z_]+):\s*([^\s#]+)", f.read_text(errors="replace"), re.M)
+    found = {}
+    for k, v in pairs:  # first occurrence wins — the template's "Examples" block repeats keys
+        found.setdefault(k, v)
+    return found
+
+
+def _adr_dir():
+    """The project's ADR directory: git-conventions `adr_dir`, else the first existing candidate."""
+    configured = _conventions().get("adr_dir")
+    if configured:
+        return Path(configured)
+    for c in ADR_DIR_CANDIDATES:
+        if Path(c).is_dir():
+            return Path(c)
+    return None
+
+
+def _parse_size(fd):
+    """S | M | L from the spec.md header line `**Size**: X`; None when absent (legacy specs = M)."""
+    spec = fd / "spec.md"
+    if not spec.exists():
+        return None
+    m = _SIZE_RE.search(spec.read_text(errors="replace"))
+    return m.group(1) if m else None
+
+
+def _final_review(fd):
+    """The latest round of review-final.md: verdict, reviewed commit, and whether code changed since."""
+    f = fd / FINAL_REVIEW
+    if not f.exists():
+        return {"present": False, "rounds": 0, "verdict": None, "reviewed_commit": None, "stale": None}
+    text = f.read_text(errors="replace")
+    rounds = list(_ROUND_RE.finditer(text))
+    last = text[rounds[-1].start():] if rounds else text
+    vm = _VERDICT_RE.search(last)
+    cm = _REVIEWED_COMMIT_RE.search(last)
+    commit = cm.group(1) if cm else None
+    stale = None
+    if commit and _git("rev-parse", "--git-dir")[0] == 0:
+        rc, out = _git("log", "--format=%h", f"{commit}..HEAD", "--", ".", ":(exclude)specs")
+        if rc == 0:
+            stale = bool(out.strip())
+        elif rc > 0:
+            stale = True  # the reviewed commit is gone (rebased/amended) — the review no longer names this code
+    return {"present": True, "rounds": len(rounds), "verdict": vm.group(1) if vm else None,
+            "reviewed_commit": commit, "stale": stale}
+
+
+def _final_review_problem(fr):
+    """Why the final review does not open the merge gate; None when it does."""
+    if not fr["present"]:
+        return f"no {FINAL_REVIEW} — run the final review (spec-kit-review, final mode) first"
+    if fr["verdict"] is None:
+        return f"{FINAL_REVIEW}: latest round has no '**Verdict**:' line"
+    if fr["verdict"] not in PASSING_VERDICTS:
+        return f"{FINAL_REVIEW}: latest verdict is {fr['verdict']} — fix the findings (bugfix loop) and re-review"
+    if fr["reviewed_commit"] is None:
+        return f"{FINAL_REVIEW}: latest round has no '**Reviewed-commit**:' sha"
+    if fr["stale"]:
+        return f"{FINAL_REVIEW}: code changed after the reviewed commit {fr['reviewed_commit']} — re-run the final review"
+    return None
 
 
 def _derive(feature):
@@ -123,6 +222,7 @@ def _derive(feature):
     open_bugs = [b for b in bugs if b["status"] in ("open", "in-progress")]
     claimed = [b for b in bugs if b["status"] == "claimed"]
     closed_on_disk = any(c in present for c in CLOSE_DOCS)
+    size = _parse_size(fd)
 
     if not {"spec.md"} <= present:
         phase, status = 1, "new"
@@ -147,6 +247,9 @@ def _derive(feature):
         "status": status,
         "artifacts": {a: ("present" if a in present else "absent") for a in TRACKED_ARTIFACTS},
         "contracts": contracts,
+        "size": size or "M",
+        "size_declared": size is not None,
+        "final_review": _final_review(fd) if phase >= 5 else None,
         "tasks": {"total": len(tasks), "done": sum(t["done"] for t in tasks),
                   "bugfix": sum(t["kind"] == "BF" for t in tasks)},
         "bugs": {"total": len(bugs), "open": len(open_bugs), "claimed": len(claimed),
@@ -173,19 +276,23 @@ def _phase_card(state):
         2: "plan artifacts written → commit spec(phase-2)",
         3: "tasks.md written, TDD question asked → commit spec(phase-3)",
         4: "phase tests output: saved, tasks [X], history entry with Implemented-by → commit per phase; full regression → output: + ci:",
-        5: f"{state['bugs']['open']} open, {state['bugs']['claimed']} claimed-unverified → verify with user/ci/other-agent or run 'bugfix {f}'",
-        6: "every bug verified/superseded, Evidence table filled → one commit spec(phase-6)",
+        5: f"{state['bugs']['open']} open, {state['bugs']['claimed']} claimed-unverified → verify with user/ci/other-agent or run 'bugfix {f}'; then the final review ({FINAL_REVIEW}) must say READY",
+        6: "final review READY and fresh, every bug verified/superseded, Evidence + Architecture Decisions filled (ADRs, AGENTS.md) → one commit spec(phase-6)",
     }[phase]
+    fr = state.get("final_review") or {}
+    review_line = (f"final review: {fr.get('verdict') or 'missing verdict'} @ {fr.get('reviewed_commit') or '?'}"
+                   f"{' — STALE, re-review' if fr.get('stale') else ''}" if fr.get("present")
+                   else "final review: not run" if phase >= 5 else None)
     lines = [
         f"PHASE CARD — {f}",
-        f"phase: {phase} ({state['phase_name']})  status: {state['status']}",
+        f"phase: {phase} ({state['phase_name']})  status: {state['status']}  size: {state['size']}{'' if state['size_declared'] else ' (undeclared — treated as M)'}",
         f"allowed writes: {allowed}",
         f"next gate: {gate}",
         f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF)",
         f"bugs: {state['bugs']['open']} open · {state['bugs']['claimed']} claimed · {state['bugs']['verified']} verified",
         "rules: history entry BEFORE commit · additive-only · evidence before claims (evidence.md)",
         "ids: call next_id before adding a BUG/T/BF · lint_artifacts before every commit",
-        "ask: an ASK you cannot put to a human is an ASSUMPTION — record it in decisions.md",
+        review_line or "ask: an ASK you cannot put to a human is an ASSUMPTION — record it in decisions.md",
         f"derived from files at {state['derived_at']} — the files are the truth, not this card",
     ]
     return "\n".join(lines)
@@ -216,6 +323,8 @@ def project_status() -> str:
         "version": 3,
         "constitution": "present" if (SPECS_DIR / "constitution.md").exists() else "absent",
         "git_conventions": "present" if (SPECS_DIR / "git-conventions.md").exists() else "absent",
+        "merge_checklist": "present" if (SPECS_DIR / "merge-checklist.md").exists() else "absent",
+        "adr_dir": str(_adr_dir()) if _adr_dir() else None,
         "features": len(features),
         "legacy_state_file": LEGACY_STATE_FILE.exists(),
         "note": "state is derived from files on every call; nothing is persisted by this server",
@@ -304,6 +413,10 @@ def get_next_actions(feature: str) -> str:
         actions.append({"action": "bugfix", "description": f"'bugfix {feature}' — {state['bugs']['open']} open bug(s)"})
     if state["bugs"]["claimed"]:
         actions.append({"action": "verify", "description": f"{state['bugs']['claimed']} claimed bug(s) need an oracle (user / ci / review:<other-agent>)"})
+    if phase == 5 and not state["bugs"]["open"]:
+        problem = _final_review_problem(state["final_review"])
+        if problem:
+            actions.append({"action": "final_review", "description": f"Run the final (merge-readiness) review — {problem}"})
     if phase == 6 and status != "closed":
         actions.append({"action": "close_feature", "description": "Write close.md / implementation-summary.md"})
     return _json({"current_phase": phase, "phase_name": state["phase_name"], "status": status,
@@ -322,6 +435,9 @@ def _validate_phase(state, to_phase):
             blocking = [b["id"] for b in bugs if b["status"] in ("open", "in-progress")]
             if blocking:
                 return False, f"Prerequisite not met: open bugs {blocking} — run bugfix first"
+        problem = _final_review_problem(_final_review(fd))
+        if problem:
+            return False, f"Prerequisite not met: {problem}"
     return True, None
 
 
@@ -399,8 +515,10 @@ def reopen_feature(feature: str) -> str:
 
 @mcp.tool(name="close_feature")
 def close_feature(feature: str) -> str:
-    """Validate the close: a close document exists, no bug is open/in-progress, and every
-    verified bug carries a Verified-by oracle. Reports claimed-unverified bugs. Writes nothing.
+    """Validate the close: a close document exists with an `## Architecture Decisions`
+    section, the final review's latest verdict is READY / READY-WITH-FOLLOWUPS and no code
+    changed after its reviewed commit, no bug is open/in-progress, and every verified bug
+    carries a Verified-by oracle. Reports claimed-unverified bugs. Writes nothing.
 
     Args:
         feature: Feature ID
@@ -413,6 +531,12 @@ def close_feature(feature: str) -> str:
         return _json({"error": f"Feature '{feature}' has no close.md / implementation-summary.md — write it first (phase {state['current_phase']})"})
     problems = []
     unverified = []
+    close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
+    if "## Architecture Decisions" not in close_text:
+        problems.append("close document has no '## Architecture Decisions' section (write 'none met the ADR bar' if so)")
+    problem = _final_review_problem(_final_review(fd))
+    if problem:
+        problems.append(problem)
     if (fd / "bugs.md").exists():
         for b in _parse_bugs((fd / "bugs.md").read_text(errors="replace")):
             if b["status"] in ("open", "in-progress"):
@@ -483,7 +607,7 @@ def next_id(feature: str, kind: str) -> str:
 
     Args:
         feature: Feature ID
-        kind: BUG | T | BF
+        kind: BUG | T | BF | ADR (ADR scans the project's ADR directory, not the feature)
     """
     state = _derive(feature)
     if state is None:
@@ -493,12 +617,19 @@ def next_id(feature: str, kind: str) -> str:
     if kind == "BUG":
         nums = [b["num"] for b in _parse_bugs((fd / "bugs.md").read_text(errors="replace"))] if (fd / "bugs.md").exists() else []
         fmt = "BUG-{:03d}"
+    elif kind == "ADR":
+        adr_dir = _adr_dir()
+        if adr_dir is None:
+            return _json({"error": f"no ADR directory — set adr_dir in specs/git-conventions.md or create one of {list(ADR_DIR_CANDIDATES)}"})
+        nums = [int(m.group(1)) for p in adr_dir.glob("*.md") for m in [re.match(r"(\d{3,4})-", p.name)] if m]
+        n = (max(nums) + 1) if nums else 1
+        return _json({"success": True, "kind": kind, "next_id": f"{n:04d}", "adr_dir": str(adr_dir), "existing": len(nums)})
     elif kind in ("T", "BF"):
         tasks = _parse_tasks((fd / "tasks.md").read_text(errors="replace")) if (fd / "tasks.md").exists() else []
         nums = [t["num"] for t in tasks if t["kind"] == kind]
         fmt = "T{:03d}" if kind == "T" else "BF-{:03d}"
     else:
-        return _json({"error": "kind must be BUG, T or BF"})
+        return _json({"error": "kind must be BUG, T, BF or ADR"})
     n = (max(nums) + 1) if nums else 1
     return _json({"success": True, "kind": kind, "next_id": fmt.format(n), "existing": len(nums)})
 
@@ -550,9 +681,9 @@ def lint_artifacts(feature: str) -> str:
         evidence = [p.name for p in (fd / "evidence").glob("*")] if (fd / "evidence").is_dir() else []
         for line in tasks_text.splitlines():
             m = _TASK_RE.match(line)
-            if not m or m.group(1) not in "xX":
+            if not m or (_task_mark(m) or " ") not in "xX":
                 continue
-            tid = m.group(2)
+            tid = m.group("id")
             if "[SEAM]" in line and not any(e.startswith(f"{tid}-probe") for e in evidence):
                 findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [SEAM] marked done without evidence/{tid}-probe-*.txt"})
             if "[TEST]" in line and not any("-red" in e for e in evidence):
@@ -569,6 +700,29 @@ def lint_artifacts(feature: str) -> str:
         if "## Current Design" not in (fd / "plan.md").read_text(errors="replace"):
             findings.append({"file": "plan.md", "severity": "warning", "msg": "closed feature without a '## Current Design' section — regenerate it at close"})
 
+    if (fd / FINAL_REVIEW).exists():
+        text = (fd / FINAL_REVIEW).read_text(errors="replace")
+        rounds = list(_ROUND_RE.finditer(text))
+        if not rounds:
+            findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": "no '## Round N — <date>' section"})
+        for i, m in enumerate(rounds):
+            body = text[m.start():rounds[i + 1].start() if i + 1 < len(rounds) else len(text)]
+            if not _VERDICT_RE.search(body):
+                findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"Round {m.group(1)}: no '**Verdict**: READY | READY-WITH-FOLLOWUPS | NOT READY'"})
+            if not _REVIEWED_COMMIT_RE.search(body):
+                findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"Round {m.group(1)}: no '**Reviewed-commit**: <sha>'"})
+        nums = [int(m.group(1)) for m in rounds]
+        if nums != list(range(1, len(nums) + 1)):
+            findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"rounds not numbered 1..N: {nums}"})
+
+    if "spec.md" in state["artifacts"] and state["artifacts"]["spec.md"] == "present" and not state["size_declared"]:
+        findings.append({"file": "spec.md", "severity": "warning", "msg": "no '**Size**: S | M | L' header line — treated as M"})
+
+    if any((fd / c).exists() for c in CLOSE_DOCS):
+        close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
+        if "## Architecture Decisions" not in close_text:
+            findings.append({"file": "close.md", "severity": "warning", "msg": "close document has no '## Architecture Decisions' section"})
+
     if (fd / "history.md").exists():
         if not (fd / "history.md").read_text(errors="replace").lstrip().startswith("#"):
             findings.append({"file": "history.md", "severity": "warning", "msg": "missing title header"})
@@ -577,6 +731,102 @@ def lint_artifacts(feature: str) -> str:
 
     errors = sum(f["severity"] == "error" for f in findings)
     return _json({"success": errors == 0, "errors": errors, "warnings": len(findings) - errors, "findings": findings})
+
+
+# Added lines matching these are reported by diff_scan. Kept to high-signal patterns: every
+# hit is something a reviewer must look at, not a style opinion.
+_SCAN_LINE_PATTERNS = [
+    ("conflict-marker", "error", re.compile(r"^(<{7}|>{7}|={7})( |$)")),
+    ("private-key", "error", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+    ("secret-assignment", "warning", re.compile(r"(?i)\b(password|pwd|secret|api[_-]?key|accountkey|client[_-]?secret)\s*[=:]\s*['\"]?[^\s'\";{}<>$]{8,}")),
+    ("aws-access-key", "error", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
+    ("focused-test", "error", re.compile(r"\b(fdescribe|fit|describe\.only|it\.only|test\.only)\s*\(")),
+    ("debugger", "warning", re.compile(r"^\s*debugger;?\s*$")),
+    ("todo", "warning", re.compile(r"\b(TODO|FIXME|HACK|XXX)\b")),
+]
+_SCAN_FORBIDDEN_FILES = re.compile(r"(?i)\.(pfx|p12|pem|key|keystore|jks|bacpac)$|(^|/)\.env(\.[^/]*)?$")
+_SCAN_LARGE_BYTES = 1_000_000
+
+
+@mcp.tool(name="diff_scan")
+def diff_scan(feature: str, base: str = None) -> str:
+    """Mechanical merge-readiness scan of the branch diff (merge-base(base, HEAD)..HEAD,
+    code outside specs/ only): merge conflicts against base, conflict markers, secrets and
+    private keys, focused tests, debugger statements, new TODO/FIXME, forbidden files
+    (.pfx/.pem/.bacpac/.env…), files over 1 MB, and changed files that tasks.md/plan.md never
+    name (unplanned changes). Read-only. The final review saves this output as evidence.
+
+    Args:
+        feature: Feature ID
+        base: Base branch (default: branch_source from specs/git-conventions.md, else main)
+    """
+    state = _derive(feature)
+    if state is None:
+        return _not_found(feature)
+    base = base or _conventions().get("branch_source") or "main"
+    if "/" not in base and _git("rev-parse", "--verify", "--quiet", f"origin/{base}")[0] == 0:
+        base = f"origin/{base}"  # the remote-tracking branch is what the PR merges into; a local one goes stale
+    rc, mb = _git("merge-base", base, "HEAD")
+    if rc != 0:
+        return _json({"error": f"cannot find merge-base of '{base}' and HEAD — fetch the base branch or pass base="})
+    mb = mb.strip()
+    findings = []
+
+    rc, out = _git("merge-tree", "--write-tree", "--name-only", "--no-messages", base, "HEAD")
+    if rc == 1:
+        conflicted = [l for l in out.splitlines()[1:] if l.strip()]
+        findings.append({"check": "merge-conflict", "severity": "error", "file": None,
+                         "msg": f"merging into {base} conflicts in {len(conflicted)} file(s): {conflicted[:10]}"})
+    elif rc not in (0, 1):
+        findings.append({"check": "merge-conflict", "severity": "warning", "file": None,
+                         "msg": "git merge-tree --write-tree unavailable (git < 2.38) — check conflicts by hand"})
+
+    _, names = _git("diff", "--name-status", "--no-renames", f"{mb}..HEAD", "--", ".", ":(exclude)specs")
+    changed = []
+    for line in names.splitlines():
+        parts = line.split("\t")
+        if len(parts) == 2:
+            changed.append((parts[0], parts[1]))
+    for status, path in changed:
+        if status == "D":
+            continue
+        if _SCAN_FORBIDDEN_FILES.search(path):
+            findings.append({"check": "forbidden-file", "severity": "error", "file": path, "msg": "certificate/key/backup/env file in the diff"})
+        try:
+            if Path(path).stat().st_size > _SCAN_LARGE_BYTES:
+                findings.append({"check": "large-file", "severity": "warning", "file": path, "msg": f"{Path(path).stat().st_size // 1024} KB"})
+        except OSError:
+            pass
+
+    _, diff = _git("diff", "-U0", "--no-color", f"{mb}..HEAD", "--", ".", ":(exclude)specs")
+    current, lineno = None, 0
+    for line in diff.splitlines():
+        if line.startswith("+++ "):
+            current = line[6:] if line.startswith("+++ b/") else None
+            continue
+        if line.startswith("@@"):
+            m = re.search(r"\+(\d+)", line)
+            lineno = int(m.group(1)) if m else 0
+            continue
+        if line.startswith("+") and current:
+            text = line[1:]
+            for check, sev, rx in _SCAN_LINE_PATTERNS:
+                if rx.search(text):
+                    findings.append({"check": check, "severity": sev, "file": f"{current}:{lineno}", "msg": text.strip()[:120]})
+            lineno += 1
+
+    fd = _feature_dir(feature)
+    planned_text = "".join((fd / a).read_text(errors="replace") for a in ("tasks.md", "plan.md", "spec.md") if (fd / a).exists())
+    unplanned = [p for st, p in changed if st != "D" and p not in planned_text and Path(p).name not in planned_text]
+    if unplanned:
+        findings.append({"check": "unplanned-change", "severity": "info", "file": None,
+                         "msg": f"{len(unplanned)} changed file(s) not named in spec/plan/tasks — confirm each is in scope",
+                         "files": unplanned[:50]})
+
+    errors = sum(f["severity"] == "error" for f in findings)
+    return _json({"success": errors == 0, "base": base, "merge_base": mb[:12], "files_changed": len(changed),
+                  "errors": errors, "warnings": sum(f["severity"] == "warning" for f in findings),
+                  "findings": findings, "scanned_at": _now()})
 
 
 @mcp.tool(name="timestamp")

@@ -9,7 +9,7 @@
 
 **Task Persona**: Adopt the mindset of a thorough code auditor. Verify every claim against actual code — check spec.md, plan.md, and the git diff together. Use web search to research best patterns and practices when evaluating architecture decisions. Describe exactly what changed, why, and whether it matches the spec. No filler, no fluff. Detail is proportionate to actual work done.
 
-**Purpose**: When implementation is complete and testing is done, produce either a full `implementation-summary.md` or a lightweight `close.md`. Computes spec health score (0-100%), patches spec.md/plan.md for intentional deviations. **Mandatory** before a feature can be marked complete.
+**Purpose**: When implementation is complete, testing is done and the final review says READY, produce either a full `implementation-summary.md` or a lightweight `close.md`. Computes spec health score (0-100%), patches spec.md/plan.md for intentional deviations, **writes or updates the project's ADRs** for decisions that pass the ADR bar, and **keeps AGENTS.md current**. **Mandatory** before a feature can be marked complete.
 
 **When NOT to use**: For mid-stream alignment — use `spec-kit-refresh` instead.
 
@@ -33,8 +33,24 @@ See `spec-kit/references/auto-commit.md`. Commits run the project's hooks (never
 - `specs/[feature]/close.md` (lightweight close document)
 - `specs/[feature]/spec.md` (auto-updated to reflect intentional deviations)
 - `specs/[feature]/plan.md` (auto-updated to reflect intentional deviations)
+- ADR files in the project's ADR directory + the ADR index (approved per ADR)
+- `AGENTS.md` (and agent rule files that restate it) — targeted patches, approved per patch
 
 ## Execution
+
+### Gate: the final review
+```
+READ specs/[feature]/review-final.md — the LATEST "## Round N" section
+IF the file is missing:
+  BLOCK: "No final review. Run the final review first ('final review [feature]' → spec-kit-review)."
+IF its **Verdict** is NOT READY:
+  BLOCK: "The final review says NOT READY — run 'bugfix [feature]', then the final review again."
+IF code changed after its **Reviewed-commit**
+   (git log <sha>..HEAD -- . ':(exclude)specs' is not empty, or the sha is unknown):
+  BLOCK: "Code changed after the final review (Round N @ <sha>) — re-run the final review."
+MCP: mcp_spec_kit_get_feature_state(feature).state.final_review gives the same answer.
+READY-WITH-FOLLOWUPS → carry its follow-ups into the close document (Open Questions / Future Work).
+```
 
 ### Determine Mode
 ```
@@ -51,8 +67,12 @@ ELIF all bugs in bugs.md have Status: verified:
   PROMPT user for which mode: full summary or lightweight close
   USE the mode they selected
 
+ELIF spec.md **Size** is S:
+  USE lightweight close mode (spec-kit/references/sizing.md)
+ELIF spec.md **Size** is L:
+  USE full summary mode
 ELSE:
-  USE full summary mode (default)
+  ASK the user: full summary or lightweight close (default: full summary)
 
 OUTPUT RULE — applies to both modes:
   The length and detail of the summary MUST be proportional to the actual
@@ -228,6 +248,80 @@ REWRITE plan.md `## Current Design` (the ONLY section that is replaced, not appe
 NOTE in the close document: "plan.md Current Design regenerated"
 ```
 
+### Step 7c: Architecture decisions → project ADRs
+*Both modes.*
+```
+LOCATE the ADR directory: adr_dir in specs/git-conventions.md, else
+  mcp_spec_kit_next_id(feature, kind="ADR").adr_dir, else the first existing of
+  docs/adr, docs/decisions, doc/adr, adr
+  None exists → ASK the user whether to create one (default docs/adr/ + README.md index);
+  declined → every candidate stays feature-local; say so in the close
+LOCATE the ADR index (adr_index, else README.md / index.md in the ADR dir) and the
+  project's ADR template (a "## Template" section in the index, else the shape of the newest
+  ADR, else spec-kit/templates/adr-template.md). Read the index rules (numbering,
+  immutability, status vocabulary) and follow them over the defaults below.
+
+HARVEST candidates from:
+  - decisions.md rulings (and assumptions the user confirmed)
+  - plan.md design decisions and every "## Rounds (ADR log)" round
+  - research.md decisions (decision → rationale → alternatives)
+  - review findings (pre-implement and final) that changed the design
+  - intentional deviations approved in Step 7
+  - the diff itself: a new dependency, a new pattern, a new boundary nobody wrote down
+
+THE ADR BAR — a candidate becomes a project ADR when ANY holds:
+  1. it constrains code beyond this feature (other features must follow it)
+  2. it is expensive to reverse (schema, public contract, data ownership, platform, dependency)
+  3. it chooses between real alternatives that a future reader would re-litigate
+  4. it changes, narrows or contradicts an existing ADR
+  5. the constitution or AGENTS.md would otherwise state something no longer true
+  Feature-local choices (a component name, an internal helper, a test layout) stay in plan.md.
+
+CHECK existing ADRs for each passing candidate:
+  - same decision already recorded → append to its Evidence / Related (allowed edit), no new ADR
+  - contradicts / replaces an Accepted ADR → NEW ADR that "supersedes NNNN"; set the old ADR's
+    status line to "Superseded by <new>" (the only edit an Accepted ADR receives)
+  - narrows or extends it without contradiction → new ADR that "amends NNNN" (or the
+    project's amendment convention, if its index defines one)
+  - nothing related → new ADR
+
+FOR each proposed ADR action:
+  PRESENT: number (mcp_spec_kit_next_id kind="ADR"), title, the Decision paragraph,
+           the action (new / supersedes / amends / evidence appended), the origin
+  WAIT for approval. Approved → write it, Status "Accepted" with the date and the quoted
+  ruling as Deciders (or "Proposed" if the user wants it reviewed by others);
+  rejected → row "feature-local (declined by user)".
+  Every number allocated, the file follows the template, Context cites path:line, Evidence
+  names where the decision is visible in the code.
+
+UPDATE the ADR index table (number, title, status, date) — and the old ADR's row when superseded.
+FILL the close document's "## Architecture Decisions" table, one row per harvested candidate
+  (including those that stayed feature-local, with the reason). No candidate passed →
+  one row "none met the ADR bar". The section is never omitted — close_feature checks it.
+```
+
+### Step 7d: Keep AGENTS.md current
+*Both modes.*
+```
+LOCATE agents_file (git-conventions, default AGENTS.md) and any file that restates or
+  imports it (CLAUDE.md, .github/copilot-instructions.md, .claude/rules/*, .cursor/rules/*)
+FOR each statement in those files, ask: does this feature's diff, a new/superseded ADR, or a
+  resolved known-debt item make it WRONG or INCOMPLETE? Typical:
+  - commands (build/test/run/deploy) added, renamed or changed
+  - repository layout, projects/modules/services added or moved; service boundaries
+  - tech stack versions, new dependencies an agent must know about
+  - conventions/rules the feature introduced (a pattern every new endpoint follows)
+  - "known debt" items this feature resolved, or new debt it knowingly left
+  - the ADR list / "decisions" pointers (new or superseded ADRs)
+  - spec-kit block (<!-- SPECKIT START/END -->): active features, artifact paths
+DO NOT add feature narrative, changelog lines or anything derivable from the code alone;
+  AGENTS.md is context for the next agent, not a history.
+PROPOSE each change as a targeted patch (old → new, one section at a time); WAIT per patch;
+  apply only approved ones. Never reformat or rewrite the file.
+RECORD in the close document: "AGENTS.md: updated — <sections>" or
+  "AGENTS.md: no change needed — <one-line reason>".
+```
+
 ### Step 8: Collect implementation details
 ```
 IDENTIFY:
@@ -322,6 +416,8 @@ REPORT:
   - Artifacts patched: spec.md [yes/no], plan.md [yes/no]
   - Gap analysis (full mode): N resolved, N acknowledged, N not done
   - New bugs created (if any gap was ❌ Not Done)
+  - ADRs: created / superseded / amended (numbers), or "none met the ADR bar"
+  - AGENTS.md: sections updated, or "no change needed"
 ```
 
 
@@ -331,7 +427,7 @@ Before the final commit (the server derives and validates; it stores nothing):
 
 ```text
 CALL mcp_spec_kit_update_artifact(feature="[feature]", artifact="close.md", status="present")
-CALL mcp_spec_kit_close_feature(feature="[feature]")   # error if any bug is open/in-progress or verified without Verified-by; lists claimed_unverified
+CALL mcp_spec_kit_close_feature(feature="[feature]")   # error if: a bug is open/in-progress or verified without Verified-by; the final review is missing, NOT READY or stale; the close doc lacks "## Architecture Decisions". Lists claimed_unverified
 CALL mcp_spec_kit_lint_artifacts(feature="[feature]")
 ```
 
@@ -353,7 +449,7 @@ If MCP is not available, skip.
 
 3. **Commit**:
    Follow `spec-kit/references/auto-commit.md`:
-   - Scope: `implementation-summary.md` or `close.md`, plus patched `spec.md`, `plan.md`, `data-model.md`
+   - Scope: `implementation-summary.md` or `close.md`, plus patched `spec.md`, `plan.md`, `data-model.md`, the ADR files + ADR index, and the AGENTS.md / agent-rule-file patches
    - Message: `"spec(phase-6): [feature] summary (health: N%)"`
 
 ## Gap Analysis Detail
@@ -433,7 +529,10 @@ BLOCKER: A feature CANNOT enter Complete state without Phase 6 completing.
 - [ ] No bug status changed by this skill
 - [ ] ✅ Resolved deviations patched into spec.md and plan.md (with user approval)
 - [ ] ❌ Not Done gaps converted to new bug entries in bugs.md (if any, full mode only)
-- [ ] Report delivered to user with spec health score and artifact state
+- [ ] Final review gate passed (latest round READY / READY-WITH-FOLLOWUPS, not stale)
+- [ ] "## Architecture Decisions" table filled; approved ADRs written, superseded ADRs re-statused, ADR index updated
+- [ ] AGENTS.md (and files restating it) patched where the change made them wrong — or "no change needed" recorded
+- [ ] Report delivered to user with spec health score, artifact state, ADRs and AGENTS.md changes
 
 ## Next Skills
 

@@ -4,6 +4,10 @@
 
 **Input**: Feature specification from /specs/[###-feature-name]/spec.md
 
+> **Size S**: keep Summary, Current Design, Technical Context (only the lines that matter),
+> the external seams and Rounds — delete the rest. No research.md / data-model.md /
+> contracts/ / quickstart.md unless the plan cannot be understood without one.
+
 ## Summary
 
 [Extract from feature spec: primary requirement + technical approach from research]
@@ -64,6 +68,8 @@ Fill ONLY if Constitution Check has violations that must be justified.
 
 ## Rounds (ADR log)
 
+> Feature-local decision records. At close, `spec-kit-summarize` promotes any round that
+> passes the ADR bar to a project ADR (see the close document's Architecture Decisions).
 > Every bugfix / reopen round appends ONE dated section here — never edits an earlier one.
 > A round states what it supersedes, so a contradiction between sections is resolved by date.
 

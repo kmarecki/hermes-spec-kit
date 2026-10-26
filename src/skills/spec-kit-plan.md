@@ -26,7 +26,7 @@ metadata:
 ## Steps
 1. New plan: copy `spec-kit/templates/plan-template.md`. Fill Technical Context (language, deps, storage, tests, platform, project type, performance, constraints, scale).
 2. Constitution gates (advisory): simplicity, anti-abstraction, integration-first — document violations with justification.
-3. `research.md`: decision → rationale → alternatives, per technology choice. Generate only what the feature needs.
+3. Read `**Size**` from spec.md (`spec-kit/references/sizing.md`). S → short plan, no research/data-model/contracts/quickstart unless indispensable. M → only the artifacts the feature needs. L → all that apply. Scope bigger than the tier → stop and **ASK** to raise it. `research.md`: decision → rationale → alternatives, per technology choice.
 4. `data-model.md` (entities, fields, relations, validation, state transitions); `contracts/` (API/command schemas); `quickstart.md` (key validation scenarios). Name every **external seam** (database function, HTTP contract, file format) the feature touches — implement will probe each one.
 5. Project structure: single / web / mobile+API.
 6. Every design question you cannot put to the user → `decisions.md` assumption (`spec-kit/templates/decisions-template.md`); a real ruling quotes the user.
@@ -38,4 +38,4 @@ metadata:
 - [ ] history.md entry, then commit — Shared Commit Procedure in `spec-kit/references/preflight.md`: scope all plan artifacts; message `spec(phase-2): [feature] plan` (bugfix: `spec(phase-2): [feature] bugfix plan (BUG-NNN, …)`).
 
 ## Next
-Report artifacts + gate status; propose `spec-kit-tasks`. Bugfix mode: route to `spec-kit-tasks` automatically.
+Report artifacts + gate status; propose `spec-kit-tasks`. Bugfix mode and size S: route to `spec-kit-tasks` automatically.

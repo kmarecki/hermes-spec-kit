@@ -27,11 +27,11 @@ metadata:
 2. Entry: `### BUG-NNN: summary` with Severity (critical/major/minor/trivial), Area, Description (observed vs expected), Steps, Actual, Expected, Requires Clarification, Plan Ref (empty), **Status: open**.
 3. Insert BEFORE the `---` that precedes `## Summary`; add the Summary row; fix the counts.
 4. Confirm each entry with the user: "Logged BUG-NNN: … — correct?"
-5. When done: 0 open bugs → suggest close; >0 → say `bugfix [feature]`. **Never fix directly.**
+5. When done: 0 open bugs → suggest the final review (`final review [feature]`, mandatory before close); >0 → say `bugfix [feature]`. **Never fix directly.**
 
 ## Verify a bug
 - Allowed only with an oracle: the user said so (quote), a green `ci:<run-id>` on that commit, or `review:<other-agent>`. The implementing agent's claim is not enough → refuse: "BUG-NNN is claimed, not verified."
-- Set `Status: verified` + `Verified-by: user | ci:<id> | review:<agent>`. All verified → "run `close [feature]`".
+- Set `Status: verified` + `Verified-by: user | ci:<id> | review:<agent>`. All verified → "run `final review [feature]`, then `close [feature]`".
 
 ## Done when
 - [ ] Every bug confirmed with the user; ids ascending; Summary table and counts match (MCP `mcp_spec_kit_lint_artifacts` → 0 errors).

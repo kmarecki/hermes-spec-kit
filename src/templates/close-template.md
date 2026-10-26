@@ -17,6 +17,7 @@
 | `tasks.md` | ✅ all complete / ⚠️ N remaining |
 | `bugs.md` | ✅ all verified / ⚠️ N open / ⚠️ N claimed-unverified |
 | `implementation-summary.md` | ✅ complete / ❌ not generated |
+| `review-final.md` | ✅ READY @ <sha> / ⚠️ READY-WITH-FOLLOWUPS (N follow-ups) |
 
 ## Evidence
 
@@ -24,7 +25,20 @@
 |------|--------|-----------|
 | Full regression | ci:<run-id> / output:<path> | [link or ❌ unverified] |
 | Bug fixes | Verified-by per bug | [N verified / N claimed-unverified] |
-| Review | review:<agent> / self-review | [report] |
+| Final review | Verdict READY / READY-WITH-FOLLOWUPS @ <sha> · review:<agent> / self-review | review-final.md Round N |
+
+## Architecture Decisions
+
+> Harvested at close from decisions.md rulings, plan.md rounds, research decisions and review
+> findings. Only decisions that pass the ADR bar become ADRs; the rest stay feature-local.
+> "None met the ADR bar" is a valid row — omitting the section is not.
+
+| Decision | Source | ADR bar (why / why not) | Action | ADR |
+|----------|--------|-------------------------|--------|-----|
+| [decision in one line] | [decisions.md ruling N / plan Round N / research D-n / review Q-n] | [cross-feature / hard to reverse / constrains future code / deviates from ADR NNNN — or "feature-local"] | new / supersedes NNNN / evidence appended to NNNN / feature-local | [docs/adr/NNNN-….md] |
+
+**ADR index updated**: yes / n/a
+**AGENTS.md**: [updated — sections touched / no change needed — why]
 
 ## Key Decisions
 - **[Decision]**: [Rationale]

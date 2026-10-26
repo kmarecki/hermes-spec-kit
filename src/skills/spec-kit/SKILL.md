@@ -27,7 +27,7 @@ Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → 
                                                                       └── bugfix loop ──┐
                                                                 ┌──────────────────────┘
                                                                 ▼
-                                                          [Clarify] → Plan → Tasks → [Review] → Implement → Test → Close (mandatory)
+                                                          [Clarify] → Plan → Tasks → [Review] → Implement → Test → Final review → Close (mandatory)
 ```
 
 | Mode | Trigger | Behavior |
@@ -49,10 +49,11 @@ Every phase skill is a **one-screen checklist**; its complete procedure lives in
 | 1.5 — Clarify | `spec-kit-clarify` | Resolve ambiguities in the spec |
 | 2 — Plan | `spec-kit-plan` | Architecture, data flow, module boundaries |
 | 3 — Tasks | `spec-kit-tasks` | Executable task breakdown with TDD flag |
-| 3.5 — Review | `spec-kit-review` | Pre/post implement quality check (optional) |
+| 3.5 — Review | `spec-kit-review` | Pre-implement check (optional S/M, required L) |
+| 5.5 — Final review | `spec-kit-review` | **Mandatory** merge gate: spec conformance, constitution rules, code quality, merge checklist → `review-final.md` |
 | 4 — Implement | `spec-kit-implement` | Phase-level TDD execution |
 | 5 — Test | `spec-kit-test` | Bug tracking and manual testing |
-| 6 — Close | `spec-kit-summarize` | Spec health score, gap analysis, deviation patching |
+| 6 — Close | `spec-kit-summarize` | Spec health, gap analysis, deviation patching, ADRs, AGENTS.md |
 | — Refresh | `spec-kit-refresh` | Standalone artifact reconciliation |
 
 ## AGENTS.md Conventions
@@ -110,6 +111,7 @@ Installed via `./scripts/install.sh` — see `src/templates/` for the full list:
 - `references/preflight.md` — Pre-action self-check (branch, mode, logged bug, conventions, phase card, history)
 - `references/skills/<skill>.md` — the full procedure behind each one-screen skill
 - `templates/decisions-template.md` — the assumptions log: every unanswered ASK is an assumption with the alternative not taken; rulings quote the user
+- `references/sizing.md` — Size tiers S/M/L: the signals, what each tier produces, always asked at specify
 - `references/evidence.md` — Evidence of Done: oracles (user / ci / other-agent review / probe / output), the claimed→verified status split, the author/reviewer split
 - `references/auto-commit.md` — Standard commit patterns across all phases
 - `references/history-tracking.md` — Process history design rationale
@@ -129,7 +131,7 @@ mcp_servers:
     args: ["~/.hermes/skills/spec-kit/mcp-server/server.py"]
 ```
 
-16 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_get_next_actions`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_next_id`, `mcp_spec_kit_lint_artifacts`, `mcp_spec_kit_timestamp`, `mcp_spec_kit_history_guard`, `mcp_spec_kit_project_status`, etc.
+17 MCP tools available: `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_get_next_actions`, `mcp_spec_kit_advance_phase`, `mcp_spec_kit_next_id`, `mcp_spec_kit_lint_artifacts`, `mcp_spec_kit_timestamp`, `mcp_spec_kit_history_guard`, `mcp_spec_kit_project_status`, `mcp_spec_kit_diff_scan`, etc.
 (In Hermes the tools appear with the `mcp_spec_kit_` prefix — call them by this full name.)
 
 ## ⚠️ MCP Tool Usage Rules — Critical

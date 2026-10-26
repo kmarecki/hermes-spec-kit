@@ -61,6 +61,7 @@ With both agents installed, the default is: whoever implemented does not review.
 | Full regression (implement step 7) | `output:` of the full run **and** `ci:<id>` when a pipeline exists |
 | Bug `claimed` | `output:` of the reproducing test now green; `probe:` for every external seam the fix touches |
 | Bug `verified` | `Verified-by:` oracle |
-| Close (phase 6) | every bug `verified` or `superseded`; every ❌/⚠️ in the gap table names its evidence or its absence |
+| Final review (phase 5.5) | `review-final.md` round with Verdict + Reviewed-commit; `output:` of diff_scan, build, full test, lint; `ci:<id>` when a pipeline exists |
+| Close (phase 6) | final review READY / READY-WITH-FOLLOWUPS and not stale; every bug `verified` or `superseded`; every ❌/⚠️ in the gap table names its evidence or its absence |
 
 A gate without evidence is reported as **unverified**, never as done.

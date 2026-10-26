@@ -645,23 +645,35 @@ linking to the plan section that addresses it — no Plan Ref, no implementation
 supersedes specific original (buggy) tasks, append `[T###-fix]` to trace the
 relationship (e.g., `BF-001 [BUGFIX] [T051-fix] Fix validate_cluster_shape`).
 
-### Phase 5.5: Review — Post-Implement Gate (Optional)
-**Skill**: `spec-kit-review` · **Trigger**: "Review [feature]" after
-code + tests
+### Phase 5.5: Final Review — Merge Gate (Mandatory)
+**Skill**: `spec-kit-review` · **Trigger**: "Final review [feature]", "Is [feature] ready
+to merge", or "Review [feature]" once every task is done and no bug is open ·
+**Artifact**: `review-final.md` (one round per run)
 
-Same skill as pre-implement, auto-detects mode. Three modes total:
-- **Pre-implement** (Phase 3.5): Cross-artifact consistency check before coding
-- **Post-implement** (Phase 5.5): Code quality, spec fulfillment, test quality
-- **Closed-review**: Read-only audit of a closed feature — does not update history.md.
-  If issues found, offers to add refactoring tasks and reopen the feature.
+Same skill as pre-implement, auto-detects mode (pre-implement / final / closed-review).
+The final review answers four questions and ends with a verdict:
 
-Post-implement checks:
-- Spec fulfillment (does code satisfy every FR-###?)
-- Constitution alignment
-- Architecture compliance with plan
-- Code quality (error handling, duplication, security)
-- Test quality
-- Documentation completeness
+1. **Does the code do what the spec says?** Every FR, success criterion, acceptance
+   scenario and edge case → the code (`path:line`) and the test that proves it; contracts
+   and data model vs code; unplanned changes.
+2. **Does it obey the constitution and project rules?** Every applicable MUST in
+   `specs/constitution.md`, every rule in `specs/merge-checklist.md` and AGENTS.md — each
+   verdicted with evidence. This is where the constitution is enforced.
+3. **Is it good code?** Architecture, error handling, security, data integrity,
+   concurrency, duplication, complexity, API surface, current best practice; test quality.
+4. **Can it merge?** `diff_scan` (conflicts, secrets, forbidden files, focused tests,
+   TODOs) and the checklist commands (build, full tests, lint, format), outputs saved under
+   `evidence/final-*`.
+
+**Verdict**: `READY`, `READY-WITH-FOLLOWUPS` (only MEDIUM findings) or `NOT READY` (any
+CRITICAL/HIGH or failing blocking check → logged as bugs → bugfix loop → new round). The
+round records the reviewed commit; a later code commit makes it stale. The close refuses
+without a fresh READY round. Run it by the other agent, or a fresh-context sub-agent.
+
+### Size tiers (S / M / L)
+Specify always asks for the tier, with its recommendation first. S trims the templates and
+chains specify → plan → tasks into one commit; M is the default; L adds the full artifact
+set and a required pre-implement review. See `references/sizing.md`.
 
 ### Phase 6: Close/Summarize — Mandatory
 **Skill**: `spec-kit-summarize` · **Trigger**: "Close [feature]" or
@@ -678,6 +690,15 @@ Two modes:
   intentional deviations (with per-change user approval).
 - **Lightweight close** ("close [feature]"): Quick health score, artifact
   state table, key decisions.
+
+Both modes, after the final-review gate:
+- **ADRs**: decisions harvested from decisions.md, plan rounds, research and reviews are
+  tested against the ADR bar (cross-feature, hard to reverse, real alternatives, changes an
+  existing ADR); passing ones become new / superseding / amending project ADRs (approved one
+  by one) and the ADR index is updated. The close's *Architecture Decisions* table lists
+  every candidate.
+- **AGENTS.md**: statements the change made wrong (commands, layout, boundaries, versions,
+  conventions, debt, ADR list) get targeted patches, approved one by one.
 
 **Output rule**: Length proportional to actual git changes, not spec size.
 A one-line bugfix gets one line; a multi-file feature gets thorough

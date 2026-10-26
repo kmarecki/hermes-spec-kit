@@ -8,6 +8,33 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Final review (phase 5.5) — mandatory merge gate.** `spec-kit-review` final mode replaces
+  the optional post-implement review: requirement-by-requirement spec conformance (code
+  `path:line` + proving test), every applicable constitution MUST / project rule verdicted,
+  code quality and best practice, test quality, and a merge checklist
+  (`specs/merge-checklist.md`, template `merge-checklist-template.md`) whose commands run with
+  saved evidence. Output: `review-final.md` rounds with `**Verdict**` and `**Reviewed-commit**`.
+  CRITICAL/HIGH findings become bugs. Prefers the other agent or a fresh-context sub-agent.
+- **ADRs and AGENTS.md at close.** `spec-kit-summarize` harvests decisions (decisions.md
+  rulings, plan rounds, research, review findings, deviations), applies the ADR bar, and
+  writes / supersedes / amends project ADRs (project template, else `adr-template.md`),
+  updates the ADR index, and proposes targeted AGENTS.md patches. Close documents carry an
+  `## Architecture Decisions` table.
+- **Size tiers S / M / L** (`references/sizing.md`): specify always asks, recommendation
+  first; `**Size**:` in spec.md. S trims the templates and auto-chains specify → plan → tasks
+  into one commit; L requires the pre-implement review. Evidence, history and the final-review
+  gate do not shrink with the tier.
+- MCP: `diff_scan` tool (merge conflicts, secrets, forbidden files, focused tests, TODOs,
+  unplanned files); `next_id(kind="ADR")`; `get_feature_state` reports `size` and
+  `final_review` (verdict, reviewed commit, stale); `advance_phase(5)` and `close_feature`
+  require a fresh READY final review, `close_feature` an Architecture Decisions section;
+  `lint_artifacts` checks review-final rounds, the Size line and the ADR section;
+  `project_status` reports the merge checklist and ADR directory.
+- git-conventions template: `## Documentation locations` (`adr_dir`, `adr_index`,
+  `agents_file`, `merge_checklist`).
+
 ### Fixed
 
 - **install.sh / uninstall.sh corrupted `~/.hermes/config.yaml`** when the

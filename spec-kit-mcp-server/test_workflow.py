@@ -32,6 +32,19 @@ async def call(s, tool, args=None):
     return json.loads(r.content[0].text)
 
 
+FINAL = """
+## Round {n} — 2026-10-26 — review:hermes
+
+**Verdict**: {v}
+**Reviewed-commit**: {c}
+"""
+
+
+def git(root, *args):
+    subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=root, check=True,
+                   capture_output=True)
+
+
 def write(root, feature, name, text="# x\n"):
     p = Path(root) / "specs" / feature / name
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -138,6 +151,14 @@ async def test_close_and_reopen(s, root):
     d = await call(s, "close_feature", {"feature": "f3"})
     check("close without close doc → error", "no close.md" in d.get("error", ""))
     write(root, "f3", "close.md")
+    d = await call(s, "close_feature", {"feature": "f3"})
+    check("close without ADR section / final review → error",
+          "Architecture Decisions" in d.get("error", "") and "review-final.md" in d.get("error", ""))
+    write(root, "f3", "close.md", "# Close\n\n## Architecture Decisions\n\nnone met the ADR bar\n")
+    write(root, "f3", "review-final.md", FINAL.format(n=1, v="NOT READY", c="abc1234"))
+    d = await call(s, "close_feature", {"feature": "f3"})
+    check("close with NOT READY verdict → error", "NOT READY" in d.get("error", ""))
+    write(root, "f3", "review-final.md", FINAL.format(n=1, v="NOT READY", c="abc1234") + FINAL.format(n=2, v="READY", c="abc1234"))
     write(root, "f3", "bugs.md", BUGS.format(s1="verified", e1="output:x", v1="", s2="claimed"))
     d = await call(s, "close_feature", {"feature": "f3"})
     check("verified without Verified-by → error", "without a Verified-by" in d.get("error", ""))
@@ -211,6 +232,10 @@ async def test_next_id_and_lint(s, root):
     msgs = " | ".join(f["msg"] for f in d["findings"])
     check("[SEAM] done without probe → warning", "T002 [SEAM]" in msgs)
     check("[TEST] done without red file → warning", "T001 [TEST]" in msgs)
+    write(root, "f9", "spec.md"); write(root, "f9", "plan.md")
+    write(root, "f9", "tasks.md", "# Tasks\n- T001 [X] [TEST] t — t.py\n- T002 [ ] code — c.py\n- BF-001 [X] fix — c.py\n")
+    d = await call(s, "get_feature_state", {"feature": "f9"})
+    check("id-first task lines ('- T001 [X] …') are parsed", d["state"]["tasks"] == {"total": 3, "done": 2, "bugfix": 1}, json.dumps(d["state"]["tasks"]))
     write(root, "f5", "evidence/T002-probe-rates.txt", "cmd\nresult\n")
     write(root, "f5", "evidence/core-red.txt", "cmd\nFAILED\n")
     d = await call(s, "lint_artifacts", {"feature": "f5"})
@@ -252,6 +277,81 @@ async def test_timestamp_and_history_guard(s, root):
     check("entry over 60 words → error", "max 60" in d.get("error", ""))
 
 
+async def test_size_final_review_adr_and_diff_scan(s, root):
+    print("\n═══ size tier / final review gate / next_id ADR / diff_scan ═══")
+    write(root, "f7", "spec.md", "# Spec\n\n**Size**: S\n")
+    d = await call(s, "get_feature_state", {"feature": "f7"})
+    check("size read from spec.md header", d["state"]["size"] == "S" and d["state"]["size_declared"] is True)
+    check("phase card shows the size", "size: S" in d["phase_card"])
+    write(root, "f8", "spec.md")
+    d = await call(s, "get_feature_state", {"feature": "f8"})
+    check("undeclared size → M, flagged", d["state"]["size"] == "M" and "undeclared" in d["phase_card"])
+    d = await call(s, "lint_artifacts", {"feature": "f8"})
+    check("lint warns on missing Size line", any("Size" in f["msg"] for f in d["findings"]))
+
+    # a git repo with a base branch and a feature branch
+    git(root, "init", "-q", "-b", "main")
+    (Path(root) / "src").mkdir()
+    (Path(root) / "src/app.py").write_text("x = 1\n")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "base")
+    git(root, "checkout", "-q", "-b", "feat/007")
+    write(root, "f7", "plan.md", "# plan\n- src/app.py\n")
+    write(root, "f7", "tasks.md", "# Tasks\n- [x] T001 change — src/app.py\n")
+    (Path(root) / "src/app.py").write_text("x = 2  # TODO tidy\npassword = 'hunter2hunter2'\n")
+    (Path(root) / "src/extra.py").write_text("<<<<<<< HEAD\n")
+    (Path(root) / "cert.pfx").write_text("binary")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "feat")
+    head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=root, capture_output=True, text=True).stdout.strip()
+
+    d = await call(s, "diff_scan", {"feature": "f7"})
+    checks = {f["check"] for f in d["findings"]}
+    check("diff_scan finds conflict marker, secret, todo, forbidden file",
+          {"conflict-marker", "secret-assignment", "todo", "forbidden-file"} <= checks, str(checks))
+    unplanned = [f for f in d["findings"] if f["check"] == "unplanned-change"]
+    check("diff_scan lists unplanned files, not planned ones",
+          unplanned and "src/extra.py" in unplanned[0]["files"] and "src/app.py" not in unplanned[0]["files"])
+    check("diff_scan not success with errors", d["success"] is False and d["base"] == "main")
+    d = await call(s, "diff_scan", {"feature": "f7", "base": "nope"})
+    check("diff_scan unknown base → error", "merge-base" in d.get("error", ""))
+
+    d = await call(s, "advance_phase", {"feature": "f7", "from_phase": 5})
+    check("5→6 blocked without a final review", "review-final.md" in d.get("error", ""))
+    d = await call(s, "get_next_actions", {"feature": "f7"})
+    check("next actions offer the final review", any(a["action"] == "final_review" for a in d["available_actions"]))
+    write(root, "f7", "review-final.md", FINAL.format(n=1, v="READY", c=head))
+    d = await call(s, "advance_phase", {"feature": "f7", "from_phase": 5})
+    check("5→6 ok with a fresh READY review", d.get("success"), json.dumps(d))
+    d = await call(s, "get_feature_state", {"feature": "f7"})
+    check("phase card shows the verdict", f"final review: READY @ {head}" in d["phase_card"])
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "spec only")
+    d = await call(s, "advance_phase", {"feature": "f7", "from_phase": 5})
+    check("  a specs/-only commit keeps the review fresh", d.get("success"), json.dumps(d))
+    (Path(root) / "src/app.py").write_text("x = 3\n")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "code after review")
+    d = await call(s, "advance_phase", {"feature": "f7", "from_phase": 5})
+    check("  a code commit after the review → stale", "re-run the final review" in d.get("error", ""))
+    write(root, "f7", "review-final.md", "# Final review\n\n## Round 1 — x\n\nno verdict\n")
+    d = await call(s, "lint_artifacts", {"feature": "f7"})
+    msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("lint: round without verdict / commit → errors", "Verdict" in msgs and "Reviewed-commit" in msgs and d["success"] is False)
+
+    d = await call(s, "next_id", {"feature": "f7", "kind": "ADR"})
+    check("next_id ADR without an ADR dir → error", "ADR directory" in d.get("error", ""))
+    (Path(root) / "docs/adr").mkdir(parents=True)
+    (Path(root) / "docs/adr/0001-first.md").write_text("# 0001")
+    (Path(root) / "docs/adr/0014-later.md").write_text("# 0014")
+    d = await call(s, "next_id", {"feature": "f7", "kind": "ADR"})
+    check("next_id ADR → 0015 in docs/adr", d.get("next_id") == "0015" and d["adr_dir"] == "docs/adr")
+    (Path(root) / "specs/git-conventions.md").write_text("adr_dir: records\nbranch_source: main\n\n## Examples\nbranch_source: develop\nadr_dir: elsewhere\n")
+    (Path(root) / "records").mkdir()
+    d = await call(s, "next_id", {"feature": "f7", "kind": "ADR"})
+    check("adr_dir from git-conventions wins", d.get("next_id") == "0001" and d["adr_dir"] == "records")
+    d = await call(s, "diff_scan", {"feature": "f7"})
+    check("branch_source: first occurrence wins over the Examples block", d.get("base") == "main", json.dumps(d)[:200])
+    d = await call(s, "project_status")
+    check("project_status reports adr_dir and merge checklist", d["adr_dir"] == "records" and d["merge_checklist"] == "absent")
+
+
 # ── Runner ─────────────────────────────────────────────────────────────────
 
 
@@ -273,7 +373,8 @@ async def main():
     print("  spec-kit MCP Server — Workflow Integration Tests (v3 derive-only)")
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
-              test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard]:
+              test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
+              test_size_final_review_adr_and_diff_scan]:
         try:
             await run_in_tmp(t)
         except Exception as e:

@@ -62,6 +62,14 @@ ELSE:
   COPY spec-kit/templates/plan-template.md → specs/[feature]/plan.md
 ```
 
+### Size tier
+Read `**Size**` from spec.md (absent → M; `spec-kit/references/sizing.md`). S → short plan
+(Summary, Current Design placeholder, the Technical Context lines that matter, external
+seams, Rounds), no research.md / data-model.md / contracts/ / quickstart.md unless the plan
+cannot be understood without one. M → only the artifacts the feature needs. L → all that
+apply. If the design turns out bigger than the tier (a new seam, another layer), STOP and
+ASK to raise the tier; on approval edit the Size line and record the ruling.
+
 ### Fill Technical Context
 Document: language/version, dependencies, storage, test framework, platform, project type, performance goals, constraints.
 

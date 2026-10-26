@@ -75,8 +75,8 @@ The system has three operational layers plus an optional MCP state layer:
 
 | Mode | When | Trigger | Phase Sequence | User Involvement |
 |------|------|---------|---------------|-----------------|
-| **Specify** (default) | New feature, low uncertainty | "Create a spec for..." | Constitution → Specify → [Clarify] → Plan → Tasks → [Review] → Implement → Test → Close | Manual — user says "plan", "implement", etc. |
-| **Bugfix** | Working feature with known bugs | "bugfix [feature]" | Auto-chain: Plan → Tasks → Implement → Test → Close | Minimal — inner loop is automatic |
+| **Specify** (default) | New feature, low uncertainty | "Create a spec for..." | Constitution → Specify (asks Size S/M/L) → [Clarify] → Plan → Tasks → [Review] → Implement → Test → Final review → Close | Manual — user says "plan", "implement", etc.; size S auto-chains specify → plan → tasks |
+| **Bugfix** | Working feature with known bugs | "bugfix [feature]" | Auto-chain: Plan → Tasks → Implement → Test → Final review → Close | Minimal — inner loop is automatic |
 | **Reopen** | Closed feature needs more work | "reopen [feature]" | Creates bugfix branch from main, preserves original close, routes through bugfix loop | Additive-only edits; must close again |
 
 ### Bugfix vs Quickfix
@@ -97,10 +97,11 @@ The system has three operational layers plus an optional MCP state layer:
 | 1.5 | `spec-kit-clarify` | `specs/NNN-name/clarify.md`, amends spec.md | spec.md | ❌ | Requirements analyst |
 | 2 | `spec-kit-plan` | `plan.md`, `research.md`, `data-model.md`, `contracts/*`, `quickstart.md` | spec.md | ❌ | Architect |
 | 3 | `spec-kit-tasks` | `specs/NNN-name/tasks.md` | plan.md + spec.md | ❌ | Tech lead |
-| 3.5 | `spec-kit-review` | Review report (pre/post implement) | Pre: spec+plan+tasks / Post: spec+code | ❌ | Quality engineer |
+| 3.5 | `spec-kit-review` | Pre-implement review report | spec+plan+tasks | ❌ | Quality engineer |
+| 5.5 | `spec-kit-review` (final) | `review-final.md` (rounds: Verdict + Reviewed-commit), `evidence/final-*` | all tasks [X], no open bug | ❌ (runs build/test/lint) | Senior reviewer — merge gate |
 | 4 | `spec-kit-implement` | Source code, `tasks.md` (completions), `bugs.md` (mark resolved) | tasks.md | ✅ | Developer |
 | 5 | `spec-kit-test` | `specs/NNN-name/bugs.md` | Implement (or spec for bugfix) | ❌ | QA engineer |
-| 6 | `spec-kit-summarize` | `close.md` or `implementation-summary.md`, patched spec/plan | Implement + Test (or bugs all verified) | ❌ | Reviewer |
+| 6 | `spec-kit-summarize` | `close.md` or `implementation-summary.md`, patched spec/plan, ADRs + ADR index, AGENTS.md patches | Fresh READY final review, no open bug | ❌ | Auditor / archivist |
 | — | `spec-kit-refresh` | Patched spec/plan/data-model/contracts | Any (standalone) | ❌ | Archivist |
 
 ### Phase 6 — Mandatory Close
@@ -192,10 +193,11 @@ outside its owning skill context.
 | `project_set_constitution` | Confirm `specs/constitution.md` exists (stores nothing) | In constitution skill |
 | `list_features` | Every feature's derived phase/status/bug counts | Status queries, diagnostics |
 | `reopen_feature` | Check closed-on-disk, return branch hint (writes nothing) | Reopen flow |
-| `close_feature` | Validate close: close doc exists, no open bugs, verified bugs have Verified-by; lists claimed-unverified | Before the Phase 6 commit |
+| `close_feature` | Validate close: close doc with Architecture Decisions, fresh READY final review, no open bugs, verified bugs have Verified-by; lists claimed-unverified | Before the Phase 6 commit |
 | `update_artifact` | Confirm an artifact is on disk (or absent) | After writing an artifact file |
 | `auto_detect_features` | Derived state of every feature; flags a legacy state.json | First-use, diagnostics |
-| `next_id` | Next BUG-NNN / T### / BF-### by scanning the files | Before adding an entry |
+| `next_id` | Next BUG-NNN / T### / BF-### by scanning the files; next ADR number in the project's ADR dir | Before adding an entry / an ADR |
+| `diff_scan` | Mechanical merge-readiness scan of the branch diff (conflicts, secrets, forbidden files, focused tests, TODOs, unplanned files) | Final review (phase 5.5) |
 | `lint_artifacts` | Schema lint of bugs.md / tasks.md / history.md | Before every commit |
 | `timestamp` | Real UTC time | Every history entry and evidence file |
 | `history_guard` | Is there a fresh history entry for this phase since the last commit? | Pre-commit guard |

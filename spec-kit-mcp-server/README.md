@@ -19,7 +19,9 @@ The things an LLM agent does badly and a script does perfectly:
 |------|------|
 | Which phase am I in, what may I write, what is the next gate (also after compaction) | `get_next_actions` → ten-line **phase card** |
 | Is this transition valid given the files on disk | `advance_phase`, `close_feature`, `update_artifact` |
-| Next BUG-NNN / T### / BF-### | `next_id` |
+| Next BUG-NNN / T### / BF-### / project ADR number | `next_id` |
+| Is the branch mechanically mergeable (conflicts, secrets, forbidden files, focused tests, TODOs, unplanned files) | `diff_scan` |
+| Has the final review said READY on the current code | `get_feature_state.final_review`, `close_feature` |
 | Are bugs.md / tasks.md / history.md well-formed (statuses, Verified-by, ids, summary counts) | `lint_artifacts` |
 | What time is it (never type a timestamp from memory) | `timestamp` |
 | Is there a fresh history entry for this phase since the last commit | `history_guard` |
@@ -40,18 +42,19 @@ Claude Code: restart; tools appear as `mcp__spec-kit__*`.
 | Tool | Purpose | Writes |
 |------|---------|--------|
 | `init_feature` | Create `specs/<feature>/` with a history.md header; error if it exists | dir + history.md header |
-| `get_feature_state` | Derived phase, status, artifacts, task/bug counts, phase card | — |
+| `get_feature_state` | Derived phase, status, size tier (S/M/L from spec.md), artifacts, task/bug counts, final review (verdict, reviewed commit, stale), phase card | — |
 | `get_next_actions` | Available actions + phase card | — |
-| `advance_phase` | Validate leaving `from_phase`: derived phase is `from_phase` or already `from_phase+1`, named artifacts and next prerequisites exist | — |
-| `project_status` | Constitution / git-conventions present, feature count, legacy state file present? | — |
+| `advance_phase` | Validate leaving `from_phase`: derived phase is `from_phase` or already `from_phase+1`, named artifacts and next prerequisites exist; 5→6 also needs a fresh READY final review | — |
+| `project_status` | Constitution / git-conventions / merge-checklist present, ADR directory, feature count, legacy state file present? | — |
 | `project_set_constitution` | Confirm `specs/constitution.md` matches the claimed status | — |
 | `list_features` | Every feature's derived state | — |
 | `reopen_feature` | Feature is closed on disk → branch hint; reopening is materialised by an open bug in bugs.md | — |
-| `close_feature` | Close doc exists, no open/in-progress bug, verified bugs carry Verified-by; returns claimed-unverified list | — |
+| `close_feature` | Close doc exists with `## Architecture Decisions`; latest `review-final.md` round is READY / READY-WITH-FOLLOWUPS and no code commit follows its Reviewed-commit; no open/in-progress bug; verified bugs carry Verified-by; returns claimed-unverified list | — |
 | `update_artifact` | Named artifact exists (present/verified) or does not (absent) | — |
 | `auto_detect_features` | Derived state of all features; flags legacy `state.json` | — |
-| `next_id` | Scan files, return next id for kind BUG / T / BF | — |
-| `lint_artifacts` | Schema lint: status vocabulary (open/in-progress/claimed/verified/superseded; legacy resolved/fixed = warning), Verified-by on verified, Evidence on claimed, ascending ids, summary rows and totals, history header | — |
+| `next_id` | Scan files, return next id for kind BUG / T / BF; ADR → next 4-digit number in the project's ADR directory (`adr_dir` in git-conventions, else docs/adr, docs/decisions, …) | — |
+| `diff_scan` | Branch diff vs base (`branch_source`): merge conflicts (`git merge-tree`), conflict markers, private keys, secret assignments, AWS keys, focused tests, debugger, TODO/FIXME, forbidden files (.pfx/.pem/.key/.bacpac/.env), files > 1 MB, changed files not named in spec/plan/tasks; specs/ excluded | — |
+| `lint_artifacts` | Schema lint: status vocabulary (open/in-progress/claimed/verified/superseded; legacy resolved/fixed = warning), Verified-by on verified, Evidence on claimed, ascending ids, summary rows and totals, history header, review-final.md rounds (Verdict + Reviewed-commit, numbering), spec.md Size line, close doc Architecture Decisions section | — |
 | `timestamp` | UTC now, ISO 8601 | — |
 | `history_guard` | A history.md entry mentioning `phase` exists and is newer than the last commit touching the feature | — |
 | `append_history` | Append one fixed-field entry (timestamp \| phase \| skill \| agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words; ≤ 60 words total) with the real UTC time | history.md |

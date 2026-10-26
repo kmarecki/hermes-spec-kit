@@ -58,6 +58,32 @@ Populate with:
 - **Key Entities**: Domain objects only (no implementation)
 - **Edge Cases**: Error conditions, boundaries
 
+### Ask for the size tier (ALWAYS)
+```
+SCORE the signals in spec-kit/references/sizing.md (layers, files, seams, dependencies,
+  security/money/tenancy, expected tasks, unknowns) → RECOMMENDED = the highest tier any
+  signal triggers
+ASK the user — every time, even when the answer looks obvious:
+  "Size for [feature]?"
+    1. <RECOMMENDED> (Recommended) — <the signals that triggered it>
+    2./3. the other two tiers, each with one line on what it produces
+       (S: short spec/plan/tasks auto-chained, no pre-review; M: default artifacts;
+        L: full artifacts + required pre-implement review)
+  (Claude Code: AskUserQuestion with the recommended option first, labelled "(Recommended)")
+WRITE "**Size**: <answer> — <reason>" in the spec.md header
+RECORD a ruling in decisions.md quoting the answer; the user picked a tier other than the
+  recommendation → note the recommendation too. No human to ask → record RECOMMENDED as an
+  assumption (preflight check 6) and continue.
+```
+
+### Size S: auto-chain
+```
+IF Size == S AND the user has confirmed the spec:
+  RUN spec-kit-plan (short plan, no research/data-model/contracts/quickstart unless
+    indispensable) and spec-kit-tasks (flat list; the TDD question is still asked)
+  ONE history entry per phase, ONE commit for the three: "spec(phase-1-3): [feature] spec, plan, tasks"
+```
+
 ### Apply constraints
 - MAX 3 `[NEEDS CLARIFICATION]` markers
 - NO implementation details (tech stack, frameworks, APIs)
@@ -90,6 +116,7 @@ Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
 
 ### Done When
 - [ ] spec.md created with FR-### requirements numbered sequentially
+- [ ] The user was asked for the size (recommendation first); `**Size**:` line written; ruling in decisions.md
 - [ ] No existing content deleted; modifications minimal (additive-safe)
 - [ ] history.md entry appended
 - [ ] Committed

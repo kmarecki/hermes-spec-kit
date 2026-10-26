@@ -63,7 +63,7 @@
 |------|--------|-----------|
 | Full regression | ci:<run-id> / output:<path> | [link or ❌ unverified] |
 | External seams | probe:<path> per seam | [list] |
-| Review | review:<agent> / self-review | [report] |
+| Final review | Verdict READY / READY-WITH-FOLLOWUPS @ <sha> · review:<agent> / self-review | review-final.md Round N |
 
 > Rules: `spec-kit/references/evidence.md`. A row without an oracle is reported as **unverified**.
 
@@ -105,6 +105,19 @@ The following spec artifacts were **automatically updated** to reflect intention
 | *(none)* | *All artifacts already aligned* | *No changes needed* |
 
 > If artifacts show `⚠️ needs review` or `❌ outdated`, they were NOT auto-updated because the drift requires user judgment. Run `spec-kit-refresh` to reconcile them manually.
+
+## Architecture Decisions
+
+> Harvested at close from decisions.md rulings, plan.md rounds, research decisions and review
+> findings. Only decisions that pass the ADR bar become ADRs; the rest stay feature-local.
+> "None met the ADR bar" is a valid row — omitting the section is not.
+
+| Decision | Source | ADR bar (why / why not) | Action | ADR |
+|----------|--------|-------------------------|--------|-----|
+| [decision in one line] | [decisions.md ruling N / plan Round N / research D-n / review Q-n] | [cross-feature / hard to reverse / constrains future code / deviates from ADR NNNN — or "feature-local"] | new / supersedes NNNN / evidence appended to NNNN / feature-local | [docs/adr/NNNN-….md] |
+
+**ADR index updated**: yes / n/a
+**AGENTS.md**: [updated — sections touched / no change needed — why]
 
 ## Decisions Made
 
