@@ -8,6 +8,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — epics and module design docs (opt-in)
+
+- **`spec-kit-epic`** — an epic plan (`epic-template.md` in `epics_dir`): one body of work in
+  *time* — goal, scope, done-when, the feature table (spec dir · size · status · PR · health ·
+  ADRs), sequencing, cross-feature rules the reviews check like constitution MUSTs. A spec
+  names its epic with `**Epic**:`; the feature close updates its row; the epic closes when
+  every row is closed or dropped.
+- **`spec-kit-design`** — a living module design doc (`design-doc-template.md` in
+  `design_dir`): one bounded part of the system in *space* — purpose, components, data flow,
+  seams, invariants and security (`path:line`), testing, debt, ADRs; ≤ 3–4 pages, patched in
+  place, never copied to `-v2`. The plan names the modules it touches (`**Modules**:`); the
+  feature close patches the affected sections with approval.
+- Both are **opt-in**: `epics_dir` / `design_dir` in `specs/git-conventions.md`. A small
+  project sets neither and nothing is ever created unprompted; `lint_artifacts` warns when a
+  spec or plan names an epic / module the project does not keep, and `project_status` hints
+  when 3+ specs share an epic or 3+ closed features share a module without the dir.
+
 ### Changed — leaner tiers, the change record, devil's advocate
 
 - **Size tiers are progressively leaner in workflow and artifact length — never in evidence**

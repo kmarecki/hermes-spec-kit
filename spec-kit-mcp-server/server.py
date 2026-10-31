@@ -86,6 +86,8 @@ _BUG_HEADER_RE = re.compile(r"^### (BUG-(\d+)):", re.M)
 _TASK_RE = re.compile(r"^- (?:\[(?P<pre>[ xX])\] )?(?P<id>(?:T|BF-?)(?P<num>\d+))\b(?: \[(?P<post>[ xX])\])?", re.M)
 _HISTORY_ENTRY_RE = re.compile(r"^## \[?([0-9T:\-+.Z]+)\]? *\| *(.*)$", re.M)
 _SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
+_EPIC_RE = re.compile(r"^\*\*Epic\*\*:\s*\[?([A-Za-z0-9][\w.-]*)", re.M)
+_MODULES_RE = re.compile(r"^\*\*Modules\*\*:\s*(.+)$", re.M)
 _ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
 _VERDICT_RE = re.compile(r"\*\*Verdict\*\*:\s*(READY-WITH-FOLLOWUPS|AWAITING-OWNER|NOT READY|READY)\b")
 _REVIEWED_COMMIT_RE = re.compile(r"\*\*Reviewed-commit\*\*:\s*([0-9a-f]{7,40})\b")
@@ -179,6 +181,26 @@ def _adr_dir():
         if Path(c).is_dir():
             return Path(c)
     return None
+
+
+def _epic_of(fd):
+    """The epic short-name from spec.md `**Epic**: name`; None when absent or a template placeholder."""
+    f = fd / "spec.md"
+    if not f.exists():
+        return None
+    m = _EPIC_RE.search(f.read_text(errors="replace"))
+    return m.group(1) if m and m.group(1).lower() not in ("epic", "none") else None
+
+
+def _modules_of(fd):
+    """Module names from plan.md `**Modules**: a, b`; [] when absent or a template placeholder."""
+    f = fd / "plan.md"
+    if not f.exists():
+        return []
+    m = _MODULES_RE.search(f.read_text(errors="replace"))
+    if not m or m.group(1).lstrip().startswith("["):
+        return []
+    return [x.strip().strip("`") for x in m.group(1).split(",") if x.strip()]
 
 
 def _parse_size(fd):
@@ -461,8 +483,32 @@ def project_status() -> str:
     whether a legacy specs/.spec-kit/state.json still exists (it is ignored — delete it).
     """
     features = sorted(d.name for d in SPECS_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")) if SPECS_DIR.is_dir() else []
+    conv = _conventions()
+    hints = []
+    if not conv.get("epics_dir"):
+        by_epic = {}
+        for f in features:
+            e = _epic_of(SPECS_DIR / f)
+            if e:
+                by_epic.setdefault(e, []).append(f)
+        for e, fs in by_epic.items():
+            if len(fs) >= 3:
+                hints.append(f"{len(fs)} specs name epic '{e}' but no epics_dir is set — consider an epic plan (spec-kit epic {e})")
+    if not conv.get("design_dir"):
+        by_module = {}
+        for f in features:
+            fd = SPECS_DIR / f
+            if any((fd / c).exists() for c in CLOSE_DOCS):
+                for m in _modules_of(fd):
+                    by_module.setdefault(m, []).append(f)
+        for m, fs in by_module.items():
+            if len(fs) >= 3:
+                hints.append(f"{len(fs)} closed features name module '{m}' but no design_dir is set — consider a module design doc (spec-kit design {m})")
     return _json({
         "version": 3,
+        "epics_dir": conv.get("epics_dir"),
+        "design_dir": conv.get("design_dir"),
+        "hints": hints,
         "constitution": "present" if (SPECS_DIR / "constitution.md").exists() else "absent",
         "git_conventions": "present" if (SPECS_DIR / "git-conventions.md").exists() else "absent",
         "merge_checklist": "present" if (SPECS_DIR / "merge-checklist.md").exists() else "absent",
@@ -906,6 +952,24 @@ def lint_artifacts(feature: str) -> str:
 
     if "spec.md" in state["artifacts"] and state["artifacts"]["spec.md"] == "present" and not state["size_declared"]:
         findings.append({"file": "spec.md", "severity": "warning", "msg": "no '**Size**: S | M | L' header line — treated as M"})
+
+    conv = _conventions()
+    epic = _epic_of(fd)
+    if epic:
+        epics_dir = conv.get("epics_dir")
+        if not epics_dir:
+            findings.append({"file": "spec.md", "severity": "warning", "msg": f"**Epic**: {epic} but git-conventions.md sets no epics_dir — add it or drop the line"})
+        elif not (Path(epics_dir) / f"{epic}.md").exists():
+            findings.append({"file": "spec.md", "severity": "warning", "msg": f"**Epic**: {epic} names {epics_dir}/{epic}.md which does not exist — run 'spec-kit epic {epic}'"})
+        elif feature not in (Path(epics_dir) / f"{epic}.md").read_text(errors="replace"):
+            findings.append({"file": f"{epics_dir}/{epic}.md", "severity": "warning", "msg": f"epic {epic} has no row for {feature} — add it (spec-kit-epic status)"})
+    for module in _modules_of(fd):
+        design_dir = conv.get("design_dir")
+        if not design_dir:
+            findings.append({"file": "plan.md", "severity": "warning", "msg": f"**Modules**: {module} but git-conventions.md sets no design_dir — add it or drop the line"})
+            break
+        if not (Path(design_dir) / f"{module}.md").exists():
+            findings.append({"file": "plan.md", "severity": "warning", "msg": f"module {module} has no {design_dir}/{module}.md — the close cannot patch it (spec-kit design {module})"})
 
     if any((fd / c).exists() for c in CLOSE_DOCS):
         close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())

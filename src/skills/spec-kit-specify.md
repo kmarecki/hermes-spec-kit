@@ -27,8 +27,9 @@ metadata:
 3. Copy `spec-kit/templates/spec-template.md`. Fill stories (P1/P2/P3), FR-### (testable, technology-agnostic), **Security & Privacy table** (every row answered — "None — because …" is valid), SC-###, entities, edge cases.
 4. **ACs** (`spec-kit/references/acceptance.md`): every scenario and important edge case → `**AC-###** (FR-…) Given/When/Then — Verify: <lowest level that proves it>`; every FR named by ≥ 1 AC; ids `mcp_spec_kit_next_id(kind="AC")`.
 5. ≤ 3 `[NEEDS CLARIFICATION]` markers — more → ask first. Priority: scope > security > UX > technical.
-6. **Size — always ASK** (`spec-kit/references/sizing.md`): score the signals, offer S/M/L with the recommendation first "(Recommended)" + reason + what each produces. Write `**Size**: X — <reason>`; ruling in `decisions.md` (unattended → assumption).
-7. Size S (single bugfix / small enhancement): the spec is a few lines — 1–3 FRs, 1–2 ACs, one Security & Privacy line. After the user confirms it: auto-chain `spec-kit-plan` → `spec-kit-tasks`, ONE commit `spec(phase-1-3): [feature] spec, plan, tasks`.
+6. `epics_dir` kept (`specs/git-conventions.md`) → `**Epic**: <name>` in the header (ASK which, or none); the epic file must exist (`spec-kit-epic`), its row is added now.
+7. **Size — always ASK** (`spec-kit/references/sizing.md`): score the signals, offer S/M/L with the recommendation first "(Recommended)" + reason + what each produces. Write `**Size**: X — <reason>`; ruling in `decisions.md` (unattended → assumption).
+8. Size S (single bugfix / small enhancement): the spec is a few lines — 1–3 FRs, 1–2 ACs, one Security & Privacy line. After the user confirms it: auto-chain `spec-kit-plan` → `spec-kit-tasks`, ONE commit `spec(phase-1-3): [feature] spec, plan, tasks`.
 
 ## Done when
 - [ ] spec.md written; FR/AC ids ascending; Security & Privacy filled; `**Size**:` set from the user's answer.

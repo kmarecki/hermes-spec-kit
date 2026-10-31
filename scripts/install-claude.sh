@@ -93,6 +93,8 @@ arg_hint = {
     "spec-kit": None,
     "spec-kit-constitution": "[project description]",
     "spec-kit-workflow": "[command] [feature]",
+    "spec-kit-epic": "[epic]",
+    "spec-kit-design": "[module]",
 }.get(skill, "[feature]")
 
 out = ["---", f"name: {skill}", f"description:{description}"]

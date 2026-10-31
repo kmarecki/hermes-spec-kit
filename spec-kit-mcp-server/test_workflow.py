@@ -399,6 +399,30 @@ TRX = """<?xml version="1.0"?>
 """
 
 
+async def test_epics_and_design(s, root):
+    print("\n═══ epics / design docs (optional dirs) ═══")
+    for f in ("e1", "e2", "e3"):
+        write(root, f, "spec.md", "# Spec\n\n**Size**: S — x\n**Epic**: rs-m\n")
+        write(root, f, "history.md", "# Process History\n")
+    d = await call(s, "project_status")
+    check("3 specs naming an epic without epics_dir → hint", any("epic 'rs-m'" in h for h in d["hints"]), json.dumps(d["hints"]))
+    d = await call(s, "lint_artifacts", {"feature": "e1"})
+    check("lint: Epic line without epics_dir → warning", any("no epics_dir" in f["msg"] for f in d["findings"]) and d["success"])
+    (Path(root) / "specs/git-conventions.md").write_text("epics_dir: specs/epics\ndesign_dir: docs/design\n")
+    d = await call(s, "lint_artifacts", {"feature": "e1"})
+    check("lint: epic file missing → warning", any("does not exist" in f["msg"] for f in d["findings"]))
+    (Path(root) / "specs/epics").mkdir(parents=True); (Path(root) / "specs/epics/rs-m.md").write_text("# Epic\n| 1 | e2 | S | closed |\n")
+    d = await call(s, "lint_artifacts", {"feature": "e1"})
+    check("lint: epic file without the feature's row → warning", any("no row for e1" in f["msg"] for f in d["findings"]))
+    d = await call(s, "lint_artifacts", {"feature": "e2"})
+    check("  feature with a row → no epic warning", not any("epic" in f["msg"].lower() for f in d["findings"]))
+    write(root, "e2", "plan.md", "# Plan\n\n**Modules**: reader, bff\n")
+    d = await call(s, "lint_artifacts", {"feature": "e2"})
+    check("lint: module without design doc → warning", sum("no docs/design/" in f["msg"] for f in d["findings"]) == 2)
+    d = await call(s, "project_status")
+    check("project_status reports the dirs, no hints once set", d["epics_dir"] == "specs/epics" and d["hints"] == [])
+
+
 async def test_acceptance(s, root):
     print("\n═══ acceptance criteria: lint / next_id / freeze / status / gates ═══")
     git(root, "init", "-q", "-b", "main")
@@ -507,7 +531,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan, test_acceptance]:
+              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance]:
         try:
             await run_in_tmp(t)
         except Exception as e:

@@ -47,7 +47,7 @@ PHASE_SKILLS = {
     6:   "spec-kit-summarize",
 }
 
-NON_PHASE_SKILLS = {"spec-kit-refresh", "spec-kit-workflow"}
+NON_PHASE_SKILLS = {"spec-kit-refresh", "spec-kit-workflow", "spec-kit-epic", "spec-kit-design"}
 UMBRELLA_DIR = "spec-kit"  # umbrella SKILL.md inside spec-kit/ directory
 ALL_SKILLS = set(PHASE_SKILLS.values()) | NON_PHASE_SKILLS | {UMBRELLA_DIR}
 
@@ -65,6 +65,8 @@ EXPECTED_TEMPLATES = {
     "git-conventions-template.md",
     "gitignore-template.md",
     "change-record-template.md",
+    "design-doc-template.md",
+    "epic-template.md",
     "history-template.md",
     "plan-template.md",
     "research-template.md",
@@ -84,7 +86,7 @@ EXPECTED_REFERENCES = {
 }
 
 # Skills whose one-screen SKILL.md is the whole procedure (no references/skills/ file).
-SELF_CONTAINED_SKILLS = {"spec-kit-clarify", "spec-kit-refresh"}
+SELF_CONTAINED_SKILLS = {"spec-kit-clarify", "spec-kit-refresh", "spec-kit-epic", "spec-kit-design"}
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -282,7 +284,7 @@ def test_cross_skill_references_exist():
 def test_preflight_reference():
     """Every phase skill references preflight.md for its pre-action checks."""
     print("\n═══ Pre-flight reference ═══")
-    skip = {"spec-kit-workflow", "spec-kit-refresh", "spec-kit-review", UMBRELLA_DIR}
+    skip = {"spec-kit-workflow", "spec-kit-refresh", "spec-kit-review", "spec-kit-epic", "spec-kit-design", UMBRELLA_DIR}
     for name in sorted(ALL_SKILLS):
         if name in skip:
             continue

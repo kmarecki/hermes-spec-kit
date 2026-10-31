@@ -33,6 +33,7 @@ Constitution → Specify (size S/M/L, ACs, Security & Privacy) → [Clarify] →
 | 5 | `spec-kit-test` | `bugs.md`; accept mode → `acceptance.md` rounds |
 | 6 | `spec-kit-summarize` | `close.md`, **`change-record.md`**, ADRs, AGENTS.md patches |
 | — | `spec-kit-refresh` | spec/plan reconciled with the code mid-stream |
+| — | `spec-kit-epic` · `spec-kit-design` | optional, only when `epics_dir` / `design_dir` are set: an epic plan (many features, one goal — **time**) · a living module design doc (how a part works now — **space**); feature closes patch both |
 
 **Mandatory**: constitution once per project; size asked at specify; the final review; the close.
 
@@ -44,6 +45,7 @@ Constitution → Specify (size S/M/L, ACs, Security & Privacy) → [Clarify] →
 - **Decisions**: questions the user would want to decide → `decisions.md` (ruling quotes them; assumption otherwise); design choices stay in plan.md.
 - Templates: `spec-kit/templates/<name>-template.md`. Git: `specs/git-conventions.md` (`feat/NNN-name`, `bug/NNN-name`, reopen suffix `-bugfixing`).
 - AGENTS.md carries: available skills, active spec dirs, build commands, project conventions — not routing tables or phase mechanics.
+- **Scale**: a small project keeps no `design_dir` / `epics_dir` / `adr_dir` and the close has nothing to patch; a platform sets all three. Document roles: spec = one feature · epic = what and in what order · design doc = how it works now · ADR = why · AGENTS.md = where things are and what never to do.
 
 ## MCP server (optional, stateless)
 `spec-kit-mcp-server/server.py` derives the phase from `specs/<feature>/` on every call and validates: `mcp_spec_kit_get_next_actions` (phase card — re-read after compaction), `mcp_spec_kit_advance_phase` (only from the owning phase skill), `mcp_spec_kit_next_id`, `mcp_spec_kit_lint_artifacts` (before every commit), `mcp_spec_kit_acceptance_freeze` / `mcp_spec_kit_acceptance_status`, `mcp_spec_kit_diff_scan`, `mcp_spec_kit_close_feature`, `mcp_spec_kit_timestamp`, `mcp_spec_kit_append_history`, `mcp_spec_kit_history_guard`, `mcp_spec_kit_init_feature`, `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_list_features`, `mcp_spec_kit_project_status`, `mcp_spec_kit_project_set_constitution`, `mcp_spec_kit_reopen_feature`, `mcp_spec_kit_update_artifact`, `mcp_spec_kit_auto_detect_features`. Bugs are file-based (`bugs.md`) — no bug tools. Setup: `spec-kit-mcp-server/README.md`; enable by adding to `~/.hermes/config.yaml`:

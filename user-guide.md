@@ -1035,6 +1035,8 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | implementation-summary-template.md | Phase 6 | Full summary |
 | close-template.md | Phase 6 | Lightweight close |
 | history-template.md | Phase transitions | Append-only log entries |
+| epic-template.md | `spec-kit epic` (opt-in `epics_dir`) | Goal, feature table, sequencing, cross-feature rules, epic close |
+| design-doc-template.md | `spec-kit design` (opt-in `design_dir`) | Living module design: components, flow, seams, invariants, security, debt |
 | change-record-template.md | Close | The auditor's one page: ticket, risk tier, security impact, approvals, verification, rollback, timeline |
 | git-conventions-template.md | Project setup | Git branch/commit conventions |
 | gitignore-template.md | Project setup | .gitignore starter |

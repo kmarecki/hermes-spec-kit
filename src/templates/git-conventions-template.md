@@ -64,7 +64,13 @@ adr_dir: docs/adr               # default: first existing of docs/adr, docs/deci
 adr_index: docs/adr/README.md   # the ADR list to update; default: README.md / index.md in adr_dir
 agents_file: AGENTS.md          # the agent context file kept current at close (also CLAUDE.md if it restates it)
 merge_checklist: specs/merge-checklist.md
+design_dir: docs/design         # living module design docs (design-doc-template.md); ABSENT → plan.md's Current Design is the only design, nothing else is created
+epics_dir: specs/epics          # epic plans (epic-template.md); ABSENT → every feature is its own epic
 ```
+
+A small project leaves `design_dir` and `epics_dir` out: the close then has nothing to patch
+and nothing is ever created unprompted. A platform sets both; `spec-kit-design` and
+`spec-kit-epic` create the documents, the feature close keeps them true.
 
 ---
 

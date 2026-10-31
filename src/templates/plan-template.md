@@ -1,6 +1,7 @@
 # Implementation Plan: [FEATURE]
 
 **Branch**: [###-feature-name] | **Date**: [DATE] | **Spec**: spec.md | **Size**: [S | M | L]
+**Modules**: [module names as in `design_dir` — the design docs the close will patch; delete when the project keeps none]
 
 > Size S: keep Summary, Current Design, the Technical Context lines that matter, Seams,
 > Acceptance Test Strategy, Rounds — delete the rest; no research / data-model / contracts /

@@ -15,7 +15,7 @@ For users, see `user-guide.md` (workflow docs) and `README.md` (quick start).
 | Field | Value |
 |-------|-------|
 | Repository | `kmarecki/hermes-spec-kit` |
-| What it is | Spec-driven development (SDD) workflow for Hermes Agent — 12 skills + MCP server |
+| What it is | Spec-driven development (SDD) workflow for Hermes Agent — 14 skills + MCP server |
 | License | MIT |
 | Author | Hermes Agent |
 | Maturity | Active development — `feat/mcp-orchestrator` branch |
@@ -35,8 +35,8 @@ The system has three operational layers plus an optional MCP state layer:
 │  Phase detection via artifact scan or MCP state              │
 │  Session continuity detection for cross-session resumption   │
 ├──────────────────────────────────────────────────────────────┤
-│              12 Phase Skills Layer                            │
-│  One skill per phase + 2 supporting (refresh, review)        │
+│              14 Skills Layer                                  │
+│  One skill per phase + review, refresh, epic, design         │
 │  Each skill: preflight → phase work → history append → commit│
 │  All skills loadable independently, none depend on each      │
 │  other at runtime (only on artifact state)                   │
@@ -74,7 +74,11 @@ The system has three operational layers plus an optional MCP state layer:
    ACs, one commit for spec+plan+tasks, no pre-implement review). Evidence never shrinks:
    RED/GREEN files, probes per seam, the acceptance round documenting every AC, the oracle
    rule, the final review, the change record.
-7. **Skills are the delta** — the one-screen SKILL.md (≤ 60 lines) is the procedure; the
+7. **Scale is opt-in** — `adr_dir`, `design_dir`, `epics_dir` in git-conventions.md decide
+   which documents exist; absent → the close has nothing to patch and never creates them.
+   Roles: spec = one feature · epic = what and in what order (time) · design doc = how a
+   part works now (space) · ADR = why · AGENTS.md = where things are and what never to do.
+8. **Skills are the delta** — the one-screen SKILL.md (≤ 60 lines) is the procedure; the
    `references/skills/` file holds only what it leaves out. Never restate one in the other.
 
 ---
@@ -111,6 +115,8 @@ The system has three operational layers plus an optional MCP state layer:
 | 5 | `spec-kit-test` | `specs/NNN-name/bugs.md` | Implement (or spec for bugfix) | ❌ | QA engineer |
 | 6 | `spec-kit-summarize` | `close.md` + `change-record.md`, patched spec/plan, ADRs + ADR index, AGENTS.md patches | Fresh READY final review, no open bug | ❌ | Auditor / archivist |
 | — | `spec-kit-refresh` | Patched spec/plan/data-model/contracts | Any (standalone) | ❌ | Archivist |
+| — | `spec-kit-epic` | `[epics_dir]/<epic>.md` — goal, feature table, sequencing, cross-feature rules (optional: `epics_dir` set) | — | ❌ | Delivery lead |
+| — | `spec-kit-design` | `[design_dir]/<module>.md` — living module design doc (optional: `design_dir` set) | — | ❌ | Architect describing what is built |
 
 ### Phase 6 — Mandatory Close
 
@@ -270,6 +276,8 @@ hermes-spec-kit/
 │   │   ├── spec-kit-test.md          # Phase 5 — bug tracking
 │   │   ├── spec-kit-summarize.md     # Phase 6 — close/summary
 │   │   ├── spec-kit-refresh.md       # Standalone — artifact reconciliation
+│   │   ├── spec-kit-epic.md          # Standalone — epic plan (time: many features, one goal); optional epics_dir
+│   │   ├── spec-kit-design.md        # Standalone — module design doc (space: how a part works now); optional design_dir
 │   │   └── spec-kit/
 │   │       └── SKILL.md              # Umbrella skill — overview only
 │   ├── templates/                    # 18 template files (*-template.md)
@@ -280,6 +288,7 @@ hermes-spec-kit/
 │   │   ├── bugs-template.md
 │   │   ├── close-template.md
 │   │   ├── change-record-template.md       # the auditor's one page, written at close
+│   │   ├── epic-template.md · design-doc-template.md   # optional document types (epics_dir / design_dir)
 │   │   ├── data-model-template.md
 │   │   ├── research-template.md
 │   │   ├── AGENTS-template.md

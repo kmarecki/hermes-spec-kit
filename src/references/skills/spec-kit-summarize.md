@@ -61,6 +61,22 @@ WRONG or INCOMPLETE — commands, layout, boundaries, versions, dependencies, co
 debt, ADR list, the spec-kit block. No narrative, no changelog. Targeted patch per section →
 WAIT → apply approved ones only. Record "updated — <sections>" or "no change needed — <why>".
 
+## Design doc and epic row (optional — only what the project keeps)
+```
+DESIGN_DIR = git-conventions design_dir · EPICS_DIR = epics_dir   (absent → "none kept", skip)
+FOR each module in plan.md **Modules**:  DOC = DESIGN_DIR/<module>.md
+  missing → NOTE "no design doc for <module> — run 'spec-kit design <module>'" (never create it here)
+  else → which sections does the diff make wrong? components (paths), data flow, seams /
+         contracts, invariants & security, testing, known debt, Decisions (new ADRs)
+         → targeted patch per section, WAIT, apply approved; append "- <date> <feature> — <what>"
+         to the change log; bump Last patched
+EPIC = spec.md **Epic**:  FILE = EPICS_DIR/<epic>.md
+  missing → NOTE "spec names epic <epic> but <FILE> does not exist — run 'spec-kit epic <epic>'"
+  else → set this feature's row: Status closed · PR · Health N% · ADRs; add the row if absent;
+         every row closed or dropped → suggest "close epic <epic>"
+RECORD both outcomes in the close document (Artifact State) and in the change record (Decisions / follow-ups)
+```
+
 ## Change record
 `spec-kit/templates/change-record-template.md` → `specs/[feature]/change-record.md`. Every field
 filled from what exists (spec Security & Privacy, size ruling, history.md, acceptance round,

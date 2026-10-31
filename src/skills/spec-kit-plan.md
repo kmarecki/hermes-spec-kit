@@ -22,7 +22,7 @@ metadata:
 - `plan.md` exists and not bugfix mode → **BLOCK** (`bugfix` / `reopen`). Bugfix mode → append only.
 
 ## Steps
-1. Copy `spec-kit/templates/plan-template.md`; Technical Context — only the lines that matter.
+1. Copy `spec-kit/templates/plan-template.md`; Technical Context — only the lines that matter. `design_dir` kept → `**Modules**:` names the design docs the close will patch (read them first — they describe what is built).
 2. Tier from spec.md (`spec-kit/references/sizing.md`): S → Summary, Current Design, Seams, Acceptance strategy, Rounds; M → + Design, and research / data-model / contracts / quickstart only when needed; L → all that apply. Bigger than the tier → stop, **ASK** to raise it.
 3. Constitution gates (advisory) — violations justified in Complexity Tracking.
 4. **External Seams** table — every DB function, HTTP contract, message, file format the feature touches (implement probes each). **Acceptance Test Strategy** — per AC: level, harness, test file, needs, result source (`spec-kit/references/acceptance.md`). The Security & Privacy rows of the spec get a design answer here (where the check lives).

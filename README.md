@@ -45,9 +45,9 @@ Full workflow documentation: **[user-guide.md](user-guide.md)**
 
 ```text
 src/
-  skills/                # Skill source files (11 .md + 1 umbrella directory)
+  skills/                # Skill source files (13 .md + 1 umbrella directory)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
-  templates/             # Template source files (17 templates, all *-template.md)
+  templates/             # Template source files (19 templates, all *-template.md)
   references/            # preflight, commits, history-tracking, evidence, sizing, acceptance, constitution-*
     skills/              # Full procedure per skill — loaded on demand by the one-screen SKILL.md
   skills/

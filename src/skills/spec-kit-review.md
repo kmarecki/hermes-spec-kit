@@ -25,7 +25,7 @@ metadata:
 - Final review: read the code and the spec **before** `decisions.md` so the author's reasoning does not anchor you; then every assumption is a review item.
 
 ## Pre-implement (3.5)
-1. Load spec, plan, tasks, constitution; requirement ↔ task coverage; the Security & Privacy table answered in the plan.
+1. Load spec, plan, tasks, constitution, the epic's cross-feature rules and the modules' design docs when the project keeps them; requirement ↔ task coverage; the Security & Privacy table answered in the plan.
 2. M (lite): underspecification, coverage gaps, codebase fit, design soundness. L: + duplication, ambiguity, naming, completeness, inconsistency, best practice (research the stack).
 3. **Devil's advocate**: the strongest case against the plan + a simpler alternative; a pre-mortem ("three months later it failed — why?"); abuse cases per new seam (authz, tenant crossover, input, data exposure, logging); the riskiest assumptions in decisions.md. ≤ 5 objections, each answered: accepted / rebutted with evidence / deferred. L: run it as a separate sub-agent (different model when available).
 4. Report + commit `spec(review): [feature] review findings`. CRITICAL → resolve before implement.
@@ -34,7 +34,7 @@ metadata:
 1. Inputs: spec, plan, tasks, data-model, contracts, constitution, `specs/merge-checklist.md` (missing → from `spec-kit/templates/merge-checklist-template.md`, **ASK** to confirm), AGENTS.md / rule files, `git diff <base>...HEAD`, `evidence/`, bugs.md, acceptance.md.
 2. Mechanical: `mcp_spec_kit_diff_scan(feature)` → `evidence/final-diff-scan.txt`; every checklist command → `evidence/final-<check>.txt`; `ci:<id>` for the reviewed commit.
 3. **§1** — one coverage line (FR n/N, SC, edge cases, acceptance round PASS @ sha, frozen unchanged) + rows ONLY for ⚠️ / ❌ / ↔ / 👤. Missing = CRITICAL; ↔ → **WAIT** (patch spec, log a bug, or defer). Manual / deferred ACs unconfirmed → 👤.
-4. **§2** — every applicable constitution MUST, checklist P-item, AGENTS.md rule and **spec Security & Privacy row** verdicted with `path:line`; violated MUST = HIGH (CRITICAL if security / data / non-negotiable).
+4. **§2** — every applicable constitution MUST, checklist P-item, AGENTS.md rule, epic cross-feature rule, design-doc invariant and **spec Security & Privacy row** verdicted with `path:line`; violated MUST = HIGH (CRITICAL if security / data / non-negotiable).
 5. **§3** — findings on the changed code: architecture, error chains, security, data integrity, concurrency, duplication, complexity, API surface, tests (behaviour not implementation; fixtures match `probe:` files; RED/GREEN files per phase). Stack research: M/L.
 6. **§4 Devil's advocate** — try to break it with concrete inputs (another tenant's id, empty/stale period, concurrent edit, failing dependency, unauthorized role); "would this test still pass if the code were wrong?"; argue the opposite of the verdict. L: separate sub-agent. ≤ 5 objections, each answered; unanswered blocks READY for L.
 7. **§5** checklist table with evidence files. **Verdict**: CRITICAL/HIGH or blocking ❌ → `NOT READY`; no defect but owner confirmations pending → `AWAITING-OWNER`; MEDIUM / non-blocking only → `READY-WITH-FOLLOWUPS`; else `READY`. Write `**Verdict**:` and `**Reviewed-commit**:`.
