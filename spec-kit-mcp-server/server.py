@@ -12,9 +12,8 @@ What the server is for — the things an LLM agent does badly and a script does
 perfectly:
   * phase derivation and prerequisite validation (advance_phase, get_feature_state)
   * sequential id allocation (next_id: BUG / T / BF)
-  * artifact schema lint (lint_artifacts: bugs.md, tasks.md, history.md)
+  * artifact schema lint (lint_artifacts: bugs.md, tasks.md, spec.md ACs, acceptance.md, review-final.md)
   * real timestamps (timestamp)
-  * the history-before-commit guard (history_guard)
   * a ten-line phase card to re-read after context compaction (get_next_actions)
   * the merge gate: the final review's verdict and freshness (close_feature) and a
     mechanical scan of the branch diff (diff_scan)
@@ -69,11 +68,11 @@ AC_TEST_LEVELS = ("unit", "integration", "component", "e2e")   # proven by a tes
 AC_REASON_LEVELS = ("e2e", "manual")                           # need a written reason in spec.md
 TRACKED_ARTIFACTS = [
     "spec.md", "clarify.md", "plan.md", "research.md", "data-model.md",
-    "quickstart.md", "tasks.md", "bugs.md", "decisions.md", "history.md",
-    ACCEPTANCE, FINAL_REVIEW, "close.md", "implementation-summary.md",
+    "quickstart.md", "tasks.md", "bugs.md", "decisions.md",
+    ACCEPTANCE, FINAL_REVIEW, "close.md", "implementation-summary.md", "change-record.md",
 ]
 SIZES = ("S", "M", "L")
-VERDICTS = ("READY", "READY-WITH-FOLLOWUPS", "NOT READY")
+VERDICTS = ("READY", "READY-WITH-FOLLOWUPS", "AWAITING-OWNER", "NOT READY")
 PASSING_VERDICTS = ("READY", "READY-WITH-FOLLOWUPS")
 ADR_DIR_CANDIDATES = ("docs/adr", "docs/decisions", "doc/adr", "adr", "docs/architecture/decisions")
 
@@ -84,10 +83,9 @@ VERIFIED_BY_RE = re.compile(r"^(user|ci:\S+|review:\S+)$")
 _BUG_HEADER_RE = re.compile(r"^### (BUG-(\d+)):", re.M)
 # "- [X] T001 …" (template) and "- T001 [X] …" (id first) are both task lines.
 _TASK_RE = re.compile(r"^- (?:\[(?P<pre>[ xX])\] )?(?P<id>(?:T|BF-?)(?P<num>\d+))\b(?: \[(?P<post>[ xX])\])?", re.M)
-_HISTORY_ENTRY_RE = re.compile(r"^## \[?([0-9T:\-+.Z]+)\]? *\| *(.*)$", re.M)
 _SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
 _ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
-_VERDICT_RE = re.compile(r"\*\*Verdict\*\*:\s*(READY-WITH-FOLLOWUPS|NOT READY|READY)\b")
+_VERDICT_RE = re.compile(r"\*\*Verdict\*\*:\s*(READY-WITH-FOLLOWUPS|AWAITING-OWNER|NOT READY|READY)\b")
 _REVIEWED_COMMIT_RE = re.compile(r"\*\*Reviewed-commit\*\*:\s*([0-9a-f]{7,40})\b")
 # spec.md: "- **AC-003** (FR-002) Given … When … Then … — Verify: integration"
 _AC_LINE_RE = re.compile(r"^.*\*\*AC-(\d{3})\*\*.*$", re.M)
@@ -330,6 +328,8 @@ def _final_review_problem(fr):
         return f"no {FINAL_REVIEW} — run the final review (spec-kit-review, final mode) first"
     if fr["verdict"] is None:
         return f"{FINAL_REVIEW}: latest round has no '**Verdict**:' line"
+    if fr["verdict"] == "AWAITING-OWNER":
+        return f"{FINAL_REVIEW}: latest verdict is AWAITING-OWNER — get the owner's answers and append a specs-only Round N+1"
     if fr["verdict"] not in PASSING_VERDICTS:
         return f"{FINAL_REVIEW}: latest verdict is {fr['verdict']} — fix the findings (bugfix loop) and re-review"
     if fr["reviewed_commit"] is None:
@@ -401,15 +401,15 @@ def _phase_card(state):
         3: "tasks.md only — no code",
         4: "source code, tasks.md [X] marks, bugs.md status→claimed with Evidence",
         5: "bugs.md only — log before fix; verified needs an oracle",
-        6: "close.md / implementation-summary.md, plan.md Current Design, spec/plan deviation patches",
+        6: "close.md + change-record.md, plan.md Current Design, spec/plan deviation patches, ADRs, AGENTS.md",
     }[phase]
     gate = {
         1: "spec.md written → commit spec(phase-1)",
         2: "plan artifacts written → commit spec(phase-2)",
         3: "tasks.md written, TDD question asked → commit spec(phase-3)",
-        4: "phase tests output: saved, tasks [X], history entry with Implemented-by → commit per phase; full regression → output: + ci:",
+        4: "phase tests RED/GREEN evidence by size, probes per [SEAM], tasks [X] → one commit per phase with Phase/Implemented-by/Evidence trailers; then accept",
         5: f"{state['bugs']['open']} open, {state['bugs']['claimed']} claimed-unverified → verify with user/ci/other-agent or run 'bugfix {f}'; then the final review ({FINAL_REVIEW}) must say READY",
-        6: "final review READY and fresh, every bug verified/superseded, Evidence + Architecture Decisions filled (ADRs, AGENTS.md) → one commit spec(phase-6)",
+        6: "final review READY and fresh, every bug verified/superseded, close.md (Architecture Decisions) + change-record.md → one commit spec(phase-6)",
     }[phase]
     fr = state.get("final_review") or {}
     review_line = (f"final review: {fr.get('verdict') or 'missing verdict'} @ {fr.get('reviewed_commit') or '?'}"
@@ -430,7 +430,7 @@ def _phase_card(state):
         f"next gate: {gate}",
         f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF)",
         f"bugs: {state['bugs']['open']} open · {state['bugs']['claimed']} claimed · {state['bugs']['verified']} verified",
-        "rules: history entry BEFORE commit · additive-only · evidence before claims (evidence.md)",
+        "rules: commit trailers Phase/Implemented-by/Evidence · additive-only · evidence before claims (evidence.md)",
         acc_line or "ids: call next_id before adding a BUG/T/BF · lint_artifacts before every commit",
         review_line or "ask: an ASK you cannot put to a human is an ASSUMPTION — record it in decisions.md",
         f"derived from files at {state['derived_at']} — the files are the truth, not this card",
@@ -498,18 +498,18 @@ def project_set_constitution(status: str = "present", principles: str = "") -> s
 
 @mcp.tool(name="init_feature")
 def init_feature(feature: str, name: str = None, mode: str = "specify") -> str:
-    """Create specs/<feature>/ with a history.md header. Fails if the directory exists.
+    """Create specs/<feature>/ (an empty directory — the artifacts are the state). Fails if it exists.
 
     Args:
         feature: Feature ID (e.g., 003-user-auth)
-        name: Human-readable name (defaults to feature ID)
-        mode: specify, bugfix, or reopen (recorded in the history header only)
+        name: Human-readable name (unused; kept for compatibility)
+        mode: specify, bugfix, or reopen (unused; kept for compatibility)
     """
     fd = _feature_dir(feature)
     if fd.exists():
         return _json({"error": f"Feature '{feature}' already exists", "state": _derive(feature)})
     fd.mkdir(parents=True)
-    (fd / "history.md").write_text(f"# Process History: {name or feature}\n\n> mode: {mode} · created {_now()}\n")
+    (fd / ".gitkeep").write_text("")
     return _json({"success": True, "state": _derive(feature)})
 
 
@@ -659,7 +659,7 @@ def reopen_feature(feature: str) -> str:
 @mcp.tool(name="close_feature")
 def close_feature(feature: str) -> str:
     """Validate the close: a close document exists with an `## Architecture Decisions`
-    section, the latest acceptance round PASSes on the current code (when spec.md has ACs), the final review's latest verdict is READY / READY-WITH-FOLLOWUPS and no code
+    section and change-record.md is present, the latest acceptance round PASSes on the current code (when spec.md has ACs), the final review's latest verdict is READY / READY-WITH-FOLLOWUPS and no code
     changed after its reviewed commit, no bug is open/in-progress, and every verified bug
     carries a Verified-by oracle. Reports claimed-unverified bugs. Writes nothing.
 
@@ -677,6 +677,8 @@ def close_feature(feature: str) -> str:
     close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
     if "## Architecture Decisions" not in close_text:
         problems.append("close document has no '## Architecture Decisions' section (write 'none met the ADR bar' if so)")
+    if not (fd / "change-record.md").exists():
+        problems.append("change-record.md missing — the auditor's page (change-record-template.md)")
     for problem in (_acceptance_problem(fd), _final_review_problem(_final_review(fd))):
         if problem:
             problems.append(problem)
@@ -782,9 +784,10 @@ def next_id(feature: str, kind: str) -> str:
 
 @mcp.tool(name="lint_artifacts")
 def lint_artifacts(feature: str) -> str:
-    """Lint bugs.md, tasks.md and history.md against the spec-kit schema: status vocabulary,
-    Verified-by on verified bugs, Evidence on claimed bugs, ascending ids, summary-table
-    counts, history header present. Returns findings; call before every commit.
+    """Lint bugs.md, tasks.md, spec.md ACs, acceptance.md and review-final.md against the
+    spec-kit schema: status vocabulary, Verified-by on verified bugs, Evidence on claimed bugs,
+    ascending ids, summary-table counts, probes per [SEAM], RED files per [TEST] (M/L only),
+    round headers. Returns findings; call before every commit.
 
     Args:
         feature: Feature ID
@@ -832,8 +835,8 @@ def lint_artifacts(feature: str) -> str:
             tid = m.group("id")
             if "[SEAM]" in line and not any(e.startswith(f"{tid}-probe") for e in evidence):
                 findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [SEAM] marked done without evidence/{tid}-probe-*.txt"})
-            if "[TEST]" in line and not any("-red" in e for e in evidence):
-                findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [TEST] marked done but no *-red* file in evidence/"})
+            if "[TEST]" in line and state["size"] != "S" and not any("-red" in e for e in evidence):
+                findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [TEST] marked done but no *-red* file in evidence/ (required for size {state['size']})"})
         for kind in ("T", "BF"):
             nums = [t["num"] for t in tasks if t["kind"] == kind]
             if nums != sorted(nums):
@@ -854,7 +857,7 @@ def lint_artifacts(feature: str) -> str:
         for i, m in enumerate(rounds):
             body = text[m.start():rounds[i + 1].start() if i + 1 < len(rounds) else len(text)]
             if not _VERDICT_RE.search(body):
-                findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"Round {m.group(1)}: no '**Verdict**: READY | READY-WITH-FOLLOWUPS | NOT READY'"})
+                findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"Round {m.group(1)}: no '**Verdict**: READY | READY-WITH-FOLLOWUPS | AWAITING-OWNER | NOT READY'"})
             if not _REVIEWED_COMMIT_RE.search(body):
                 findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"Round {m.group(1)}: no '**Reviewed-commit**: <sha>'"})
         nums = [int(m.group(1)) for m in rounds]
@@ -906,12 +909,8 @@ def lint_artifacts(feature: str) -> str:
         close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
         if "## Architecture Decisions" not in close_text:
             findings.append({"file": "close.md", "severity": "warning", "msg": "close document has no '## Architecture Decisions' section"})
-
-    if (fd / "history.md").exists():
-        if not (fd / "history.md").read_text(errors="replace").lstrip().startswith("#"):
-            findings.append({"file": "history.md", "severity": "warning", "msg": "missing title header"})
-    elif state["current_phase"] > 1 or state["status"] != "new":
-        findings.append({"file": "history.md", "severity": "error", "msg": "history.md missing — every feature with artifacts must have one"})
+        if not (fd / "change-record.md").exists():
+            findings.append({"file": "change-record.md", "severity": "warning", "msg": "closed feature without change-record.md — write it from change-record-template.md"})
 
     errors = sum(f["severity"] == "error" for f in findings)
     return _json({"success": errors == 0, "errors": errors, "warnings": len(findings) - errors, "findings": findings})
@@ -1127,86 +1126,11 @@ def diff_scan(feature: str, base: str = None) -> str:
 
 @mcp.tool(name="timestamp")
 def timestamp() -> str:
-    """The real current UTC time (ISO 8601, seconds). Use it for every history entry,
-    evidence file header and date field — never type a timestamp from memory.
+    """The real current UTC time (ISO 8601, seconds). Use it for every evidence file header
+    and date field — never type a timestamp from memory.
     """
     return _json({"utc": _now()})
 
-
-@mcp.tool(name="append_history")
-def append_history(feature: str, phase: str, skill: str, agent: str, artifacts: str = "none",
-                   tests: str = "none", evidence: str = "none — unverified", commit: str = "n/a",
-                   note: str = "-") -> str:
-    """Append one fixed-field entry to specs/<feature>/history.md with the REAL UTC time.
-    The entry is the record, not the story: note ≤ 25 words, whole entry ≤ 60 words.
-
-    Args:
-        feature: Feature ID
-        phase: Phase label (e.g. 'Phase 2', 'Phase 4 — Core', 'BF-014', 'Regression', 'Phase 6')
-        skill: The skill that completed (e.g. spec-kit-plan)
-        agent: hermes | claude | <human name> — read later as Implemented-by
-        artifacts: Comma-separated files created or modified
-        tests: '<command> → N passed, M failed' or 'none'
-        evidence: 'output:…; probe:…; ci:…; review:…' or 'none — unverified'
-        commit: The commit message that follows this entry
-        note: ≤ 25 words — the one fact a reader needs
-    """
-    state = _derive(feature)
-    if state is None:
-        return _not_found(feature)
-    if len(note.split()) > 25:
-        return _json({"error": f"note has {len(note.split())} words — max 25; narrative belongs in implementation-summary.md"})
-    body = (f"- Artifacts: {artifacts or 'none'}\n- Tests: {tests or 'none'}\n- Evidence: {evidence or 'none — unverified'}\n"
-            f"- Commit: {commit or 'n/a'}\n- Note: {note or '-'}\n")
-    words = len(body.split())
-    if words > 60:
-        return _json({"error": f"entry body has {words} words — max 60; shorten artifacts/tests/evidence/note"})
-    ts = _now()
-    hist = _feature_dir(feature) / "history.md"
-    if not hist.exists():
-        hist.write_text(f"# Process History: {feature}\n")
-    with hist.open("a", encoding="utf-8") as fh:
-        fh.write(f"\n## {ts} | {phase} | {skill} | {agent}\n{body}")
-    return _json({"success": True, "timestamp": ts, "file": str(hist), "words": words})
-
-
-@mcp.tool(name="history_guard")
-def history_guard(feature: str, phase: str) -> str:
-    """Pre-commit guard: is there a history.md entry mentioning `phase` that is newer than
-    the last commit touching specs/<feature>/? Returns ok=false with the reason otherwise.
-
-    Args:
-        feature: Feature ID
-        phase: Text that must appear in the entry header (e.g. 'Phase 2', 'BF-014', 'Regression')
-    """
-    state = _derive(feature)
-    if state is None:
-        return _not_found(feature)
-    hist = _feature_dir(feature) / "history.md"
-    if not hist.exists():
-        return _json({"ok": False, "reason": "history.md missing"})
-    entries = [(m.group(1), m.group(2)) for m in _HISTORY_ENTRY_RE.finditer(hist.read_text(errors="replace"))]
-    matching = [(ts, hdr) for ts, hdr in entries if phase.lower() in hdr.lower()]
-    if not matching:
-        return _json({"ok": False, "reason": f"no history entry mentions '{phase}'", "entries": len(entries)})
-    try:
-        last_commit = subprocess.run(["git", "log", "-1", "--format=%cI", "--", str(_feature_dir(feature))],
-                                     capture_output=True, text=True, check=False).stdout.strip()
-    except OSError:
-        last_commit = ""
-    newest_ts = max(ts for ts, _ in matching)
-    if last_commit:
-        try:
-            lc = datetime.datetime.fromisoformat(last_commit.replace("Z", "+00:00"))
-            et = datetime.datetime.fromisoformat(newest_ts.replace("Z", "+00:00"))
-            if et.tzinfo is None:
-                et = et.replace(tzinfo=datetime.timezone.utc)
-            if et < lc:
-                return _json({"ok": False, "reason": f"newest '{phase}' entry ({newest_ts}) predates the last commit ({last_commit}) — append a new entry",
-                              "matching_entries": len(matching)})
-        except ValueError:
-            pass
-    return _json({"ok": True, "matching_entries": len(matching), "newest": newest_ts, "last_commit": last_commit or None})
 
 
 # ── Entry point ────────────────────────────────────────────────────────────

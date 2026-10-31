@@ -1,47 +1,50 @@
 # Final Review: [FEATURE NAME]
 
 > Merge-readiness review — phase 5.5, mandatory before close. One `## Round N` per run,
-> appended, never edited. `close_feature` reads the LATEST round's Verdict and
-> Reviewed-commit; any code commit after that sha makes the review stale.
+> appended, never edited. The close reads the LATEST round's Verdict and Reviewed-commit; a
+> code commit after that sha makes the round stale. **Exceptions only**: the full AC → test
+> matrix is in acceptance.md, the FR → task map in tasks.md — do not repeat them here.
 
 ## Round 1 — [YYYY-MM-DD] — [review:<agent> | self-review by <agent> (fresh context: yes/no)]
 
-**Verdict**: READY | READY-WITH-FOLLOWUPS | NOT READY
+**Verdict**: READY | READY-WITH-FOLLOWUPS | AWAITING-OWNER | NOT READY
 **Reviewed-commit**: [short sha of HEAD when the review ran]
-**Base**: [base branch] @ [merge-base sha] · **Size**: S | M | L · **Implemented-by**: [agent]
-**Counts**: CRITICAL N · HIGH N · MEDIUM N · checklist failures N
+**Base**: [branch] @ [merge-base sha] · **Size**: S | M | L · **Implemented-by**: [agent, from the commit trailers]
+**Counts**: CRITICAL N · HIGH N · MEDIUM N · checklist failures N · awaiting owner N
 
-### 1. Spec conformance — does the code do what the spec says?
+### 1. Spec conformance
 
-| ID | Requirement (short) | Implemented in (`path:line`) | Proven by (test / evidence) | Verdict |
-|----|---------------------|------------------------------|-----------------------------|---------|
-| FR-001 | … | … | … | ✅ / ⚠️ partial / ❌ missing / ↔ deviates |
-| SC-001 | … | … | … | |
-| Edge: … | … | … | … | |
+Coverage: FR [n/N] ✅ · SC [n/N] ✅ · edge cases [n/N] ✅ · acceptance round [N] PASS @ [sha] (frozen tests unchanged).
+Rows for everything NOT ✅:
 
-Contracts / data model vs code: [each contract and entity — matches / differs (how)].
-Unplanned behaviour (code that no requirement asks for): [list or "none"].
+| ID | Requirement (short) | Verdict | Code / evidence | Why |
+|----|---------------------|---------|-----------------|-----|
+| [FR-00N] | … | ⚠️ partial / ❌ missing / ↔ deviates / 👤 awaiting owner | `path:line` · test | |
 
-### 2. Constitution & project rules
+Contracts / data model vs code: [matches / differs — how]. Unplanned behaviour: [list / none].
 
-| Rule (source §) | Applies to this diff? | Verdict | Evidence (`path:line`) |
-|-----------------|-----------------------|---------|------------------------|
-| [constitution.md § / MUST statement] | yes / no — [why] | ✅ / ❌ | |
-| [merge-checklist.md P1 / AGENTS.md rule] | | | |
+### 2. Constitution, project rules, Security & Privacy
 
-### 3. Code quality & best practice
+| Rule (source §) | Verdict | Evidence (`path:line`) |
+|-----------------|---------|------------------------|
+| [constitution MUST / merge-checklist P-item / AGENTS.md rule / spec Security & Privacy row] | ✅ / ❌ / n/a — why | |
+
+### 3. Findings (code quality, best practice, tests)
 
 | ID | Severity | Category | `path:line` | Finding | Fix |
 |----|----------|----------|-------------|---------|-----|
-| Q1 | CRITICAL / HIGH / MEDIUM | architecture / error handling / security / data integrity / concurrency / duplication / complexity / API / tests | | | |
+| Q1 | CRITICAL / HIGH / MEDIUM | architecture / errors / security / data / concurrency / duplication / complexity / API / tests | | | |
 
-Best-practice check (stack research): [per technology the diff leans on — follows current guidance / deviates (source)].
-Nitpicks omitted.
+Stack practice checked: [per framework the diff leans on — follows / deviates (source)] *(skip for S)*.
+Tests: [prove §1 behaviour, not implementation; fixtures match `probe:` files; RED evidence per tier].
 
-### 4. Tests
+### 4. Devil's advocate *(M: same reviewer, separate pass · L: separate sub-agent, code before decisions.md)*
 
-[Do the tests prove the requirements in §1? Edge cases? Fixtures match their `probe:` files?
-RED/GREEN evidence present?]
+| # | Objection (concrete input / scenario that breaks it) | Author's answer | Outcome |
+|---|------------------------------------------------------|-----------------|---------|
+| O1 | | | accepted → BUG-NNN / rebutted (evidence) / deferred (follow-up) |
+
+≤ 5 objections. An unanswered objection blocks READY for size L.
 
 ### 5. Merge checklist
 
@@ -49,12 +52,11 @@ RED/GREEN evidence present?]
 |---|------|--------|----------|
 | G1 | Merges cleanly | ✅ / ❌ | output:evidence/final-diff-scan.txt |
 | G2 | Build | | output:evidence/final-build.txt |
-| G3 | Full tests | | output:evidence/final-test.txt · ci:<id> |
+| G3 | Full tests · `ci:<id>` | | output:evidence/final-test.txt |
 | … | | | |
 
 ### 6. Outcome
 
-- Bugs logged for CRITICAL/HIGH and blocking checklist failures: [BUG-NNN, … / none]
-- Follow-ups (MEDIUM, non-blocking): [list / none]
-- Deviations put to the user (spec ↔ code): [FR-NNN → decision / none]
-- PR description draft: [below, or "see PR"]
+- Bugs logged (CRITICAL / HIGH / blocking): [BUG-NNN, … / none] · Follow-ups (MEDIUM): [list / none]
+- Awaiting the owner: [SC-00N manual check … / deviation FR-00N ruling … / none] → a specs-only Round N+1 turns AWAITING-OWNER into READY
+- PR description: what / why / how verified (evidence + ci) / risks / rollback / strongest objections and how they were answered

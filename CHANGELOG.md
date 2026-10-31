@@ -8,6 +8,53 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed — leaner tiers, the change record, devil's advocate
+
+- **Size tiers are now progressively leaner** (`references/sizing.md`, `references/evidence.md`):
+  S saves no RED/GREEN files (the commit's `Evidence:` trailer names the test run), M saves RED
+  per phase only, L saves RED and GREEN. Probes per `[SEAM]`, the acceptance round, the oracle
+  rule and the final review never shrink. `lint_artifacts` warns about a missing RED file only
+  for M/L. The pre-implement review is skipped for S, **lite** for M (coverage,
+  underspecification, codebase fit, design soundness + devil's advocate), full for L.
+- **`change-record.md` at close** (`change-record-template.md`) — the one page an auditor
+  reads: ticket, branch/PR, size, what/why, Security & Privacy impact, data/config changes,
+  implemented-by, reviewed-by (agent + human PR reviewer), verification, decisions, deployment
+  approval, rollback, follow-ups, and the timeline from git. `close_feature` requires it.
+- **Security & Privacy section in spec.md** (authorization / tenant boundary, personal data,
+  new surface, input validation, logging) — "None — because …" is a valid answer; the plan
+  answers each non-empty row, the pre-implement review checks it, the final review §2 verdicts it.
+- **No more `history.md`.** The record is the commit: every spec-kit commit carries
+  `Phase:` / `Implemented-by:` / `Evidence:` trailers (`references/commits.md`, which replaces
+  `auto-commit.md` + `history-tracking.md`); `scripts/spec-kit-history.sh` prints the timeline
+  from git and the close pastes it into the change record (it survives the squash-merge).
+  Removed: `append_history`, `history_guard`, `spec-kit-log.sh`, `history-template.md`;
+  `init_feature` creates only the directory; `lint_artifacts` no longer requires history.md.
+- **Final review is exceptions-only** (`review-final-template.md`): §1 is one coverage line +
+  rows for ⚠️ / ❌ / ↔ / 👤 (the AC matrix lives in acceptance.md, the FR map in tasks.md). New
+  verdict **`AWAITING-OWNER`** — no defect, owner confirmations pending; a specs-only Round
+  N+1 with the owner's quoted answers turns it READY without a bugfix cycle. `close_feature`
+  names the owner instead of sending the feature to bugfix.
+- **Devil's advocate pass in both reviews** (§4 of the final round; a section of the
+  pre-implement report): strongest case against + simpler alternative, pre-mortem, abuse cases
+  per seam, riskiest assumptions; concrete break attempts and "would this test still pass if
+  the code were wrong?" after implementation. ≤ 5 objections, each answered (accepted /
+  rebutted with evidence / deferred); unanswered blocks READY for L, where it runs as a separate
+  sub-agent. The final review reads code and spec **before** decisions.md.
+- **One close template.** `implementation-summary-template.md` is gone; `close-template.md`
+  carries the gap table at the depth the tier needs (M exceptions, L "summarize" full).
+  `implementation-summary.md` is still recognised as a legacy close document.
+- **Deduplicated skills.** One-screen SKILL.md files are ≤ 60 lines; `references/skills/*.md`
+  hold only the delta (clarify and refresh need none). `preflight.md` 173 → 40 lines; the
+  workflow procedure 331 → 70; the tasks template is a legend plus one example, not a
+  greenfield scaffold; the umbrella and workflow skills no longer trigger on phase commands.
+  Whole skill set: ~85k → ~45k tokens; `test_skills.py` enforces the budget.
+- `decisions.md` records only questions the **user** would want to decide; design choices
+  within the plan's remit stay in plan.md (preflight check 6).
+- Installers: `install.sh` moves unshipped top-level references aside (`references/local/`)
+  and removes superseded full procedures; the Claude edition note block is four lines.
+
+## [Previous unreleased]
+
 ### Added
 
 - **Acceptance criteria and the automatic acceptance loop** (`references/acceptance.md`).

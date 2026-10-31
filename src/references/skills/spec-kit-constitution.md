@@ -1,10 +1,5 @@
 # spec-kit-constitution — full procedure
 
-> **Loaded on demand.** The one-screen `spec-kit-constitution` SKILL.md is the entry point; this file holds the complete
-> procedure (every branch, template field and pitfall). Read the section you need, not the whole file.
-> Tool names: Hermes (`terminal`, `write_file`, `patch`, `read_file`, `skill_view`) — Claude Code maps them to
-> `Bash`, `Write`/`Edit`, `Read`, `Skill`; MCP tools are `mcp_spec_kit_*` / `mcp__spec-kit__*`.
-
 **Task Persona**: Adopt the mindset of a project founder setting ground rules.
 Constitutions should be principled but practical — they guide decisions without
 being bureaucratic. Every rule must have a clear purpose. Always offer choice
@@ -562,13 +557,9 @@ CALL mcp_spec_kit_project_set_constitution(status="present", principles='{"key":
 # principles is optional — echoed back after JSON validation
 ```
 
-### Append to history.md and Commit
+### Commit
 
-Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
-- Phase: Phase 0 — Constitution
-- Artifact: `specs/constitution.md`
-- Scope: `specs/constitution.md`
-- Message: `"spec(phase-0): constitution for [PROJECT]"`
+The constitution is project-level: commit directly per `spec-kit/references/commits.md` — `spec(phase-0): constitution for [PROJECT]`.
 
 ## Completion
 - Report: "Constitution ratified with [N] principles."

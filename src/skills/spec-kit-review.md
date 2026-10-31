@@ -14,35 +14,37 @@ metadata:
 
 # spec-kit-review
 
-**Phase**: 3.5 (pre-implement) / 5.5 (final — **mandatory before close**) / closed-review · **Persona**: senior architect and the last reviewer before merge — structural problems, spec drift, broken project rules, security; not a style checker.
-**Purpose**: pre-implement = spec/plan/tasks coherence + codebase fit + best practice (report). **Final** = does the code do what the spec says, does it obey the constitution and project rules, is it good code, is the branch mergeable → `review-final.md` with a verdict that gates close. Closed-review = final checks on a closed feature, history untouched.
-**Full procedure**: `spec-kit/references/skills/spec-kit-review.md` (passes A–M, final-review steps, report formats, severity rules). Template: `spec-kit/templates/review-final-template.md`.
+**Phase**: 3.5 (pre-implement) / 5.5 (final — **mandatory before close**) / closed-review · **Persona**: senior architect and last reviewer before merge — structural problems, spec drift, broken rules, security; not a style checker.
+**Purpose**: pre-implement = does spec/plan/tasks hold together and fit the codebase (report). **Final** = does the code do what the spec says, obey the rules, is it good, is it mergeable → `review-final.md` round whose verdict gates the close. Both include a **devil's advocate** pass.
+**Full procedure**: `spec-kit/references/skills/spec-kit-review.md` · template `spec-kit/templates/review-final-template.md`.
 
 ## Before reviewing
-- Preflight checks 1 and 4 (`spec-kit/references/preflight.md`). Mode: close doc exists → closed-review; tasks.md and no code → pre-implement; all tasks `[X]` and no open/in-progress bug → **final**; open bugs → refuse ("run bugfix first"); unclear → **ASK**.
-- **Author check** (`spec-kit/references/evidence.md`): `Implemented-by` in history.md = you → *self-review*. For the final review prefer the other agent; otherwise run it in a **fresh-context sub-agent** (no implementation transcript) and label `self-review by <agent> (fresh context)`.
-- Read `decisions.md` first: every assumption is a review item. Size from spec.md (`spec-kit/references/sizing.md`): L requires a pre-implement review before implement.
+- Preflight checks 1 and 4 (`spec-kit/references/preflight.md`). Mode: close doc → closed-review; tasks.md and no code → pre-implement; all tasks `[X]`, no open bug → **final**; open bugs → refuse ("bugfix first"); unclear → **ASK**.
+- SIZE from spec.md (`spec-kit/references/sizing.md`): S skips the pre-implement review and the stack research; M runs the lite pre-implement; L requires it in full.
+- **Author check** (`spec-kit/references/evidence.md`): `Implemented-by` trailers = you → *self-review*; for the final review prefer the other agent, else a **fresh-context sub-agent** (procedure + feature path + base only; no transcript).
+- Final review: read the code and the spec **before** `decisions.md` so the author's reasoning does not anchor you; then every assumption is a review item.
 
-## Pre-implement
-1. Load spec, plan, tasks, constitution; build requirement↔task coverage.
-2. Passes: duplication, ambiguity, underspecification, constitution alignment, naming, completeness, coverage gaps, inconsistency, bugfix coverage, **codebase fit**, **best practice** (research the stack), design soundness.
-3. Report + history + commit `spec(review): [feature] review findings`. CRITICAL → resolve before implement.
+## Pre-implement (3.5)
+1. Load spec, plan, tasks, constitution; requirement ↔ task coverage; the Security & Privacy table answered in the plan.
+2. M (lite): underspecification, coverage gaps, codebase fit, design soundness. L: + duplication, ambiguity, naming, completeness, inconsistency, best practice (research the stack).
+3. **Devil's advocate**: the strongest case against the plan + a simpler alternative; a pre-mortem ("three months later it failed — why?"); abuse cases per new seam (authz, tenant crossover, input, data exposure, logging); the riskiest assumptions in decisions.md. ≤ 5 objections, each answered: accepted / rebutted with evidence / deferred. L: run it as a separate sub-agent (different model when available).
+4. Report + commit `spec(review): [feature] review findings`. CRITICAL → resolve before implement.
 
-## Final (5.5) — one `## Round N` appended to `specs/[feature]/review-final.md`
-1. **Inputs**: spec, plan, tasks, data-model, contracts, constitution, `specs/merge-checklist.md` (missing → create from `spec-kit/templates/merge-checklist-template.md`, pre-fill commands from AGENTS.md / README, **ASK** the user to confirm), AGENTS.md / project rule files, `git diff <base>...HEAD`, `evidence/`, bugs.md.
-2. **Mechanical**: MCP `mcp_spec_kit_diff_scan(feature)` → save `evidence/final-diff-scan.txt`. Run every checklist command (build, full test, lint, format, extra) → `evidence/final-<check>.txt`. Record `ci:<id>` for the reviewed commit when a pipeline exists.
-3. **§1 Spec conformance**: spec has ACs → the latest `acceptance.md` round must be PASS on the reviewed code (else NOT READY: "run `accept`"); `deferred` e2e and `manual` ACs are verified here (targeted run or the user's quoted words) or block READY. Every FR, SC and edge case → the code (`path:line`) + the AC/test that proves it. Contracts and data model vs code. Code no requirement asks for → unplanned. ❌ missing = CRITICAL; ↔ deviation → **WAIT**: patch spec/plan (intentional), log a bug, or defer to close.
-4. **§2 Constitution & project rules**: list every constitution MUST/principle and checklist P-item that applies to the touched layers; verdict each with `path:line`. A violated MUST = HIGH (CRITICAL if security/data).
-5. **§3 Code quality & best practice**: architecture conformance, layers/dependency direction, error chains, security, data integrity, concurrency, duplication, complexity, API surface; research current practice for the stack (skip research for size S). **§4 Tests**: behaviour not implementation, edge cases, fixtures match `probe:` files.
-6. **§5 Checklist** table, every item with its evidence file. **Verdict**: any CRITICAL/HIGH or failing blocking item → `NOT READY`; only MEDIUM / non-blocking → `READY-WITH-FOLLOWUPS`; else `READY`. Write `**Verdict**:` and `**Reviewed-commit**: <git rev-parse --short HEAD>`.
-7. NOT READY → log each CRITICAL/HIGH/blocking failure in bugs.md (bug format of `spec-kit-test`, ids via `mcp_spec_kit_next_id`), confirm with the user → `bugfix [feature]`, then a new round. Draft the PR description in §6.
+## Final (5.5) — one `## Round N` appended, **exceptions only**
+1. Inputs: spec, plan, tasks, data-model, contracts, constitution, `specs/merge-checklist.md` (missing → from `spec-kit/templates/merge-checklist-template.md`, **ASK** to confirm), AGENTS.md / rule files, `git diff <base>...HEAD`, `evidence/`, bugs.md, acceptance.md.
+2. Mechanical: `mcp_spec_kit_diff_scan(feature)` → `evidence/final-diff-scan.txt`; every checklist command → `evidence/final-<check>.txt`; `ci:<id>` for the reviewed commit.
+3. **§1** — one coverage line (FR n/N, SC, edge cases, acceptance round PASS @ sha, frozen unchanged) + rows ONLY for ⚠️ / ❌ / ↔ / 👤. Missing = CRITICAL; ↔ → **WAIT** (patch spec, log a bug, or defer). Manual / deferred ACs unconfirmed → 👤.
+4. **§2** — every applicable constitution MUST, checklist P-item, AGENTS.md rule and **spec Security & Privacy row** verdicted with `path:line`; violated MUST = HIGH (CRITICAL if security / data / non-negotiable).
+5. **§3** — findings on the changed code: architecture, error chains, security, data integrity, concurrency, duplication, complexity, API surface, tests (behaviour not implementation; fixtures match `probe:` files; RED evidence per tier). Stack research: M/L.
+6. **§4 Devil's advocate** — try to break it with concrete inputs (another tenant's id, empty/stale period, concurrent edit, failing dependency, unauthorized role); "would this test still pass if the code were wrong?"; argue the opposite of the verdict. L: separate sub-agent. ≤ 5 objections, each answered; unanswered blocks READY for L.
+7. **§5** checklist table with evidence files. **Verdict**: CRITICAL/HIGH or blocking ❌ → `NOT READY`; no defect but owner confirmations pending → `AWAITING-OWNER`; MEDIUM / non-blocking only → `READY-WITH-FOLLOWUPS`; else `READY`. Write `**Verdict**:` and `**Reviewed-commit**:`.
+8. NOT READY → bugs for each CRITICAL/HIGH (`mcp_spec_kit_next_id`), confirm with the user → `bugfix [feature]`, new round. AWAITING-OWNER → ask the owner; their quoted answer → specs-only Round N+1 (no code change ⇒ not stale). §6: PR description incl. "strongest objections and how they were answered".
 
-## Severity and nitpick filter
-CRITICAL / HIGH / MEDIUM only. A finding must harm correctness, security, performance, maintainability or testability; style, formatting, naming taste → delete. A broken explicit project rule is never a nitpick.
+## Severity
+CRITICAL / HIGH / MEDIUM only; a finding must harm correctness, security, performance, maintainability or testability — style and taste → delete. A broken explicit project rule is never a nitpick.
 
 ## Done when
-- [ ] Pre: report + commit. Final: round appended with Verdict + Reviewed-commit, every FR/SC row filled, every applicable rule verdicted, every checklist item has evidence; `mcp_spec_kit_lint_artifacts` → 0 errors.
-- [ ] Final: history.md entry (phase `Phase 5.5 — Final review`) + ONE commit `spec(review): [feature] final review (verdict: X)` — review-final.md, evidence, bugs.md. Closed-review: no history entry.
+- [ ] Pre: report + commit. Final: round with Verdict + Reviewed-commit, §2 rules verdicted, §4 objections answered, §5 evidence; `mcp_spec_kit_lint_artifacts` → 0 errors; commit `spec(review): [feature] final review (verdict: X)`. Closed-review: report only.
 
 ## Next
-Pre: `spec-kit-implement`. Final READY / READY-WITH-FOLLOWUPS → `spec-kit-summarize` (close). NOT READY → `bugfix [feature]`, then final review again. Closed: `reopen [feature]` if needed.
+Pre → `spec-kit-implement`. Final READY / READY-WITH-FOLLOWUPS → `spec-kit-summarize`. AWAITING-OWNER → the owner, then Round N+1. NOT READY → `bugfix [feature]`.

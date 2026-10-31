@@ -24,10 +24,8 @@ The things an LLM agent does badly and a script does perfectly:
 | Has the final review said READY on the current code | `get_feature_state.final_review`, `close_feature` |
 | Which acceptance criteria pass, fail, are missing or deferred — from JUnit/TRX results | `acceptance_status` |
 | Have the acceptance tests been weakened since their RED run | `acceptance_freeze`, `acceptance_status.frozen_changed`, `lint_artifacts` |
-| Are bugs.md / tasks.md / history.md well-formed (statuses, Verified-by, ids, summary counts) | `lint_artifacts` |
+| Are bugs.md / tasks.md / ACs / rounds well-formed (statuses, Verified-by, ids, probes, RED files by size) | `lint_artifacts` |
 | What time is it (never type a timestamp from memory) | `timestamp` |
-| Is there a fresh history entry for this phase since the last commit | `history_guard` |
-| Append the history record with the real time and a word cap | `append_history` |
 
 ## Quick Start
 
@@ -43,7 +41,7 @@ Claude Code: restart; tools appear as `mcp__spec-kit__*`.
 
 | Tool | Purpose | Writes |
 |------|---------|--------|
-| `init_feature` | Create `specs/<feature>/` with a history.md header; error if it exists | dir + history.md header |
+| `init_feature` | Create `specs/<feature>/`; error if it exists | the directory |
 | `get_feature_state` | Derived phase, status, size tier (S/M/L from spec.md), artifacts, task/bug counts, final review (verdict, reviewed commit, stale), phase card | — |
 | `get_next_actions` | Available actions + phase card | — |
 | `advance_phase` | Validate leaving `from_phase`: derived phase is `from_phase` or already `from_phase+1`, named artifacts and next prerequisites exist; 5→6 also needs a fresh READY final review | — |
@@ -60,8 +58,6 @@ Claude Code: restart; tools appear as `mcp__spec-kit__*`.
 | `diff_scan` | Branch diff vs base (`branch_source`): merge conflicts (`git merge-tree`), conflict markers, private keys, secret assignments, AWS keys, focused tests, debugger, TODO/FIXME, forbidden files (.pfx/.pem/.key/.bacpac/.env), files > 1 MB, changed files not named in spec/plan/tasks; specs/ excluded | — |
 | `lint_artifacts` | Schema lint: status vocabulary (open/in-progress/claimed/verified/superseded; legacy resolved/fixed = warning), Verified-by on verified, Evidence on claimed, ascending ids, summary rows and totals, history header, review-final.md rounds (Verdict + Reviewed-commit, numbering), spec.md Size line, close doc Architecture Decisions section | — |
 | `timestamp` | UTC now, ISO 8601 | — |
-| `history_guard` | A history.md entry mentioning `phase` exists and is newer than the last commit touching the feature | — |
-| `append_history` | Append one fixed-field entry (timestamp \| phase \| skill \| agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words; ≤ 60 words total) with the real UTC time | history.md |
 
 > Hermes prefixes tools with `mcp_spec_kit_`; Claude Code with `mcp__spec-kit__`.
 
@@ -74,7 +70,7 @@ Claude Code: restart; tools appear as `mcp__spec-kit__*`.
 | `plan.md`, no `tasks.md` | 3 tasks |
 | `tasks.md` with pending tasks, no `bugs.md`, no close doc | 4 implement |
 | all tasks `[X]` or `bugs.md` present, no close doc | 5 test |
-| `close.md` / `implementation-summary.md`, no open bug | 6 / `closed` |
+| `close.md` (+ `change-record.md`), no open bug | 6 / `closed` |
 | close doc + `bugs.md` with open or in-progress bug | 5 / `reopened` |
 
 ## Bug tracking
@@ -92,7 +88,7 @@ exists — delete it and add `specs/.spec-kit/` to `.gitignore` (the gitignore t
 
 ```bash
 cd spec-kit-mcp-server
-python3 test_workflow.py   # derivation, validation, close/reopen, next_id, lint, timestamp, history_guard — in temp projects with real files
+python3 test_workflow.py   # derivation, validation, close/reopen, next_id, lint, timestamp, acceptance — in temp projects with real files
 python3 test_skills.py     # skill/template/reference consistency, tool-name drift
 ```
 

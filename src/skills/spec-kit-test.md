@@ -13,34 +13,28 @@ metadata:
 
 # spec-kit-test
 
-**Phase**: 5 · **Persona**: QA engineer — a vague bug report is worse than none: steps, observed vs expected, severity.
-**Purpose**: log user-reported bugs in `specs/[feature]/bugs.md` and mark bugs verified **only with an oracle**. Log, then STOP — never fix here. **Accept mode** runs the feature's acceptance criteria automatically and logs every failure as a bug for the loop.
-**Full procedure**: `spec-kit/references/skills/spec-kit-test.md`. Status rules: `spec-kit/references/evidence.md`.
-**Not for**: logging bugs during implementation (accept mode is the exception: it runs after the last implement phase).
+**Phase**: 5 · **Persona**: QA engineer — steps, observed vs expected, severity; a vague bug report is worse than none.
+**Purpose**: log user-reported bugs in `bugs.md`; mark bugs verified **only with an oracle**; **accept mode** runs the acceptance criteria and logs every failure for the loop. Log, then STOP — never fix here.
+**Full procedure**: `spec-kit/references/skills/spec-kit-test.md` · status rules `spec-kit/references/evidence.md`.
 
 ## Before writing
-- Run `spec-kit/references/preflight.md`. **ERROR** if `spec.md` is missing.
-- `bugs.md` missing → copy `spec-kit/templates/bugs-template.md`. Exists → report the summary; **ASK**: add bugs, continue bugfixing, or verify?
+- `spec-kit/references/preflight.md`. **ERROR** if `spec.md` is missing. `bugs.md` missing → `spec-kit/templates/bugs-template.md`; exists → summary, **ASK**: add, bugfix, or verify?
 
 ## Log a bug
-1. Id: MCP `mcp_spec_kit_next_id(kind="BUG")` or highest existing + 1.
-2. Entry: `### BUG-NNN: summary` with Severity (critical/major/minor/trivial), Area, Description (observed vs expected), Steps, Actual, Expected, Requires Clarification, Plan Ref (empty), **Status: open**.
-3. Insert BEFORE the `---` that precedes `## Summary`; add the Summary row; fix the counts.
-4. Confirm each entry with the user: "Logged BUG-NNN: … — correct?"
-5. When done: 0 open bugs → suggest the final review (`final review [feature]`, mandatory before close); >0 → say `bugfix [feature]`. **Never fix directly.**
+1. Id `mcp_spec_kit_next_id(kind="BUG")`. Entry `### BUG-NNN: summary` — Severity, Area, Description (observed vs expected), Steps, Actual, Expected, Requires Clarification, Plan Ref (empty), **Status: open**.
+2. Insert before the `---` preceding `## Summary`; add the Summary row; fix counts. Confirm each: "Logged BUG-NNN — correct?"
+3. 0 open → suggest `final review [feature]`; > 0 → `bugfix [feature]`. **Never fix directly.**
 
-## Accept mode — one acceptance round (`spec-kit/references/acceptance.md` §5–6)
-1. Commands from `specs/merge-checklist.md` (`acceptance_*`; missing → add them from `spec-kit/templates/merge-checklist-template.md`, **ASK** to confirm once). Note HEAD = the round's commit.
-2. Run `acceptance_fast` (full unit + integration + component — also the regression); `acceptance_e2e` with only this feature's e2e spec files, only if `acceptance_e2e_ready` exits 0 (else those ACs are deferred); each command/probe AC → `evidence/acceptance-r<N>-AC-###.txt` (`RESULT: PASS|FAIL` first line). Console → `evidence/acceptance-r<N>.txt`.
-3. `mcp_spec_kit_acceptance_status(feature, results=<the *_results globs>, round=N)` → append `## Round N` to `acceptance.md` (`spec-kit/templates/acceptance-template.md`): **Result**, **Commit**, counts, matrix.
-4. FAIL → per failing/missing AC and regression: an open/claimed bug already names it → back to `open` ("failed again in round N"); else a new bug (Area `AC-###`, Steps = its Given/When/Then, Actual = the failing assertion, Source: acceptance round N) — **no per-bug confirmation in the loop**; the failing test is the evidence.
-5. **Stop and ASK** (no fix) when: round = `acceptance_max_rounds` (5); same ACs failing with the same first assertion two rounds running; the fix needs a spec or frozen-test change; STOPPED (frozen test changed); the run cannot execute twice. Else hand to the bugfix chain (`spec-kit-workflow` routes `bugfix [feature]`, then `accept` again). PASS → route the final review.
-6. History (phase `Acceptance R<N>`) + commit `spec(phase-5): [feature] acceptance round N (RESULT a/b)` — acceptance.md, evidence, bugs.md.
+## Accept mode — one round (`spec-kit/references/acceptance.md` §5–6)
+1. Commands = `specs/merge-checklist.md` `acceptance_*` (missing → add from `spec-kit/templates/merge-checklist-template.md`, **ASK** once). COMMIT = HEAD.
+2. Run `acceptance_fast` (full unit + integration + component = the regression); `acceptance_e2e` with this feature's e2e specs only if `acceptance_e2e_ready` exits 0 (else deferred); command/probe ACs → `evidence/acceptance-r<N>-AC-###.txt` (`RESULT: PASS|FAIL`). Console → `evidence/acceptance-r<N>.txt`.
+3. `mcp_spec_kit_acceptance_status(feature, results, round=N)` → append `## Round N` to `acceptance.md` (`spec-kit/templates/acceptance-template.md`): Result, Commit, counts, matrix.
+4. FAIL → per failing/missing AC and regression: existing bug → back to `open` ("failed again in round N"); else new bug (Area `AC-###`, Steps = Given/When, Actual = first failing assertion, Source: round N) — no per-bug confirmation in the loop.
+5. **Stop and ASK** when: round = `acceptance_max_rounds` (5); same ACs + same assertion two rounds running; the fix needs a spec or frozen-test change; STOPPED; the run cannot execute twice. Else hand to `bugfix [feature]` (then `accept` again). PASS → final review.
+6. Commit `spec(phase-5): [feature] acceptance round N (RESULT a/b)` — acceptance.md, evidence, bugs.md.
 
 ## Verify a bug
-- Allowed only with an oracle: the user said so (quote), a green `ci:<run-id>` on that commit, or `review:<other-agent>`. The implementing agent's claim is not enough → refuse: "BUG-NNN is claimed, not verified."
-- Set `Status: verified` + `Verified-by: user | ci:<id> | review:<agent>`. All verified → "run `final review [feature]`, then `close [feature]`".
+Only with an oracle: the user's quoted words, a green `ci:<id>` on that commit, or `review:<other-agent>`. Else refuse: "claimed, not verified." Set `Status: verified` + `Verified-by:`.
 
 ## Done when
-- [ ] Every user-reported bug confirmed with the user (acceptance-logged bugs carry their round instead); ids ascending; Summary table and counts match (MCP `mcp_spec_kit_lint_artifacts` → 0 errors).
-- [ ] history.md entry, then commit — Shared Commit Procedure in `spec-kit/references/preflight.md`: scope `specs/[feature]/bugs.md`; message `spec(phase-5): [feature] bug log`.
+- [ ] Bugs confirmed with the user (loop-logged bugs carry their round); ids ascending; Summary counts match (`mcp_spec_kit_lint_artifacts` → 0 errors). Commit (`spec-kit/references/commits.md`): `spec(phase-5): [feature] bug log`.

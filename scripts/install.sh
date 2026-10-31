@@ -75,9 +75,8 @@ TEMPLATES_DIR="$SKILLS_DIR/spec-kit/templates"
 mkdir -p "$TEMPLATES_DIR"
 
 # Remove obsolete template files
-rm -f "$TEMPLATES_DIR/checklist-template.md"
-rm -f "$TEMPLATES_DIR/comparison-template.md"
-rm -f "$TEMPLATES_DIR/soul-template.md"
+rm -f "$TEMPLATES_DIR/checklist-template.md" "$TEMPLATES_DIR/comparison-template.md" "$TEMPLATES_DIR/soul-template.md"
+rm -f "$TEMPLATES_DIR/history-template.md" "$TEMPLATES_DIR/implementation-summary-template.md"
 
 for tmpl in "$PROJECT_DIR"/src/templates/*-template.md; do
   if [ -f "$tmpl" ]; then
@@ -98,9 +97,22 @@ for ref in "$PROJECT_DIR"/src/references/*.md; do
     cp "$ref" "$REFERENCES_DIR/$ref_name"
   fi
 done
-# Shell helpers (no-MCP fallbacks, e.g. spec-kit-log.sh)
+# Top-level references that spec-kit no longer ships (superseded, or notes an agent added by
+# hand) are moved aside, not deleted: nothing in the skills loads them, so they only cost
+# attention. They stay readable under references/local/.
+mkdir -p "$REFERENCES_DIR/local"
+for installed in "$REFERENCES_DIR"/*.md; do
+  [ -f "$installed" ] || continue
+  if [ ! -f "$PROJECT_DIR/src/references/$(basename "$installed")" ]; then
+    echo "  Moving unshipped reference aside: $(basename "$installed") -> references/local/"
+    mv -f "$installed" "$REFERENCES_DIR/local/"
+  fi
+done
+rmdir "$REFERENCES_DIR/local" 2>/dev/null || true
+# Shell helpers (spec-kit-history.sh — the feature timeline from git)
 if [ -d "$PROJECT_DIR/src/scripts" ]; then
   mkdir -p "$SKILLS_DIR/spec-kit/scripts"
+  rm -f "$SKILLS_DIR/spec-kit/scripts/spec-kit-log.sh"
   for sh in "$PROJECT_DIR"/src/scripts/*.sh; do
     [ -f "$sh" ] || continue
     echo "  Installing script: $(basename "$sh")"
@@ -115,6 +127,10 @@ if [ -d "$PROJECT_DIR/src/references/skills" ]; then
     [ -f "$ref" ] || continue
     echo "  Installing full procedure: skills/$(basename "$ref")"
     cp "$ref" "$REFERENCES_DIR/skills/$(basename "$ref")"
+  done
+  for installed in "$REFERENCES_DIR"/skills/*.md; do
+    [ -f "$installed" ] || continue
+    [ -f "$PROJECT_DIR/src/references/skills/$(basename "$installed")" ] || { echo "  Removing superseded full procedure: skills/$(basename "$installed")"; rm -f "$installed"; }
   done
 fi
 

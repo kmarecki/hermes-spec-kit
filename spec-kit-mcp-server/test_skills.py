@@ -64,8 +64,7 @@ EXPECTED_TEMPLATES = {
     "decisions-template.md",
     "git-conventions-template.md",
     "gitignore-template.md",
-    "history-template.md",
-    "implementation-summary-template.md",
+    "change-record-template.md",
     "plan-template.md",
     "research-template.md",
     "spec-template.md",
@@ -74,14 +73,16 @@ EXPECTED_TEMPLATES = {
 
 EXPECTED_REFERENCES = {
     "acceptance.md",
-    "auto-commit.md",
+    "commits.md",
     "constitution-principles.md",
     "constitution-tables.md",
     "evidence.md",
-    "history-tracking.md",
     "preflight.md",
     "sizing.md",
 }
+
+# Skills whose one-screen SKILL.md is the whole procedure (no references/skills/ file).
+SELF_CONTAINED_SKILLS = {"spec-kit-clarify", "spec-kit-refresh"}
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -344,14 +345,17 @@ def test_no_loose_reference_files():
           f"extra: {existing - EXPECTED_REFERENCES}, "
           f"missing: {EXPECTED_REFERENCES - existing}")
     full = {p.stem for p in (REFERENCES_DIR / "skills").glob("spec-kit-*.md")}
-    expected_full = ALL_SKILLS - {UMBRELLA_DIR}
-    check("references/skills/ has one full procedure per skill", full == expected_full,
+    expected_full = ALL_SKILLS - {UMBRELLA_DIR} - SELF_CONTAINED_SKILLS
+    check("references/skills/ has one full procedure per non-self-contained skill", full == expected_full,
           f"extra: {full - expected_full}, missing: {expected_full - full}")
-    for name in sorted(expected_full):
+    for name in sorted(ALL_SKILLS - {UMBRELLA_DIR}):
         skill_text = (SKILLS_DIR / f"{name}.md").read_text()
-        check(f"{name}: SKILL.md points at its full procedure", f"spec-kit/references/skills/{name}.md" in skill_text)
+        if name in expected_full:
+            check(f"{name}: SKILL.md points at its full procedure", f"spec-kit/references/skills/{name}.md" in skill_text)
         lines = skill_text.count("\n")
-        check(f"{name}: SKILL.md is one screen (<= 110 lines)", lines <= 110, f"{lines} lines")
+        check(f"{name}: SKILL.md is one screen (<= 60 lines)", lines <= 60, f"{lines} lines")
+    budget = sum(p.stat().st_size for p in SKILLS_DIR.rglob("*.md")) + sum(p.stat().st_size for p in REFERENCES_DIR.rglob("*.md")) + sum(p.stat().st_size for p in TEMPLATES_DIR.glob("*.md"))
+    check("skills + references + templates stay under ~55k tokens (220 KB)", budget <= 220_000, f"{budget // 1024} KB")
 
 
 def test_workflow_diagram_phases():
@@ -387,7 +391,7 @@ def test_mcp_tool_names_match_server():
         check("server.py found", False, "spec-kit-mcp-server/server.py missing")
         return
 
-    REMOVED_TOOLS = {"log_bug", "set_bug_status", "set_bug_plan_ref"}
+    REMOVED_TOOLS = {"log_bug", "set_bug_status", "set_bug_plan_ref", "append_history", "history_guard"}
 
     # 1. Removed tools must not exist in the server
     for t in sorted(REMOVED_TOOLS):

@@ -1,173 +1,40 @@
 # Pre-Action Self-Check
 
-**Must be loaded and followed before ANY action in any spec-kit skill.**
-
-Run these checks in order. If any check fails, stop and report before proceeding.
-
-## Checks
-
-> Keep this file and the one-screen SKILL.md in context; open `spec-kit/references/skills/<skill>.md` only for the step you are on. After a context compaction, re-run checks 1–6 and re-read the phase card.
+Run before any action in any spec-kit skill; stop and report on a failure. After a context
+compaction re-run 1–5 and re-read the phase card. Keep this file and the one-screen SKILL.md
+in context; open `spec-kit/references/skills/<skill>.md` only for the step you are on.
 
 ```
-1. BRANCH CHECK
-   CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-   IF CURRENT_BRANCH == blocked_branches (from git-conventions.md, step 3):
-     BLOCK: "On a blocked branch. All spec-kit work must be on a
-             feature branch. Run:
-             git checkout -b {feature_prefix}/NNN-name
-             (or {bugfix_prefix}/NNN-name for bugfix)"
-     HALT
-   
-2. MODE DETECTION — STRICT
-   IF specs/[feature]/bugs.md EXISTS with Status: open or in-progress entries:
-     BLOCK: "You are in bugfix mode. Cannot write code directly — bugs must go through the workflow.
-             Route: 'bugfix [feature]' → plan → tasks → implement."
-     HALT
-   ELSE:
-     MODE = feature
-
-3. UNLOGGED BUG CHECK — before any code change
-  IF the user reported a bug or issue (not a planned feature task):
-    IF specs/[feature]/bugs.md NOT EXISTS OR the reported issue has no BUG-NNN entry:
-      BLOCK: "Bug must be logged before it can be fixed. Run 'test [feature]' first to log the bug,
-              then 'bugfix [feature]' to start the fix loop.
-              Rule: Log Before Fix — ALWAYS."
-      ROUTE to: spec-kit-test
-      HALT
-
-4. GIT CONVENTIONS
-   IF specs/git-conventions.md EXISTS in the project root:
-     LOAD and apply for branch naming, commit messages, and merge behaviour.
-     CHECK version: read `Conventions version:` line from the file
-       IF version < 1: NOTE "Your git-conventions.md is outdated. Re-copy from spec-kit/templates/git-conventions-template.md."
-     NOTE: Conventions override the defaults shown in each skill.
-   ELSE:
-     CREATE specs/git-conventions.md from spec-kit/templates/git-conventions-template.md
-     NOTE: "Created specs/git-conventions.md with default conventions. Edit to customise for this project."
-
-5. PHASE CARD CHECK — before any write
-   IF the MCP server is configured:
-     CALL mcp_spec_kit_get_next_actions(feature) and READ the phase card —
-     it names the phase, the allowed writes and the next gate. Re-read it
-     after every context compaction.
-   ELSE:
-     DERIVE the phase from the files (workflow skill, "Phase Detection")
-     and state it in one line before writing.
-   IF you are about to edit source code and the phase is not Implement:
-     BLOCK — route through the workflow (bugfix / implement).
-
-6. HISTORY LOG CHECK — BEFORE creating or modifying any markdown document
-   IF you are about to create or modify any markdown document in specs/[feature]/:
-     ENSURE specs/[feature]/history.md EXISTS (create with header if missing)
-     NOTE: "history.md is the process log for this feature. Every markdown
-            change MUST be recorded here BEFORE the next commit."
-
-7. ASSUMPTIONS CHECK — at every ASK / PROMPT / WAIT
-   IF a human answered: RECORD a `ruling` in specs/[feature]/decisions.md quoting their words.
-   IF no human can answer (unattended run, compaction lost the answer, the
-   question was never put): do NOT invent an answer and call it a ruling —
-     RECORD an `assumption` in decisions.md (question, what you take, the
-     alternative not taken), create the file from
-     spec-kit/templates/decisions-template.md if missing, and continue.
-   Reviews read decisions.md first; the close lists assumptions still unconfirmed.
+1. BRANCH   git rev-parse --abbrev-ref HEAD ∈ blocked_branches (git-conventions.md)
+            → BLOCK "feature branch required: git checkout -b {feature_prefix}/NNN-name"
+2. MODE     specs/[feature]/bugs.md has Status: open | in-progress
+            → bugfix mode: code only through 'bugfix [feature]' (plan → tasks → implement)
+3. LOG BEFORE FIX   the user reports a bug with no BUG-NNN entry
+            → BLOCK, route spec-kit-test, HALT
+4. CONVENTIONS      specs/git-conventions.md missing → create from
+            spec-kit/templates/git-conventions-template.md; `Conventions version:` < 1 → say so
+5. PHASE CARD       MCP: mcp_spec_kit_get_next_actions(feature) — read it; no MCP: derive the
+            phase from the files and state it in one line. Source code outside Implement → BLOCK
+6. ASSUMPTIONS      at every ASK / WAIT with no human answer: record an `assumption` in
+            decisions.md (question, taken, alternative) — never an invented "ruling"; a human
+            answer → `ruling` quoting them. Only questions the USER would want to decide (scope,
+            behaviour, user-visible trade-offs) go here; a design choice inside the plan's remit
+            is plan.md content, not an assumption.
 ```
 
-## Quick summary for fast reference
+## Commit procedure (every skill that writes artifacts)
 
-- Not on main/master? ✓
-- Bug mode blocks code? ✓ (open bugs → BLOCK, route through bugfix)
-- Bug logged before fix? ✓ (unlogged bug → BLOCK, route to spec-kit-test)
-- Phase card read (MCP) or phase derived from files before any write? ✓
-- Unanswered ASK recorded as an assumption in decisions.md, not as a ruling? ✓
-- history.md exists for this feature? ✓ (created if missing)
-
-## Post-Completion Requirements (MANDATORY)
-
-0. **Evidence before claims** — see `spec-kit/references/evidence.md`. Any "tests pass", "fixed" or "verified" in a report, history entry or bug status must name its oracle or evidence file; otherwise write "claimed" / "unverified".
-
-After every skill completes that created or modified any markdown document:
-
-1. **history.md is already ready** (pre-action check 6 already ensured it exists). Append an entry for each document created or modified:
-   - Fixed fields only (timestamp | phase | skill | agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words)
-   - See `spec-kit/references/history-tracking.md` for the exact format and the appender
-   - This is NOT optional — if you skip this, the process log will be missing
-
-2. **PRE-COMMIT GUARD — Verify history.md is updated**
-   BEFORE running `git add` and `git commit`:
-   ```text
-   READ specs/[feature]/history.md
-   IF any markdown document created/modified in THIS skill run is NOT recorded:
-     BLOCK: "Cannot commit — history.md is missing entries for [document(s)].
-             Append entries first."
-   ```
-   Only proceed to commit after history.md is verified complete.
-   - **Spec/plan changes that alter requirements or design intent** → MUST be committed BEFORE any related code. This preserves the causal chain: spec describes what → code implements it. Never commit spec changes as a side-effect of a code commit.
-   - **Status-only updates** (bug verified, task marked [X], bug status changed, history entry, evidence files) → ride the phase's code commit. One commit per phase boundary carries its own documentation; do not split a phase into a doc commit and a code commit.
-   - **Bugfix sub-round documents** (new plan section for new bugs, new tasks for new bugs):
-     - `bugfix` (default): plan gets its own commit, tasks get its own commit, implementation commits per fix.
-     - `quickfix` (user opt-in): plan + tasks + fix batched in one commit. Plan ref and task entry ALWAYS exist.
-   - **Phase 6 close** (patched spec/plan + close.md) → ONE commit. This is explicit intentional reconciliation.
-   - **One change → one commit**. Multiple related changes in one logical action (e.g. clarify updates clarify.md + amends spec.md) → one commit.
-   - Use commit template from specs/git-conventions.md (see auto-commit.md).
-   - Skip silently if not a git repo.
-
----
-
-### Shared Commit Procedure (reference from every skill)
-
-**Every skill that creates or modifies markdown artifacts MUST follow this procedure instead of re-implementing it.**
-
-```text
-1. APPEND the fixed-field record to specs/[feature]/history.md
-   (format: spec-kit/references/history-tracking.md — never type the time yourself):
-   - MCP: mcp_spec_kit_append_history(feature, phase, skill, agent, artifacts, tests, evidence, commit, note)
-   - no MCP: spec-kit/scripts/spec-kit-log.sh <feature> "<phase>" <skill> <agent> --artifacts … --tests … --evidence … --commit … --note …
-   Note ≤ 25 words; the narrative goes to implementation-summary.md at close.
-
-2. PRE-COMMIT GUARD:
-   READ specs/[feature]/history.md
-   IF the entry for this phase is NOT recorded:
-     BLOCK: "Cannot commit — history.md is missing the [phase] entry. Append first."
-
-2b. LINT (MCP): CALL mcp_spec_kit_lint_artifacts(feature) — 0 errors; and
-    CALL mcp_spec_kit_history_guard(feature, phase) — ok. Without MCP, re-read
-    bugs.md/tasks.md ids and statuses by eye.
-
-3. COMMIT:
-   Follow the auto-commit template for this phase:
-   - Scope: [artifacts scope]
-   - Message: [commit message template]
-   git commit -m "[message]"
-   (the project's hooks run — never --no-verify; a hook that blocks a spec
-    artifact is a hook to fix, not to bypass)
+```
+1. mcp_spec_kit_lint_artifacts(feature) → 0 errors   (no MCP: re-read ids/statuses)
+2. git add <scope>; git commit with the message from spec-kit/references/commits.md and the
+   three trailers (Phase / Implemented-by / Evidence). Hooks run — never --no-verify.
 ```
 
-Skills MUST replace their full "Append to history.md and Commit" section with:
-```text
-Follow the Shared Commit Procedure in spec-kit/references/preflight.md:
-- Phase: [Phase Name]
-- Artifact: [comma-separated list]
-- Scope: [git scope for auto-commit.md]
-- Message: "[commit message template]"
-```
+## No complete overwrite — every phase
 
-This ensures the 3-step pattern (append → guard → commit) is defined in ONE place, not copy-pasted across every skill. See each skill's section for the phase-specific phase name, artifacts, and commit message.
-
-3. **No Complete Overwrite — Strict at EVERY phase**. No phase is exempt. Spec artifacts (constitution.md, spec.md, plan.md, tasks.md, bugs.md, clarify.md, close.md, implementation-summary.md, history.md) MUST never be completely overwritten. Every modification must be additive (append new sections, insert new entries) or targeted-edit (update specific fields).
-
-   - **Before any write**: ALWAYS load the existing file first to check if it has substantive content (>=50 lines of spec content).
-   - **If the file has substantive content**: NEVER copy a template over it, never rewrite it from scratch, never rewrite >=50% of its lines.
-   - **Allowed**: Append new sections, insert new entries between existing ones, modify specific lines/fields, update status markers (e.g. marking a task [X], changing a bug status to verified).
-   - **Forbidden**: Replacing all functional requirements, deleting existing task/bug IDs, reformatting the entire document, restructuring sections not relevant to the current change.
-   - **history.md is append-only**: NEVER edit or delete past entries. Always append new entries.
-
-   > This rule is UNIVERSAL. It applies during constitution, specify, clarify, plan, tasks, review, implement, test, and close phases. There is no "free iteration" phase. The only exception is first creation (file does not exist yet).
-
-   If you return to modify spec/plan during test or bugfix phases: commit those changes immediately after editing, following the same per-document commit pattern.
-
-4. **Ordering**: bugs.md entries must be ascending by BUG-NNN. tasks.md entries must be ascending by T###. New entries append with the next sequential ID.
-
-## Enforcement
-
-These checks are NOT optional. If you skip them and write to the wrong branch,
-the result is workflow corruption. Stop and verify every time.
+Spec artifacts (`spec.md`, `plan.md`, `tasks.md`, `bugs.md`, `clarify.md`, `decisions.md`,
+`acceptance.md`, `review-final.md`, close documents) are never rewritten: append sections,
+insert entries, patch fields, flip status markers. Before any write, read the file. Forbidden:
+copying a template over an existing file, deleting ids, reformatting, rewriting ≥ 50 % of the
+lines. First creation is the only exception. Ids (`BUG-NNN`, `T###`, `BF-###`, `AC-###`, `D-###`)
+are ascending and never reused.

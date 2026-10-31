@@ -1,50 +1,44 @@
-[Close: FEATURE NAME]
+# Close: [FEATURE NAME]
 
-**Feature**: specs/[###-feature-name]/
-**Spec Health**: N%
-**TDD Mode**: Active / Bypassed by user
-
-## Intent Alignment
-- Code matches spec intent: Yes / Partially / No
-- Deviations: [1-2 sentences describing key differences between spec and code]
-
-## Artifact State
-
-| Artifact | Status |
-|----------|--------|
-| `spec.md` | ✅ current / ⚠️ needs review / ❌ outdated |
-| `plan.md` | ✅ current / ⚠️ needs review / ❌ outdated |
-| `tasks.md` | ✅ all complete / ⚠️ N remaining |
-| `bugs.md` | ✅ all verified / ⚠️ N open / ⚠️ N claimed-unverified |
-| `implementation-summary.md` | ✅ complete / ❌ not generated |
-| `review-final.md` | ✅ READY @ <sha> / ⚠️ READY-WITH-FOLLOWUPS (N follow-ups) |
+**Feature**: specs/[###-feature-name]/ · **Date**: [DATE] · **Size**: S | M | L · **Mode**: close | summarize
+**Spec Health**: N% = (resolved + acknowledged) / total · **TDD**: active / bypassed
+**Change record**: `change-record.md` (the auditor's page — ticket, risk, approvals, rollback, timeline)
 
 ## Evidence
 
 | Gate | Oracle | Reference |
 |------|--------|-----------|
-| Full regression | ci:<run-id> / output:<path> | [link or ❌ unverified] |
-| Bug fixes | Verified-by per bug | [N verified / N claimed-unverified] |
-| Final review | Verdict READY / READY-WITH-FOLLOWUPS @ <sha> · review:<agent> / self-review | review-final.md Round N |
+| Acceptance / regression | ci:<run-id> / output:evidence/acceptance-r<N>.txt | round N PASS @ <sha> / ❌ unverified |
+| External seams | probe:<path> per seam | [list] |
+| Bugs | Verified-by per bug | N verified · N claimed-unverified (listed below) |
+| Final review | READY / READY-WITH-FOLLOWUPS @ <sha> · review:<agent> / self-review | review-final.md Round N |
+
+## Artifact State
+
+| Artifact | Status |
+|----------|--------|
+| `spec.md` / `plan.md` / `data-model.md` / `contracts/` | ✅ current / ⚠️ needs review / ❌ outdated — [patched at close: …] |
+| `tasks.md` · `bugs.md` | ✅ all done · ✅ all verified / ⚠️ N claimed-unverified |
+| `plan.md` Current Design | regenerated |
+
+## Gaps *(M: exceptions only · L "summarize": every FR / story / entity / contract)*
+
+| Item | Planned | Actual | Verdict | Rationale / follow-up |
+|------|---------|--------|---------|------------------------|
+| [FR-00N] | | | ✅ resolved / ⚠️ acknowledged / ❌ not done → BUG-NNN | |
+
+Unverified claims: [bug ids / none]. Open questions / future work: [follow-ups from the final review].
 
 ## Architecture Decisions
 
-> Harvested at close from decisions.md rulings, plan.md rounds, research decisions and review
-> findings. Only decisions that pass the ADR bar become ADRs; the rest stay feature-local.
 > "None met the ADR bar" is a valid row — omitting the section is not.
 
 | Decision | Source | ADR bar (why / why not) | Action | ADR |
 |----------|--------|-------------------------|--------|-----|
-| [decision in one line] | [decisions.md ruling N / plan Round N / research D-n / review Q-n] | [cross-feature / hard to reverse / constrains future code / deviates from ADR NNNN — or "feature-local"] | new / supersedes NNNN / evidence appended to NNNN / feature-local | [docs/adr/NNNN-….md] |
+| | decisions.md D-n / plan Round n / review Q-n | cross-feature / hard to reverse / re-litigable / contradicts ADR NNNN — or feature-local | new / supersedes NNNN / evidence appended / feature-local | docs/adr/NNNN-….md |
 
-**ADR index updated**: yes / n/a
-**AGENTS.md**: [updated — sections touched / no change needed — why]
+**ADR index**: updated / n/a · **AGENTS.md**: [updated — sections / no change needed — why]
 
-## Key Decisions
-- **[Decision]**: [Rationale]
+## Reopened — [YYYY-MM-DD] *(appended on reopen, original close above untouched)*
 
-## Spec Health Calculation
-- Resolved (implemented as planned or intentionally deviated): N
-- Acknowledged (deferred with documented reason): N
-- Not Done (missing without documented reason): N
-- **Spec Health** = (resolved + acknowledged) / total * 100 = N%
+Previous health N% → M%. [what changed; new gaps; decisions]

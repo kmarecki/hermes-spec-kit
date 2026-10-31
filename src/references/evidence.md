@@ -1,70 +1,61 @@
 # Evidence of Done
 
-**Rule**: a statement made by the agent that produced a change is never evidence that the change works. Every gate that used to read "tests pass" now needs an **oracle** the agent did not author.
+**Rule**: a statement by the agent that produced a change is never evidence that it works.
+The same model writes the code, the tests, the fixtures and the review; its fixtures encode
+its own misunderstanding. Every gate needs an **oracle** the agent did not author.
 
-Why: the same model writes the code, the tests, the fixtures and the review. Its fixtures encode its own misunderstanding, and its review shares its blind spots. A fix can pass every artifact gate and still be wrong (hand-built fixture vs real data shape).
-
-## Accepted oracles
+## Oracles
 
 | Oracle | Form | Counts as |
 |--------|------|-----------|
 | `user` | A human ran or inspected it and said so (quote the words) | verification |
-| `ci:<run-id>` | A CI pipeline run on the exact commit, with its result | verification |
-| `review:<agent>` | A review by a **different** agent than the author (e.g. `review:claude` for Hermes-implemented code) | verification |
-| `probe:<path>` | A read-only query/call against the real system or real data, command and result saved under `specs/[feature]/evidence/` | evidence (supports a claim; required for every external seam) |
-| `output:<path>` | Saved output of a test/build command, under `specs/[feature]/evidence/` | evidence (supports a claim) |
+| `ci:<run-id>` | A CI run on the exact commit, with its result | verification |
+| `review:<agent>` | A review by a **different** agent than `Implemented-by` | verification |
+| `probe:<path>` | Read-only query/call against the real system, saved under `evidence/` | evidence — required for every `[SEAM]` |
+| `output:<path>` | Saved output of a test/build command under `evidence/` | evidence |
 
-`probe:` and `output:` strengthen a **claim**. They do not by themselves verify a bug fix; `verified` needs `user`, `ci:` or `review:<other-agent>`.
+`probe:` and `output:` support a **claim**; `verified` needs `user`, `ci:` or `review:<other-agent>`.
 
-## Evidence directory
+## Files — by size (`sizing.md`)
 
-`specs/[feature]/evidence/` — committed with the feature. One file per item, named `<ID>-<label>.<ext>`, e.g. `BF-014-red.txt`, `BF-014-probe-exchange-rates.txt`, `T012-tests.txt`. Each file starts with the command that produced it and the UTC time.
+`specs/[feature]/evidence/`, one file per item, first line = command, second = UTC time.
 
-## RED, GREEN and fixtures (the checkable TDD rules)
+| File | S | M | L |
+|------|---|---|---|
+| `<TASK>-probe-<seam>.txt` — read-only probe before a `[SEAM]` fixture | ✓ | ✓ | ✓ |
+| `<phase>-red.txt` — the phase's `[TEST]` tasks failing for the right reason | — | ✓ | ✓ |
+| `<phase>-green.txt` — the phase's tests passing | — | — | ✓ |
+| `<TASK>-characterisation.txt` — legacy code pinned before change | when it applies | ✓ | ✓ |
+| `acceptance-r<N>.txt` (+ `-AC-###.txt` per command/probe AC) | ✓ | ✓ | ✓ |
+| `acceptance-freeze.json` — SHA of the AC tests after RED | ✓ | ✓ | ✓ |
+| `final-<check>.txt` — diff scan, build, test, lint, format | ✓ | ✓ | ✓ |
 
-| Rule | File |
-|------|------|
-| A `[TEST]` task's failing run is saved before implementation code is written | `evidence/<phase-or-task>-red.txt` |
-| A `[SEAM]` task starts with a read-only probe of the real system; the fixture matches its shape | `evidence/<TASK>-probe-<seam>.txt` |
-| Legacy code without tests: pin current behaviour first | `evidence/<TASK>-characterisation.txt` |
-| The phase's passing run | `evidence/<phase>-green.txt` |
-| The full regression | `evidence/regression-<date>.txt` + `ci:<run-id>` |
-| Acceptance tests are frozen after their RED run; changes need the user | `evidence/acceptance-freeze.json` |
-| An acceptance round | `evidence/acceptance-r<N>.txt` (+ `acceptance-r<N>-AC-###.txt` per command/probe AC) |
-
-`lint_artifacts` warns when a `[SEAM]` task is marked done without a probe file, or a `[TEST]` task is done with no RED file in `evidence/`.
+Where a RED/GREEN file is not required, the commit's `Evidence:` trailer names the test
+command and counts instead. `lint_artifacts` warns about a done `[TEST]` task without a RED
+file only for M and L; a done `[SEAM]` without a probe always.
 
 ## Status vocabulary (bugs.md)
 
-| Status | Set by | Meaning |
-|--------|--------|---------|
-| `open` | test skill | logged, not planned |
-| `in-progress` | implement skill | fix under way |
-| `claimed` | implement skill | the agent believes it is fixed; **Evidence:** lists the `output:`/`probe:` files |
-| `verified` | test skill, only with **Verified-by:** `user` / `ci:<id>` / `review:<other-agent>` | an oracle confirmed it |
-| `superseded` | plan/test skill | replaced by another bug entry (name it) |
-
-Legacy values `resolved` and `fixed` are read as `claimed`. An implementing agent never sets `verified` on its own claim.
+`open` → `in-progress` → `claimed` (agent believes fixed; **Evidence:** lists files) →
+`verified` (only with **Verified-by:** `user` / `ci:<id>` / `review:<other-agent>`) ·
+`superseded` (replaced by another entry). Legacy `resolved`/`fixed` read as `claimed`. The
+implementing agent never sets `verified`.
 
 ## Author / reviewer split
 
-Every implement-phase history entry records `Implemented-by: <agent>` (`hermes`, `claude`, or the user's name). `spec-kit-review` reads it:
+`Implemented-by:` is a commit trailer (`commits.md`). The review reads it: a different agent →
+the review is `review:<agent>`; the same agent → **self-review** (fresh-context sub-agent for
+L), which opens the merge gate but never verifies a bug.
 
-- a different agent → the report may be cited as `review:<agent>`;
-- the same agent → the report is labelled **self-review** and cannot be cited as verification.
-
-With both agents installed, the default is: whoever implemented does not review.
-
-## What each gate must show
+## Gates
 
 | Gate | Minimum evidence |
 |------|------------------|
-| Implement phase commit | `output:` of the phase's test run |
-| Full regression (implement step 7) | `output:` of the full run **and** `ci:<id>` when a pipeline exists — for specs with ACs this is the acceptance round |
-| Acceptance round | `acceptance.md` round with Result + Commit; `output:evidence/acceptance-r<N>.txt`; the JUnit/TRX results it parsed; frozen AC tests unchanged (`evidence/acceptance-freeze.json`) |
-| Bug `claimed` | `output:` of the reproducing test now green; `probe:` for every external seam the fix touches |
+| Implement phase commit | `Evidence:` trailer (S) / `output:` RED (M) / RED + GREEN (L); probe per seam |
+| Acceptance round | `acceptance.md` round with Result + Commit; `output:`; frozen tests unchanged |
+| Bug `claimed` | `output:` of the reproducing test green; `probe:` per seam touched |
 | Bug `verified` | `Verified-by:` oracle |
-| Final review (phase 5.5) | `review-final.md` round with Verdict + Reviewed-commit; `output:` of diff_scan, build, full test, lint; `ci:<id>` when a pipeline exists |
-| Close (phase 6) | final review READY / READY-WITH-FOLLOWUPS and not stale; every bug `verified` or `superseded`; every ❌/⚠️ in the gap table names its evidence or its absence |
+| Final review | round with Verdict + Reviewed-commit; `output:` of diff_scan, build, test, lint; `ci:` when a pipeline exists |
+| Close | final review READY / READY-WITH-FOLLOWUPS, fresh; every bug verified or superseded; change record filled |
 
-A gate without evidence is reported as **unverified**, never as done.
+A gate without evidence is **unverified**, never done.

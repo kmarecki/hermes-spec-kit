@@ -65,7 +65,7 @@ mode).
   (e.g. `"speckit plan 001-user-auth"`, `"spec-kit plan 001-user-auth"`, or
   `"plan the implementation for 001-user-auth"` all trigger the same skill)
 - Templates in `~/.hermes/skills/spec-kit/templates/`
-- Reference files in `~/.hermes/skills/spec-kit/references/` (preflight checks, auto-commit patterns, history tracking)
+- Reference files in `~/.hermes/skills/spec-kit/references/` (preflight, commits, sizing, evidence, acceptance)
 - A `specs/` directory in your project for feature artifacts
 - An optional MCP server (`mcp_spec_kit_*` tools) for deterministic state management
   — auto-configured by install.sh, activates with `/reload-mcp`
@@ -476,7 +476,7 @@ Agent:
   - Creates branch from main: feat/001-user-auth-bugfixing
     (or reuses existing branch if already created)
   - Checks if bugs.md exists; if not, creates from template
-  - Adds entry to history.md: "Feature reopened from closed state"
+  - The reopen commit carries `Phase: Reopen` in its trailers
   - Routes to spec-kit-test so you can log bugs
 ```
 
@@ -829,7 +829,7 @@ user resolution.
 An MCP server acts as a **derive-and-enforce** service. It keeps no state: on every call it
 derives the current phase from the files under `specs/<feature>/` and validates against them.
 It exists for the things an agent does badly — allocating the next id, linting `bugs.md` and
-`tasks.md`, stamping real times, guarding that `history.md` was written before the commit — and
+`tasks.md`, stamping real times, freezing acceptance tests, scanning the diff — and
 to hand back a ten-line **phase card** that survives context compaction.
 
 ### How it works
@@ -846,7 +846,7 @@ The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`F
 
 | Tool | Purpose |
 |------|---------|
-| `mcp_spec_kit_init_feature` | Create `specs/<feature>/` with a history.md header |
+| `mcp_spec_kit_init_feature` | Create `specs/<feature>/` |
 | `mcp_spec_kit_get_feature_state` | Derived phase, artifacts, task/bug counts, phase card |
 | `mcp_spec_kit_get_next_actions` | Available actions + the phase card |
 | `mcp_spec_kit_advance_phase` | Validate a transition against the files (writes nothing) |
@@ -858,16 +858,14 @@ The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`F
 | `mcp_spec_kit_update_artifact` | Confirm an artifact is on disk |
 | `mcp_spec_kit_auto_detect_features` | Derived state of all features |
 | `mcp_spec_kit_next_id` | Next BUG / T / BF id |
-| `mcp_spec_kit_lint_artifacts` | Schema lint of bugs.md, tasks.md, history.md |
+| `mcp_spec_kit_lint_artifacts` | Schema lint of bugs.md, tasks.md, ACs, rounds — size-aware |
 | `mcp_spec_kit_timestamp` | Real UTC time |
-| `mcp_spec_kit_history_guard` | Fresh history entry since the last commit? |
-| `mcp_spec_kit_append_history` | Append a fixed-field, time-stamped, word-capped history entry |
 
 ### Benefits
 
 - **No drift**: nothing to keep in sync — the files are the state
 - **Enforced transitions**: `advance_phase` and `close_feature` reject moves the files do not support
-- **Mechanical hygiene**: ids, statuses, timestamps and the history guard are checked by code, not by prose
+- **Mechanical hygiene**: ids, statuses, timestamps, probes and RED files are checked by code, not by prose
 - **Backward compatible**: without the server every skill falls back to filesystem detection, `date -u` and manual id counting
 
 Bug tracking is deliberately NOT in the MCP server: `bugs.md` is the single
@@ -1034,7 +1032,7 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | bugs-template.md | Phase 5 | Bug tracking |
 | implementation-summary-template.md | Phase 6 | Full summary |
 | close-template.md | Phase 6 | Lightweight close |
-| history-template.md | Phase transitions | Append-only log entries |
+| change-record-template.md | Close | The auditor's one page: ticket, risk tier, security impact, approvals, verification, rollback, timeline |
 | git-conventions-template.md | Project setup | Git branch/commit conventions |
 | gitignore-template.md | Project setup | .gitignore starter |
 | AGENTS-template.md | Project setup | Starting AGENTS.md |
@@ -1060,7 +1058,7 @@ table, applied by code. Use it (or the table) before any write.
 | `implementation-summary.md` exists | Summarized — complete |
 | `variants/` directory with ≥2 entries | Exploring |
 | `comparison.md` exists | Compared — decision made |
-| `history.md` last entry | Current phase (fastest lookup) |
+| `git log --format=%(trailers:key=Phase)` | Current phase (fastest lookup) — or the MCP phase card |
 
 ### Quick CLI Reference
 

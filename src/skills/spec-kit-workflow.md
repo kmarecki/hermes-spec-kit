@@ -14,39 +14,29 @@ metadata:
 
 # Spec Kit Workflow Orchestrator
 
-**Persona**: router, not executor — check prerequisites, derive the phase, dispatch to the phase skill, enforce guardrails before handing over.
-**Load for**: `bugfix`, `quickfix`, `reopen`, `close`, `status` / "what phase is X in", and any `spec-kit …` command whose phase is unclear. Phase skills do **not** need this skill loaded — their preflight carries the guardrails.
-**Full procedure**: `spec-kit/references/skills/spec-kit-workflow.md` (routing table, phase-detection table, guardrail matrix, reopen and quickfix rules).
+**Persona**: router, not executor — check prerequisites, derive the phase, dispatch, enforce guardrails.
+**Load for**: `bugfix`, `quickfix`, `reopen`, `accept`, `status` / "what phase is X in", and any `spec-kit …` command whose phase is unclear. Phase skills (`spec-kit-specify`, `spec-kit-clarify`, `spec-kit-plan`, `spec-kit-tasks`, `spec-kit-review`, `spec-kit-implement`, `spec-kit-test`, `spec-kit-summarize`, `spec-kit-refresh`, `spec-kit-constitution`) trigger themselves — do not load this skill for them.
+**Full procedure**: `spec-kit/references/skills/spec-kit-workflow.md` (bugfix / quickfix / reopen rules, guardrail table).
 
 ## Before routing
-- Preflight checks 1 and 4 (`spec-kit/references/preflight.md`): feature branch, git conventions.
-- Feature named but `specs/[feature]/` missing → **BLOCK**, list available specs.
-- Bootstrap gate, once per session: `specs/constitution.md` missing → route `spec-kit-constitution` and stop.
-- Phase: MCP `mcp_spec_kit_get_next_actions(feature)` (phase card) or `mcp_spec_kit_list_features()`; without MCP derive from files: spec → plan → tasks → tasks with `[X]` (implementing) → bugs.md open (bugfix loop) → all verified (**must close**) → close doc (complete); close doc + open bug = reopened. All tasks done, spec has ACs and no fresh PASS round in acceptance.md → **accept**; then no READY final review → **final review**; close doc with ⚠️/❌ artifact rows → warn "drift — run refresh".
+- Preflight checks 1 and 4 (`spec-kit/references/preflight.md`). Feature named but `specs/[feature]/` missing → **BLOCK**, list specs. `specs/constitution.md` missing → route `spec-kit-constitution`, stop (once per session).
+- Phase: `mcp_spec_kit_get_next_actions(feature)` / `mcp_spec_kit_list_features()`; no MCP: spec → plan → tasks → `[X]` tasks (implementing) → bugs open (bugfix loop) → all verified → acceptance PASS (ACs) → final review READY → close doc (complete); close doc + open bug = reopened.
 
 ## Routes
-| Phase | Skill | Needs |
-|---|---|---|
-| 1 specify · 1.5 clarify | `spec-kit-specify` · `spec-kit-clarify` | — · spec |
-| 2 plan · 3 tasks | `spec-kit-plan` · `spec-kit-tasks` | spec · spec+plan |
-| 3.5 pre-implement review (L: required) | `spec-kit-review` | spec+plan+tasks |
-| 5 accept (spec has ACs) | `spec-kit-test` (accept mode) | all tasks `[X]` |
-| **5.5 final review (mandatory)** | `spec-kit-review` | all tasks `[X]`, no open bug, acceptance PASS |
-| 4 implement · 5 test | `spec-kit-implement` · `spec-kit-test` | tasks · spec |
-| 6 summarize / close (mandatory) | `spec-kit-summarize` | tasks |
-| refresh (standalone) | `spec-kit-refresh` | spec |
+| State | Route |
+|---|---|
+| all tasks `[X]`, spec has ACs, no fresh PASS round | **accept** → `spec-kit-test` (accept mode) |
+| no open bug, acceptance PASS (or no ACs), no fresh READY review | **final review** → `spec-kit-review` |
+| final review READY / READY-WITH-FOLLOWUPS, fresh | **must close** → `spec-kit-summarize` |
+| close doc with ⚠️/❌ artifact rows | warn "drift — run refresh" |
 
-Inject constitution principles as guidance (not gates) when routing to specify, plan, implement, test, review.
+Inject constitution principles as guidance (not gates) when routing.
 
 ## Bugfix loop
-`bugfix [feature]`: load bugs.md → closed feature → say "use `reopen`". Every open bug needs a **Plan Ref** (else route `spec-kit-plan` first, user confirms). Bug *Requires Clarification* → `spec-kit-clarify` first. Then **auto-chain** `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement`; review only on request. `quickfix [feature]` (explicit opt-in): plan section + task + fix in one commit, documents still written.
-- `test [feature]` logs and stops. New bugs mid-round → logged, fixed next round.
-- **Acceptance loop** — `accept [feature]` (also routed automatically after implement when spec.md has ACs): `spec-kit-test` accept round → FAIL → auto-chain `bugfix` (plan → tasks → implement) → accept again; no user prompt between rounds. Stops on PASS (→ final review) or a stop condition (max rounds, no progress, spec/frozen-test change, run cannot execute) → **ASK**. `spec-kit/references/acceptance.md`.
-- No open bug and (spec has ACs) the latest acceptance round PASS → route the **final review**; READY → suggest `close [feature]`; NOT READY → its bugs start a new round. Never auto-close.
-- Size (spec.md `**Size**`, `spec-kit/references/sizing.md`): S auto-chains specify → plan → tasks; L requires the pre-implement review before implement.
-- `reopen [feature]`: needs a close doc; bugfix branch per `specs/git-conventions.md`; close appends, never overwrites.
+`bugfix [feature]`: closed feature → say "use `reopen`". Every open bug needs a **Plan Ref** (else `spec-kit-plan` first). *Requires Clarification* → `spec-kit-clarify` first. Then **auto-chain** `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement`; review only on request. `quickfix [feature]` (explicit opt-in): plan section + task + fix in one commit, documents still written.
+- `accept [feature]` (also automatic after implement when spec.md has ACs): accept round → FAIL → auto-chain `bugfix` → accept again; no prompt between rounds; stop conditions → **ASK** (`spec-kit/references/acceptance.md`). PASS → final review. Never auto-close.
+- Size (`spec-kit/references/sizing.md`): S auto-chains specify → plan → tasks; M lite pre-implement review; L full pre-implement review required.
+- `reopen [feature]`: needs a close doc; bugfix branch per `specs/git-conventions.md`; the close appends.
 
 ## Guardrails
-- Code-editing tools only in Implement (incl. bugfix implementation). Spec artifacts only in their own phase; summarize/close and refresh may patch spec/plan with approval.
-- Unknown phase → **ASK**. Code requested outside Implement → refuse, name the right phase.
-- A feature is not "done" without `close.md` / `implementation-summary.md`.
+- Code-editing tools only in Implement (incl. bugfix). Spec artifacts only in their phase; summarize/close and refresh patch spec/plan with approval. Unknown phase → **ASK**. Code requested outside Implement → refuse, name the phase. Not done without a close doc.

@@ -1,94 +1,55 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: [###-feature-name]
-**Created**: [DATE]
-**Status**: Draft
-**Size**: [S | M | L] — [one-line reason; see spec-kit/references/sizing.md]
-**Input**: User description: "[USER DESCRIPTION]"
+**Feature Branch**: [###-feature-name] · **Created**: [DATE] · **Status**: Draft
+**Size**: [S | M | L] — [one-line reason; `spec-kit/references/sizing.md`]
+**Input**: "[USER DESCRIPTION]"
 
-> **Size S**: keep only one user story, the FRs, Success Criteria and Edge Cases — delete the
-> unused sections instead of leaving placeholders.
+> Size S: one user story, FRs, ACs, Success Criteria, Edge Cases, Security & Privacy — delete
+> the unused sections instead of leaving placeholders.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios *(mandatory)*
 
-### User Story 1 - [Brief Title] (Priority: P1)
+### User Story 1 - [Title] (Priority: P1)
 
-[Describe this user journey in plain language]
+[The journey in plain language.] **Why this priority:** [value]. **Independent test:** [how].
 
-**Why this priority:** [Explain the value and why it has this priority level]
+**Acceptance Criteria** (`spec-kit/references/acceptance.md` — lowest level that proves it):
+- **AC-001** (FR-001) Given [state], When [action], Then [outcome] — Verify: unit | integration | component
+- **AC-002** (FR-002) Given [state], When [action], Then [outcome] — Verify: e2e ([why no lower level can prove it])
 
-**Independent Test:** [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+### User Story 2 - [Title] (Priority: P2)
 
-**Acceptance Criteria:** (ids, levels and rules: `spec-kit/references/acceptance.md`)
-- **AC-001** (FR-001) Given [initial state], When [action], Then [expected outcome] — Verify: unit | integration | component
-- **AC-002** (FR-002) Given [initial state], When [action], Then [expected outcome] — Verify: e2e ([why no lower level can prove it])
-
-### User Story 2 - [Brief Title] (Priority: P2)
-
-[Describe this user journey in plain language]
-
-**Why this priority:** [Explain the value and why it has this priority level]
-
-**Independent Test:** [Describe how this can be tested independently]
-
-**Acceptance Criteria:**
-- **AC-003** (FR-003) Given [initial state], When [action], Then [expected outcome] — Verify: [level]
-
-### User Story 3 - [Brief Title] (Priority: P3)
-
-[Describe this user journey in plain language]
-
-**Why this priority:** [Explain the value and why it has this priority level]
-
-**Independent Test:** [Describe how this can be tested independently]
-
-**Acceptance Criteria:**
-- **AC-004** (FR-004) Given [initial state], When [action], Then [expected outcome] — Verify: [level]
-
-[Add more user stories as needed, each with an assigned priority]
+[…] **Acceptance Criteria:** - **AC-003** (FR-003) Given …, When …, Then … — Verify: [level]
 
 ## Edge Cases
 
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
-
-An edge case that matters is an acceptance criterion too: give it the next `AC-###` under the
-story it belongs to. Every FR must be named by at least one AC. Verify levels: `unit`,
-`integration`, `component`, `e2e` (reason required), `command`, `probe`, `manual` (reason required)
-— always the LOWEST level that can prove the outcome.
+- [boundary condition] · [error scenario] — an edge case that matters is an AC too.
 
 ## Requirements *(mandatory)*
 
-### Functional Requirements
+- **FR-001**: System MUST [specific, testable capability]
+- **FR-002**: Users MUST be able to [key interaction]
+- **FR-003**: System MUST [behaviour] [NEEDS CLARIFICATION: …] *(max 3 markers)*
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+**Key entities**: **[Entity]** — [what it represents, key attributes, relations] (domain only).
 
-Example of marking unclear requirements:
+## Security & Privacy *(mandatory — "None — because …" is a valid answer)*
 
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+| Question | Answer |
+|----------|--------|
+| Authorization / tenant boundary — who may do this, and how is another tenant's data kept out? | |
+| Personal data — collected, displayed, exported or logged? retention? | |
+| New external surface — endpoint, file upload, integration, secret, dependency? | |
+| Input reaching a sensitive operation — validated where? | |
+| Audit / logging — what must be recorded, what must never be logged? | |
 
-### Key Entities
-
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+The pre-implement review checks this table; the final review verdicts it under §2.
 
 ## Success Criteria *(mandatory)*
 
-### Measurable Outcomes
-
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: [measurable outcome, e.g. "a 1 000-row import completes in < 10 s"]
+- **SC-002**: [user or business metric]
 
 ## Assumptions
 
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+- [target users, scope boundaries, environment, dependencies on existing services]

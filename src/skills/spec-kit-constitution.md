@@ -20,7 +20,7 @@ metadata:
 **Not for**: per-feature runs — principles are project-wide.
 
 ## Before writing
-- Run `spec-kit/references/preflight.md`. `specs/constitution.md` exists → report its version and **HALT** (amend only on explicit request).
+- `spec-kit/references/preflight.md`. `specs/constitution.md` exists → report its version and **HALT** (amend only on explicit request).
 
 ## Steps
 1. Detect mode: scan the project root with the detection tables. Files found → brownfield summary ("Detected [language]/[framework]; tests …; CI …; DB …; lint …"). Nothing → **ASK**: free-text description or wizard.
@@ -32,7 +32,7 @@ metadata:
 ## Done when
 - [ ] Every principle chosen by the user (never silently); skipped ones listed with a reason.
 - [ ] MCP (optional): `mcp_spec_kit_project_set_constitution(status="present")` (checks the file exists).
-- [ ] history.md is per feature — for the constitution, commit directly: `spec(phase-0): constitution for [PROJECT]` (`spec-kit/references/auto-commit.md`).
+- [ ] Commit directly (`spec-kit/references/commits.md`): `spec(phase-0): constitution for [PROJECT]`.
 
 ## Next
 Report mode, inferred items, chosen options; propose `spec-kit-specify`.
