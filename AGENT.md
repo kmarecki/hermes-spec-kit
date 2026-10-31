@@ -115,7 +115,7 @@ The system has three operational layers plus an optional MCP state layer:
 | 5 | `spec-kit-test` | `specs/NNN-name/bugs.md` | Implement (or spec for bugfix) | ❌ | QA engineer |
 | 6 | `spec-kit-summarize` | `close.md` + `change-record.md`, patched spec/plan, ADRs + ADR index, AGENTS.md patches | Fresh READY final review, no open bug | ❌ | Auditor / archivist |
 | — | `spec-kit-refresh` | Patched spec/plan/data-model/contracts | Any (standalone) | ❌ | Archivist |
-| — | `spec-kit-epic` | `[epics_dir]/<epic>.md` — goal, feature table, sequencing, cross-feature rules (optional: `epics_dir` set) | — | ❌ | Delivery lead |
+| — | `spec-kit-epic` | `[epics_dir]/<epic>/{epic,plan,features,review}.md` — E1 specify → E2 plan → E3 breakdown → E3.5 review (+ devil's advocate) → build → E6 close (optional: `epics_dir` set) | — | ❌ | Delivery lead + architect |
 | — | `spec-kit-design` | `[design_dir]/<module>.md` — living module design doc (optional: `design_dir` set) | — | ❌ | Architect describing what is built |
 
 ### Phase 6 — Mandatory Close
@@ -288,7 +288,8 @@ hermes-spec-kit/
 │   │   ├── bugs-template.md
 │   │   ├── close-template.md
 │   │   ├── change-record-template.md       # the auditor's one page, written at close
-│   │   ├── epic-template.md · design-doc-template.md   # optional document types (epics_dir / design_dir)
+│   │   ├── epic-template.md · epic-plan-template.md · epic-features-template.md · epic-review-template.md
+│   │   ├── design-doc-template.md          # optional document types (epics_dir / design_dir)
 │   │   ├── data-model-template.md
 │   │   ├── research-template.md
 │   │   ├── AGENTS-template.md

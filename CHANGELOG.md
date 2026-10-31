@@ -10,11 +10,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added — epics and module design docs (opt-in)
 
-- **`spec-kit-epic`** — an epic plan (`epic-template.md` in `epics_dir`): one body of work in
-  *time* — goal, scope, done-when, the feature table (spec dir · size · status · PR · health ·
-  ADRs), sequencing, cross-feature rules the reviews check like constitution MUSTs. A spec
-  names its epic with `**Epic**:`; the feature close updates its row; the epic closes when
-  every row is closed or dropped.
+- **`spec-kit-epic`** — an epic is one body of work in *time*, run through the same shape as
+  a feature in `[epics_dir]/<epic>/`: **E1 specify** `epic.md` (goal, scope and non-goals,
+  `EAC-###` epic acceptance criteria with how each is verified, cross-feature rules, epic-level
+  Security & Privacy) → **E2 plan** `plan.md` (current state, target architecture, seams
+  today → after, `ED-###` cross-feature decisions, sequencing, rollout / rollback, risks) →
+  **E3 breakdown** `features.md` (the epic's tasks are features: ordered rows with size,
+  depends-on, modules, EACs, status) → **E3.5 review** `review.md` (coverage, fit, sequencing
+  + **devil's advocate**: the case against the epic and the ~80 % alternative, a six-month
+  pre-mortem, system-level abuse cases, the riskiest assumption; verdict GO / GO-WITH-CHANGES
+  / NO-GO, required before the first feature) → **E4 build** (features run the normal
+  workflow; `specify` fills the row, each close flips it) → **E6 close** (every EAC verified
+  with evidence, close review round, `ED-###` through the ADR bar).
 - **`spec-kit-design`** — a living module design doc (`design-doc-template.md` in
   `design_dir`): one bounded part of the system in *space* — purpose, components, data flow,
   seams, invariants and security (`path:line`), testing, debt, ADRs; ≤ 3–4 pages, patched in

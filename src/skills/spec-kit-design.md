@@ -38,4 +38,4 @@ Diff the page against the code (`git log -- <module paths>` since *Last patched*
 - [ ] Project ADR index and AGENTS.md point at the doc (propose the one-line patch, **WAIT**).
 
 ## Next
-Feature closes keep it true (`spec-kit-summarize` step "design doc + epic row"); `spec-kit-epic` lists it under *Modules touched*.
+Feature closes keep it true (`spec-kit-summarize` step "design doc + epic row"); `spec-kit-epic` plans name it under `**Modules**:`.

@@ -67,6 +67,9 @@ EXPECTED_TEMPLATES = {
     "change-record-template.md",
     "design-doc-template.md",
     "epic-template.md",
+    "epic-plan-template.md",
+    "epic-features-template.md",
+    "epic-review-template.md",
     "history-template.md",
     "plan-template.md",
     "research-template.md",
@@ -359,7 +362,7 @@ def test_no_loose_reference_files():
         lines = skill_text.count("\n")
         check(f"{name}: SKILL.md is one screen (<= 60 lines)", lines <= 60, f"{lines} lines")
     budget = sum(p.stat().st_size for p in SKILLS_DIR.rglob("*.md")) + sum(p.stat().st_size for p in REFERENCES_DIR.rglob("*.md")) + sum(p.stat().st_size for p in TEMPLATES_DIR.glob("*.md"))
-    check("skills + references + templates stay under ~60k tokens (240 KB)", budget <= 240_000, f"{budget // 1024} KB")
+    check("skills + references + templates stay under ~62k tokens (250 KB)", budget <= 250_000, f"{budget // 1024} KB")
 
 
 def test_workflow_diagram_phases():

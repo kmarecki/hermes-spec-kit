@@ -70,7 +70,7 @@ FOR each module in plan.md **Modules**:  DOC = DESIGN_DIR/<module>.md
          contracts, invariants & security, testing, known debt, Decisions (new ADRs)
          → targeted patch per section, WAIT, apply approved; append "- <date> <feature> — <what>"
          to the change log; bump Last patched
-EPIC = spec.md **Epic**:  FILE = EPICS_DIR/<epic>.md
+EPIC = spec.md **Epic**:  FILE = EPICS_DIR/<epic>/features.md
   missing → NOTE "spec names epic <epic> but <FILE> does not exist — run 'spec-kit epic <epic>'"
   else → set this feature's row: Status closed · PR · Health N% · ADRs; add the row if absent;
          every row closed or dropped → suggest "close epic <epic>"

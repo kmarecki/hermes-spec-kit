@@ -33,7 +33,7 @@ Constitution → Specify (size S/M/L, ACs, Security & Privacy) → [Clarify] →
 | 5 | `spec-kit-test` | `bugs.md`; accept mode → `acceptance.md` rounds |
 | 6 | `spec-kit-summarize` | `close.md`, **`change-record.md`**, ADRs, AGENTS.md patches |
 | — | `spec-kit-refresh` | spec/plan reconciled with the code mid-stream |
-| — | `spec-kit-epic` · `spec-kit-design` | optional, only when `epics_dir` / `design_dir` are set: an epic plan (many features, one goal — **time**) · a living module design doc (how a part works now — **space**); feature closes patch both |
+| — | `spec-kit-epic` · `spec-kit-design` | optional, only when `epics_dir` / `design_dir` are set: an epic (many features, one goal — **time**) run as E1 specify → E2 plan → E3 breakdown into features → E3.5 review + devil's advocate → build → E6 close · a living module design doc (how a part works now — **space**); feature closes patch both |
 
 **Mandatory**: constitution once per project; size asked at specify; the final review; the close.
 

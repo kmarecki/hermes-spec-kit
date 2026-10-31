@@ -411,7 +411,7 @@ async def test_epics_and_design(s, root):
     (Path(root) / "specs/git-conventions.md").write_text("epics_dir: specs/epics\ndesign_dir: docs/design\n")
     d = await call(s, "lint_artifacts", {"feature": "e1"})
     check("lint: epic file missing → warning", any("does not exist" in f["msg"] for f in d["findings"]))
-    (Path(root) / "specs/epics").mkdir(parents=True); (Path(root) / "specs/epics/rs-m.md").write_text("# Epic\n| 1 | e2 | S | closed |\n")
+    (Path(root) / "specs/epics/rs-m").mkdir(parents=True); (Path(root) / "specs/epics/rs-m/features.md").write_text("# Features\n| 1 | e2 | S | closed |\n")
     d = await call(s, "lint_artifacts", {"feature": "e1"})
     check("lint: epic file without the feature's row → warning", any("no row for e1" in f["msg"] for f in d["findings"]))
     d = await call(s, "lint_artifacts", {"feature": "e2"})

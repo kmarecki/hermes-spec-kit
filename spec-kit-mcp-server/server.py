@@ -192,6 +192,14 @@ def _epic_of(fd):
     return m.group(1) if m and m.group(1).lower() not in ("epic", "none") else None
 
 
+def _epic_features_file(epics_dir, epic):
+    """The epic's feature table: <epics_dir>/<epic>/features.md (legacy: <epics_dir>/<epic>.md); None when neither exists."""
+    for cand in (Path(epics_dir) / epic / "features.md", Path(epics_dir) / f"{epic}.md"):
+        if cand.exists():
+            return cand
+    return None
+
+
 def _modules_of(fd):
     """Module names from plan.md `**Modules**: a, b`; [] when absent or a template placeholder."""
     f = fd / "plan.md"
@@ -959,10 +967,10 @@ def lint_artifacts(feature: str) -> str:
         epics_dir = conv.get("epics_dir")
         if not epics_dir:
             findings.append({"file": "spec.md", "severity": "warning", "msg": f"**Epic**: {epic} but git-conventions.md sets no epics_dir — add it or drop the line"})
-        elif not (Path(epics_dir) / f"{epic}.md").exists():
-            findings.append({"file": "spec.md", "severity": "warning", "msg": f"**Epic**: {epic} names {epics_dir}/{epic}.md which does not exist — run 'spec-kit epic {epic}'"})
-        elif feature not in (Path(epics_dir) / f"{epic}.md").read_text(errors="replace"):
-            findings.append({"file": f"{epics_dir}/{epic}.md", "severity": "warning", "msg": f"epic {epic} has no row for {feature} — add it (spec-kit-epic status)"})
+        elif (ef := _epic_features_file(epics_dir, epic)) is None:
+            findings.append({"file": "spec.md", "severity": "warning", "msg": f"**Epic**: {epic} names {epics_dir}/{epic}/features.md which does not exist — run 'spec-kit epic {epic}' (E1–E3)"})
+        elif feature not in ef.read_text(errors="replace"):
+            findings.append({"file": str(ef), "severity": "warning", "msg": f"epic {epic} has no row for {feature} — add it (spec-kit-epic status)"})
     for module in _modules_of(fd):
         design_dir = conv.get("design_dir")
         if not design_dir:
