@@ -16,9 +16,10 @@ Implemented-by: <agent>        # hermes | claude | <human> — read by the revie
 Evidence: <refs or none>       # output:evidence/… ; probe:evidence/… ; ci:<id> ; review:<agent>
 ```
 
-The three trailers are mandatory on every spec-kit commit (`git interpret-trailers` can add
-them). `Implemented-by` on a `feat:`/`fix:` commit is what the final review reads to decide
-self-review vs `review:<agent>`.
+The three trailers are mandatory on every spec-kit commit. Git reads trailers only from the
+**last paragraph** of the message, so they share ONE block with any attribution trailer
+(`Co-Authored-By: …`) — no blank line between them. `Implemented-by` on a `feat:`/`fix:` commit
+is what the final review reads to decide self-review vs `review:<agent>`.
 
 ## Per-skill messages
 
