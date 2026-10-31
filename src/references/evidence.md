@@ -30,7 +30,7 @@ its own misunderstanding. Every gate needs an **oracle** the agent did not autho
 | `acceptance-freeze.json` — SHA of the AC tests after RED | every feature with ACs |
 | `final-<check>.txt` — diff scan, build, test, lint, format | every final review |
 
-The history entry's `Evidence:` field names these files. `lint_artifacts` warns about a done `[TEST]`
+The history entry's `Evidence:` field (history on) or the commit body (history off) names these files. `lint_artifacts` warns about a done `[TEST]`
 task without a RED file and a done `[SEAM]` without a probe — every tier.
 
 ## Acceptance criteria are always documented
@@ -49,7 +49,8 @@ implementing agent never sets `verified`.
 
 ## Author / reviewer split
 
-`<agent>` in every history.md entry header is the `Implemented-by` (`history-tracking.md`). The review reads it: a different agent →
+`Implemented-by` = the `<agent>` of the history.md implement entries, or — history off — the
+`**Implemented-by**:` line in the tasks.md header. The review reads it: a different agent →
 the review is `review:<agent>`; the same agent → **self-review** (fresh-context sub-agent for
 L), which opens the merge gate but never verifies a bug.
 

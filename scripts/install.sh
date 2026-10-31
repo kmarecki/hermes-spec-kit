@@ -109,10 +109,9 @@ for installed in "$REFERENCES_DIR"/*.md; do
   fi
 done
 rmdir "$REFERENCES_DIR/local" 2>/dev/null || true
-# Shell helpers (spec-kit-log.sh — the no-MCP history appender)
+# Shell helpers (spec-kit-log.sh — the no-MCP history appender; spec-kit-history.sh — the git timeline when history is off)
 if [ -d "$PROJECT_DIR/src/scripts" ]; then
   mkdir -p "$SKILLS_DIR/spec-kit/scripts"
-  rm -f "$SKILLS_DIR/spec-kit/scripts/spec-kit-history.sh"
   for sh in "$PROJECT_DIR"/src/scripts/*.sh; do
     [ -f "$sh" ] || continue
     echo "  Installing script: $(basename "$sh")"

@@ -27,7 +27,7 @@ metadata:
 2. **`[SEAM]`** — before the fixture: read-only probe of the real system → `evidence/<TASK>-probe-<seam>.txt`; the fixture matches its shape. All sizes.
 3. **GREEN** — simplest code; run this phase's tests; save `evidence/<phase>-green.txt`; run the build (TypeScript must compile).
 4. Mark the phase's tasks `[X]`; fixed bugs → `claimed` + `Evidence:` (never `verified`).
-5. History entry (`mcp_spec_kit_append_history`: phase, skill, **agent = Implemented-by**, artifacts, tests, evidence = the RED/GREEN/probe files, commit, note ≤ 25 words) → `mcp_spec_kit_history_guard` + `mcp_spec_kit_lint_artifacts` → commit `feat: [feature] Phase N - [name]` (bugfix: `fix: [feature] BF-### - description`).
+5. History on (phase card) → entry (`mcp_spec_kit_append_history`: phase, skill, **agent = Implemented-by**, artifacts, tests, evidence = the RED/GREEN/probe files, commit, note ≤ 25 words); history off → first phase writes `**Implemented-by**: <agent>` into the tasks.md header and the commit body names the evidence files. Then `mcp_spec_kit_history_guard` + `mcp_spec_kit_lint_artifacts` → commit `feat: [feature] Phase N - [name]` (bugfix: `fix: [feature] BF-### - description`).
 - Legacy code without tests → characterisation test first. Untestable item → note beside the task; the close flags it.
 - No commits during RED; no per-task regression runs; a non-parallel task that cannot complete → HALT and report.
 - New bug mid-fix → log it (`mcp_spec_kit_next_id(kind="BUG")`), do not fix inline (trivial test-only fixes excepted).
@@ -38,7 +38,7 @@ metadata:
 7. Build verification. MCP: `mcp_spec_kit_advance_phase(from_phase=4)`.
 
 ## Done when
-- [ ] Every phase committed with its RED + GREEN files and its history entry (`Implemented-by`); AC tests frozen after RED; every `[SEAM]` has a matching `probe:`; fixed bugs `claimed`, none `verified` here; all tasks `[X]`.
+- [ ] Every phase committed with its RED + GREEN files and its history entry (or tasks.md `Implemented-by` when history is off); AC tests frozen after RED; every `[SEAM]` has a matching `probe:`; fixed bugs `claimed`, none `verified` here; all tasks `[X]`.
 
 ## Next
 `accept [feature]` (automatic with ACs) → `spec-kit-test` for user-found bugs → **final review** (`spec-kit-review`) by the other agent or a fresh-context sub-agent.

@@ -1,7 +1,7 @@
 # Commits
 
-Every phase ends in ONE commit, preceded by its `history.md` entry (`history-tracking.md`) —
-the record that survives the squash-merge. Project overrides: `specs/git-conventions.md`.
+Every phase ends in ONE commit, preceded by its `history.md` entry when history is on for the
+feature (`history-tracking.md`: default size L only). Project overrides: `specs/git-conventions.md`.
 
 ## Per-skill messages
 
@@ -22,8 +22,9 @@ the record that survives the squash-merge. Project overrides: `specs/git-convent
 
 ## Rules
 
-- **History first.** The entry for the phase is appended (`mcp_spec_kit_append_history` or
-  `spec-kit/scripts/spec-kit-log.sh`) and `mcp_spec_kit_history_guard` says ok before `git commit`.
+- **History first (when on).** The entry is appended (`mcp_spec_kit_append_history` or
+  `spec-kit/scripts/spec-kit-log.sh`) and `mcp_spec_kit_history_guard` says ok before `git commit`;
+  when off the guard answers ok and the close reads `spec-kit/scripts/spec-kit-history.sh`.
 - **Intent before code.** A change to requirements or design intent (spec FRs, plan decisions)
   is committed before the code that follows it. Status-only edits (task `[X]`, bug status,
   evidence files, history entry) ride the phase's code commit — one commit per phase boundary.

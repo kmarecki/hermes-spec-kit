@@ -3,6 +3,7 @@
 **Feature Branch**: [###-feature-name] · **Created**: [DATE] · **Status**: Draft
 **Size**: [S | M | L] — [one-line reason; `spec-kit/references/sizing.md`]
 **Epic**: [NNN-epic-name — the epic directory under `epics_dir`; delete the line when the project keeps none]
+**History**: [on | off — only to override the project default (`history:` in git-conventions, default large = L only); delete otherwise]
 **Input**: "[USER DESCRIPTION]"
 
 > Size S (a single bugfix or a small enhancement): **a few lines** — one sentence of intent,

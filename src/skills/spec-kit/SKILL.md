@@ -38,7 +38,7 @@ Constitution → Specify (size S/M/L, ACs, Security & Privacy) → [Clarify] →
 **Mandatory**: constitution once per project; size asked at specify; the final review; the close.
 
 ## Conventions
-- **Record = `history.md`** (`spec-kit/references/history-tracking.md`): one fixed-field entry per phase (time, phase, skill, agent = Implemented-by, artifacts, tests, evidence, commit, note ≤ 25 words), appended before every commit (`mcp_spec_kit_append_history` / `spec-kit/scripts/spec-kit-log.sh`, guarded by `mcp_spec_kit_history_guard`). It survives the squash-merge; the close copies it into `change-record.md`. Messages: `spec-kit/references/commits.md`.
+- **Record** (`spec-kit/references/history-tracking.md`): `history: large` by default — size L keeps `history.md` (one fixed-field entry per phase, appended before every commit via `mcp_spec_kit_append_history` / `spec-kit/scripts/spec-kit-log.sh`, guarded by `mcp_spec_kit_history_guard`); S/M do not, and the close builds the timeline from git (`spec-kit/scripts/spec-kit-history.sh`). `**History**: on|off` in a spec overrides. Either way `change-record.md` carries the timeline that survives the squash-merge. Messages: `spec-kit/references/commits.md`.
 - **Evidence** (`spec-kit/references/evidence.md`): the agent's word is never evidence; probes per seam, RED/GREEN files every tier, `ci:`/`user`/`review:<other-agent>` verify.
 - **Size** (`spec-kit/references/sizing.md`): S / M / L — leaner workflow and shorter artifacts (S = a bugfix or small enhancement: a few-line spec, 1–2 ACs, one commit for spec+plan+tasks); evidence and the acceptance round never shrink.
 - **Additive only**: no spec artifact is ever rewritten (`spec-kit/references/preflight.md`).

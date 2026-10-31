@@ -21,7 +21,7 @@ metadata:
 ## Before reviewing
 - Preflight checks 1 and 4 (`spec-kit/references/preflight.md`). Mode: close doc → closed-review; tasks.md and no code → pre-implement; all tasks `[X]`, no open bug → **final**; open bugs → refuse ("bugfix first"); unclear → **ASK**.
 - SIZE from spec.md (`spec-kit/references/sizing.md`): S skips the pre-implement review and the stack research; M runs the lite pre-implement; L requires it in full. Evidence and the acceptance round are checked the same way at every size.
-- **Author check** (`spec-kit/references/evidence.md`): `<agent>` in the implement entries of history.md = you → *self-review*; for the final review prefer the other agent, else a **fresh-context sub-agent** (procedure + feature path + base only; no transcript).
+- **Author check** (`spec-kit/references/evidence.md`): `Implemented-by` (history.md implement entries, or the tasks.md header when history is off) = you → *self-review*; for the final review prefer the other agent, else a **fresh-context sub-agent** (procedure + feature path + base only; no transcript).
 - Final review: read the code and the spec **before** `decisions.md` so the author's reasoning does not anchor you; then every assumption is a review item.
 
 ## Pre-implement (3.5)
@@ -44,7 +44,7 @@ metadata:
 CRITICAL / HIGH / MEDIUM only; a finding must harm correctness, security, performance, maintainability or testability — style and taste → delete. A broken explicit project rule is never a nitpick.
 
 ## Done when
-- [ ] Pre: report, history entry (`Phase 3.5`), commit. Final: round with Verdict + Reviewed-commit, §2 rules verdicted, §4 objections answered, §5 evidence; `mcp_spec_kit_lint_artifacts` → 0 errors; history entry (`Phase 5.5`), commit `spec(review): [feature] final review (verdict: X)`. Closed-review: report only, no history entry.
+- [ ] Pre: report, history entry when on (`Phase 3.5`), commit. Final: round with Verdict + Reviewed-commit, §2 rules verdicted, §4 objections answered, §5 evidence; `mcp_spec_kit_lint_artifacts` → 0 errors; history entry when on (`Phase 5.5`), commit `spec(review): [feature] final review (verdict: X)`. Closed-review: report only, no history entry.
 
 ## Next
 Pre → `spec-kit-implement`. Final READY / READY-WITH-FOLLOWUPS → `spec-kit-summarize`. AWAITING-OWNER → the owner, then Round N+1. NOT READY → `bugfix [feature]`.

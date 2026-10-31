@@ -15,7 +15,8 @@ in context; open `spec-kit/references/skills/<skill>.md` only for the step you a
             spec-kit/templates/git-conventions-template.md; `Conventions version:` < 1 → say so
 5. PHASE CARD       MCP: mcp_spec_kit_get_next_actions(feature) — read it; no MCP: derive the
             phase from the files and state it in one line. Source code outside Implement → BLOCK
-            specs/[feature]/history.md missing → create it (spec-kit/templates/history-template.md)
+            history ON for this feature (phase card; history-tracking.md) and history.md missing
+            → create it (spec-kit/templates/history-template.md)
 6. ASSUMPTIONS      at every ASK / WAIT with no human answer: record an `assumption` in
             decisions.md (question, taken, alternative) — never an invented "ruling"; a human
             answer → `ruling` quoting them. Only questions the USER would want to decide (scope,
@@ -26,15 +27,16 @@ in context; open `spec-kit/references/skills/<skill>.md` only for the step you a
 ## Commit procedure (every skill that writes artifacts)
 
 ```
-1. APPEND the history.md entry (spec-kit/references/history-tracking.md — fixed fields, real
-   time, ≤ 60 words): mcp_spec_kit_append_history(feature, phase, skill, agent, artifacts,
+1. history ON (phase card) → APPEND the history.md entry (history-tracking.md — fixed fields,
+   real time, ≤ 60 words): mcp_spec_kit_append_history(feature, phase, skill, agent, artifacts,
    tests, evidence, commit, note)  |  no MCP: spec-kit/scripts/spec-kit-log.sh …
+   history OFF → nothing to append (implement keeps **Implemented-by** in tasks.md instead)
 2. mcp_spec_kit_history_guard(feature, phase) → ok · mcp_spec_kit_lint_artifacts → 0 errors
 3. git add <scope>; git commit -m "<message from spec-kit/references/commits.md>"
    Hooks run — never --no-verify.
 ```
-`history.md` is the record that survives the squash-merge; a commit without its entry is a
-gap an auditor will find.
+When on, `history.md` is the record that survives the squash-merge; a commit without its entry
+is a gap an auditor will find. When off, the change record's timeline is built from git at close.
 
 ## No complete overwrite — every phase
 

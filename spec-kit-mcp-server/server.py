@@ -86,6 +86,7 @@ _BUG_HEADER_RE = re.compile(r"^### (BUG-(\d+)):", re.M)
 _TASK_RE = re.compile(r"^- (?:\[(?P<pre>[ xX])\] )?(?P<id>(?:T|BF-?)(?P<num>\d+))\b(?: \[(?P<post>[ xX])\])?", re.M)
 _HISTORY_ENTRY_RE = re.compile(r"^## \[?([0-9T:\-+.Z]+)\]? *\| *(.*)$", re.M)
 _SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
+_HISTORY_RE = re.compile(r"^\*\*History\*\*:\s*\[?(on|off)\b", re.M | re.I)
 _EPIC_RE = re.compile(r"^\*\*Epic\*\*:\s*\[?([A-Za-z0-9][\w.-]*)", re.M)
 _MODULES_RE = re.compile(r"^\*\*Modules\*\*:\s*(.+)$", re.M)
 _ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
@@ -181,6 +182,23 @@ def _adr_dir():
         if Path(c).is_dir():
             return Path(c)
     return None
+
+
+def _history_setting(fd, size):
+    """Is history.md kept for this feature? Project default `history: always | large | never`
+    (git-conventions.md, default large = size L only); spec.md `**History**: on | off` overrides.
+    Returns (on: bool, source: str)."""
+    f = fd / "spec.md"
+    if f.exists():
+        m = _HISTORY_RE.search(f.read_text(errors="replace"))
+        if m:
+            return m.group(1).lower() == "on", "spec override"
+    default = (_conventions().get("history") or "large").lower()
+    if default == "always":
+        return True, "project default: always"
+    if default == "never":
+        return False, "project default: never"
+    return (size or "M") == "L", f"project default: large (size {size or 'M'})"
 
 
 def _epic_of(fd):
@@ -411,6 +429,7 @@ def _derive(feature):
         "contracts": contracts,
         "size": size or "M",
         "size_declared": size is not None,
+        "history": dict(zip(("on", "source"), _history_setting(fd, size))),
         "final_review": _final_review(fd) if phase >= 5 else None,
         "acceptance": ({"criteria": len(acs), "round": _acceptance_round(fd) if phase >= 5 else None}
                        if (acs := _parse_acs(fd)) else None),
@@ -462,7 +481,7 @@ def _phase_card(state):
         f"next gate: {gate}",
         f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF)",
         f"bugs: {state['bugs']['open']} open · {state['bugs']['claimed']} claimed · {state['bugs']['verified']} verified",
-        "rules: history entry BEFORE commit · additive-only · evidence before claims (evidence.md)",
+        f"rules: history.md {'ON — entry before every commit' if state['history']['on'] else 'OFF — timeline from git at close'} ({state['history']['source']}) · additive-only · evidence before claims",
         acc_line or "ids: call next_id before adding a BUG/T/BF · lint_artifacts before every commit",
         review_line or "ask: an ASK you cannot put to a human is an ASSUMPTION — record it in decisions.md",
         f"derived from files at {state['derived_at']} — the files are the truth, not this card",
@@ -554,7 +573,9 @@ def project_set_constitution(status: str = "present", principles: str = "") -> s
 
 @mcp.tool(name="init_feature")
 def init_feature(feature: str, name: str = None, mode: str = "specify") -> str:
-    """Create specs/<feature>/ with a history.md header. Fails if the directory exists.
+    """Create specs/<feature>/. history.md is written only when the project default is
+    `history: always`; otherwise specify creates it once the size is known (large → L only).
+    Fails if the directory exists.
 
     Args:
         feature: Feature ID (e.g., 003-user-auth)
@@ -565,7 +586,10 @@ def init_feature(feature: str, name: str = None, mode: str = "specify") -> str:
     if fd.exists():
         return _json({"error": f"Feature '{feature}' already exists", "state": _derive(feature)})
     fd.mkdir(parents=True)
-    (fd / "history.md").write_text(f"# Process History: {name or feature}\n\n> mode: {mode} · created {_now()}\n")
+    if (_conventions().get("history") or "large").lower() == "always":
+        (fd / "history.md").write_text(f"# Process History: {name or feature}\n\n> mode: {mode} · created {_now()}\n")
+    else:
+        (fd / ".gitkeep").write_text("")
     return _json({"success": True, "state": _derive(feature)})
 
 
@@ -997,8 +1021,10 @@ def lint_artifacts(feature: str) -> str:
     if (fd / "history.md").exists():
         if not (fd / "history.md").read_text(errors="replace").lstrip().startswith("#"):
             findings.append({"file": "history.md", "severity": "warning", "msg": "missing title header"})
-    elif state["current_phase"] > 1 or state["status"] != "new":
-        findings.append({"file": "history.md", "severity": "error", "msg": "history.md missing — every feature with artifacts must have one"})
+    elif state["history"]["on"] and (state["current_phase"] > 1 or state["status"] != "new"):
+        findings.append({"file": "history.md", "severity": "error", "msg": f"history.md missing — history is on for this feature ({state['history']['source']})"})
+    if not state["history"]["on"] and (fd / "tasks.md").exists() and state["tasks"]["done"] and "**Implemented-by**:" not in (fd / "tasks.md").read_text(errors="replace"):
+        findings.append({"file": "tasks.md", "severity": "warning", "msg": "history is off — add '**Implemented-by**: <agent>' to the tasks.md header (the review's author check reads it)"})
 
     errors = sum(f["severity"] == "error" for f in findings)
     return _json({"success": errors == 0, "errors": errors, "warnings": len(findings) - errors, "findings": findings})
@@ -1270,6 +1296,8 @@ def history_guard(feature: str, phase: str) -> str:
     state = _derive(feature)
     if state is None:
         return _not_found(feature)
+    if not state["history"]["on"]:
+        return _json({"ok": True, "history": "off", "source": state["history"]["source"], "note": "no entry required; the close builds the timeline from git"})
     hist = _feature_dir(feature) / "history.md"
     if not hist.exists():
         return _json({"ok": False, "reason": "history.md missing"})

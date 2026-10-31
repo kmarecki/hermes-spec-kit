@@ -40,6 +40,7 @@ Typo, rename, config value → no spec-kit at all.
 | Final review (5.5) | §1 coverage line + exceptions, §2 rules, §4 devil's advocate (brief), §5 checklist; no stack research | full, exceptions-only tables | full, by the other agent or a fresh-context sub-agent; devil's advocate separate |
 | Close | `close` (one page) + `change-record.md` | `close` + change record; gap table exceptions only | `summarize` (full gap table) + change record |
 | ADR / AGENTS.md step | yes ("none met the bar" is fine) | yes | yes |
+| `history.md` (default `history: large`; spec `**History**:` overrides) | off — timeline from git at close | off | **on** — entry before every commit |
 
 **What never shrinks**: the RED/GREEN files, the probe per seam, the acceptance round that
 documents every AC passing (automated where a harness exists, `manual` with the user's quoted

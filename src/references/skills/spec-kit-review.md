@@ -13,7 +13,8 @@ SIZE from spec.md. REVIEWED_COMMIT = `git rev-parse --short HEAD` before anythin
 BASE = merge-checklist `base_branch`, else `branch_source` in git-conventions, else main.
 
 ## Reviewer
-`Implemented-by` = the `<agent>` of the implement entries in `history.md`.
+`Implemented-by` = the `<agent>` of the implement entries in `history.md`, or the
+`**Implemented-by**:` line in the tasks.md header when history is off for the feature.
 Another agent available → it reviews → `review:<agent>`. Else (Claude Code: the Agent tool) a
 **fresh-context sub-agent** given ONLY this procedure, the feature path, BASE and the project
 rule files — never the implementation transcript → `self-review by <agent> (fresh context: yes)`.

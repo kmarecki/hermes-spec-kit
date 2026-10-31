@@ -11,6 +11,17 @@ It is the record that survives the squash-merge; the close copies its timeline i
 In one deployment history files reached 215 KB with 1 600-word entries and invented
 timestamps — nobody read them. The format below is capped and machine-appended.
 
+## When it is kept
+
+`history:` in `specs/git-conventions.md` — `always` · `large` (default: size L only) · `never`;
+`**History**: on | off` in spec.md overrides it for one feature. The phase card says which
+applies. **On**: every phase appends an entry before its commit (`history_guard` enforces).
+**Off**: no entries; the close builds the change record's timeline from the branch's git log
+(`spec-kit/scripts/spec-kit-history.sh`, run before the squash) and `Implemented-by` comes from
+the `**Implemented-by**:` line implement writes into the tasks.md header. S/M bugfixes and small
+enhancements rarely need the per-phase record; L — many phases, weeks, the features auditors
+sample — does.
+
 ## Entry format
 
 ```markdown

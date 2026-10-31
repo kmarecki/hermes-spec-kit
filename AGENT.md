@@ -45,8 +45,9 @@ The system has three operational layers plus an optional MCP state layer:
 │  Markdown files in specs/ — additive-only, never overwritten │
 │  Templates in spec-kit/templates/ — 17 templates             │
 │  References in spec-kit/references/ — 7 shared files         │
-│  history.md — append-only record per feature (survives the  │
-│  squash-merge); change-record.md at close copies it          │
+│  history.md — per-phase record, kept for size L by default   │
+│  (history: large); change-record.md at close carries the     │
+│  timeline that survives the squash-merge                     │
 ├──────────────────────────────────────────────────────────────┤
 │              MCP State Management Layer (optional)            │
 │  FastMCP stdio server — 19 tools, no stored state            │
@@ -295,11 +296,11 @@ hermes-spec-kit/
 │   │   ├── AGENTS-template.md
 │   │   ├── git-conventions-template.md
 │   │   └── gitignore-template.md
-│   ├── scripts/spec-kit-log.sh       # no-MCP history appender (real UTC time, word cap)
+│   ├── scripts/spec-kit-log.sh · spec-kit-history.sh   # no-MCP history appender · git timeline when history is off
 │   └── references/                   # 8 shared files + skills/ (full procedures — the delta over SKILL.md)
 │       ├── preflight.md              # Pre-action self-check + commit procedure + no-overwrite rule
 │       ├── commits.md                # Commit messages per skill (history entry first)
-│       ├── history-tracking.md       # history.md: fixed-field, append-only, the record that survives the squash
+│       ├── history-tracking.md       # history.md: when kept (history: always|large|never, spec override), format, guard
 │       ├── sizing.md                 # S / M / L — leaner workflow and artifacts per tier; evidence never shrinks
 │       ├── evidence.md               # Oracles, evidence files (every tier), status vocabulary
 │       ├── acceptance.md             # AC ids, verify levels, freeze, the acceptance loop

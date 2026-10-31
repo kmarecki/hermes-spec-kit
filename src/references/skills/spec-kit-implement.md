@@ -16,8 +16,10 @@ Phase N (Setup → Foundational → stories → Polish; S: the one flat list is 
 ═══ GREEN ═══ for each code task: the simplest code that passes (hardcode now, refactor in
               Polish). Then run ONLY this phase's tests (tee → evidence/<phase>-green.txt);
               run the build — TypeScript MUST compile (Vitest/Jest swallow type errors).
-═══ CLOSE ═══ tasks [X] · fixed bugs → claimed + Evidence · history entry
+═══ CLOSE ═══ tasks [X] · fixed bugs → claimed + Evidence · history ON: entry
               (mcp_spec_kit_append_history: "Phase 4 — <name>", agent = Implemented-by, evidence files)
+              history OFF: "**Implemented-by**: <agent>" in the tasks.md header (first phase only),
+              evidence files named in the commit body
               · mcp_spec_kit_history_guard + mcp_spec_kit_lint_artifacts
               · ONE commit "feat: [feature] Phase N - [name]"
 ```

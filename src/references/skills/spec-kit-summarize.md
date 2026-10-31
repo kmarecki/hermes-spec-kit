@@ -28,7 +28,7 @@ page, what is BUILT; rounds untouched).
 
 ## Evidence table
 Acceptance / regression `output:` + `ci:`; a `probe:` per seam in the plan or the diff;
-`Implemented-by` from the history.md implement entries and the review label from review-final.md. No oracle → ❌
+`Implemented-by` from the history.md implement entries (or the tasks.md header when history is off) and the review label from review-final.md. No oracle → ❌
 unverified — never omitted, never upgraded. `claimed` bugs without `Verified-by` → *Unverified
 claims*; the feature may still close, saying so.
 
@@ -81,8 +81,10 @@ RECORD both outcomes in the close document (Artifact State) and in the change re
 `spec-kit/templates/change-record-template.md` → `specs/[feature]/change-record.md`. Every field
 filled from what exists (spec Security & Privacy, size ruling, history.md, acceptance round,
 review round, decisions, ADRs) or written `pending` (PR reviewer, deployment approval) — never
-blank. Timeline: one row per history.md entry (date, phase, agent, evidence, commit message).
-The record is the one page an auditor reads; with history.md it survives the squash-merge.
+blank. Timeline: history on → one row per history.md entry (date, phase, agent, evidence, commit
+message); history off → `spec-kit/scripts/spec-kit-history.sh [feature]` (date · author · subject)
+run on the branch now, before the squash. The record is the one page an auditor reads and the
+one that survives the squash-merge.
 
 ## Reopen
 Close doc exists → APPEND `## Reopened — <date>` (previous health → new health, changed

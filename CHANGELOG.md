@@ -50,9 +50,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - **Security & Privacy section in spec.md** (authorization / tenant boundary, personal data,
   new surface, input validation, logging) — "None — because …" is a valid answer; the plan
   answers each non-empty row, the pre-implement review checks it, the final review §2 verdicts it.
-- **`history.md` stays** — it is the record that survives the squash-merge, and the close
-  copies its timeline into the change record. `references/commits.md` replaces `auto-commit.md`
-  (messages per skill; the history entry comes first). Commit hashes are still never recorded.
+- **`history.md` is a project setting, default `history: large`** (git-conventions.md:
+  `always | large | never`; spec.md `**History**: on | off` overrides per feature). Size L keeps
+  the per-phase record (entry before every commit, `history_guard` enforces); S/M do not — the
+  close builds the change record's timeline from the branch's git log
+  (`scripts/spec-kit-history.sh`, before the squash) and `Implemented-by` lives in the tasks.md
+  header. The MCP server stores nothing: the setting is in the files, so both agents and every
+  machine see the same answer and it travels with the PR. `init_feature` writes history.md only
+  under `always`; `lint_artifacts` requires it only when on. `references/commits.md` replaces
+  `auto-commit.md`. Commit hashes are still never recorded.
 - **Final review is exceptions-only** (`review-final-template.md`): §1 is one coverage line +
   rows for ⚠️ / ❌ / ↔ / 👤 (the AC matrix lives in acceptance.md, the FR map in tasks.md). New
   verdict **`AWAITING-OWNER`** — no defect, owner confirmations pending; a specs-only Round

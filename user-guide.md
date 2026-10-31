@@ -1034,7 +1034,7 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | bugs-template.md | Phase 5 | Bug tracking |
 | implementation-summary-template.md | Phase 6 | Full summary |
 | close-template.md | Phase 6 | Lightweight close |
-| history-template.md | Phase transitions | Append-only log entries |
+| history-template.md | Phase transitions (size L by default — `history: large`) | Append-only log entries |
 | epic-template.md · epic-plan-template.md · epic-features-template.md · epic-review-template.md | `spec-kit epic` (opt-in `epics_dir`) | E1 specify (goal, EACs, rules) · E2 plan (target architecture, ED decisions, sequencing) · E3 breakdown (ordered features) · E3.5 / E6 reviews with devil's advocate |
 | design-doc-template.md | `spec-kit design` (opt-in `design_dir`) | Living module design: components, flow, seams, invariants, security, debt |
 | change-record-template.md | Close | The auditor's one page: ticket, risk tier, security impact, approvals, verification, rollback, timeline |

@@ -31,13 +31,13 @@ metadata:
 5. **ADRs**: harvest (decisions.md rulings, plan Rounds, research, review findings, deviations); apply the ADR bar; per candidate propose new / supersede / append-evidence (`mcp_spec_kit_next_id(kind="ADR")`, project template else `spec-kit/templates/adr-template.md`); **WAIT** per ADR; update the index. Fill *Architecture Decisions* — "none met the bar" is a valid row.
 6. **AGENTS.md** (+ CLAUDE.md / rule files): statements the diff or new ADRs make wrong (commands, layout, boundaries, versions, conventions, debt, ADR list) → targeted patches; **WAIT**; never rewrite.
 6b. **Design doc + epic row** (only when `specs/git-conventions.md` sets `design_dir` / `epics_dir`; else skip in one line): for each module in plan.md `**Modules**:` → the `[design_dir]/[module].md` sections the diff makes wrong (components, flow, seams, invariants, debt) → targeted patches + a change-log line; **WAIT** per patch; a module without a doc → say so, never create one here (`spec-kit-design`). `**Epic**:` in spec.md → set this feature's row in `[epics_dir]/[epic]/features.md` (status closed, PR, health, ADRs); last row → suggest `close epic`.
-7. **`change-record.md`** from `spec-kit/templates/change-record-template.md`: ticket, branch/PR, size, what/why, Security & Privacy impact (from spec), data/config changes, implemented-by, reviewed-by (agent + human PR reviewer or `pending`), verification, decisions, deployment approval (or `pending`), rollback, follow-ups; **Timeline** = one row per `history.md` entry (date, phase, agent, evidence).
+7. **`change-record.md`** from `spec-kit/templates/change-record-template.md`: ticket, branch/PR, size, what/why, Security & Privacy impact (from spec), data/config changes, implemented-by, reviewed-by (agent + human PR reviewer or `pending`), verification, decisions, deployment approval (or `pending`), rollback, follow-ups; **Timeline** = one row per `history.md` entry (history on) or `spec-kit/scripts/spec-kit-history.sh [feature]` run now on the branch (history off — before the squash).
 8. ❌ Not Done gaps → new `open` bugs. Write `close.md` from `spec-kit/templates/close-template.md`.
 
 ## Done when
 - [ ] close.md + change-record.md written (no `pending` field left blank); health computed; no bug status changed; design doc / epic row patched or "none kept" recorded.
 - [ ] MCP: `mcp_spec_kit_close_feature` · `mcp_spec_kit_lint_artifacts` → 0 errors.
-- [ ] history.md entry (`Phase 6`, health %, ADRs), then ONE commit: close doc, change record, patched spec/plan/data-model, ADRs + index, AGENTS.md, design doc, epic row — `spec(phase-6): [feature] close (health: N%)`.
+- [ ] history.md entry when on (`Phase 6`, health %, ADRs), then ONE commit: close doc, change record, patched spec/plan/data-model, ADRs + index, AGENTS.md, design doc, epic row — `spec(phase-6): [feature] close (health: N%)`.
 
 ## Next
 Feature **Complete**. Propose the PR (description drafted by the final review; the human reviewer's name goes into the change record when known), `spec-kit-specify` for the next feature, `bugfix [feature]` if gaps became bugs.
