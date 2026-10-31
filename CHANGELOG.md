@@ -10,12 +10,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed — leaner tiers, the change record, devil's advocate
 
-- **Size tiers are now progressively leaner** (`references/sizing.md`, `references/evidence.md`):
-  S saves no RED/GREEN files (the commit's `Evidence:` trailer names the test run), M saves RED
-  per phase only, L saves RED and GREEN. Probes per `[SEAM]`, the acceptance round, the oracle
-  rule and the final review never shrink. `lint_artifacts` warns about a missing RED file only
-  for M/L. The pre-implement review is skipped for S, **lite** for M (coverage,
-  underspecification, codebase fit, design soundness + devil's advocate), full for L.
+- **Size tiers are progressively leaner in workflow and artifact length — never in evidence**
+  (`references/sizing.md`, `references/evidence.md`). S is for a single bugfix or a small
+  enhancement: a few-line spec (1–3 FRs, 1–2 ACs, one Security & Privacy line), a half-page
+  plan, a flat task list, one commit for spec+plan+tasks, no pre-implement review. M runs a
+  **lite** pre-implement review (coverage, underspecification, codebase fit, design soundness
+  + devil's advocate), L the full one. Every tier saves RED/GREEN files per phase and a probe
+  per seam, and ends with an acceptance round that documents every AC — automated where a
+  harness exists, `manual` with the user's quoted confirmation where none can.
 - **`change-record.md` at close** (`change-record-template.md`) — the one page an auditor
   reads: ticket, branch/PR, size, what/why, Security & Privacy impact, data/config changes,
   implemented-by, reviewed-by (agent + human PR reviewer), verification, decisions, deployment
@@ -23,12 +25,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - **Security & Privacy section in spec.md** (authorization / tenant boundary, personal data,
   new surface, input validation, logging) — "None — because …" is a valid answer; the plan
   answers each non-empty row, the pre-implement review checks it, the final review §2 verdicts it.
-- **No more `history.md`.** The record is the commit: every spec-kit commit carries
-  `Phase:` / `Implemented-by:` / `Evidence:` trailers (`references/commits.md`, which replaces
-  `auto-commit.md` + `history-tracking.md`); `scripts/spec-kit-history.sh` prints the timeline
-  from git and the close pastes it into the change record (it survives the squash-merge).
-  Removed: `append_history`, `history_guard`, `spec-kit-log.sh`, `history-template.md`;
-  `init_feature` creates only the directory; `lint_artifacts` no longer requires history.md.
+- **`history.md` stays** — it is the record that survives the squash-merge, and the close
+  copies its timeline into the change record. `references/commits.md` replaces `auto-commit.md`
+  (messages per skill; the history entry comes first). Commit hashes are still never recorded.
 - **Final review is exceptions-only** (`review-final-template.md`): §1 is one coverage line +
   rows for ⚠️ / ❌ / ↔ / 👤 (the AC matrix lives in acceptance.md, the FR map in tasks.md). New
   verdict **`AWAITING-OWNER`** — no defect, owner confirmations pending; a specs-only Round

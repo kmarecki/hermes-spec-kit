@@ -37,4 +37,4 @@ metadata:
 Only with an oracle: the user's quoted words, a green `ci:<id>` on that commit, or `review:<other-agent>`. Else refuse: "claimed, not verified." Set `Status: verified` + `Verified-by:`.
 
 ## Done when
-- [ ] Bugs confirmed with the user (loop-logged bugs carry their round); ids ascending; Summary counts match (`mcp_spec_kit_lint_artifacts` → 0 errors). Commit (`spec-kit/references/commits.md`): `spec(phase-5): [feature] bug log`.
+- [ ] Bugs confirmed with the user (loop-logged bugs carry their round); ids ascending; Summary counts match (`mcp_spec_kit_lint_artifacts` → 0 errors). history.md entry, then commit (`spec-kit/references/preflight.md` procedure): `spec(phase-5): [feature] bug log`.

@@ -16,23 +16,29 @@ its own misunderstanding. Every gate needs an **oracle** the agent did not autho
 
 `probe:` and `output:` support a **claim**; `verified` needs `user`, `ci:` or `review:<other-agent>`.
 
-## Files — by size (`sizing.md`)
+## Files — every tier (`sizing.md`: the size changes the workflow, never the evidence)
 
 `specs/[feature]/evidence/`, one file per item, first line = command, second = UTC time.
 
-| File | S | M | L |
-|------|---|---|---|
-| `<TASK>-probe-<seam>.txt` — read-only probe before a `[SEAM]` fixture | ✓ | ✓ | ✓ |
-| `<phase>-red.txt` — the phase's `[TEST]` tasks failing for the right reason | — | ✓ | ✓ |
-| `<phase>-green.txt` — the phase's tests passing | — | — | ✓ |
-| `<TASK>-characterisation.txt` — legacy code pinned before change | when it applies | ✓ | ✓ |
-| `acceptance-r<N>.txt` (+ `-AC-###.txt` per command/probe AC) | ✓ | ✓ | ✓ |
-| `acceptance-freeze.json` — SHA of the AC tests after RED | ✓ | ✓ | ✓ |
-| `final-<check>.txt` — diff scan, build, test, lint, format | ✓ | ✓ | ✓ |
+| File | When |
+|------|------|
+| `<TASK>-probe-<seam>.txt` — read-only probe before a `[SEAM]` fixture | every `[SEAM]` task |
+| `<phase>-red.txt` — the phase's `[TEST]` tasks failing for the right reason | every implement phase (S: the one phase) |
+| `<phase>-green.txt` — the phase's tests passing | every implement phase |
+| `<TASK>-characterisation.txt` — legacy code pinned before change | when it applies |
+| `acceptance-r<N>.txt` (+ `-AC-###.txt` per command/probe AC) | every acceptance round |
+| `acceptance-freeze.json` — SHA of the AC tests after RED | every feature with ACs |
+| `final-<check>.txt` — diff scan, build, test, lint, format | every final review |
 
-Where a RED/GREEN file is not required, the commit's `Evidence:` trailer names the test
-command and counts instead. `lint_artifacts` warns about a done `[TEST]` task without a RED
-file only for M and L; a done `[SEAM]` without a probe always.
+The history entry's `Evidence:` field names these files. `lint_artifacts` warns about a done `[TEST]`
+task without a RED file and a done `[SEAM]` without a probe — every tier.
+
+## Acceptance criteria are always documented
+
+Every feature, S included, ends with an acceptance round in `acceptance.md` that lists every
+AC with its outcome. Automated wherever a harness exists (`unit` … `e2e`, `command`, `probe`);
+`manual` only where no tool can judge, and then the round (or the final review) quotes the
+user's confirmation — an unconfirmed manual AC is 👤 pending, never ✅.
 
 ## Status vocabulary (bugs.md)
 
@@ -43,7 +49,7 @@ implementing agent never sets `verified`.
 
 ## Author / reviewer split
 
-`Implemented-by:` is a commit trailer (`commits.md`). The review reads it: a different agent →
+`<agent>` in every history.md entry header is the `Implemented-by` (`history-tracking.md`). The review reads it: a different agent →
 the review is `review:<agent>`; the same agent → **self-review** (fresh-context sub-agent for
 L), which opens the merge gate but never verifies a bug.
 
@@ -51,7 +57,7 @@ L), which opens the merge gate but never verifies a bug.
 
 | Gate | Minimum evidence |
 |------|------------------|
-| Implement phase commit | `Evidence:` trailer (S) / `output:` RED (M) / RED + GREEN (L); probe per seam |
+| Implement phase commit | `output:` RED + GREEN of the phase; probe per seam |
 | Acceptance round | `acceptance.md` round with Result + Commit; `output:`; frozen tests unchanged |
 | Bug `claimed` | `output:` of the reproducing test green; `probe:` per seam touched |
 | Bug `verified` | `Verified-by:` oracle |

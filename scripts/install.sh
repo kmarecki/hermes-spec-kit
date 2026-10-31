@@ -76,7 +76,7 @@ mkdir -p "$TEMPLATES_DIR"
 
 # Remove obsolete template files
 rm -f "$TEMPLATES_DIR/checklist-template.md" "$TEMPLATES_DIR/comparison-template.md" "$TEMPLATES_DIR/soul-template.md"
-rm -f "$TEMPLATES_DIR/history-template.md" "$TEMPLATES_DIR/implementation-summary-template.md"
+rm -f "$TEMPLATES_DIR/implementation-summary-template.md"
 
 for tmpl in "$PROJECT_DIR"/src/templates/*-template.md; do
   if [ -f "$tmpl" ]; then
@@ -109,10 +109,10 @@ for installed in "$REFERENCES_DIR"/*.md; do
   fi
 done
 rmdir "$REFERENCES_DIR/local" 2>/dev/null || true
-# Shell helpers (spec-kit-history.sh — the feature timeline from git)
+# Shell helpers (spec-kit-log.sh — the no-MCP history appender)
 if [ -d "$PROJECT_DIR/src/scripts" ]; then
   mkdir -p "$SKILLS_DIR/spec-kit/scripts"
-  rm -f "$SKILLS_DIR/spec-kit/scripts/spec-kit-log.sh"
+  rm -f "$SKILLS_DIR/spec-kit/scripts/spec-kit-history.sh"
   for sh in "$PROJECT_DIR"/src/scripts/*.sh; do
     [ -f "$sh" ] || continue
     echo "  Installing script: $(basename "$sh")"

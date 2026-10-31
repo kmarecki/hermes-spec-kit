@@ -23,4 +23,4 @@ metadata:
 4. Apply approved patches only — additive or targeted, nothing deleted. May regenerate `plan.md` → `## Current Design`.
 
 ## Done when
-- [ ] Every patch approved before applying. Commit (`spec-kit/references/commits.md`): `spec(refresh): [feature] reconcile artifacts`.
+- [ ] Every patch approved before applying. history.md entry, then commit (`spec-kit/references/preflight.md` procedure): `spec(refresh): [feature] reconcile artifacts`.

@@ -37,7 +37,7 @@ The system has three operational layers plus an optional MCP state layer:
 ├──────────────────────────────────────────────────────────────┤
 │              12 Phase Skills Layer                            │
 │  One skill per phase + 2 supporting (refresh, review)        │
-│  Each skill: preflight → phase work → commit (with trailers)  │
+│  Each skill: preflight → phase work → history append → commit│
 │  All skills loadable independently, none depend on each      │
 │  other at runtime (only on artifact state)                   │
 ├──────────────────────────────────────────────────────────────┤
@@ -45,11 +45,11 @@ The system has three operational layers plus an optional MCP state layer:
 │  Markdown files in specs/ — additive-only, never overwritten │
 │  Templates in spec-kit/templates/ — 17 templates             │
 │  References in spec-kit/references/ — 7 shared files         │
-│  git log IS the history: Phase / Implemented-by / Evidence   │
-│  trailers; change-record.md at close (survives the squash)   │
+│  history.md — append-only record per feature (survives the  │
+│  squash-merge); change-record.md at close copies it          │
 ├──────────────────────────────────────────────────────────────┤
 │              MCP State Management Layer (optional)            │
-│  FastMCP stdio server — 17 tools, no stored state            │
+│  FastMCP stdio server — 19 tools, no stored state            │
 │  No stored state — derived from specs/<feature>/ per call     │
 │  Fallback: filesystem-based artifact detection               │
 │  All skills backward-compatible with or without MCP          │
@@ -69,9 +69,11 @@ The system has three operational layers plus an optional MCP state layer:
    append, insert, or targeted patch. This is enforced at every phase.
 5. **Phase 6 is mandatory** — a feature is not complete until Close/Summarize is
    done. This prevents feature accretion and ensures traceability.
-6. **Ceremony follows size** — S / M / L (`references/sizing.md`) make artifacts, reviews and
-   evidence progressively leaner; what never shrinks: probes per seam, the acceptance round,
-   the oracle rule, the final review, the change record.
+6. **Ceremony follows size** — S / M / L (`references/sizing.md`) make the workflow and the
+   artifacts progressively leaner (S = a bugfix or small enhancement: a few-line spec with 1–2
+   ACs, one commit for spec+plan+tasks, no pre-implement review). Evidence never shrinks:
+   RED/GREEN files, probes per seam, the acceptance round documenting every AC, the oracle
+   rule, the final review, the change record.
 7. **Skills are the delta** — the one-screen SKILL.md (≤ 60 lines) is the procedure; the
    `references/skills/` file holds only what it leaves out. Never restate one in the other.
 
@@ -191,7 +193,7 @@ outside its owning skill context.
 
 | Tool | Purpose | When to Call |
 |------|---------|-------------|
-| `init_feature` | Create `specs/<feature>/` | In specify skill when creating a new feature |
+| `init_feature` | Create `specs/<feature>/` + history.md header | In specify skill when creating a new feature |
 | `get_feature_state` | Derived phase, status, artifacts, task/bug counts + phase card | Phase detection, status queries |
 | `get_next_actions` | Available actions + the ten-line **phase card** | Before any write; after context compaction |
 | `advance_phase` | Validate a transition against the files (writes nothing) | In the phase skill that owns the transition |
@@ -206,8 +208,10 @@ outside its owning skill context.
 | `acceptance_freeze` | Checksum the `[TEST] [AC-###]` test files after their RED run; refuse silent changes | Implement, after each RED sub-phase |
 | `acceptance_status` | AC → test → result matrix from spec.md, tasks.md and JUnit/TRX files; regressions; frozen changes | Accept mode (each loop round) |
 | `diff_scan` | Mechanical merge-readiness scan of the branch diff (conflicts, secrets, forbidden files, focused tests, TODOs, unplanned files) | Final review (phase 5.5) |
-| `lint_artifacts` | Schema lint of bugs.md / tasks.md / ACs / rounds; probes per [SEAM]; RED files for M/L | Before every commit |
-| `timestamp` | Real UTC time | Every evidence file header and date field |
+| `lint_artifacts` | Schema lint of bugs.md / tasks.md / ACs / rounds; probes per [SEAM]; RED files per done [TEST] | Before every commit |
+| `timestamp` | Real UTC time | Every history entry and evidence file |
+| `history_guard` | Is there a fresh history entry for this phase since the last commit? | Pre-commit guard |
+| `append_history` | Append a fixed-field, time-stamped, word-capped history entry | End of every phase / bugfix / regression / close |
 
 ### Critical MCP Rules
 
@@ -225,7 +229,7 @@ outside its owning skill context.
 - **Fallback** — when MCP is not configured, all skills fall back to filesystem
   artifact detection, `date -u` for timestamps and manual id counting.
 - **No persistence** — the server never writes under `specs/` except
-  `init_feature` (the directory). If a tool "succeeds", it means
+  `init_feature` (directory + history header). If a tool "succeeds", it means
   the files already prove the state; if it errors, fix the files.
 
 ### MCP Error Handling
@@ -281,18 +285,19 @@ hermes-spec-kit/
 │   │   ├── AGENTS-template.md
 │   │   ├── git-conventions-template.md
 │   │   └── gitignore-template.md
-│   ├── scripts/spec-kit-history.sh   # the feature timeline from git trailers (pasted into change-record.md)
-│   └── references/                   # 7 shared files + skills/ (full procedures — the delta over SKILL.md)
+│   ├── scripts/spec-kit-log.sh       # no-MCP history appender (real UTC time, word cap)
+│   └── references/                   # 8 shared files + skills/ (full procedures — the delta over SKILL.md)
 │       ├── preflight.md              # Pre-action self-check + commit procedure + no-overwrite rule
-│       ├── commits.md                # Commit messages per skill + Phase / Implemented-by / Evidence trailers
-│       ├── sizing.md                 # S / M / L — what each tier produces (artifacts, reviews, evidence)
-│       ├── evidence.md               # Oracles, evidence files by tier, status vocabulary
+│       ├── commits.md                # Commit messages per skill (history entry first)
+│       ├── history-tracking.md       # history.md: fixed-field, append-only, the record that survives the squash
+│       ├── sizing.md                 # S / M / L — leaner workflow and artifacts per tier; evidence never shrinks
+│       ├── evidence.md               # Oracles, evidence files (every tier), status vocabulary
 │       ├── acceptance.md             # AC ids, verify levels, freeze, the acceptance loop
 │       ├── constitution-principles.md # 12 principles × 3 options with pros/cons
 │       └── constitution-tables.md    # Wizard tables and brownfield detection data
 │
 ├── spec-kit-mcp-server/              # MCP server (Python, FastMCP)
-│   ├── server.py                     # 17 tools, Python + mcp SDK (<2)
+│   ├── server.py                     # 19 tools, Python + mcp SDK (<2)
 │   ├── test_workflow.py              # MCP integration tests in temp git projects
 │   ├── test_skills.py                # skill/template/reference integrity checks
 │   ├── test_server.py                # Test runner entry point
@@ -418,7 +423,7 @@ Run validation tests before committing to catch:
 - **One commit per phase, documentation included**: status-only document
   changes (task [X], bug status, evidence) ride the phase's
   code commit; only requirement/design-intent changes are committed first.
-- **Commit messages**: Follow `commits.md` — message per skill + the three trailers.
+- **Commit messages**: Follow `commits.md`; the history.md entry is appended first.
   Template: `spec(phase-N): [feature] description` for spec phases,
   `feat:` / `fix:` for code phases.
 - **Branch guardrails**: Block git operations on main/master. Preflight check #1
@@ -448,7 +453,7 @@ or targeted-edit (update specific lines/fields).
 - **Exception**: `plan.md` `## Current Design` is REGENERATED at close (and by
   refresh) — the one section that is replaced. Bugfix rounds append dated
   ADR-style sections under `## Rounds (ADR log)` and name what they supersede.
-- **No history file**: the commit trailers are the record; `spec-kit-history.sh` reads it back; the close copies it into `change-record.md`.
+- **history.md is append-only**: never edit or delete past entries; the close copies its timeline into `change-record.md`.
 
 Preflight.md section 3 enforces this with a 50-line threshold check.
 
@@ -493,7 +498,7 @@ The template at `src/templates/AGENTS-template.md` provides the starter.
 | **9 purposes × 25 architectures** | Covers the full spectrum of project types while keeping the decision tree manageable. |
 | **Free-text + guided + brownfield** | Three modes for three user contexts — fast (free-text), thorough (guided), or detected (brownfield). |
 | **Separate workflow skill** | Prevents routing logic from mixing with phase execution logic. Each skill stays focused. |
-| **Commits carry the record** | `Phase:` / `Implemented-by:` / `Evidence:` trailers on every commit; `change-record.md` at close survives the squash-merge. |
+| **history.md append-only** | The process record that survives the squash-merge; `change-record.md` at close copies it for the auditor. |
 
 ---
 
@@ -556,7 +561,7 @@ Follow the spec-kit workflow! This repo uses its own skills:
    full `./scripts/install.sh`.
 6. **Never edit installed files in ~/.hermes/skills/.** Edit source files in
    `src/` and reinstall.
-7. **Pre-flight self-check is not optional.** Branch, mode, logged bug, phase card —
+7. **Pre-flight self-check is not optional.** Branch, mode, logged bug, phase card, history —
    run them before every action.
 8. **When in doubt about the current state, run `get_feature_state` or
    `project_status` (MCP), or scan the artifact directory.** Do not guess.

@@ -13,7 +13,7 @@ SIZE from spec.md. REVIEWED_COMMIT = `git rev-parse --short HEAD` before anythin
 BASE = merge-checklist `base_branch`, else `branch_source` in git-conventions, else main.
 
 ## Reviewer
-`Implemented-by` from the feat/fix commit trailers (`git log --format=%(trailers:key=Implemented-by)`).
+`Implemented-by` = the `<agent>` of the implement entries in `history.md`.
 Another agent available → it reviews → `review:<agent>`. Else (Claude Code: the Agent tool) a
 **fresh-context sub-agent** given ONLY this procedure, the feature path, BASE and the project
 rule files — never the implementation transcript → `self-review by <agent> (fresh context: yes)`.
@@ -78,7 +78,8 @@ MECHANICAL  mcp_spec_kit_diff_scan(feature, base=BASE) → evidence/final-diff-s
     data integrity (transactions, races, migrations), concurrency, structural duplication,
     complexity (> ~100-line functions, deep nesting), API surface. Stack practice: M/L.
     Tests: assert §1 behaviour; edge cases; every [SEAM] fixture matches its probe (missing = HIGH);
-    RED/GREEN evidence per tier; acceptance round present.
+    RED + GREEN file per implement phase; acceptance round present with every AC's outcome
+    (manual ACs → the user's quoted confirmation, else 👤).
 §4  devil's advocate (final): concrete break attempts — another tenant's id, empty / stale /
     boundary period, concurrent edit, failing dependency, unauthorized role, oversized input;
     "would this test still pass if the code were wrong?"; argue the opposite verdict.
@@ -107,7 +108,7 @@ Same checks as final, written as a report; no round, no commit. CRITICAL / HIGH 
 refactoring tasks in tasks.md + `reopen`, or note for future work — with the user's approval.
 
 ## Commit
-Pre: `spec(review): [feature] review findings`. Final: `mcp_spec_kit_lint_artifacts` (rounds
-need Verdict + Reviewed-commit) → `spec(review): [feature] final review (verdict: X)` — specs only,
-so the round stays fresh. Read-only on source code; writes only the report / round, evidence,
+History entry first (preflight commit procedure; closed-review: none). Pre: `spec(review): [feature]
+review findings`. Final: `mcp_spec_kit_lint_artifacts` (rounds need Verdict + Reviewed-commit) →
+`spec(review): [feature] final review (verdict: X)` — specs only, so the round stays fresh. Read-only on source code; writes only the report / round, evidence,
 bugs.md entries, approved spec/plan patches, merge-checklist.md on first use.

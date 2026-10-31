@@ -7,18 +7,19 @@
 Phase N (Setup → Foundational → stories → Polish; S: the one flat list is one phase)
 ═══ RED ═══   for each [TEST] task: write it (one behaviour per test; real code, not mocks,
               unless unavoidable; behaviour, not implementation) → run it → it FAILS because
-              the feature is missing (not a typo). M/L: tee → evidence/<phase>-red.txt
+              the feature is missing (not a typo). tee → evidence/<phase>-red.txt (every tier)
               then mcp_spec_kit_acceptance_freeze(feature)   # SHA of every [AC-###] test file
 ═══ SEAMS ═══ for each [SEAM] task: read-only probe of the real system/data FIRST
               → evidence/<TASK>-probe-<seam>.txt (command + result); the fixture has the SAME
               shape (columns, rows per key, types). A hand-built fixture without a probe is how
               a fix passes green and fails in production. All sizes.
 ═══ GREEN ═══ for each code task: the simplest code that passes (hardcode now, refactor in
-              Polish). Then run ONLY this phase's tests (L: tee → evidence/<phase>-green.txt);
+              Polish). Then run ONLY this phase's tests (tee → evidence/<phase>-green.txt);
               run the build — TypeScript MUST compile (Vitest/Jest swallow type errors).
-═══ CLOSE ═══ tasks [X] · fixed bugs → claimed + Evidence · mcp_spec_kit_lint_artifacts ·
-              ONE commit "feat: [feature] Phase N - [name]" with the trailers
-              (Phase: Phase 4 — <name> / Implemented-by: <agent> / Evidence: …)
+═══ CLOSE ═══ tasks [X] · fixed bugs → claimed + Evidence · history entry
+              (mcp_spec_kit_append_history: "Phase 4 — <name>", agent = Implemented-by, evidence files)
+              · mcp_spec_kit_history_guard + mcp_spec_kit_lint_artifacts
+              · ONE commit "feat: [feature] Phase N - [name]"
 ```
 - A frozen `[AC-###]` test that "needs" editing to go green means the code or the spec is wrong:
   STOP and ASK; a refreeze needs the user's ruling (`acceptance_freeze refreeze=true reason=…`).
@@ -37,7 +38,7 @@ Phase N (Setup → Foundational → stories → Polish; S: the one flat list is 
 2. GREEN — minimal fix; run → passes; evidence/BF-###-green.txt (all sizes — it is the claim);
            probe per seam touched → evidence/BF-###-probe-<seam>.txt
 3. CLAIM — bugs.md Status: claimed + Evidence: … (never verified)
-4. COMMIT "fix: [feature] BF-### - description" + trailers
+4. HISTORY entry (phase "BF-###") → guard → COMMIT "fix: [feature] BF-### - description"
 ```
 New bug found mid-fix → log it (`mcp_spec_kit_next_id(kind="BUG")`, inserted before the
 Summary separator), do not fix inline; say "BUG-NNN logged — address via 'bugfix' after this

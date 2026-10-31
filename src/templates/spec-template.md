@@ -4,8 +4,8 @@
 **Size**: [S | M | L] — [one-line reason; `spec-kit/references/sizing.md`]
 **Input**: "[USER DESCRIPTION]"
 
-> Size S: one user story, FRs, ACs, Success Criteria, Edge Cases, Security & Privacy — delete
-> the unused sections instead of leaving placeholders.
+> Size S (a single bugfix or a small enhancement): **a few lines** — one sentence of intent,
+> 1–3 FRs, 1–2 ACs, one Security & Privacy line, 1 SC. Delete every other section.
 
 ## User Scenarios *(mandatory)*
 

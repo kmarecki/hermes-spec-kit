@@ -65,6 +65,7 @@ EXPECTED_TEMPLATES = {
     "git-conventions-template.md",
     "gitignore-template.md",
     "change-record-template.md",
+    "history-template.md",
     "plan-template.md",
     "research-template.md",
     "spec-template.md",
@@ -77,6 +78,7 @@ EXPECTED_REFERENCES = {
     "constitution-principles.md",
     "constitution-tables.md",
     "evidence.md",
+    "history-tracking.md",
     "preflight.md",
     "sizing.md",
 }
@@ -355,7 +357,7 @@ def test_no_loose_reference_files():
         lines = skill_text.count("\n")
         check(f"{name}: SKILL.md is one screen (<= 60 lines)", lines <= 60, f"{lines} lines")
     budget = sum(p.stat().st_size for p in SKILLS_DIR.rglob("*.md")) + sum(p.stat().st_size for p in REFERENCES_DIR.rglob("*.md")) + sum(p.stat().st_size for p in TEMPLATES_DIR.glob("*.md"))
-    check("skills + references + templates stay under ~55k tokens (220 KB)", budget <= 220_000, f"{budget // 1024} KB")
+    check("skills + references + templates stay under ~60k tokens (240 KB)", budget <= 240_000, f"{budget // 1024} KB")
 
 
 def test_workflow_diagram_phases():
@@ -391,7 +393,7 @@ def test_mcp_tool_names_match_server():
         check("server.py found", False, "spec-kit-mcp-server/server.py missing")
         return
 
-    REMOVED_TOOLS = {"log_bug", "set_bug_status", "set_bug_plan_ref", "append_history", "history_guard"}
+    REMOVED_TOOLS = {"log_bug", "set_bug_status", "set_bug_plan_ref"}
 
     # 1. Removed tools must not exist in the server
     for t in sorted(REMOVED_TOOLS):

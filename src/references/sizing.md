@@ -1,9 +1,14 @@
 # Size Tiers (S / M / L)
 
-Ceremony follows the size of the change. `spec-kit-specify` **always asks** the tier,
-recommendation first and marked "(Recommended)" with the signals that triggered it. The
-answer is a ruling in decisions.md and `**Size**: S | M | L — <reason>` in spec.md. Unattended
-→ the recommendation is recorded as an assumption. A spec without the line is treated as M.
+Ceremony follows the size of the change — the **workflow** and the **length of the artifacts**
+shrink; the evidence does not. `spec-kit-specify` **always asks** the tier, recommendation first
+and marked "(Recommended)" with the signals that triggered it. The answer is a ruling in
+decisions.md and `**Size**: S | M | L — <reason>` in spec.md. Unattended → the recommendation is
+recorded as an assumption. A spec without the line is treated as M.
+
+**S is for a single bugfix or a small enhancement** — one layer, a handful of files, nothing
+new at the boundary. Anything with a new seam, a second layer or a security / tenant / data
+dimension is at least M.
 
 ## Choosing — the highest tier any row triggers
 
@@ -19,25 +24,27 @@ answer is a ruling in decisions.md and `**Size**: S | M | L — <reason>` in spe
 
 Typo, rename, config value → no spec-kit at all.
 
-## What each tier produces — progressively leaner
+## What each tier produces — the workflow and the artifacts get leaner, the evidence stays
 
 | Step | S | M | L |
 |------|---|---|---|
-| spec.md | one story, FRs, ACs, SCs, edge cases, **Security & Privacy** (one line allowed) | full | full |
-| Clarify | only if markers remain | if markers remain | recommended |
-| plan.md | Summary, Current Design, seams, Acceptance strategy, Rounds | full; research / data-model / contracts / quickstart only when needed | full + all that apply |
+| spec.md | **a few lines**: one sentence of intent, 1–3 FRs, **1–2 ACs**, the Security & Privacy line ("None — because …" allowed), 1 SC | full template | full template |
+| Clarify | only if a marker remains | if markers remain | recommended |
+| plan.md | **half a page**: Summary, Current Design, seams, the AC → test row(s), Rounds | full; research / data-model / contracts / quickstart only when needed | full + all that apply |
 | Specify → Plan → Tasks | **auto-chained**, ONE commit `spec(phase-1-3)` | one commit per phase | one commit per phase |
-| tasks.md | flat list | phases | phases |
+| tasks.md | flat list, ≤ ~8 tasks | phases | phases |
 | Pre-implement review (3.5) | skip | **lite**: coverage, underspecification, codebase fit, devil's advocate | **required, full** + devil's advocate by a separate sub-agent |
-| **Implement evidence** | `probe:` per `[SEAM]` · no RED/GREEN files | `probe:` per `[SEAM]` · **RED per phase** · no GREEN files | `probe:` · RED **and** GREEN per phase |
-| Acceptance loop | yes — its round output is the regression evidence | yes | yes |
+| Implement evidence | **same for every tier**: `probe:` per `[SEAM]`, RED and GREEN file per phase, AC tests frozen after RED | same | same |
+| **Acceptance round** (`acceptance.md`) | **every tier**: automated ACs run and recorded; manual ACs carry the user's quoted confirmation | same | same |
 | `ci:<id>` | when a pipeline exists | yes | yes |
-| Final review (5.5) | §1 coverage line + exceptions, §2 rules, §5 checklist; no stack research | full, exceptions-only tables | full, by the other agent or a fresh-context sub-agent; devil's advocate separate |
+| Final review (5.5) | §1 coverage line + exceptions, §2 rules, §4 devil's advocate (brief), §5 checklist; no stack research | full, exceptions-only tables | full, by the other agent or a fresh-context sub-agent; devil's advocate separate |
 | Close | `close` (one page) + `change-record.md` | `close` + change record; gap table exceptions only | `summarize` (full gap table) + change record |
 | ADR / AGENTS.md step | yes ("none met the bar" is fine) | yes | yes |
 
-What never shrinks: the probe per seam, the acceptance round, the oracle rule (your word is
-not evidence), the final-review gate, the change record.
+**What never shrinks**: the RED/GREEN files, the probe per seam, the acceptance round that
+documents every AC passing (automated where a harness exists, `manual` with the user's quoted
+words where none can), the oracle rule (your word is not evidence), the final-review gate,
+the change record. A small change still has to prove it works.
 
 ## Changing the tier
 

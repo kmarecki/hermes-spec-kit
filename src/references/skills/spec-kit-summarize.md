@@ -28,7 +28,7 @@ page, what is BUILT; rounds untouched).
 
 ## Evidence table
 Acceptance / regression `output:` + `ci:`; a `probe:` per seam in the plan or the diff;
-`Implemented-by` and the review label from the commits and review-final.md. No oracle → ❌
+`Implemented-by` from the history.md implement entries and the review label from review-final.md. No oracle → ❌
 unverified — never omitted, never upgraded. `claimed` bugs without `Verified-by` → *Unverified
 claims*; the feature may still close, saying so.
 
@@ -63,10 +63,10 @@ WAIT → apply approved ones only. Record "updated — <sections>" or "no change
 
 ## Change record
 `spec-kit/templates/change-record-template.md` → `specs/[feature]/change-record.md`. Every field
-filled from what exists (spec Security & Privacy, size ruling, commit trailers, acceptance round,
+filled from what exists (spec Security & Privacy, size ruling, history.md, acceptance round,
 review round, decisions, ADRs) or written `pending` (PR reviewer, deployment approval) — never
-blank. Timeline: paste `spec-kit/scripts/spec-kit-history.sh [feature]`. The record is the one
-page an auditor reads; it survives the squash-merge that erases the phase commits.
+blank. Timeline: one row per history.md entry (date, phase, agent, evidence, commit message).
+The record is the one page an auditor reads; with history.md it survives the squash-merge.
 
 ## Reopen
 Close doc exists → APPEND `## Reopened — <date>` (previous health → new health, changed
@@ -77,5 +77,5 @@ from ✅ to worse → ASK: new entry (recommended) or overwrite.
 ❌ Not Done gaps → `open` bugs (`mcp_spec_kit_next_id`). `mcp_spec_kit_update_artifact(close.md)` ·
 `mcp_spec_kit_close_feature` (errors: open bugs, verified without oracle, review missing / NOT READY /
 stale, no Architecture Decisions) · `mcp_spec_kit_lint_artifacts` · ONE commit
-`spec(phase-6): [feature] close (health: N%)` per `spec-kit/references/commits.md`. Report: mode,
+`spec(phase-6): [feature] close (health: N%)` after the history entry (preflight commit procedure). Report: mode,
 health, tasks, bugs, patches, ADRs, AGENTS.md, change record.

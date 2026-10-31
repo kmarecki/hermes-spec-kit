@@ -93,7 +93,7 @@ async def test_derivation(s, root):
     check("missing feature → error", "error" in d)
 
     d = await call(s, "init_feature", {"feature": "f1", "name": "Feature one"})
-    check("init_feature creates the directory (no history.md)", d["success"] and (Path(root) / "specs/f1").is_dir() and not (Path(root) / "specs/f1/history.md").exists())
+    check("init_feature creates the directory", d["success"] and (Path(root) / "specs/f1/history.md").exists())
     check("  new feature is phase 1 / new", d["state"]["current_phase"] == 1 and d["state"]["status"] == "new")
     d = await call(s, "init_feature", {"feature": "f1"})
     check("duplicate init → already exists", "already exists" in d.get("error", ""))
@@ -220,7 +220,9 @@ async def test_next_id_and_lint(s, root):
     msgs = " | ".join(f["msg"] for f in d["findings"])
     check("lint flags legacy 'resolved' as warning", any(f["severity"] == "warning" and "resolved" in f["msg"] for f in d["findings"]))
     check("lint flags verified without Verified-by", "without Verified-by" in msgs)
-    check("lint result not success (errors present)", d["success"] is False and d["errors"] >= 1)
+    check("lint flags missing history.md", "history.md missing" in msgs)
+    check("lint result not success (errors present)", d["success"] is False and d["errors"] >= 2)
+    write(root, "f5", "history.md", "# Process History: f5\n")
     write(root, "f5", "bugs.md", BUGS.format(s1="claimed", e1="output:evidence/BF-001-green.txt", v1="", s2="verified").replace(
         "- **Verified-by**: [user / ci:<run-id> / review:<other-agent>]", "- **Verified-by**: user"))
     d = await call(s, "lint_artifacts", {"feature": "f5"})
@@ -235,10 +237,10 @@ async def test_next_id_and_lint(s, root):
     d = await call(s, "lint_artifacts", {"feature": "f5"})
     msgs = " | ".join(f["msg"] for f in d["findings"])
     check("[SEAM] done without probe → warning", "T002 [SEAM]" in msgs)
-    check("[TEST] done without red file → warning (size M default)", "T001 [TEST]" in msgs)
+    check("[TEST] done without red file → warning", "T001 [TEST]" in msgs)
     write(root, "f5", "spec.md", "# Spec\n\n**Size**: S — tiny\n")
     d = await call(s, "lint_artifacts", {"feature": "f5"})
-    check("  size S → no RED-file warning", "T001 [TEST]" not in " | ".join(f["msg"] for f in d["findings"]))
+    check("  size S → RED file still required", "T001 [TEST]" in " | ".join(f["msg"] for f in d["findings"]))
     write(root, "f5", "spec.md")
     write(root, "f9", "spec.md"); write(root, "f9", "plan.md")
     write(root, "f9", "tasks.md", "# Tasks\n- T001 [X] [TEST] t — t.py\n- T002 [ ] code — c.py\n- BF-001 [X] fix — c.py\n")
@@ -251,13 +253,38 @@ async def test_next_id_and_lint(s, root):
     check("  with probe + red files → no warnings", "[SEAM]" not in msgs and "[TEST]" not in msgs, msgs)
 
 
-async def test_timestamp(s, root):
-    print("\n═══ timestamp ═══")
-    write(root, "f6", "spec.md")
+async def test_timestamp_and_history_guard(s, root):
+    print("\n═══ timestamp / history_guard ═══")
     d = await call(s, "timestamp")
-    check("timestamp is real UTC ISO", d["utc"].endswith("+00:00") and d["utc"][:2] == "20")
-    tools = {t.name for t in (await s.list_tools()).tools}
-    check("history tools removed", "append_history" not in tools and "history_guard" not in tools)
+    check("timestamp is UTC ISO", d["utc"].endswith("+00:00") and "T" in d["utc"])
+    write(root, "f6", "spec.md")
+    d = await call(s, "history_guard", {"feature": "f6", "phase": "Phase 1"})
+    check("no history.md → not ok", d["ok"] is False)
+    write(root, "f6", "history.md", "# Process History: f6\n\n## 2020-01-01T00:00:00+00:00 | Phase 1 | spec-kit-specify | claude\n- Artifacts: spec.md\n")
+    d = await call(s, "history_guard", {"feature": "f6", "phase": "Phase 2"})
+    check("entry for other phase → not ok", d["ok"] is False and "no history entry" in d["reason"])
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "add", "-A"], cwd=root, check=True)
+    subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "init"], cwd=root, check=True)
+    d = await call(s, "history_guard", {"feature": "f6", "phase": "Phase 1"})
+    check("entry older than last commit → not ok", d["ok"] is False and "predates" in d["reason"])
+    with open(Path(root) / "specs/f6/history.md", "a") as fh:
+        fh.write("\n## 2999-01-01T00:00:00+00:00 | Phase 1 | spec-kit-specify | claude\n- Artifacts: spec.md\n")
+    d = await call(s, "history_guard", {"feature": "f6", "phase": "Phase 1"})
+    check("fresh entry → ok", d["ok"] is True)
+
+    print("\n═══ append_history ═══")
+    d = await call(s, "append_history", {"feature": "f6", "phase": "Phase 2", "skill": "spec-kit-plan", "agent": "claude",
+                                         "artifacts": "plan.md", "commit": "spec(phase-2): f6 plan", "note": "short note"})
+    check("append_history writes a stamped entry", d.get("success") and d["timestamp"].endswith("+00:00"))
+    text = (Path(root) / "specs/f6/history.md").read_text()
+    check("  entry has the fixed fields", "| Phase 2 | spec-kit-plan | claude" in text and "- Evidence: none — unverified" in text)
+    d = await call(s, "history_guard", {"feature": "f6", "phase": "Phase 2"})
+    check("  guard sees the new entry", d["ok"] is True)
+    d = await call(s, "append_history", {"feature": "f6", "phase": "Phase 3", "skill": "s", "agent": "a", "note": " ".join(["w"] * 26)})
+    check("note over 25 words → error", "max 25" in d.get("error", ""))
+    d = await call(s, "append_history", {"feature": "f6", "phase": "Phase 3", "skill": "s", "agent": "a", "artifacts": " ".join(["f"] * 70)})
+    check("entry over 60 words → error", "max 60" in d.get("error", ""))
 
 
 async def test_size_final_review_adr_and_diff_scan(s, root):
@@ -375,6 +402,7 @@ TRX = """<?xml version="1.0"?>
 async def test_acceptance(s, root):
     print("\n═══ acceptance criteria: lint / next_id / freeze / status / gates ═══")
     git(root, "init", "-q", "-b", "main")
+    write(root, "f10", "history.md", "# Process History: f10\n")
     write(root, "f10", "spec.md", ACC_SPEC.replace(" — Verify: e2e (spans SPA + BFF + auth)", " — Verify: e2e"))
     write(root, "f10", "plan.md")
     write(root, "f10", "tasks.md", ACC_TASKS.replace("- [x] T001 [TEST] [AC-001] rules integration test — tests/RulesTests.cs\n", "- [x] T001 [TEST] [AC-009] stray — tests/RulesTests.cs\n"))
@@ -478,7 +506,7 @@ async def main():
     print("  spec-kit MCP Server — Workflow Integration Tests (v3 derive-only)")
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
-              test_project_tools, test_next_id_and_lint, test_timestamp,
+              test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
               test_size_final_review_adr_and_diff_scan, test_acceptance]:
         try:
             await run_in_tmp(t)

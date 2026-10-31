@@ -27,7 +27,7 @@ metadata:
 4. After every answer update `spec.md` at once (replace the marker); `clarify.md` is the log (`## Q1: …` / `**Answer**` / `**Resolution**`), `spec.md` the truth.
 
 ## Done when
-- [ ] Every answer applied; unanswered questions left as markers. Commit (`spec-kit/references/commits.md`): `spec(phase-1.5): [feature] clarifications`.
+- [ ] Every answer applied; unanswered questions left as markers. history.md entry, then commit (`spec-kit/references/preflight.md` procedure): `spec(phase-1.5): [feature] clarifications`.
 
 ## Next
 `spec-kit-plan`.

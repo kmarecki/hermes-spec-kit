@@ -19,7 +19,7 @@ metadata:
 **Full procedure**: `spec-kit/references/skills/spec-kit-summarize.md` (gap analysis, health, ADR bar, AGENTS.md sync, reopen) · **Not for**: mid-stream alignment → `spec-kit-refresh`.
 
 ## Before writing
-- `spec-kit/references/preflight.md`. Requires `tasks.md`. Load spec, plan, tasks, bugs, constitution, data-model, contracts, research, clarify, `evidence/`, `decisions.md`, `acceptance.md`, `review-final.md`.
+- `spec-kit/references/preflight.md`. Requires `tasks.md`. Load spec, plan, tasks, bugs, constitution, data-model, contracts, research, clarify, `history.md`, `evidence/`, `decisions.md`, `acceptance.md`, `review-final.md`.
 - **Gate**: latest `review-final.md` round READY / READY-WITH-FOLLOWUPS and not stale — else **BLOCK** ("run the final review"; AWAITING-OWNER → get the owner's answer, Round N+1). Open bug → **BLOCK**.
 - Mode: "close" / "summarize" as said; else S/M → close, L → summarize. Reopen (close doc exists) → APPEND a dated section.
 
@@ -30,13 +30,13 @@ metadata:
 4. Deviations → propose each spec/plan patch; **WAIT**; rejected → ⚠️ needs review. Regenerate `plan.md` → `## Current Design` (≤ 1 page, what is BUILT).
 5. **ADRs**: harvest (decisions.md rulings, plan Rounds, research, review findings, deviations); apply the ADR bar; per candidate propose new / supersede / append-evidence (`mcp_spec_kit_next_id(kind="ADR")`, project template else `spec-kit/templates/adr-template.md`); **WAIT** per ADR; update the index. Fill *Architecture Decisions* — "none met the bar" is a valid row.
 6. **AGENTS.md** (+ CLAUDE.md / rule files): statements the diff or new ADRs make wrong (commands, layout, boundaries, versions, conventions, debt, ADR list) → targeted patches; **WAIT**; never rewrite.
-7. **`change-record.md`** from `spec-kit/templates/change-record-template.md`: ticket, branch/PR, size, what/why, Security & Privacy impact (from spec), data/config changes, implemented-by, reviewed-by (agent + human PR reviewer or `pending`), verification, decisions, deployment approval (or `pending`), rollback, follow-ups; **Timeline** = `spec-kit/scripts/spec-kit-history.sh [feature]` output.
+7. **`change-record.md`** from `spec-kit/templates/change-record-template.md`: ticket, branch/PR, size, what/why, Security & Privacy impact (from spec), data/config changes, implemented-by, reviewed-by (agent + human PR reviewer or `pending`), verification, decisions, deployment approval (or `pending`), rollback, follow-ups; **Timeline** = one row per `history.md` entry (date, phase, agent, evidence).
 8. ❌ Not Done gaps → new `open` bugs. Write `close.md` from `spec-kit/templates/close-template.md`.
 
 ## Done when
 - [ ] close.md + change-record.md written (no `pending` field left blank); health computed; no bug status changed.
 - [ ] MCP: `mcp_spec_kit_close_feature` · `mcp_spec_kit_lint_artifacts` → 0 errors.
-- [ ] ONE commit (`spec-kit/references/commits.md`): close doc, change record, patched spec/plan/data-model, ADRs + index, AGENTS.md — `spec(phase-6): [feature] close (health: N%)`.
+- [ ] history.md entry (`Phase 6`, health %, ADRs), then ONE commit: close doc, change record, patched spec/plan/data-model, ADRs + index, AGENTS.md — `spec(phase-6): [feature] close (health: N%)`.
 
 ## Next
 Feature **Complete**. Propose the PR (description drafted by the final review; the human reviewer's name goes into the change record when known), `spec-kit-specify` for the next feature, `bugfix [feature]` if gaps became bugs.

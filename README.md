@@ -48,7 +48,7 @@ src/
   skills/                # Skill source files (11 .md + 1 umbrella directory)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
   templates/             # Template source files (17 templates, all *-template.md)
-  references/            # preflight, commits, evidence, sizing, acceptance, constitution-*
+  references/            # preflight, commits, history-tracking, evidence, sizing, acceptance, constitution-*
     skills/              # Full procedure per skill — loaded on demand by the one-screen SKILL.md
   skills/
     spec-kit-bugfix/      [removed] — function absorbed into spec-kit-workflow
@@ -56,7 +56,7 @@ scripts/
   install.sh             # Installs to ~/.hermes/skills/ + MCP config
   uninstall.sh           # Full clean uninstall (skills, MCP, config)
 spec-kit-mcp-server/
-  server.py              # MCP server — 17 tools, Python + mcp SDK (<2)
+  server.py              # MCP server — 19 tools, Python + mcp SDK (<2)
   README.md              # MCP server docs
   test_server.py         # Smoke test
 ```
@@ -136,14 +136,14 @@ An MCP server (`spec-kit-mcp-server/server.py`) is a **derive-and-enforce** serv
 keeps no state, derives every feature's phase from the files under `specs/<feature>/` on
 each call, and does the things an agent does badly — id allocation, artifact lint, real
 timestamps, the acceptance matrix, the merge-readiness diff scan, and a ten-line phase card to
-re-read after context compaction. 17 tools exposed as `mcp_spec_kit_*` in Hermes (`mcp__spec-kit__*` in
+re-read after context compaction. 19 tools exposed as `mcp_spec_kit_*` in Hermes (`mcp__spec-kit__*` in
 Claude Code).
 
 **Tools:**
 
 | Tool | Purpose |
 |------|---------|
-| `init_feature` | Create `specs/<feature>/` |
+| `init_feature` | Create `specs/<feature>/` with a history.md header |
 | `get_feature_state` | Derived phase, artifacts, task/bug counts, phase card |
 | `get_next_actions` | Available actions + the phase card |
 | `advance_phase` | Validate a transition against the files (writes nothing) |
@@ -159,6 +159,8 @@ Claude Code).
 | `timestamp` | Real UTC time |
 | `acceptance_freeze` / `acceptance_status` | Freeze the AC tests after RED; AC → test → result matrix |
 | `diff_scan` | Mechanical merge-readiness scan of the branch diff |
+| `history_guard` | Fresh history entry since the last commit? |
+| `append_history` | Append a fixed-field, time-stamped, word-capped history entry |
 
 **State file**: none. The files are the state. A legacy `specs/.spec-kit/state.json` is
 ignored — delete it and add `specs/.spec-kit/` to `.gitignore` (the gitignore template does).

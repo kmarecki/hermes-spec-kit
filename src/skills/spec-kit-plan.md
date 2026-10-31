@@ -33,7 +33,7 @@ metadata:
 ## Done when
 - [ ] Plan artifacts for the tier written; bugfix: appended only.
 - [ ] MCP: `mcp_spec_kit_update_artifact(plan.md)` · `mcp_spec_kit_advance_phase(from_phase=2)` · `mcp_spec_kit_lint_artifacts` → 0 errors.
-- [ ] Commit (`spec-kit/references/commits.md`): `spec(phase-2): [feature] plan` (bugfix: `… bugfix plan (BUG-NNN, …)`).
+- [ ] history.md entry, then commit (`spec-kit/references/preflight.md` procedure): `spec(phase-2): [feature] plan` (bugfix: `… bugfix plan (BUG-NNN, …)`).
 
 ## Next
 `spec-kit-tasks` (bugfix mode and size S: automatically).

@@ -13,7 +13,7 @@
 | **Why** | [the requirement, in one line] |
 | **Security & Privacy impact** | [from spec.md § Security & Privacy — authorization, personal data, new surface, secrets; "none — because …"] |
 | **Data / schema / config changes** | [migrations, settings, infra; reversible?] |
-| **Implemented by** | [agents / humans from the commit trailers] |
+| **Implemented by** | [agents / humans from the history.md entries] |
 | **Reviewed by** | review:<agent> / self-review (fresh context) · human PR reviewer: [name / pending] |
 | **Verification** | acceptance round N PASS @ <sha> · `ci:<id>` · probes: [n] · manual checks: [who, what, quoted] |
 | **Decisions** | rulings D-… (by [user]) · assumptions still unconfirmed: [ids / none] · ADRs: [NNNN / none] |
@@ -23,7 +23,7 @@
 
 ## Timeline
 
-`spec-kit/scripts/spec-kit-history.sh [feature]` — pasted at close (survives the squash-merge):
+One row per `history.md` entry (the record that survives the squash-merge):
 
 | Date | Phase | By | Commit | Evidence |
 |------|-------|----|--------|----------|

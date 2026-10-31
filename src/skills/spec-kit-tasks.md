@@ -29,7 +29,7 @@ metadata:
 
 ## Done when
 - [ ] Every task has a path; markers set; TDD answered. MCP: `mcp_spec_kit_update_artifact(tasks.md)` · `mcp_spec_kit_advance_phase(from_phase=3)` · `mcp_spec_kit_lint_artifacts` → 0 errors.
-- [ ] Commit (`spec-kit/references/commits.md`): `spec(phase-3): [feature] tasks` (bugfix: `… bugfix tasks (BUG-NNN, …)`).
+- [ ] history.md entry, then commit (`spec-kit/references/preflight.md` procedure): `spec(phase-3): [feature] tasks` (bugfix: `… bugfix tasks (BUG-NNN, …)`).
 
 ## Next
 L → `spec-kit-review` (pre-implement, required). M → `spec-kit-review` lite, then `spec-kit-implement`. S → one commit `spec(phase-1-3)` then `spec-kit-implement`. Bugfix mode → `spec-kit-implement` automatically.

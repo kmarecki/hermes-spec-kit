@@ -20,8 +20,8 @@ metadata:
 
 ## Before reviewing
 - Preflight checks 1 and 4 (`spec-kit/references/preflight.md`). Mode: close doc → closed-review; tasks.md and no code → pre-implement; all tasks `[X]`, no open bug → **final**; open bugs → refuse ("bugfix first"); unclear → **ASK**.
-- SIZE from spec.md (`spec-kit/references/sizing.md`): S skips the pre-implement review and the stack research; M runs the lite pre-implement; L requires it in full.
-- **Author check** (`spec-kit/references/evidence.md`): `Implemented-by` trailers = you → *self-review*; for the final review prefer the other agent, else a **fresh-context sub-agent** (procedure + feature path + base only; no transcript).
+- SIZE from spec.md (`spec-kit/references/sizing.md`): S skips the pre-implement review and the stack research; M runs the lite pre-implement; L requires it in full. Evidence and the acceptance round are checked the same way at every size.
+- **Author check** (`spec-kit/references/evidence.md`): `<agent>` in the implement entries of history.md = you → *self-review*; for the final review prefer the other agent, else a **fresh-context sub-agent** (procedure + feature path + base only; no transcript).
 - Final review: read the code and the spec **before** `decisions.md` so the author's reasoning does not anchor you; then every assumption is a review item.
 
 ## Pre-implement (3.5)
@@ -35,7 +35,7 @@ metadata:
 2. Mechanical: `mcp_spec_kit_diff_scan(feature)` → `evidence/final-diff-scan.txt`; every checklist command → `evidence/final-<check>.txt`; `ci:<id>` for the reviewed commit.
 3. **§1** — one coverage line (FR n/N, SC, edge cases, acceptance round PASS @ sha, frozen unchanged) + rows ONLY for ⚠️ / ❌ / ↔ / 👤. Missing = CRITICAL; ↔ → **WAIT** (patch spec, log a bug, or defer). Manual / deferred ACs unconfirmed → 👤.
 4. **§2** — every applicable constitution MUST, checklist P-item, AGENTS.md rule and **spec Security & Privacy row** verdicted with `path:line`; violated MUST = HIGH (CRITICAL if security / data / non-negotiable).
-5. **§3** — findings on the changed code: architecture, error chains, security, data integrity, concurrency, duplication, complexity, API surface, tests (behaviour not implementation; fixtures match `probe:` files; RED evidence per tier). Stack research: M/L.
+5. **§3** — findings on the changed code: architecture, error chains, security, data integrity, concurrency, duplication, complexity, API surface, tests (behaviour not implementation; fixtures match `probe:` files; RED/GREEN files per phase). Stack research: M/L.
 6. **§4 Devil's advocate** — try to break it with concrete inputs (another tenant's id, empty/stale period, concurrent edit, failing dependency, unauthorized role); "would this test still pass if the code were wrong?"; argue the opposite of the verdict. L: separate sub-agent. ≤ 5 objections, each answered; unanswered blocks READY for L.
 7. **§5** checklist table with evidence files. **Verdict**: CRITICAL/HIGH or blocking ❌ → `NOT READY`; no defect but owner confirmations pending → `AWAITING-OWNER`; MEDIUM / non-blocking only → `READY-WITH-FOLLOWUPS`; else `READY`. Write `**Verdict**:` and `**Reviewed-commit**:`.
 8. NOT READY → bugs for each CRITICAL/HIGH (`mcp_spec_kit_next_id`), confirm with the user → `bugfix [feature]`, new round. AWAITING-OWNER → ask the owner; their quoted answer → specs-only Round N+1 (no code change ⇒ not stale). §6: PR description incl. "strongest objections and how they were answered".
@@ -44,7 +44,7 @@ metadata:
 CRITICAL / HIGH / MEDIUM only; a finding must harm correctness, security, performance, maintainability or testability — style and taste → delete. A broken explicit project rule is never a nitpick.
 
 ## Done when
-- [ ] Pre: report + commit. Final: round with Verdict + Reviewed-commit, §2 rules verdicted, §4 objections answered, §5 evidence; `mcp_spec_kit_lint_artifacts` → 0 errors; commit `spec(review): [feature] final review (verdict: X)`. Closed-review: report only.
+- [ ] Pre: report, history entry (`Phase 3.5`), commit. Final: round with Verdict + Reviewed-commit, §2 rules verdicted, §4 objections answered, §5 evidence; `mcp_spec_kit_lint_artifacts` → 0 errors; history entry (`Phase 5.5`), commit `spec(review): [feature] final review (verdict: X)`. Closed-review: report only, no history entry.
 
 ## Next
 Pre → `spec-kit-implement`. Final READY / READY-WITH-FOLLOWUPS → `spec-kit-summarize`. AWAITING-OWNER → the owner, then Round N+1. NOT READY → `bugfix [feature]`.

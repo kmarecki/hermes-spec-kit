@@ -9,7 +9,7 @@
 
 **Verdict**: READY | READY-WITH-FOLLOWUPS | AWAITING-OWNER | NOT READY
 **Reviewed-commit**: [short sha of HEAD when the review ran]
-**Base**: [branch] @ [merge-base sha] · **Size**: S | M | L · **Implemented-by**: [agent, from the commit trailers]
+**Base**: [branch] @ [merge-base sha] · **Size**: S | M | L · **Implemented-by**: [agent, from the history.md implement entries]
 **Counts**: CRITICAL N · HIGH N · MEDIUM N · checklist failures N · awaiting owner N
 
 ### 1. Spec conformance
@@ -36,7 +36,7 @@ Contracts / data model vs code: [matches / differs — how]. Unplanned behaviour
 | Q1 | CRITICAL / HIGH / MEDIUM | architecture / errors / security / data / concurrency / duplication / complexity / API / tests | | | |
 
 Stack practice checked: [per framework the diff leans on — follows / deviates (source)] *(skip for S)*.
-Tests: [prove §1 behaviour, not implementation; fixtures match `probe:` files; RED evidence per tier].
+Tests: [prove §1 behaviour, not implementation; fixtures match `probe:` files; RED + GREEN file per phase].
 
 ### 4. Devil's advocate *(M: same reviewer, separate pass · L: separate sub-agent, code before decisions.md)*
 

@@ -24,8 +24,12 @@ The things an LLM agent does badly and a script does perfectly:
 | Has the final review said READY on the current code | `get_feature_state.final_review`, `close_feature` |
 | Which acceptance criteria pass, fail, are missing or deferred — from JUnit/TRX results | `acceptance_status` |
 | Have the acceptance tests been weakened since their RED run | `acceptance_freeze`, `acceptance_status.frozen_changed`, `lint_artifacts` |
-| Are bugs.md / tasks.md / ACs / rounds well-formed (statuses, Verified-by, ids, probes, RED files by size) | `lint_artifacts` |
-| What time is it (never type a timestamp from memory) | `timestamp` |
+| Are bugs.md / tasks.md / history.md / ACs / rounds well-formed (statuses, Verified-by, ids, probes, RED files) | `lint_artifacts` |
+| Is there a fresh history entry for this phase since the last commit | `history_guard` |
+| Append the history record with the real time and a word cap | `append_history` |
+| What time is it (never type a timestamp from memory) | `history_guard` | A history.md entry mentioning `phase` exists and is newer than the last commit touching the feature | ok / reason |
+| `append_history` | Append one fixed-field entry (timestamp \| phase \| skill \| agent; Artifacts, Tests, Evidence, Commit, Note ≤ 25 words) with the real UTC time | entry |
+| `timestamp` |
 
 ## Quick Start
 
@@ -41,7 +45,7 @@ Claude Code: restart; tools appear as `mcp__spec-kit__*`.
 
 | Tool | Purpose | Writes |
 |------|---------|--------|
-| `init_feature` | Create `specs/<feature>/`; error if it exists | the directory |
+| `init_feature` | Create `specs/<feature>/` with a history.md header; error if it exists | dir + history.md header |
 | `get_feature_state` | Derived phase, status, size tier (S/M/L from spec.md), artifacts, task/bug counts, final review (verdict, reviewed commit, stale), phase card | — |
 | `get_next_actions` | Available actions + phase card | — |
 | `advance_phase` | Validate leaving `from_phase`: derived phase is `from_phase` or already `from_phase+1`, named artifacts and next prerequisites exist; 5→6 also needs a fresh READY final review | — |
@@ -88,7 +92,7 @@ exists — delete it and add `specs/.spec-kit/` to `.gitignore` (the gitignore t
 
 ```bash
 cd spec-kit-mcp-server
-python3 test_workflow.py   # derivation, validation, close/reopen, next_id, lint, timestamp, acceptance — in temp projects with real files
+python3 test_workflow.py   # derivation, validation, close/reopen, next_id, lint, timestamp, history_guard, acceptance — in temp projects with real files
 python3 test_skills.py     # skill/template/reference consistency, tool-name drift
 ```
 

@@ -28,12 +28,12 @@ metadata:
 4. **ACs** (`spec-kit/references/acceptance.md`): every scenario and important edge case → `**AC-###** (FR-…) Given/When/Then — Verify: <lowest level that proves it>`; every FR named by ≥ 1 AC; ids `mcp_spec_kit_next_id(kind="AC")`.
 5. ≤ 3 `[NEEDS CLARIFICATION]` markers — more → ask first. Priority: scope > security > UX > technical.
 6. **Size — always ASK** (`spec-kit/references/sizing.md`): score the signals, offer S/M/L with the recommendation first "(Recommended)" + reason + what each produces. Write `**Size**: X — <reason>`; ruling in `decisions.md` (unattended → assumption).
-7. Size S, after the user confirms the spec: auto-chain `spec-kit-plan` → `spec-kit-tasks`, ONE commit `spec(phase-1-3): [feature] spec, plan, tasks`.
+7. Size S (single bugfix / small enhancement): the spec is a few lines — 1–3 FRs, 1–2 ACs, one Security & Privacy line. After the user confirms it: auto-chain `spec-kit-plan` → `spec-kit-tasks`, ONE commit `spec(phase-1-3): [feature] spec, plan, tasks`.
 
 ## Done when
 - [ ] spec.md written; FR/AC ids ascending; Security & Privacy filled; `**Size**:` set from the user's answer.
 - [ ] MCP: `mcp_spec_kit_update_artifact(spec.md)` · `mcp_spec_kit_advance_phase(from_phase=1)` · `mcp_spec_kit_lint_artifacts` → 0 errors.
-- [ ] Commit per `spec-kit/references/commits.md`: `spec(phase-1): [feature] spec` + trailers.
+- [ ] history.md entry, then commit (preflight commit procedure): `spec(phase-1): [feature] spec`.
 
 ## Next
 Markers remain → `spec-kit-clarify`; else `spec-kit-plan`. S: plan + tasks chained → `spec-kit-implement`. L: plan, then the pre-implement review is required.
