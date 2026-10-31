@@ -512,6 +512,9 @@ def project_status() -> str:
     features = sorted(d.name for d in SPECS_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")) if SPECS_DIR.is_dir() else []
     conv = _conventions()
     hints = []
+    if conv.get("epics_dir") and (conv.get("epics_index") or "on").lower() == "on" and Path(conv["epics_dir"]).is_dir() \
+            and not (Path(conv["epics_dir"]) / "README.md").exists() and any(Path(conv["epics_dir"]).glob("*/epic.md")):
+        hints.append(f"epics_index is on but {conv['epics_dir']}/README.md is missing — create it from epics-index-template.md (spec-kit epic status)")
     if not conv.get("epics_dir"):
         by_epic = {}
         for f in features:

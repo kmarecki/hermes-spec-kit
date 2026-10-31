@@ -33,6 +33,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
   spec or plan names an epic / module the project does not keep, and `project_status` hints
   when 3+ specs share an epic or 3+ closed features share a module without the dir.
 
+- **Epic as a PRD**: `epic.md` carries *Problem and users (why now)*, *Success metrics*
+  (post-launch, lagging — today / target / measured how) and *Alternatives considered* (incl.
+  do nothing) before Scope — the PR-FAQ shape for a programme.
+- **Epics index** (`[epics_dir]/README.md`, `epics-index-template.md`) — the roadmap table, one
+  row per epic (id · status · owner · tracker · features closed / planned), maintained by
+  `spec-kit-epic` and by every feature close; `epics_index: on | off` in git-conventions.md
+  (default on). `project_status` hints when it is missing.
+- **`system.md`** — the reserved module name in `design_dir`: the one-page C4 L1/L2 system view
+  (containers, stores, external systems, trust boundaries) every module doc links to.
+- **Close widens "docs the diff makes wrong"** to runbooks (`runbooks_dir`) and adds one
+  Keep-a-Changelog *Unreleased* line (`changelog`); both opt-in keys in git-conventions.md.
+
 ### Changed — leaner tiers, the change record, devil's advocate
 
 - **Size tiers are progressively leaner in workflow and artifact length — never in evidence**

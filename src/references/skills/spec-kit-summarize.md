@@ -61,6 +61,15 @@ WRONG or INCOMPLETE — commands, layout, boundaries, versions, dependencies, co
 debt, ADR list, the spec-kit block. No narrative, no changelog. Targeted patch per section →
 WAIT → apply approved ones only. Record "updated — <sections>" or "no change needed — <why>".
 
+## Runbooks and changelog (optional — only what the project keeps)
+```
+RUNBOOKS = git-conventions runbooks_dir (absent → skip): grep the runbooks for commands, settings,
+  endpoints, procedures the diff changed → targeted patch per statement, WAIT, apply approved
+CHANGELOG = git-conventions changelog (absent → skip): under "## [Unreleased]" add ONE line in the
+  right group (Added / Changed / Fixed / Removed / Security): "<one sentence> (<ticket>)" — never
+  a feature narrative; the PR description already has that
+```
+
 ## Design doc and epic row (optional — only what the project keeps)
 ```
 DESIGN_DIR = git-conventions design_dir · EPICS_DIR = epics_dir   (absent → "none kept", skip)
@@ -73,6 +82,7 @@ FOR each module in plan.md **Modules**:  DOC = DESIGN_DIR/<module>.md
 EPIC = spec.md **Epic**:  FILE = EPICS_DIR/<epic>/features.md
   missing → NOTE "spec names epic <epic> but <FILE> does not exist — run 'spec-kit epic <epic>'"
   else → set this feature's row: Status closed · PR · Health N% · ADRs; add the row if absent;
+         epics_index on (default) → update the epic's row in EPICS_DIR/README.md (features closed / planned);
          every row closed or dropped → suggest "close epic <epic>"
 RECORD both outcomes in the close document (Artifact State) and in the change record (Decisions / follow-ups)
 ```

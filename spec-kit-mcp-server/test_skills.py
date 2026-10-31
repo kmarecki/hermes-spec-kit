@@ -67,6 +67,7 @@ EXPECTED_TEMPLATES = {
     "change-record-template.md",
     "design-doc-template.md",
     "epic-template.md",
+    "epics-index-template.md",
     "epic-plan-template.md",
     "epic-features-template.md",
     "epic-review-template.md",

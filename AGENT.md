@@ -289,7 +289,7 @@ hermes-spec-kit/
 │   │   ├── bugs-template.md
 │   │   ├── close-template.md
 │   │   ├── change-record-template.md       # the auditor's one page, written at close
-│   │   ├── epic-template.md · epic-plan-template.md · epic-features-template.md · epic-review-template.md
+│   │   ├── epic-template.md · epic-plan-template.md · epic-features-template.md · epic-review-template.md · epics-index-template.md
 │   │   ├── design-doc-template.md          # optional document types (epics_dir / design_dir)
 │   │   ├── data-model-template.md
 │   │   ├── research-template.md

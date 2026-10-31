@@ -7,6 +7,23 @@
 > towards one goal. This file is the epic's spec: WHAT and WHY. HOW across features is
 > `plan.md`; the ordered features are `features.md`; reviews append to `review.md`.
 
+## Problem and users *(why now)*
+
+[Who has the problem, what it costs them today, why this programme now. 3–6 lines; a reader
+should be able to say "no" to it.]
+
+## Success metrics *(post-launch, lagging — measured after the epic closes)*
+
+| Metric | Today | Target | Measured how / when |
+|--------|-------|--------|---------------------|
+
+## Alternatives considered
+
+| Alternative | Why not (or: why not yet) |
+|-------------|---------------------------|
+| Do nothing | |
+| [smaller / different approach] | |
+
 ## Scope
 
 - **In**: [bounded list] · **Out (non-goals)**: [explicit — what a reader would assume is in, but is not]

@@ -16,6 +16,7 @@ metadata:
 
 **Phase**: cross-feature (standalone) · **Persona**: the architect who describes what is **built** — components, flows, seams, invariants — in ≤ 3–4 pages a new engineer or an auditor reads first; not a decision log (ADRs), not a plan (epic), not a feature (spec).
 **Purpose**: create or refresh `[design_dir]/[module].md` (`spec-kit/templates/design-doc-template.md`) from the code. A module is **space**: a bounded part of the system that outlives every epic. Feature closes patch it; this skill writes or re-baselines it.
+**`system`** is the reserved module name: `[design_dir]/system.md` is the one-page system view (C4 L1 context + L2 containers: services, stores, external systems, trust boundaries) that every module doc hangs off; create it first.
 **Not for**: projects without `design_dir` (the plan's `## Current Design` is the design — say so and stop); recording a decision (→ an ADR at close); a feature's own design (→ `spec-kit-plan`).
 
 ## Before writing

@@ -5,6 +5,8 @@
 > place by every feature close that changes it — never copied to `-v2`. Decisions live in ADRs;
 > this page describes the result. (ISO/IEC 27001 A.8.27 — the architecture an auditor reads.)
 
+> `system.md` (the reserved name): replace *Components* with the container table (service / store / external system · technology · owner · trust boundary) and *Data flow* with the context diagram; every module doc links here.
+
 ## Purpose and boundary
 
 [What this module is for; what it owns; what it explicitly does not do. Which services /
