@@ -808,7 +808,7 @@ def next_id(feature: str, kind: str) -> str:
 
     Args:
         feature: Feature ID
-        kind: BUG | T | BF | AC | ADR (ADR scans the project's ADR directory, not the feature)
+        kind: BUG | T | BF | AC | ADR | EPIC (ADR scans the ADR directory, EPIC the epics_dir — neither reads the feature)
     """
     state = _derive(feature)
     if state is None:
@@ -828,12 +828,20 @@ def next_id(feature: str, kind: str) -> str:
         nums = [int(m.group(1)) for p in adr_dir.glob("*.md") for m in [re.match(r"(\d{3,4})-", p.name)] if m]
         n = (max(nums) + 1) if nums else 1
         return _json({"success": True, "kind": kind, "next_id": f"{n:04d}", "adr_dir": str(adr_dir), "existing": len(nums)})
+    elif kind == "EPIC":
+        epics_dir = _conventions().get("epics_dir")
+        if not epics_dir:
+            return _json({"error": "git-conventions.md sets no epics_dir — epics are not kept in this project"})
+        nums = [int(m.group(1)) for p in Path(epics_dir).glob("*") for m in [re.match(r"(\d{2,6})-", p.name)] if m]
+        n = (max(nums) + 1) if nums else 1
+        return _json({"success": True, "kind": kind, "next_id": f"{n:03d}", "epics_dir": epics_dir, "existing": len(nums),
+                      "note": "prefer the tracker's epic number (ADO / Jira) when one exists"})
     elif kind in ("T", "BF"):
         tasks = _parse_tasks((fd / "tasks.md").read_text(errors="replace")) if (fd / "tasks.md").exists() else []
         nums = [t["num"] for t in tasks if t["kind"] == kind]
         fmt = "T{:03d}" if kind == "T" else "BF-{:03d}"
     else:
-        return _json({"error": "kind must be BUG, T, BF, AC or ADR"})
+        return _json({"error": "kind must be BUG, T, BF, AC, ADR or EPIC"})
     n = (max(nums) + 1) if nums else 1
     return _json({"success": True, "kind": kind, "next_id": fmt.format(n), "existing": len(nums)})
 

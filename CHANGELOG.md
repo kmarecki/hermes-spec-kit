@@ -11,7 +11,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 ### Added — epics and module design docs (opt-in)
 
 - **`spec-kit-epic`** — an epic is one body of work in *time*, run through the same shape as
-  a feature in `[epics_dir]/<epic>/`: **E1 specify** `epic.md` (goal, scope and non-goals,
+  a feature in `[epics_dir]/NNN-name/` (NNN = the tracker's epic number, e.g. the ADO epic;
+  else `next_id kind="EPIC"`): **E1 specify** `epic.md` (goal, scope and non-goals,
   `EAC-###` epic acceptance criteria with how each is verified, cross-feature rules, epic-level
   Security & Privacy) → **E2 plan** `plan.md` (current state, target architecture, seams
   today → after, `ED-###` cross-feature decisions, sequencing, rollout / rollback, risks) →

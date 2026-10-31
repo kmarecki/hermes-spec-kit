@@ -1,6 +1,6 @@
 # Epic: [EPIC NAME]
 
-**Id**: [epic-short-name] · **Status**: specified | planned | broken-down | reviewed | building | closed · **Owner**: [name] · **Opened**: [DATE]
+**Id**: [NNN-short-name — NNN = the tracker's epic number (ADO / Jira) when one exists, else the next free number] · **Tracker**: [ADO Epic #NNN / link / none] · **Status**: specified | planned | broken-down | reviewed | building | closed · **Owner**: [name] · **Opened**: [DATE]
 **Goal**: [one sentence — the outcome, not the feature list]
 
 > Stage E1 of `spec-kit-epic`. An epic is a body of work in *time*: many single-spec features

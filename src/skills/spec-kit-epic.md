@@ -23,7 +23,7 @@ metadata:
 - Load constitution, ADR index, AGENTS.md, the module design docs (`design_dir`) the epic will touch.
 
 ## E1 Specify → `epic.md` (`spec-kit/templates/epic-template.md`)
-Goal (one sentence), scope in / **out**, stakeholders; **EAC-###** epic acceptance criteria — measurable at the end, each with how it will be verified (feature ACs, probe, command, user); cross-feature rules; epic-level Security & Privacy; ≤ 3 clarification markers (more → ask first). **WAIT** for the owner's confirmation. Commit `spec(epic): [epic] specify`.
+Id `NNN-short-name` like a feature: **NNN = the tracker's epic number** (ADO / Jira — ASK for it, record the link as `**Tracker**:`), else `mcp_spec_kit_next_id(kind="EPIC")`; the directory is `[epics_dir]/NNN-short-name/`. Goal (one sentence), scope in / **out**, stakeholders; **EAC-###** epic acceptance criteria — measurable at the end, each with how it will be verified (feature ACs, probe, command, user); cross-feature rules; epic-level Security & Privacy; ≤ 3 clarification markers (more → ask first). **WAIT** for the owner's confirmation. Commit `spec(epic): [epic] specify`.
 
 ## E2 Plan → `plan.md` (`spec-kit/templates/epic-plan-template.md`)
 Current state from the design docs and the code (paths); target architecture; seams today → after; cross-feature decisions `ED-###` (alternatives, why; ADR bar at close); sequencing constraints and parallelism; rollout / migration / rollback; risks with owners. `**Modules**:` names the design docs the features will patch. Commit `spec(epic): [epic] plan`.

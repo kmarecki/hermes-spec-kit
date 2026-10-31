@@ -421,6 +421,9 @@ async def test_epics_and_design(s, root):
     check("lint: module without design doc → warning", sum("no docs/design/" in f["msg"] for f in d["findings"]) == 2)
     d = await call(s, "project_status")
     check("project_status reports the dirs, no hints once set", d["epics_dir"] == "specs/epics" and d["hints"] == [])
+    (Path(root) / "specs/epics/297-security").mkdir()
+    d = await call(s, "next_id", {"feature": "e1", "kind": "EPIC"})
+    check("next EPIC id scans epics_dir (298 after 297-…)", d.get("next_id") == "298", json.dumps(d))
 
 
 async def test_acceptance(s, root):
