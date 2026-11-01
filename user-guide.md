@@ -691,6 +691,15 @@ Specify always asks for the tier, with its recommendation first. S trims the tem
 chains specify → plan → tasks into one commit; M is the default; L adds the full artifact
 set and a required pre-implement review. See `references/sizing.md`.
 
+### Security compliance (opt-in, `compliance: baseline`)
+Set `compliance: baseline` in `specs/git-conventions.md`. Specify then asks a **security level**
+beside the size — `none` (docs, tests, styling: no security work at all), `low`, `medium`
+(extended Security & Privacy rows) or `high` (+ a STRIDE threat model in the plan and a named
+human `**Approved-by**:` in the final review, enforced by the close gate). Tasks that implement or
+test a security row carry `[SEC]`; other tasks need no assessment. The merge checklist gains
+dependency, secret, static-analysis and IaC scans. Agent rules: `references/compliance.md`;
+ISO 27001 / NIS2 control map and the future `formal` profile: `docs/compliance.md`.
+
 ### Phase 6: Close/Summarize — Mandatory
 **Skill**: `spec-kit-summarize` · **Trigger**: "Close [feature]" or
 "Summarize [feature]" · **Artifact**: `close.md` or

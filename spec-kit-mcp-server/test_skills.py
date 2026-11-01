@@ -81,6 +81,7 @@ EXPECTED_TEMPLATES = {
 EXPECTED_REFERENCES = {
     "acceptance.md",
     "commits.md",
+    "compliance.md",
     "constitution-principles.md",
     "constitution-tables.md",
     "evidence.md",
@@ -363,7 +364,7 @@ def test_no_loose_reference_files():
         lines = skill_text.count("\n")
         check(f"{name}: SKILL.md is one screen (<= 60 lines)", lines <= 60, f"{lines} lines")
     budget = sum(p.stat().st_size for p in SKILLS_DIR.rglob("*.md")) + sum(p.stat().st_size for p in REFERENCES_DIR.rglob("*.md")) + sum(p.stat().st_size for p in TEMPLATES_DIR.glob("*.md"))
-    check("skills + references + templates stay under ~62k tokens (250 KB)", budget <= 250_000, f"{budget // 1024} KB")
+    check("skills + references + templates stay under ~64k tokens (256 KB)", budget <= 256_000, f"{budget // 1024} KB")
 
 
 def test_workflow_diagram_phases():

@@ -297,7 +297,7 @@ hermes-spec-kit/
 │   │   ├── git-conventions-template.md
 │   │   └── gitignore-template.md
 │   ├── scripts/spec-kit-log.sh · spec-kit-history.sh   # no-MCP history appender · git timeline when history is off
-│   └── references/                   # 8 shared files + skills/ (full procedures — the delta over SKILL.md)
+│   └── references/                   # 9 shared files + skills/ (full procedures — the delta over SKILL.md)
 │       ├── preflight.md              # Pre-action self-check + commit procedure + no-overwrite rule
 │       ├── commits.md                # Commit messages per skill (history entry first)
 │       ├── history-tracking.md       # history.md: when kept (history: always|large|never, spec override), format, guard

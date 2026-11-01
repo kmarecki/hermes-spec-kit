@@ -535,6 +535,38 @@ async def test_acceptance(s, root):
 # ── Runner ─────────────────────────────────────────────────────────────────
 
 
+async def test_compliance(s, root):
+    print("\n═══ compliance: baseline (security level, [SEC], threat model, approver) ═══")
+    write(root, "c1", "spec.md", "# Spec\n\n**Size**: S — x\n")
+    write(root, "c1", "history.md", "# Process History\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"})
+    check("compliance absent → no security warning", not any("Security" in f["msg"] for f in d["findings"]))
+    (Path(root) / "specs/git-conventions.md").write_text("compliance: baseline\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"})
+    check("baseline + no **Security** line → warning", any("'**Security**:" in f["msg"] for f in d["findings"]) and d["success"])
+    write(root, "c1", "spec.md", "# Spec\n\n**Size**: S — x\n**Security**: none — docs only\n")
+    write(root, "c1", "tasks.md", "# Tasks\n- [ ] T001 docs — README.md\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"})
+    check("  Security none → no [SEC] expected", not any("Security" in f["msg"] or "[SEC]" in f["msg"] for f in d["findings"]))
+    write(root, "c1", "spec.md", "# Spec\n\n**Size**: S — x\n**Security**: high — tenant boundary\n")
+    write(root, "c1", "plan.md", "# Plan\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("Security high → threat model + [SEC] warnings", "Threat Model" in msgs and "[SEC]" in msgs)
+    write(root, "c1", "plan.md", "# Plan\n\n## Threat Model\n")
+    write(root, "c1", "tasks.md", "# Tasks\n- [x] T001 [SEC] negative test — src/a.py\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("  threat model + [SEC] present → quiet", "Threat Model" not in msgs and "[SEC]" not in msgs, msgs)
+
+    git(root, "init", "-q", "-b", "main"); git(root, "add", "-A"); git(root, "commit", "-q", "-m", "base")
+    head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=root, capture_output=True, text=True).stdout.strip()
+    write(root, "c1", "review-final.md", FINAL.format(n=1, v="READY", c=head) + "**Approved-by**: [<human> — quoted]\n")
+    d = await call(s, "advance_phase", {"feature": "c1", "from_phase": 5})
+    check("Security high, READY, placeholder approver → close blocked", "Approved-by" in d.get("error", ""), json.dumps(d))
+    write(root, "c1", "review-final.md", FINAL.format(n=1, v="READY", c=head) + '**Approved-by**: K. Owner — "approved"\n')
+    d = await call(s, "advance_phase", {"feature": "c1", "from_phase": 5})
+    check("  named human approver → gate opens", d.get("success"), json.dumps(d))
+
+
 async def run_in_tmp(test_fn):
     root = tempfile.mkdtemp(prefix="spec-kit-test-")
     try:
@@ -554,7 +586,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance]:
+              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_compliance]:
         try:
             await run_in_tmp(t)
         except Exception as e:

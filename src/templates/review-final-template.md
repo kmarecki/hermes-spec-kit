@@ -9,6 +9,7 @@
 
 **Verdict**: READY | READY-WITH-FOLLOWUPS | AWAITING-OWNER | NOT READY
 **Reviewed-commit**: [short sha of HEAD when the review ran]
+**Approved-by**: [`compliance: baseline` + Security high only — <human> — "<quoted words>"; delete otherwise]
 **Base**: [branch] @ [merge-base sha] · **Size**: S | M | L · **Implemented-by**: [agent, from the history.md implement entries]
 **Counts**: CRITICAL N · HIGH N · MEDIUM N · checklist failures N · awaiting owner N
 
