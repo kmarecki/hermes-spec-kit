@@ -36,7 +36,8 @@ authorization / tenant row has a negative `[TEST] [SEC]` (another tenant's id, a
 ## 5. Gates
 
 - **Scans**: the merge checklist `security_*` commands run in every final review, whatever the
-  level — they are mechanical, not an assessment (`evidence/final-security-<check>.txt`).
+  level — they are mechanical, not an assessment (`evidence/final-security_<check>.txt`). Exit 126 /
+  127 or a missing tool / network = **could not run**: ❌ not run, ASK — never a finding, never a bug.
 - **Approval** (high): the final round needs `**Approved-by**: <human> — "<quoted words>"`;
   missing → `AWAITING-OWNER`. An agent's review is evidence, never approval.
 - **Bugs**: `**Security**: yes | no`. Yes → no exploit payload or secret in the repo (describe the
