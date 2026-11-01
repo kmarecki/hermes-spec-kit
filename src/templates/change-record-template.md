@@ -12,7 +12,7 @@
 | **What changed** | [2–3 sentences; layers touched; the seams] |
 | **Why** | [the requirement, in one line] |
 | **Security & Privacy impact** | [from spec.md § Security & Privacy — authorization, personal data, new surface, secrets; "none — because …"] |
-| **Security level / scans** | [`compliance: baseline`: none/low/medium/high — reason · `final-security-*` results · approver (high) — else delete the row] |
+| **Security level / scans** | [`compliance: baseline`: none/low/medium/high — reason · `final-security_*` results · approver (high) — else delete the row] |
 | **Data / schema / config changes** | [migrations, settings, infra; reversible?] |
 | **Implemented by** | [agents / humans — history.md entries, or the tasks.md `**Implemented-by**:` line] |
 | **Reviewed by** | review:<agent> / self-review (fresh context) · human PR reviewer: [name / pending] |

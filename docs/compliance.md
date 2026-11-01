@@ -33,7 +33,7 @@ affect security says so in one line and carries no further security work.
 | Plan | `high` → `## Threat Model`: STRIDE per new trust-boundary crossing → mitigation → residual risk; an open residual risk is accepted only by its owner's quoted ruling | `plan.md`, `decisions.md` |
 | Tasks | `[SEC]` on the tasks that implement or test a security row or mitigation; a negative `[TEST] [SEC]` per authorization / tenant row. Untagged tasks need no security assessment | `tasks.md` |
 | Final review | §2 verdicts every `[SEC]` task, threat-model row and S-item with `path:line`; `high` needs `**Approved-by**:` a named human with quoted words, else `AWAITING-OWNER`; the MCP gate blocks the close without it | `review-final.md` |
-| Merge checklist | `security_deps` · `security_secrets` · `security_sast` · `security_iac` commands, gate items S1–S5, evidence files `final-security-*.txt` — run at every level (mechanical, not an assessment) | `specs/merge-checklist.md` |
+| Merge checklist | `security_deps` · `security_secrets` · `security_sast` · `security_iac` commands, gate items S1–S5, evidence files `final-security_*.txt` — run at every level (mechanical, not an assessment) | `specs/merge-checklist.md` |
 | Bugs | `**Security**: yes \| no`; no exploit payloads or secrets in the repo; production finding → the organisation's incident procedure | `bugs.md` |
 | Close | change record row: security level + reason, scan results, approver | `change-record.md` |
 

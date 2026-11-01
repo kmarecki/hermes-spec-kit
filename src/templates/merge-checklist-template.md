@@ -35,11 +35,16 @@ acceptance_e2e_results:   [e.g. test-results/e2e-*.xml]
 acceptance_e2e_ready:     [exit 0 when the stack is up, e.g. curl -sf http://localhost:4200 >/dev/null]
 acceptance_max_rounds:    5
 
-# Security scans — only with `compliance: baseline` (spec-kit/references/compliance.md); every final review
-security_deps:     [e.g. dotnet list package --vulnerable --include-transitive && npm audit --omit=dev --audit-level=high]
-security_secrets:  [e.g. gitleaks detect --no-banner --log-opts="<base>..HEAD"]
-security_sast:     [e.g. semgrep scan --error --config auto | CodeQL / SonarQube quality gate]
-security_iac:      [e.g. checkov -d infra --quiet — delete when the project has no IaC]
+# Security scans — only with `compliance: baseline` (spec-kit/references/compliance.md); every final review.
+# Exit 0 = pass, non-zero = finding. Check the tool really exits non-zero: `dotnet list package
+# --vulnerable` exits 0 even with findings — filter its JSON. Legacy findings → an allowlist with
+# reason + expiry (.trivyignore exp:, osv-scanner.toml ignoreUntil, checkov --baseline), or diff mode.
+security_deps:     [.NET: dotnet list package --vulnerable --include-transitive --format json | jq -e '[.. | .vulnerabilities? // empty | .[] | select(.severity=="High" or .severity=="Critical")] | length == 0'
+                    npm: npm audit --omit=dev --audit-level=high · Python: pip-audit --strict · Go: govulncheck ./...
+                    any: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .]
+security_secrets:  [gitleaks git --redact --log-opts="<base>..HEAD"   (gitleaks < 8.19: gitleaks detect)]
+security_sast:     [semgrep scan --error --config p/default --baseline-commit "$(git merge-base <base> HEAD)" | CodeQL / SonarQube new-code gate]
+security_iac:      [checkov -d infra --compact --quiet | trivy config --severity HIGH,CRITICAL --exit-code 1 infra — delete when the project has no IaC]
 ```
 
 ## Generic gate (default — edit, drop or add rows)
