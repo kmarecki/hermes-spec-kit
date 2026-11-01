@@ -1,8 +1,8 @@
 ---
 name: spec-kit-design
 description: >
-  Load when the user says 'spec-kit design [module]', 'speckit design [module]', "write the design doc for [module]", "refresh the design doc for [module]", "how does [module] work" (when a design doc should answer it), or "document the architecture of [module]" — a living module design document (purpose, components, data flow, seams, invariants, security, testing, debt). Only for projects that keep `design_dir` in specs/git-conventions.md.
-version: 1.0.0
+  Load when the user says 'spec-kit design [module]', 'speckit design [module]', "write the design doc for [module]", "refresh the design doc for [module]", "how does [module] work" (when a design doc should answer it), or "document the architecture of [module]", 'spec-kit design map', "map the architecture", "propose the module split", "onboard this codebase" — a living module design document (purpose, components, data flow, seams, invariants, security, testing, debt). Only for projects that keep `design_dir` in specs/git-conventions.md.
+version: 1.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -17,6 +17,7 @@ metadata:
 **Phase**: cross-feature (standalone) · **Persona**: the architect who describes what is **built** — components, flows, seams, invariants — in ≤ 3–4 pages a new engineer or an auditor reads first; not a decision log (ADRs), not a plan (epic), not a feature (spec).
 **Purpose**: create or refresh `[design_dir]/[module].md` (`spec-kit/templates/design-doc-template.md`) from the code. A module is **space**: a bounded part of the system that outlives every epic. Feature closes patch it; this skill writes or re-baselines it.
 **`system`** is the reserved module name: `[design_dir]/system.md` is the one-page system view (C4 L1 context + L2 containers: services, stores, external systems, trust boundaries) that every module doc hangs off; create it first.
+**Map** (`design map`): the system view, module split, module docs and ADRs in one pass — brownfield recovered from the code, greenfield the target. **Full procedure**: `spec-kit/references/skills/spec-kit-design.md`.
 **Not for**: projects without `design_dir` (the plan's `## Current Design` is the design — say so and stop); recording a decision (→ an ADR at close); a feature's own design (→ `spec-kit-plan`).
 
 ## Before writing
@@ -31,6 +32,10 @@ metadata:
 4. Testing (harnesses, goldens, probes), known debt (ticket / ADR per item), the ADRs that shaped it.
 5. Status header `current`, owner, last-patched. Commit `docs(design): [module] design doc` (`spec-kit/references/commits.md`).
 
+## Map — once per project (after the constitution, or on an existing one); re-run = refresh
+Brownfield: 1 recover (deployables, entry points, wiring, data owners, edges, existing docs) → 2 `system.md` **WAIT** → 3 module split table (paths, responsibility, owned data, seams, evidence; 5–12; a deployable ≠ a module; god libraries = debt) **WAIT** → 4 module docs via *Create*, ≤ 3 per commit, existing docs absorbed / linked / kept (**ASK** per file, never deleted) → 5 ADRs: index the existing, then ≤ 10 `Accepted (retroactive)` for undocumented de facto decisions through the ADR bar, **WAIT** each → 6 `[design_dir]/README.md` module map (`spec-kit/templates/design-index-template.md`) + AGENTS.md pointer.
+Greenfield: `system.md` status `target`, planned modules in the map (no docs until built), ADRs 0001 record decisions · 0002 architecture style · 0003 stack from the constitution choices.
+
 ## Refresh
 Diff the page against the code (`git log -- <module paths>` since *Last patched*): ≤ 5 discrepancies per session, "doc says … / code does … → patch?" **WAIT** each; append a change-log line; bump *Last patched*. Never bulk-apply.
 
@@ -39,4 +44,4 @@ Diff the page against the code (`git log -- <module paths>` since *Last patched*
 - [ ] Project ADR index and AGENTS.md point at the doc (propose the one-line patch, **WAIT**).
 
 ## Next
-Feature closes keep it true (`spec-kit-summarize` step "design doc + epic row"); `spec-kit-epic` plans name it under `**Modules**:`.
+After map: `spec-kit-specify` (plans name `**Modules**:` from the map). Feature closes keep it true (`spec-kit-summarize` step "design doc + epic row"); `spec-kit-epic` plans name it under `**Modules**:`.

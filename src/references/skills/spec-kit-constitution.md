@@ -18,7 +18,7 @@ Three input modes:
    ship fast"). Agent maps description to purpose → architecture → tech →
    principle defaults automatically. User reviews and adjusts.
 3. **Wizard** (guided, new project): Interactive 3-level decision tree
-   (9 purposes × 25 architecture options). User picks at each level.
+   (9 purposes × 27 architecture options). User picks at each level.
    Always presents 3 options per principle with pros and cons.
 
 **When NOT to use**: This is a one-time setup per project. Do NOT re-run for
@@ -87,7 +87,7 @@ LOAD the brownfield file detection tables from `spec-kit/references/constitution
 **Only for MODE=greenfield AND input_mode=free-text.**
 
 The user provides a natural-language project description. The agent maps it
-to a purpose (A-I), architecture (A1-I3), technology choices, and principle
+to a purpose (A-I), architecture (A1-I3, incl. A5 AI-native and E5 MCP server), technology choices, and principle
 defaults automatically. The user reviews the inferred choices and may accept
 or adjust any of them.
 
@@ -129,11 +129,14 @@ or adjust any of them.
      - "Unity", "Unreal", "Godot" → F1 (Engine-Centric)
      - "Rails", "Django", "Laravel" → A1 (Monolith)
      - "microservices", "distributed" → A3 (Microservices)
+     - "assistant", "agent", "copilot", "RAG", "LLM" → A5 (AI-native / Agentic)
+     - "MCP server", "tool for Claude / agents" → E5 (MCP Server / Agent Tool)
+     - "Cloud Run", "Container Apps", "Lambda" → A4 (Serverless)
      - "Arduino", "sensor firmware" → I3 (MicroPython/Arduino)
      - "bare-metal", "RTOS", "FreeRTOS" → I1 (Bare-Metal/RTOS)
      - "single notebook", "analysis only" → H1 (Single Notebook)
      - "static site", "SSG" → B1 (Static Site Generator)
-     - Default: use the most common architecture for the detected purpose
+     - Default: the ⭐ architecture of the detected purpose (constitution-tables.md)
 
    MAP tech choices from explicit mentions:
      - "React Native" → TypeScript, React Native framework
@@ -264,7 +267,7 @@ LOAD the Level 2 architecture tables for each purpose from `spec-kit/references/
 
 ```
 ASK: "Given your purpose [A|B|C|D|E|F|G|H|I], which architecture approach fits?"
-RECORD: architecture = [A1|A2|A3|A4 | B1|B2|B3 | C1|C2|C3 | D1|D2|D3 | E1|E2|E3|E4 | F1|F2|F3 | G1|G2|G3 | H1|H2|H3 | I1|I2|I3]
+RECORD: architecture = [A1–A5 | B1–B3 | C1–C3 | D1–D3 | E1–E5 | F1–F3 | G1–G3 | H1–H3 | I1–I3]
 ```
 
 ---
@@ -302,137 +305,29 @@ match:
 
 #### Step 2c: Default Mapping — Purpose to Principle Weights
 
-Once purpose + architecture are chosen, map them to recommended defaults
-for the 12 principles. These are weighted suggestions — the user still
-picks A/B/C in Step 3.
+Once purpose + architecture are chosen, pre-fill the 12 principles from this matrix (A/B/C =
+the option in `constitution-principles.md`; the user still picks in Step 3). Architecture is
+always the Level 2 choice; `—` = skip the principle (no database).
 
-```
-PURPOSE = A (User-Facing App):
-  Testing → A or B (TDD important for reliability)
-  Linting → B (Pragmatic — balance quality and speed)
-  Architecture → user's choice from Level 2
-  Dependencies → B (Curated — need frameworks)
-  Git Workflow → B (Feature branches — standard)
-  Documentation → B (Critical-only — API docs + setup)
-  Error Handling → A (Defensive — user-facing app)
-  Performance → B (Profile-then-optimize)
-  Code Review → A or B (Strict or Risk-based)
-  Database → A (Migration-first — if using DB)
-  Config/Secrets → B (Environment-based)
-  Dev Toolchain → B (Standard toolchain)
+| Principle | A App | B Site | C Client | D Library | E Infra/CLI | F Game | G Extension | H Research | I Embedded |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 Testing | A/B | C | B | A | B | C | C | C | C |
+| 2 Linting | B | B | B | A | A | B | B | C | A |
+| 4 Dependencies | B | B | B | A/B | A | C | A | C | A |
+| 5 Git workflow | B | A | B | B | A | B | B | A | A |
+| 6 Documentation | B | B | B | A | C | B | A | B | A |
+| 7 Error handling | A | C | A | B | C | A | A | C | A |
+| 8 Performance | B | C | B | B | A | A | A | C | A |
+| 9 Code review | A/B | C | A | A | B | B | A | C | A |
+| 10 Database | A (if DB) | — | — | — | — | — | — | — | — |
+| 11 Config/secrets | B | C | B | A | A | C | A | C | B |
+| 12 Dev toolchain | B | B | C | B | C | C | B | A | C |
 
-PURPOSE = B (Content Site / Marketing):
-  Testing → C (Test-After — no business logic to test, visual QA only)
-  Linting → B (Pragmatic — template code needs flexibility)
-  Architecture → user's choice from Level 2
-  Dependencies → B (Curated — SSG framework + maybe CMS client)
-  Git Workflow → A (Trunk-based — content changes should ship fast)
-  Documentation → B (Critical-only — build/deploy instructions + content guide)
-  Error Handling → C (Minimal — static sites have no runtime errors)
-  Performance → C (Ignore-until-painful — SSG output is inherently fast)
-  Code Review → C (Post-merge — content edits shouldn't block)
-  Database → SKIP (no database on content sites)
-  Config/Secrets → C (Config-in-repo — build config is part of the source)
-  Dev Toolchain → B (Standard toolchain — SSG, asset pipeline, CDN deploy)
-
-PURPOSE = D (Library / SDK):
-  Testing → A (Strict TDD — API surface must be tested)
-  Linting → A (Strict — public API consistency)
-  Architecture → user's choice from Level 2
-  Dependencies → A or B (Minimal or Curated)
-  Git Workflow → B (Feature branches)
-  Documentation → A (Exhaustive — API docs mandatory)
-  Error Handling → B (Contract-based — surface errors cleanly)
-  Performance → B (Profile-then-optimize)
-  Code Review → A (Strict — every change reviewed)
-  Database → SKIP (libraries shouldn't dictate storage)
-  Config/Secrets → A (Strict — secrets never in lib)
-  Dev Toolchain → B (Standard toolchain)
-
-PURPOSE = E (Infrastructure / CLI / DevOps):
-  Testing → B (Pragmatic — integration-heavy)
-  Linting → A (Strict — CLI UX consistency)
-  Architecture → user's choice from Level 2
-  Dependencies → A (Minimal — static binaries)
-  Git Workflow → A (Trunk-based — fast iteration)
-  Documentation → C (Code-as-docs — help text + README)
-  Error Handling → C (Minimal — propagate, top-level catch)
-  Performance → A (Optimize-first — CLI responsiveness)
-  Code Review → B (Risk-based — config changes vs engine)
-  Database → SKIP (infra tools shouldn't depend on DB)
-  Config/Secrets → A (Strict — env + config files)
-  Dev Toolchain → C (Full DX — automation matters)
-
-PURPOSE = F (Game):
-  Testing → C (Test-After — playtesting and visual QA dominant)
-  Linting → B (Pragmatic — engine code needs flexibility)
-  Architecture → user's choice from Level 2
-  Dependencies → C (Permissive — engines, assets, middleware, audio libs)
-  Git Workflow → B (Feature branches — asset changes need review)
-  Documentation → B (Critical-only — design doc + mechanics + API)
-  Error Handling → A (Defensive — game crashes ruin UX)
-  Performance → A (Optimize-first — frame budget is hard limit)
-  Code Review → B (Risk-based — gameplay logic vs asset changes)
-  Database → SKIP (save systems are engine-managed or custom binary)
-  Config/Secrets → C (Config-in-repo — game config is part of the game)
-  Dev Toolchain → C (Full DX — asset pipeline, build chain, packaging)
-
-PURPOSE = I (IoT / Embedded):
-  Testing → C (Test-After — hardware testing dominates)
-  Linting → A (Strict — firmware bugs are expensive, no OTA)
-  Architecture → user's choice from Level 2
-  Dependencies → A (Minimal — no stdlib, no heap, vendor SDK only)
-  Git Workflow → A (Trunk-based — most constrained, fast iteration)
-  Documentation → A (Exhaustive — pinouts, registers, protocols)
-  Error Handling → A (Defensive — watchdog, brownout, fail-safe)
-  Performance → A (Optimize-first — memory and cycles are hard limits)
-  Code Review → A (Strict — hardware damage risk, no hotfix possible)
-  Database → SKIP (no database on embedded devices)
-  Config/Secrets → B (Environment-based — compile-time flags, EEPROM)
-  Dev Toolchain → C (Full DX — cross-compiler, flashing, logic analyzer)
-
-PURPOSE = C (Native / Desktop Client):
-  Testing → B (Pragmatic — UI tests for critical paths, manual QA for visual)
-  Linting → B (Pragmatic — platform SDKs have their own conventions)
-  Architecture → user's choice from Level 2
-  Dependencies → B (Curated — platform SDK + UI framework, minimize transitive)
-  Git Workflow → B (Feature branches — release management matters)
-  Documentation → B (Critical-only — user-facing help + setup + store listing)
-  Error Handling → A (Defensive — app crashes cause user frustration)
-  Performance → B (Profile-then-optimize — startup time, frame drops, memory)
-  Code Review → A (Strict — app store review failures are costly)
-  Database → SKIP (local storage is platform-managed: Core Data, Room, SharedPrefs)
-  Config/Secrets → B (Environment-based — build flavors, feature flags, remote config)
-  Dev Toolchain → C (Full DX — build pipeline, code signing, app store deploy)
-
-PURPOSE = G (Browser Extension):
-  Testing → C (Test-After — manual browser testing dominates)
-  Linting → B (Pragmatic — content scripts need browser API flexibility)
-  Architecture → user's choice from Level 2
-  Dependencies → A (Minimal — browser APIs preferred, avoid bloating extension)
-  Git Workflow → B (Feature branches — store release cycles)
-  Documentation → A (Exhaustive — store listing, permissions, privacy policy mandatory)
-  Error Handling → A (Defensive — broken extension in user's browser is invisible failure)
-  Performance → A (Optimize-first — content script perf impacts every page user visits)
-  Code Review → A (Strict — privileged API misuse can cause account/data theft)
-  Database → SKIP (storage API is browser-provided)
-  Config/Secrets → A (Strict — API keys, tokens must never be in extension code)
-  Dev Toolchain → B (Standard toolchain — build, zip, upload to stores)
-
-PURPOSE = H (Research / Notebook):
-  Testing → C (Test-After — visual inspection of outputs, assertions in cells)
-  Linting → C (Minimal — notebooks are exploratory, not production code)
-  Architecture → user's choice from Level 2
-  Dependencies → C (Permissive — use whatever lib the analysis needs)
-  Git Workflow → A (Trunk-based — research is fast iteration, no release branches)
-  Documentation → B (Critical-only — reproduction steps + dataset provenance)
-  Error Handling → C (Minimal — errors are part of exploration, top-level catch)
-  Performance → C (Ignore-until-painful — correct analysis first, optimize if needed)
-  Code Review → C (Post-merge — notebooks are exploratory, not approval-gated)
-  Database → SKIP (research uses files, not databases)
-  Config/Secrets → C (Config-in-repo — dataset paths, API keys in .env.example)
-  Dev Toolchain → A (Minimal — just a notebook runtime, no build pipeline)
-```
+The why, per purpose (say it beside each ⭐): **A** reliability for real users (A5: evals are the
+tests) · **B** no business logic, ship content fast · **C** crashes and store reviews are costly ·
+**D** the public API is the product · **E** CLI responsiveness, static binaries · **F** frame budget,
+playtesting dominates · **G** privileged APIs on every page · **H** exploration first, reproducibility
+second · **I** no hotfix once flashed, hard memory limits.
 
 Present these as a summary table to the user:
 
@@ -446,7 +341,6 @@ Present these as a summary table to the user:
   | Linting   | ⭐ [option] | [reason] |
   | ...       |             |      |
 
-  Say 'bugfix [feature]' to start a new bugfix round.
 ```
 
 Then proceed to Step 3 to let the user confirm or adjust each principle.
@@ -547,6 +441,26 @@ ELSE (single project):
 - **PATCH** (x.x.1 → x.x.2): Clarifications
 
 
+### Step 7: Project documents — scale, conventions, AGENTS.md
+
+The constitution decides the rules; this step decides which living documents the project keeps
+(document roles: ADR = why · design doc = how it works now · epic = what, in what order).
+
+```
+ASK scale (recommendation first):
+  small     — one deployable, one team: no adr_dir / design_dir / epics_dir; the plan's
+              Current Design is the design; ADRs only if a close finds one worth it
+  ⭐ platform — several deployables, modules or teams (brownfield with > 1 project ⇒ platform):
+              adr_dir docs/adr · design_dir docs/design · epics_dir specs/epics (+ epics_index on)
+              · runbooks_dir / changelog only if they exist or the user wants them
+RECORD in specs/git-conventions.md (create from the template; uncomment the chosen keys only).
+AGENTS.md: missing → create from spec-kit/templates/AGENTS-template.md (stack + build commands
+  from detection); exists (also CLAUDE.md) → patch only the <!-- SPECKIT --> block, WAIT.
+EXISTING ADR / design dirs (brownfield) → point the keys at them; never move or rename files.
+platform → NEXT: spec-kit-design map — system.md, the module split, module docs and the
+  initial / retroactive ADRs (greenfield: target design + ADRs for the Level 2 / Level 3 picks).
+```
+
 ### MCP state sync (optional, when MCP server is configured)
 
 After writing the file and before committing, confirm it with the project-level
@@ -567,7 +481,7 @@ The constitution is project-level: commit directly per `spec-kit/references/comm
 - If free-text mode: Show which purpose/architecture/tech were inferred from user's description
 - List all chosen options (A/B/C per principle)
 - List any principles skipped with reason
-- Propose: Run `spec-kit-specify` to create the first feature specification.
+- Report the scale and the keys written; platform → propose `spec-kit design map` (then `spec-kit-specify`); small → propose `spec-kit-specify`.
 
 LOAD the Brownfield Detection Examples table from `spec-kit/references/constitution-tables.md`
 

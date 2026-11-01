@@ -1,6 +1,7 @@
 # NNNN — [Decision title: what is decided, in one line]
 
-> **Status:** ADR — Proposed | Accepted | Superseded by NNNN · **Date:** YYYY-MM-DD · **Deciders:** [roles; quote the ruling if a human decided]
+> **Status:** ADR — Proposed | Accepted | Accepted (retroactive) | Superseded by NNNN · **Date:** YYYY-MM-DD · **Deciders:** [roles; quote the ruling if a human decided; retroactive: "recorded by design map; original deciders unknown"]
+> **Decided:** [retroactive only — first commit that shows it (YYYY-MM-DD) or unknown]
 > **Origin:** specs/[###-feature-name]/ — [decisions.md ruling N / plan.md Round N / research D-n / review finding]
 
 <!-- Fallback template. When the project already has an ADR template (e.g. a "## Template"

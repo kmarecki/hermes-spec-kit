@@ -63,6 +63,7 @@ EXPECTED_TEMPLATES = {
     "data-model-template.md",
     "decisions-template.md",
     "git-conventions-template.md",
+    "design-index-template.md",
     "gitignore-template.md",
     "change-record-template.md",
     "design-doc-template.md",
@@ -90,7 +91,7 @@ EXPECTED_REFERENCES = {
 }
 
 # Skills whose one-screen SKILL.md is the whole procedure (no references/skills/ file).
-SELF_CONTAINED_SKILLS = {"spec-kit-clarify", "spec-kit-refresh", "spec-kit-epic", "spec-kit-design"}
+SELF_CONTAINED_SKILLS = {"spec-kit-clarify", "spec-kit-refresh", "spec-kit-epic"}
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 

@@ -8,6 +8,37 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — project documents at setup: scale, `design map`, retroactive ADRs
+
+- **Constitution Step 7 — project documents**: asks the scale (*small*: no ADR / design / epic
+  dirs · *platform*: `adr_dir`, `design_dir`, `epics_dir`), writes the keys, points them at existing
+  doc dirs, creates `AGENTS.md` from `AGENTS-template.md` (previously never installed) or patches
+  its spec-kit block, then routes platform projects to `design map`.
+- **`spec-kit design map`** (full procedure `references/skills/spec-kit-design.md`): brownfield —
+  recover deployables / entry points / wiring / data owners / trust boundaries → `system.md` →
+  proposed module split (5–12 modules; a deployable is not a module; god libraries are debt) →
+  module docs (existing docs absorbed / linked / kept, never deleted) → index existing ADRs +
+  ≤ 10 `Accepted (retroactive)` ADRs for undocumented de facto decisions → module map
+  `[design_dir]/README.md` (`design-index-template.md`). Greenfield — target `system.md`,
+  planned module map, ADRs 0001–0003 from the decision tree. Every step waits for approval.
+- `project_status` hints `design map` when `design_dir` has no `system.md` / module map; the plan
+  takes `**Modules**:` from the module map; ADR template gains `Accepted (retroactive)` + *Decided*;
+  design-doc status `current | target`.
+
+### Changed — architecture options refreshed to 2026
+
+- New options **A5 AI-native / Agentic** (model gateway, retrieval, tools / MCP, eval harness) and
+  **E5 MCP Server / Agent Tool** — 27 options; ⭐ default per purpose (A2 Modular Monolith, B1, C2,
+  D2, E1, F1, G3, H2). A4 covers scale-to-zero containers; D2 adds provenance + SBOM; E4 OpenTofu,
+  Pulumi, Bicep, dbt / Dagster; removed Gatsby, Cordova, eLua, MV2-migration notes; CRA note for
+  devices / clients / libraries; a short 2026 baseline (OpenTelemetry, scanning + SBOM, passkeys,
+  IaC, AI-agent governance) shown after Level 3 as recommendations.
+- Level 3 brackets rewritten compactly; brownfield detection adds AI app, MCP server, .NET Aspire,
+  Azure Functions, SSDT, Bicep, uv; Angular → Vitest; Remix → React Router 7; Bevy row fixed
+  (was E1/E2, now F1). The purpose → principle defaults became one matrix.
+- `git-conventions-template.md`: the document keys ship commented — the constitution's scale
+  question writes them (copying the template no longer turns on ADR / design / epic dirs silently).
+
 ### Added — epics and module design docs (opt-in)
 
 - **`spec-kit-epic`** — an epic is one body of work in *time*, run through the same shape as

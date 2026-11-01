@@ -60,19 +60,19 @@ Used by the close (ADRs, AGENTS.md) and by the final review (merge checklist). O
 use the default.
 
 ```
-adr_dir: docs/adr               # default: first existing of docs/adr, docs/decisions, doc/adr, adr
-adr_index: docs/adr/README.md   # the ADR list to update; default: README.md / index.md in adr_dir
+# adr_dir: docs/adr             # set by the constitution (scale = platform); default: first existing of docs/adr, docs/decisions, doc/adr, adr
+# adr_index: docs/adr/README.md # the ADR list to update; default: README.md / index.md in adr_dir
 agents_file: AGENTS.md          # the agent context file kept current at close (also CLAUDE.md if it restates it)
 merge_checklist: specs/merge-checklist.md
 history: large                  # always | large | never — keep specs/<feature>/history.md: large = size L only (default); spec.md `**History**: on|off` overrides
-design_dir: docs/design         # living module design docs (design-doc-template.md); ABSENT → plan.md's Current Design is the only design, nothing else is created
-epics_dir: specs/epics          # epics as specs/epics/NNN-name/{epic,plan,features,review}.md (NNN = tracker epic id, e.g. ADO); ABSENT → every feature is its own epic
-epics_index: on                 # on | off — keep [epics_dir]/README.md, the roadmap table (one row per epic), maintained by spec-kit-epic
-changelog: CHANGELOG.md         # Keep-a-Changelog file the close adds an Unreleased line to; ABSENT → no changelog step
-runbooks_dir: docs/runbooks     # operational docs the close checks for statements the diff made wrong; ABSENT → skipped
+# design_dir: docs/design       # living module design docs (design-doc-template.md); ABSENT → plan.md's Current Design is the only design, nothing else is created
+# epics_dir: specs/epics        # epics as specs/epics/NNN-name/{epic,plan,features,review}.md (NNN = tracker epic id, e.g. ADO); ABSENT → every feature is its own epic
+# epics_index: on               # on | off — keep [epics_dir]/README.md, the roadmap table (one row per epic), maintained by spec-kit-epic
+# changelog: CHANGELOG.md       # Keep-a-Changelog file the close adds an Unreleased line to; ABSENT → no changelog step
+# runbooks_dir: docs/runbooks   # operational docs the close checks for statements the diff made wrong; ABSENT → skipped
 ```
 
-A small project leaves `design_dir` and `epics_dir` out: the close then has nothing to patch
+The commented keys are written by the constitution's scale question (small: none · platform: adr / design / epics). A small project leaves `design_dir` and `epics_dir` out: the close then has nothing to patch
 and nothing is ever created unprompted. A platform sets both; `spec-kit-design` and
 `spec-kit-epic` create the documents, the feature close keeps them true.
 

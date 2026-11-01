@@ -18,7 +18,7 @@ day-to-day usage.
 3.  [Three Development Modes](#three-development-modes)
 4.  [Constitution Decision Tree](#constitution-decision-tree)
     - [Level 1: Purpose (9 options)](#level-1-purpose-9-options)
-    - [Level 2: Architecture (25 options)](#level-2-architecture-25-options-across-9-purposes)
+    - [Level 2: Architecture (27 options)](#level-2-architecture-27-options-across-9-purposes)
     - [Level 3: Technology Choices](#level-3-technology-choices)
     - [Purpose-to-Principle Defaults](#after-level-3-purpose-to-principle-defaults)
     - [Monorepo Mode](#monorepo-mode)
@@ -212,7 +212,7 @@ Spec-kit has three modes, each suited to a different level of uncertainty:
 
 | Mode | When to use | How it runs | User involvement |
 |------|-------------|-------------|-----------------|
-| **Specify** (default) | You know what you want — low uncertainty | Starts with constitution decision tree (9 purposes × 25 architecture options). Then a linear forward phase sequence: Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close | Manual — you say "plan", "implement", etc. |
+| **Specify** (default) | You know what you want — low uncertainty | Starts with constitution decision tree (9 purposes × 27 architecture options). Then a linear forward phase sequence: Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close | Manual — you say "plan", "implement", etc. |
 | **Bugfix** | You have a working feature with known bugs | Auto-chains Plan→Tasks→Implement→Test once you say "bugfix". If new bugs are discovered mid-round, they're logged separately and the next round runs the full plan→tasks→implement cycle (separate commits per phase). For trivial fixes, "quickfix [feature]" batches plan+tasks+fix in one commit (user explicitly opts in). | Minimal — inner loop is automatic |
 | **Reopen** | A closed feature needs more fixes | Creates bugfix branch from main, preserves original close data, routes through bugfix loop | Additive-only edits; must close again after fixes |
 
@@ -283,46 +283,49 @@ is a multi-project monorepo (e.g., one repo containing a web app + mobile
 app + shared library). If yes, Levels 1-3 run independently per sub-project,
 and the constitution gets a `Projects` table at the top.
 
-### Level 2: Architecture (25 options across 9 purposes)
+### Level 2: Architecture (27 options across 9 purposes)
 
 Based on the chosen purpose, the agent presents architecture options.
-Each option has a description, pros, cons, and best-use guidance.
+Each option has a description, pros, cons, and best-use guidance; ⭐ marks the 2026 default
+for the purpose (refreshed 2026-11).
 
-**A — User-Facing App**: Monolith (A1), Modular Monolith (A2),
-Microservices (A3), Serverless/FaaS (A4)
+**A — User-Facing App**: Monolith (A1), Modular Monolith ⭐ (A2),
+Microservices (A3), Serverless — functions or scale-to-zero containers (A4),
+AI-native / Agentic — model gateway, retrieval, tools, evals (A5)
 
-**B — Content Site**: Static Site Generator (B1), Headless CMS + SSG (B2),
+**B — Content Site**: Static / Islands ⭐ (B1), Headless CMS + SSG (B2),
 Lightweight Backend (B3)
 
-**C — Native / Desktop Client**: Native Platform (C1), Cross-Platform
-Framework (C2), Web Wrapper (C3)
+**C — Native / Desktop Client**: Native Platform (C1), Cross-Platform ⭐
+(C2), Web Wrapper (C3)
 
-**D — Library / SDK**: Zero-Dependency (D1), Curated (D2),
+**D — Library / SDK**: Zero-Dependency (D1), Curated ⭐ (D2),
 Umbrella/Multi-Package (D3)
 
-**E — Infra / CLI / DevOps**: Single Binary (E1), Multi-Binary (E2),
-Plugin-Based (E3), Script/Pipeline/Declarative (E4)
+**E — Infra / CLI / DevOps**: Single Binary ⭐ (E1), Multi-Binary (E2),
+Plugin-Based (E3), Declarative / Pipeline (E4), MCP Server / Agent Tool (E5)
 
-**F — Game**: Engine-Centric (F1), Custom Engine (F2), Web/Retro (F3)
+**F — Game**: Engine-Centric ⭐ (F1), Custom Engine (F2), Web (F3)
 
-**G — Browser Extension**: Simple/Single-Browser (G1), Full MV3 (G2),
-Cross-Browser (G3)
+**G — Browser Extension**: Simple (G1), Full MV3 (G2),
+Cross-Browser ⭐ (G3)
 
-**H — Research / Notebook**: Single Notebook (H1), Notebook + Scripts (H2),
+**H — Research / Notebook**: Single Notebook (H1), Notebook + Modules ⭐ (H2),
 Package + Notebooks (H3)
 
 **I — IoT / Embedded**: Bare-Metal / RTOS (I1), Linux-Based Embedded (I2),
-MicroPython / Arduino (I3)
+High-Level Firmware — Arduino / MicroPython (I3)
 
 ### Level 3: Technology Choices
 
 With purpose + architecture settled, the agent brackets recommended
 languages and frameworks. Examples:
 
-- **A1 (Monolith web app)**: Django, Rails, Laravel, Next.js, ASP.NET
-- **C1 (Native client)**: Swift (iOS/macOS), Kotlin (Android), C# (WinUI), C++ (Qt)
+- **A1 (Monolith web app)**: Rails 8, Laravel, Django, ASP.NET Core, Next.js / SvelteKit
+- **A5 (AI-native app)**: Python (FastAPI + LangGraph / Pydantic AI), TypeScript (Vercel AI SDK), C# (Microsoft.Extensions.AI) + an eval harness
+- **C1 (Native client)**: Swift (SwiftUI), Kotlin (Compose), C# (WinUI 3), C++ (Qt 6)
 - **F1 (Engine-based game)**: C# + Unity, C++ + Unreal, GDScript + Godot, Rust + Bevy
-- **I1 (Bare-metal IoT)**: C, C++ (constrained), Rust no-std, Zig
+- **I1 (Bare-metal IoT)**: C (Zephyr, FreeRTOS, ESP-IDF), Rust (Embassy), C++ (constrained)
 
 Each bracket presents 3-4 options with framework suggestions, pros, and
 cons. The user picks one.
@@ -545,15 +548,23 @@ purpose-weighted defaults. Three input modes:
   Agent maps description to purpose, architecture, tech, and principle
   defaults. User reviews the inference table.
 - **Wizard** (guided, new project): Walks the user through all 3 levels:
-  Level 1 (9 purposes A–I), Level 2 (2–4 architecture options per purpose),
+  Level 1 (9 purposes A–I), Level 2 (3–5 architecture options per purpose),
   Level 3 (language/framework bracketing).
 
 Supports multi-project monorepos: after Level 1, asks whether the repo
 contains multiple sub-projects. If yes, Levels 1-3 run independently per
 sub-project, and the constitution gets a `Projects` table.
 
+**Project documents**: the last step asks the project's **scale** — *small* (no ADR / design /
+epic directories) or *platform* (`adr_dir`, `design_dir`, `epics_dir` written to
+`specs/git-conventions.md`) — and creates or patches `AGENTS.md`. Platform then runs
+**`spec-kit design map`**: brownfield recovers `system.md`, proposes the module split, writes
+a design doc per approved module, indexes existing ADRs and proposes `Accepted (retroactive)`
+ADRs for decisions the code already embodies; greenfield writes the target `system.md`, the
+planned module map and ADRs 0001–0003 from the decision tree. Every step waits for approval.
+
 See the [Constitution Decision Tree](#constitution-decision-tree) section
-for a full walkthrough with all 9 purposes, 25 architecture options, and
+for a full walkthrough with all 9 purposes, 27 architecture options, and
 purpose-to-principle default mappings.
 
 ### Phase 1: Specify
@@ -1101,7 +1112,7 @@ mcp_spec_kit_list_features     # List all registered features via MCP
                                             ▼                          │
 Constitution (3-level tree) → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
   │ Level 1: 9 purposes (A-I)                                                        │
-  │ Level 2: 25 architecture options                                                 │
+  │ Level 2: 27 architecture options                                                 │
   │ Level 3: Tech bracketing                                              ┌──────────┘
   │ After: 12 principles with purpose-mapped defaults                     ▼
   └─────────────────────→                    ┌─→ [Clarify] → Plan → Tasks → Implement → Test → Close (mandatory)

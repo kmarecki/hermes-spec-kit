@@ -524,6 +524,11 @@ def project_status() -> str:
         for e, fs in by_epic.items():
             if len(fs) >= 3:
                 hints.append(f"{len(fs)} specs name epic '{e}' but no epics_dir is set — consider an epic plan (spec-kit epic {e})")
+    if conv.get("design_dir"):
+        dd = Path(conv["design_dir"])
+        missing = [n for n in ("system.md", "README.md") if not (dd / n).exists()]
+        if missing:
+            hints.append(f"design_dir {dd} has no {' / '.join(missing)} — run 'spec-kit design map' (system view, module map, module docs, ADRs)")
     if not conv.get("design_dir"):
         by_module = {}
         for f in features:

@@ -1,6 +1,6 @@
 # [Module name] — design
 
-> **Status:** current · **Owner:** [team / name] · **Last patched:** [DATE] by [feature]
+> **Status:** current | target *(greenfield: planned, not built yet)* · **Owner:** [team / name] · **Last patched:** [DATE] by [feature]
 > A living description of how this part of the system works **now** (≤ 3–4 pages). Patched in
 > place by every feature close that changes it — never copied to `-v2`. Decisions live in ADRs;
 > this page describes the result. (ISO/IEC 27001 A.8.27 — the architecture an auditor reads.)

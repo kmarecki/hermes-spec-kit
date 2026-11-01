@@ -278,7 +278,7 @@ hermes-spec-kit/
 │   │   ├── spec-kit-summarize.md     # Phase 6 — close/summary
 │   │   ├── spec-kit-refresh.md       # Standalone — artifact reconciliation
 │   │   ├── spec-kit-epic.md          # Standalone — epic plan (time: many features, one goal); optional epics_dir
-│   │   ├── spec-kit-design.md        # Standalone — module design doc (space: how a part works now); optional design_dir
+│   │   ├── spec-kit-design.md        # Standalone — module design doc + `design map` (system view, module split, docs, ADRs); optional design_dir
 │   │   └── spec-kit/
 │   │       └── SKILL.md              # Umbrella skill — overview only
 │   ├── templates/                    # 18 template files (*-template.md)
@@ -506,7 +506,7 @@ The template at `src/templates/AGENTS-template.md` provides the starter.
 | **One umbrella regression task** | Individual bugs would create noise. A single BF-REGRESSION-001 task covers the regression round. |
 | **MCP is optional** | Keeps the skill set usable even without MCP infrastructure. The filesystem is always available. |
 | **Project state separate from feature state in MCP** | Prevents the constitution from being treated as a per-feature phase. Clean separation of concerns between project bootstrap and feature lifecycle. |
-| **9 purposes × 25 architectures** | Covers the full spectrum of project types while keeping the decision tree manageable. |
+| **9 purposes × 27 architectures** | Covers the full spectrum of project types while keeping the decision tree manageable. |
 | **Free-text + guided + brownfield** | Three modes for three user contexts — fast (free-text), thorough (guided), or detected (brownfield). |
 | **Separate workflow skill** | Prevents routing logic from mixing with phase execution logic. Each skill stays focused. |
 | **history.md append-only** | The process record that survives the squash-merge; `change-record.md` at close copies it for the auditor. |

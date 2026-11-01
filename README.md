@@ -100,8 +100,8 @@ project principles with weighted defaults.
 | **H** | Research / Notebook | Jupyter, R Markdown, Quarto, MATLAB, experimental analysis |
 | **I** | IoT / Embedded | Arduino, ESP32, STM32, Zephyr RTOS, Raspberry Pi Linux |
 
-**Level 2 — Architecture** (25 options across all purposes): Each purpose has 2-4 architecture
-variants — e.g., User-Facing App offers Monolith / Modular Monolith / Microservices / Serverless,
+**Level 2 — Architecture** (27 options across all purposes, refreshed 2026-11): Each purpose has 3-5 architecture
+variants — e.g., User-Facing App offers Monolith / Modular Monolith / Microservices / Serverless / AI-native,
 while Libraries offer Zero-Dependency / Curated / Umbrella.
 
 **Level 3 — Technology choices**: Per-purpose language/framework bracketing — e.g., an Engine-Centric
@@ -253,7 +253,7 @@ python3 spec-kit-mcp-server/test_workflow.py && python3 spec-kit-mcp-server/test
 
 - Constitution is mandatory for all features — specify and plan block if missing
 - Constitution uses a 3-level decision tree: Purpose → Architecture → Tech stack
-- 9 purpose types (A-I) with 25 architecture variants across all purposes
+- 9 purpose types (A-I) with 27 architecture variants across all purposes
 - Purpose-to-principle default mappings for each of the 12 constitution principles
 - Design phases (0-3) each commit immediately — no batch commit
 - Bugfix sub-rounds: separate phase commits by default (`bugfix`), opt-in batch via `quickfix`
