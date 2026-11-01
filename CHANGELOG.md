@@ -8,6 +8,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — security compliance profile `baseline` (opt-in)
+
+- `compliance: baseline` in git-conventions turns on: a per-feature `**Security**: none | low |
+  medium | high` level asked at specify (`none` skips the assessment); four extended Security &
+  Privacy rows for medium/high; a `## Threat Model` (STRIDE) for high; `[SEC]` task marker with
+  negative tests per authorization row; merge-checklist security scans (S1–S5); a named human
+  `**Approved-by**:` for high, enforced by the close gate; `Security` field on bugs; security row in
+  the change record. New reference `references/compliance.md`; lint warnings for the missing pieces.
+- `docs/compliance.md` — ISO/IEC 27001:2022 Annex A, NIS2 Art. 21(2) and NIST SSDF mapping; the
+  `formal` profile documented as a future upgrade (not implemented).
+- Skill-set size budget raised from 250 KB to 256 KB.
+
 ### Added — epics and module design docs (opt-in)
 
 - **`spec-kit-epic`** — an epic is one body of work in *time*, run through the same shape as

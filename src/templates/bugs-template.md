@@ -11,6 +11,7 @@
 ### BUG-001: [Short descriptive title]
 
 - **Severity**: [critical/major/minor/trivial]
+- **Security**: [no / yes — `compliance: baseline`: no exploit payload or secret here]
 - **Area**: [spec section or component affected]
 - **Description**: [What the bug is — observed vs expected behavior]
 - **Steps to Reproduce**:

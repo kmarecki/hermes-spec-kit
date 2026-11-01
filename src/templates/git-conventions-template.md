@@ -70,6 +70,7 @@ epics_dir: specs/epics          # epics as specs/epics/NNN-name/{epic,plan,featu
 epics_index: on                 # on | off — keep [epics_dir]/README.md, the roadmap table (one row per epic), maintained by spec-kit-epic
 changelog: CHANGELOG.md         # Keep-a-Changelog file the close adds an Unreleased line to; ABSENT → no changelog step
 runbooks_dir: docs/runbooks     # operational docs the close checks for statements the diff made wrong; ABSENT → skipped
+compliance: none               # none | baseline — baseline: per-feature security level, [SEC] tasks, security scans, human approver for high (spec-kit/references/compliance.md)
 ```
 
 A small project leaves `design_dir` and `epics_dir` out: the close then has nothing to patch

@@ -89,6 +89,8 @@ _SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
 _HISTORY_RE = re.compile(r"^\*\*History\*\*:\s*\[?(on|off)\b", re.M | re.I)
 _EPIC_RE = re.compile(r"^\*\*Epic\*\*:\s*\[?([A-Za-z0-9][\w.-]*)", re.M)
 _MODULES_RE = re.compile(r"^\*\*Modules\*\*:\s*(.+)$", re.M)
+_SECURITY_RE = re.compile(r"^\*\*Security\*\*:\s*\[?(none|low|medium|high)\b", re.M | re.I)
+_APPROVED_BY_RE = re.compile(r"^\*\*Approved-by\*\*:\s*(?!\[|pending\b)\S", re.M | re.I)
 _ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
 _VERDICT_RE = re.compile(r"\*\*Verdict\*\*:\s*(READY-WITH-FOLLOWUPS|AWAITING-OWNER|NOT READY|READY)\b")
 _REVIEWED_COMMIT_RE = re.compile(r"\*\*Reviewed-commit\*\*:\s*([0-9a-f]{7,40})\b")
@@ -356,6 +358,16 @@ def _acceptance_problem(fd):
     return None
 
 
+def _security_of(fd):
+    """`compliance: baseline` → the spec's `**Security**:` level (none|low|medium|high), or
+    "missing" when the line is absent. None when the project keeps no compliance profile."""
+    if (_conventions().get("compliance") or "none").lower() != "baseline":
+        return None
+    f = fd / "spec.md"
+    m = _SECURITY_RE.search(f.read_text(errors="replace")) if f.exists() else None
+    return m.group(1).lower() if m else "missing"
+
+
 def _final_review(fd):
     """The latest round of review-final.md: verdict, reviewed commit, and whether code changed since."""
     f = fd / FINAL_REVIEW
@@ -368,8 +380,9 @@ def _final_review(fd):
     cm = _REVIEWED_COMMIT_RE.search(last)
     commit = cm.group(1) if cm else None
     stale = _code_changed_since(commit) if commit else None
+    approval_missing = _security_of(fd) == "high" and not _APPROVED_BY_RE.search(last)
     return {"present": True, "rounds": len(rounds), "verdict": vm.group(1) if vm else None,
-            "reviewed_commit": commit, "stale": stale}
+            "reviewed_commit": commit, "stale": stale, "approval_missing": approval_missing}
 
 
 def _final_review_problem(fr):
@@ -386,6 +399,8 @@ def _final_review_problem(fr):
         return f"{FINAL_REVIEW}: latest round has no '**Reviewed-commit**:' sha"
     if fr["stale"]:
         return f"{FINAL_REVIEW}: code changed after the reviewed commit {fr['reviewed_commit']} — re-run the final review"
+    if fr.get("approval_missing"):
+        return f"{FINAL_REVIEW}: **Security**: high needs '**Approved-by**: <human> — \"<quoted words>\"' in the latest round (references/compliance.md §5)"
     return None
 
 
@@ -1013,6 +1028,14 @@ def lint_artifacts(feature: str) -> str:
             break
         if not (Path(design_dir) / f"{module}.md").exists():
             findings.append({"file": "plan.md", "severity": "warning", "msg": f"module {module} has no {design_dir}/{module}.md — the close cannot patch it (spec-kit design {module})"})
+
+    security = _security_of(fd)
+    if security == "missing" and (fd / "spec.md").exists():
+        findings.append({"file": "spec.md", "severity": "warning", "msg": "compliance: baseline but no '**Security**: none | low | medium | high' header line (references/compliance.md §1)"})
+    if security == "high" and (fd / "plan.md").exists() and "## Threat Model" not in (fd / "plan.md").read_text(errors="replace"):
+        findings.append({"file": "plan.md", "severity": "warning", "msg": "**Security**: high but plan.md has no '## Threat Model' section (references/compliance.md §3)"})
+    if security in ("low", "medium", "high") and (fd / "tasks.md").exists() and "[SEC]" not in (fd / "tasks.md").read_text(errors="replace"):
+        findings.append({"file": "tasks.md", "severity": "warning", "msg": f"**Security**: {security} but no task carries [SEC] (references/compliance.md §4)"})
 
     if any((fd / c).exists() for c in CLOSE_DOCS):
         close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())

@@ -29,6 +29,12 @@ acceptance_e2e:           [ONE feature's specs only — {specs} is replaced, e.g
 acceptance_e2e_results:   [e.g. test-results/e2e-*.xml]
 acceptance_e2e_ready:     [exit 0 when the stack is up, e.g. curl -sf http://localhost:4200 >/dev/null]
 acceptance_max_rounds:    5
+
+# Security scans — only with `compliance: baseline` (spec-kit/references/compliance.md); every final review
+security_deps:     [e.g. dotnet list package --vulnerable --include-transitive && npm audit --omit=dev --audit-level=high]
+security_secrets:  [e.g. gitleaks detect --no-banner --log-opts="<base>..HEAD"]
+security_sast:     [e.g. semgrep scan --error --config auto | CodeQL / SonarQube quality gate]
+security_iac:      [e.g. checkov -d infra --quiet — delete when the project has no IaC]
 ```
 
 ## Generic gate (always checked)
@@ -50,6 +56,16 @@ acceptance_max_rounds:    5
 | G13 | User-facing docs, runbooks, AGENTS.md touched where the change makes them wrong | no |
 | G14 | Commit messages follow `specs/git-conventions.md` | no |
 | G15 | PR description drafted (what / why / how verified / risks / rollback) | no |
+
+## Security gate (only with `compliance: baseline`)
+
+| # | Item | Blocking |
+|---|------|----------|
+| S1 | No known high/critical vulnerability in new or changed dependencies (`security_deps`) | yes |
+| S2 | Secret scan clean on the branch range (`security_secrets`) | yes |
+| S3 | Static analysis: no new high finding (`security_sast`) | yes |
+| S4 | IaC scan: no new high finding (`security_iac`) | yes |
+| S5 | Security high: threat model rows mitigated or accepted; `**Approved-by**` a named human | yes |
 
 ## Project rules (edit — these are this project's non-negotiables)
 
