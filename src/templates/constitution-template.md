@@ -9,7 +9,7 @@
 | Project | Purpose | Language/Framework | Architecture | 
 |---------|---------|-------------------|--------------|
 | [e.g., frontend] | [purpose] | [tech] | [arch option] |
-| [e.g., mobile] | G — Native Client | [Flutter] | G2 — Cross-platform |
+| [e.g., mobile] | C — Native / Desktop Client | [Flutter] | C2 — Cross-Platform |
 | [e.g., backend] | A — User-Facing App | [Go] | A2 — Modular Monolith |
 
 ## Tech Stack
@@ -23,6 +23,7 @@
 - **CI/CD**: [CI_PLATFORM]
 - **Database**: [DATABASE]
 - **Deployment**: [DEPLOYMENT_TARGET]
+- **Traits**: runs [multi-tenant SaaS | single-tenant | on-prem | local-first | edge] · regulated [none | personal data | finance | health | safety-critical | AI Act high-risk] · lifecycle [prototype | product | modernization]
 
 ## Core Principles
 
@@ -43,7 +44,7 @@
 **Rationale:** [Why this option was chosen]
 
 ### 3. Architecture
-**Chosen: [A1|A2|A3|A4 | ... | I1|I2|I3] — [Rule Name]**
+**Chosen: [A1–A6 | B1–B3 | C1–C3 | D1–D4 | E1–E5 | F1–F4 | G1–G4 | H1–H5 | I1–I4 | J1–J3 | K1–K3 | Other] — [Rule Name]**
 
 [User-picked option's full text]
 

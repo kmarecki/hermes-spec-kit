@@ -25,6 +25,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
   takes `**Modules**:` from the module map; ADR template gains `Accepted (retroactive)` + *Decided*;
   design-doc status `current | target`.
 
+### Changed — constitution split by mode; coverage widened to 11 purposes / 44 options
+
+- `constitution-tables.md` split into **`constitution-detection.md`** (brownfield only) and
+  **`constitution-greenfield.md`** (free-text, wizard, architecture options — greenfield only); the
+  free-text and wizard steps moved out of the full procedure. A brownfield setup loads ~57 KB
+  instead of ~76 KB and never reads the greenfield tables.
+- New purposes **J Systems Software** (kernel / driver, engine / runtime / compiler, HPC) and
+  **K Business Platform** (low-code, platform code, marketplace apps); broadened **A Applications &
+  Services** (+ A6 event-driven / workers / streams), **G Extensions & Integrations** (+ G4 IDE /
+  Office / Figma / chat-bot / SaaS-marketplace plugins), **H Research, Data & ML** (+ H4 data
+  platform, H5 ML training & serving), **D** (+ D4 smart contracts), **F Game / XR** (+ F4 XR /
+  spatial), **I** (+ I4 connected fleet).
+- **Level 1.5 project traits** (runs where · regulated domain · lifecycle) with trait rules on the
+  defaults (safety-critical → strict testing / review / docs; regulated / personal data → suggests
+  `compliance: baseline`; modernization → characterisation tests, strangler-fig, cut-over ADR).
+- **Other** path: closest purpose + the agent's own options, marked *(not from the reference tables)*.
+- Detection adds C / C++ (CMake, Meson, vcpkg, Conan), F#, PowerShell, Zig, Haskell / OCaml, Julia,
+  Fortran / MPI, COBOL, kernel / eBPF, dbt, Spark / Databricks, ML pipelines, Salesforce, Power
+  Platform, VS Code extensions, Office add-ins / Figma plugins, smart contracts, stream workers.
+- Constitution template: a *Traits* line; the monorepo example's purpose letter fixed (was G, is C).
+
 ### Changed — architecture options refreshed to 2026
 
 - New options **A5 AI-native / Agentic** (model gateway, retrieval, tools / MCP, eval harness) and

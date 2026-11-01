@@ -1,6 +1,6 @@
 # Hermes Spec-Kit
 
-Spec-driven development for Hermes Agent. 11 skills implementing a structured phase-based workflow with three development modes, a constitution 3-level decision tree (9 purposes × 25 architecture options), mandatory close with spec health scoring, and a reopen flow for fixing closed features. Includes an optional MCP server for deterministic state management.
+Spec-driven development for Hermes Agent. 11 skills implementing a structured phase-based workflow with three development modes, a constitution decision tree (11 purposes × 44 architecture options + project traits), mandatory close with spec health scoring, and a reopen flow for fixing closed features. Includes an optional MCP server for deterministic state management.
 
 ## Quick Start
 
@@ -86,21 +86,23 @@ The constitution phase (Phase 0) guides users through a 3-level decision tree th
 narrows from general purpose to specific technology choices, then pre-fills the 12
 project principles with weighted defaults.
 
-**Level 1 — Purpose** (9 options):
+**Level 1 — Purpose** (11 options) + **Level 1.5 — traits** (runs where · regulated domain · lifecycle):
 
 | Code | Purpose | Example use cases |
 |------|---------|-------------------|
-| **A** | User-Facing Application | SaaS, e-commerce, dashboard, CMS, API server |
-| **B** | Content Site / Marketing | Portfolio, blog, docs site, landing page |
-| **C** | Native / Desktop Client | iOS app, Android app, Electron, Tauri, Qt app |
-| **D** | Library / SDK / Package | npm package, PyPI lib, Go module, Rust crate |
-| **E** | Infrastructure / CLI / DevOps | CLI tool, Terraform module, CI pipeline, daemon, AI pipeline |
-| **F** | Game | Unity/Unreal/Godot game, WebGL game, custom-engine game |
-| **G** | Browser Extension | Chrome MV3, Firefox add-on, Safari extension, cross-browser |
-| **H** | Research / Notebook | Jupyter, R Markdown, Quarto, MATLAB, experimental analysis |
-| **I** | IoT / Embedded | Arduino, ESP32, STM32, Zephyr RTOS, Raspberry Pi Linux |
+| **A** | Applications & Services | SaaS, APIs, workers / event processing, AI-native apps |
+| **B** | Content Site | Portfolio, blog, docs site, landing page |
+| **C** | Native / Desktop Client | iOS, Android, Flutter, Tauri, Qt |
+| **D** | Library / SDK | npm / PyPI / NuGet package, Rust crate, smart contracts |
+| **E** | Infrastructure / CLI / DevOps | CLI, Terraform / OpenTofu, CI pipeline, MCP server |
+| **F** | Game / XR | Unity / Unreal / Godot, WebGL, VR / AR |
+| **G** | Extensions & Integrations | Browser extension, IDE plugin, Office add-in, chat bot |
+| **H** | Research, Data & ML | Jupyter / marimo, dbt / lakehouse, model training and serving |
+| **I** | IoT / Embedded | Zephyr, ESP32, embedded Linux, device fleets |
+| **J** | Systems Software | Kernel, driver, database engine, compiler, HPC |
+| **K** | Business Platform | Salesforce, Dynamics / Power Platform, SAP, ServiceNow |
 
-**Level 2 — Architecture** (27 options across all purposes, refreshed 2026-11): Each purpose has 3-5 architecture
+**Level 2 — Architecture** (44 options across all purposes, refreshed 2026-11): Each purpose has 3-6 architecture
 variants — e.g., User-Facing App offers Monolith / Modular Monolith / Microservices / Serverless / AI-native,
 while Libraries offer Zero-Dependency / Curated / Umbrella.
 
@@ -253,7 +255,7 @@ python3 spec-kit-mcp-server/test_workflow.py && python3 spec-kit-mcp-server/test
 
 - Constitution is mandatory for all features — specify and plan block if missing
 - Constitution uses a 3-level decision tree: Purpose → Architecture → Tech stack
-- 9 purpose types (A-I) with 27 architecture variants across all purposes
+- 11 purpose types (A-K) with 44 architecture variants and project traits
 - Purpose-to-principle default mappings for each of the 12 constitution principles
 - Design phases (0-3) each commit immediately — no batch commit
 - Bugfix sub-rounds: separate phase commits by default (`bugfix`), opt-in batch via `quickfix`

@@ -305,7 +305,8 @@ hermes-spec-kit/
 │       ├── evidence.md               # Oracles, evidence files (every tier), status vocabulary
 │       ├── acceptance.md             # AC ids, verify levels, freeze, the acceptance loop
 │       ├── constitution-principles.md # 12 principles × 3 options with pros/cons
-│       └── constitution-tables.md    # Wizard tables and brownfield detection data
+│       ├── constitution-detection.md # Brownfield detection tables (loaded only for brownfield)
+│       └── constitution-greenfield.md # Free-text inference, wizard, architecture options (greenfield only)
 │
 ├── spec-kit-mcp-server/              # MCP server (Python, FastMCP)
 │   ├── server.py                     # 19 tools, Python + mcp SDK (<2)
@@ -506,7 +507,7 @@ The template at `src/templates/AGENTS-template.md` provides the starter.
 | **One umbrella regression task** | Individual bugs would create noise. A single BF-REGRESSION-001 task covers the regression round. |
 | **MCP is optional** | Keeps the skill set usable even without MCP infrastructure. The filesystem is always available. |
 | **Project state separate from feature state in MCP** | Prevents the constitution from being treated as a per-feature phase. Clean separation of concerns between project bootstrap and feature lifecycle. |
-| **9 purposes × 27 architectures** | Covers the full spectrum of project types while keeping the decision tree manageable. |
+| **11 purposes × 44 architectures + traits** | Covers the software landscape (incl. data / ML, systems, business platforms, host plugins) while each question stays short; an *Other* path for the rest. |
 | **Free-text + guided + brownfield** | Three modes for three user contexts — fast (free-text), thorough (guided), or detected (brownfield). |
 | **Separate workflow skill** | Prevents routing logic from mixing with phase execution logic. Each skill stays focused. |
 | **history.md append-only** | The process record that survives the squash-merge; `change-record.md` at close copies it for the auditor. |

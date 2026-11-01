@@ -18,7 +18,7 @@ day-to-day usage.
 3.  [Three Development Modes](#three-development-modes)
 4.  [Constitution Decision Tree](#constitution-decision-tree)
     - [Level 1: Purpose (9 options)](#level-1-purpose-9-options)
-    - [Level 2: Architecture (27 options)](#level-2-architecture-27-options-across-9-purposes)
+    - [Level 2: Architecture (44 options)](#level-2-architecture-44-options-across-11-purposes)
     - [Level 3: Technology Choices](#level-3-technology-choices)
     - [Purpose-to-Principle Defaults](#after-level-3-purpose-to-principle-defaults)
     - [Monorepo Mode](#monorepo-mode)
@@ -212,7 +212,7 @@ Spec-kit has three modes, each suited to a different level of uncertainty:
 
 | Mode | When to use | How it runs | User involvement |
 |------|-------------|-------------|-----------------|
-| **Specify** (default) | You know what you want — low uncertainty | Starts with constitution decision tree (9 purposes × 27 architecture options). Then a linear forward phase sequence: Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close | Manual — you say "plan", "implement", etc. |
+| **Specify** (default) | You know what you want — low uncertainty | Starts with constitution decision tree (11 purposes × 44 architecture options). Then a linear forward phase sequence: Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close | Manual — you say "plan", "implement", etc. |
 | **Bugfix** | You have a working feature with known bugs | Auto-chains Plan→Tasks→Implement→Test once you say "bugfix". If new bugs are discovered mid-round, they're logged separately and the next round runs the full plan→tasks→implement cycle (separate commits per phase). For trivial fixes, "quickfix [feature]" batches plan+tasks+fix in one commit (user explicitly opts in). | Minimal — inner loop is automatic |
 | **Reopen** | A closed feature needs more fixes | Creates bugfix branch from main, preserves original close data, routes through bugfix loop | Additive-only edits; must close again after fixes |
 
@@ -242,7 +242,7 @@ two input methods are offered:
 
 - **Free-text description**: User describes the project in a sentence
   (e.g. "React Native mobile app for fitness, small team, Firebase"). The
-  agent maps the description to a purpose (A-I), architecture option (A1-I3),
+  agent maps the description to a purpose (A-K), architecture option (A1-K3), traits,
   technology choices, and principle defaults automatically. The user reviews
   the inference table and may accept or correct any item. Total time: ~30 seconds.
 - **Guided wizard**: Interactive 3-level decision tree with tradeoffs at
@@ -259,21 +259,37 @@ two input methods are offered:
 - **Greenfield**: Guides the user through every choice, recommending purpose-
   specific defaults at each level.
 
-### Level 1: Purpose (9 options)
+### Level 1: Purpose (11 options)
 
 The first question is always: *"What is this project's primary purpose?"*
 
-| Code | Purpose | Examples | Testing impact | Architecture impact | Docs impact |
-|------|---------|----------|---------------|-------------------|-------------|
-| **A** | User-Facing Application | SaaS, e-commerce, dashboard, CMS, API server | Integration + E2E tests needed. TDD pays off. | Architecture matters — will need to scale. | API docs, setup guide critical. |
-| **B** | Content Site / Marketing | Portfolio, blog, docs site, landing page | Minimal — visual checks + broken link checker. | Simple — SSG, template-driven, or plain HTML/CSS. | Content IS the documentation. |
-| **C** | Native / Desktop Client | iOS app, Android app, Electron, Tauri, Qt desktop app | UI/snapshot + integration tests. Manual QA for visuals. | Platform SDK defines architecture (MVC, MVVM, Compose). | Store listing, user help. |
-| **D** | Library / SDK / Package | npm package, PyPI lib, Go module, Rust crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal coupling. | API docs, README, changelog mandatory. |
-| **E** | Infra / CLI / DevOps | CLI tool, Terraform module, CI pipeline, daemon, AI pipeline | Integration-heavy. Manual testing common. | Simple and composable. No over-engineering. | README + --help. Code IS the documentation. |
-| **F** | Game | Unity/Unreal/Godot game, WebGL game | Unit tests for game logic. Playtesting + visual QA critical. | ECS, scene graph, component-based. Engine-driven. | Design doc + mechanics + gameplay guide. |
-| **G** | Browser Extension | Chrome MV3, Firefox add-on, Safari extension | Manual browser testing. Playwright for E2E. | Manifest-driven. Content scripts + service worker + popup. | Store listing + permissions + privacy policy. |
-| **H** | Research / Notebook | Jupyter, R Markdown, Quarto, MATLAB | Minimal — visual inspection of outputs | Single notebook or notebook + scripts. No production infra. | README with reproduction steps. |
-| **I** | IoT / Embedded | Arduino, ESP32, STM32, Zephyr RTOS, RPi Linux | Hardware-in-the-loop. Simulation for CI. | HAL, RTOS tasks, driver layer. Memory-constrained. | Pinout docs, protocol specs, register maps. |
+| Code | Purpose | Examples | Weighs most |
+|------|---------|----------|-------------|
+| **A** | Applications & Services | SaaS, web / mobile backend, APIs, workers, AI apps | Integration tests, architecture, defensive errors |
+| **B** | Content Site | Marketing site, blog, docs | Publishing speed, Core Web Vitals |
+| **C** | Native / Desktop Client | iOS, Android, desktop (Flutter, Tauri, Qt) | UI tests, crash-free, store review |
+| **D** | Library / SDK | npm / PyPI / NuGet package, Rust crate, smart contract | Public API, exhaustive tests, docs |
+| **E** | Infrastructure / CLI / DevOps | CLI, IaC, CI pipeline, MCP server | Composability, static binaries |
+| **F** | Game / XR | Unity / Unreal / Godot game, WebGL, VR / AR | Frame budget, playtesting |
+| **G** | Extensions & Integrations | Browser extension, VS Code / JetBrains plugin, Office add-in, Slack / Teams bot | Host APIs, permissions, store review |
+| **H** | Research, Data & ML | Notebooks, data warehouse / dbt, model training and serving | Reproducibility, data quality, evals |
+| **I** | IoT / Embedded | Firmware, embedded Linux, connected device fleets | No hotfix once flashed, hard limits |
+| **J** | Systems Software | Kernel, driver, database engine, compiler, HPC | Memory safety, fuzzing, performance gates |
+| **K** | Business Platform | Salesforce, Dynamics / Power Platform, SAP, ServiceNow | Vendor limits, release cadence, metadata deploys |
+
+Nothing fits → **Other**: the agent takes the closest purpose, writes three options of its own
+and marks them *(not from the reference tables)* in the constitution.
+
+### Level 1.5: Project traits
+
+One multi-select question that adjusts the defaults (the stricter option wins):
+
+- **Runs where** — multi-tenant SaaS, single-tenant, on-prem, local-first / offline, edge
+- **Regulated domain** — none, personal data, finance, health, safety-critical, EU AI Act high-risk
+  (safety-critical → Testing, Review, Docs and Error handling A; regulated or personal data →
+  suggests `compliance: baseline`)
+- **Lifecycle** — prototype, product, modernization (characterisation tests first, strangler-fig
+  target, an ADR for the cut-over)
 
 Each option comes with pros/cons so the user understands tradeoffs before
 committing.
@@ -283,7 +299,7 @@ is a multi-project monorepo (e.g., one repo containing a web app + mobile
 app + shared library). If yes, Levels 1-3 run independently per sub-project,
 and the constitution gets a `Projects` table at the top.
 
-### Level 2: Architecture (27 options across 9 purposes)
+### Level 2: Architecture (44 options across 11 purposes)
 
 Based on the chosen purpose, the agent presents architecture options.
 Each option has a description, pros, cons, and best-use guidance; ⭐ marks the 2026 default
@@ -291,7 +307,8 @@ for the purpose (refreshed 2026-11).
 
 **A — User-Facing App**: Monolith (A1), Modular Monolith ⭐ (A2),
 Microservices (A3), Serverless — functions or scale-to-zero containers (A4),
-AI-native / Agentic — model gateway, retrieval, tools, evals (A5)
+AI-native / Agentic — model gateway, retrieval, tools, evals (A5),
+Event-driven / Workers / Streams (A6)
 
 **B — Content Site**: Static / Islands ⭐ (B1), Headless CMS + SSG (B2),
 Lightweight Backend (B3)
@@ -300,21 +317,27 @@ Lightweight Backend (B3)
 (C2), Web Wrapper (C3)
 
 **D — Library / SDK**: Zero-Dependency (D1), Curated ⭐ (D2),
-Umbrella/Multi-Package (D3)
+Umbrella/Multi-Package (D3), Smart Contracts (D4)
 
 **E — Infra / CLI / DevOps**: Single Binary ⭐ (E1), Multi-Binary (E2),
 Plugin-Based (E3), Declarative / Pipeline (E4), MCP Server / Agent Tool (E5)
 
-**F — Game**: Engine-Centric ⭐ (F1), Custom Engine (F2), Web (F3)
+**F — Game / XR**: Engine-Centric ⭐ (F1), Custom Engine (F2), Web (F3), XR / Spatial (F4)
 
-**G — Browser Extension**: Simple (G1), Full MV3 (G2),
-Cross-Browser ⭐ (G3)
+**G — Extensions & Integrations**: Simple browser (G1), Full MV3 (G2),
+Cross-Browser ⭐ (G3), Host Plugin / Bot — IDE, Office, Figma, Slack / Teams, SaaS marketplace (G4)
 
-**H — Research / Notebook**: Single Notebook (H1), Notebook + Modules ⭐ (H2),
-Package + Notebooks (H3)
+**H — Research, Data & ML**: Single Notebook (H1), Notebook + Modules ⭐ (H2),
+Package + Notebooks (H3), Data Platform (H4), ML Training & Serving (H5)
 
 **I — IoT / Embedded**: Bare-Metal / RTOS (I1), Linux-Based Embedded (I2),
-High-Level Firmware — Arduino / MicroPython (I3)
+High-Level Firmware — Arduino / MicroPython (I3), Connected Fleet — devices + cloud + OTA (I4)
+
+**J — Systems Software**: Kernel / Driver (J1), Engine / Runtime / Compiler ⭐ (J2),
+Scientific / HPC (J3)
+
+**K — Business Platform**: Configuration / Low-code ⭐ (K1), Platform Code (K2),
+Marketplace App (K3)
 
 ### Level 3: Technology Choices
 
@@ -548,7 +571,7 @@ purpose-weighted defaults. Three input modes:
   Agent maps description to purpose, architecture, tech, and principle
   defaults. User reviews the inference table.
 - **Wizard** (guided, new project): Walks the user through all 3 levels:
-  Level 1 (9 purposes A–I), Level 2 (3–5 architecture options per purpose),
+  Level 1 (11 purposes A–K), Level 1.5 (project traits), Level 2 (3–6 architecture options per purpose),
   Level 3 (language/framework bracketing).
 
 Supports multi-project monorepos: after Level 1, asks whether the repo
@@ -564,7 +587,7 @@ ADRs for decisions the code already embodies; greenfield writes the target `syst
 planned module map and ADRs 0001–0003 from the decision tree. Every step waits for approval.
 
 See the [Constitution Decision Tree](#constitution-decision-tree) section
-for a full walkthrough with all 9 purposes, 27 architecture options, and
+for a full walkthrough with all 11 purposes, 44 architecture options, and
 purpose-to-principle default mappings.
 
 ### Phase 1: Specify
@@ -1111,8 +1134,8 @@ mcp_spec_kit_list_features     # List all registered features via MCP
                                             │   delegate_task × N      │
                                             ▼                          │
 Constitution (3-level tree) → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
-  │ Level 1: 9 purposes (A-I)                                                        │
-  │ Level 2: 27 architecture options                                                 │
+  │ Level 1: 11 purposes (A-K) + traits                                              │
+  │ Level 2: 44 architecture options                                                 │
   │ Level 3: Tech bracketing                                              ┌──────────┘
   │ After: 12 principles with purpose-mapped defaults                     ▼
   └─────────────────────→                    ┌─→ [Clarify] → Plan → Tasks → Implement → Test → Close (mandatory)

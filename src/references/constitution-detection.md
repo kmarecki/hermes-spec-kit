@@ -1,140 +1,10 @@
-# Constitution Reference Tables
+# Constitution — Brownfield Detection
 
-Extracted wizard tables and detection tables from spec-kit-constitution.
-Loaded by the constitution skill during wizard/brownfield mode.
-
----
-
-## Level 2 — Architecture Approach Tables
-
-> Refreshed 2026-11. ⭐ = the default to recommend when nothing in the description argues otherwise.
-
-**If purpose = A (User-Facing App):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **A1** | Monolith | One deployable: server-rendered (Rails, Laravel, Django, ASP.NET Core + htmx / Hotwire / Livewire) or a full-stack framework (Next.js, Nuxt, SvelteKit, React Router 7). | Fastest to build, one deploy, one database, easy to debug | Boundaries erode without discipline; scaling is all-or-nothing | MVPs, small teams, internal tools |
-| **A2** ⭐ | Modular Monolith | One deployable, explicit modules (bounded contexts) that own their data and talk through in-process contracts; vertical slices inside a module; architecture tests guard the boundaries. | Most of the microservice benefits without the network; a module can be extracted later along a clean seam | Needs enforced boundaries (architecture tests, no shared tables) | The default for most web apps and SaaS, growing teams |
-| **A3** | Microservices | Independently deployed services with their own data, async messaging, a platform underneath (containers, service discovery, OpenTelemetry). | Independent scaling and release per team | Distributed failure modes, data consistency, platform cost; premature for one team | Several autonomous teams, very different scaling or compliance needs per domain |
-| **A4** | Serverless (functions / containers) | Functions (Lambda, Azure Functions Flex Consumption, Cloudflare Workers) or scale-to-zero containers (Cloud Run, Azure Container Apps, Fargate) behind managed services. | No servers to run, scale to zero, pay per use | Cold starts, execution limits, provider lock-in, harder local testing | Spiky or event-driven workloads, small ops capacity |
-| **A5** | AI-native / Agentic App | An app whose core runs on LLM calls: a model gateway (provider abstraction, retries, cost limits), retrieval (RAG over a vector or hybrid index), tools / MCP servers, optional agent orchestration (LangGraph, Agent SDKs), and an **evaluation harness** (golden sets, LLM-as-judge) treated as the test suite. | Capabilities impossible with plain code; fast iteration on prompts | Non-deterministic outputs, eval cost, prompt injection, model drift and price changes, EU AI Act duties for some uses | Assistants, copilots, document understanding, workflow agents |
-
-**If purpose = B (Content Site / Marketing):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **B1** ⭐ | Static / Islands | Static generation with islands of interactivity (Astro, Hugo, 11ty; docs: Starlight, VitePress, Docusaurus). | CDN hosting, near-zero cost, best Core Web Vitals | Rebuild on content change; dynamic bits need client JS or edge functions | Portfolios, blogs, marketing, documentation |
-| **B2** | Headless CMS + SSG | Content in a headless CMS (Sanity, Payload, Strapi, Storyblok, Contentful); SSG or ISR fetches it. | Non-developers edit structured content; previews | CMS cost, build coupling, preview plumbing | Team-maintained sites, multi-author content |
-| **B3** | Lightweight Backend | A small server or edge runtime for a few dynamic routes (Hono, Express, Flask, plain PHP), often with htmx. | Forms, auth, comments without a full app | A server to patch and monitor | Sites with a handful of dynamic features |
-
-**If purpose = C (Native / Desktop Client):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **C1** | Native Platform | SwiftUI (iOS/macOS), Jetpack Compose (Android), WinUI 3 / WPF (Windows), GTK / Qt (Linux). | Best performance and platform integration | One codebase per platform | Platform-specific products, performance-critical apps |
-| **C2** ⭐ | Cross-Platform | Flutter, React Native (New Architecture, Expo), Kotlin / Compose Multiplatform, .NET MAUI, Avalonia, Tauri 2 (desktop + mobile). | One codebase, shared logic, near-native UI | Abstraction leaks, plugin gaps, bridge debugging | Most mobile and desktop apps |
-| **C3** | Web Wrapper | Web tech packaged as an app: PWA, Capacitor, Electron, Blazor Hybrid. | Web skills and code reuse, instant updates (PWA) | Heavier runtime, non-native feel, store limits for PWAs on iOS | Internal tools, MVPs, content-heavy apps |
-
-**If purpose = D (Library / SDK):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **D1** | Zero-Dependency | Standard library only; minimal public API. | No supply-chain exposure, maximum compatibility | More code to own | Core primitives, security-sensitive libraries |
-| **D2** ⭐ | Curated | Few justified dependencies, ranges tested in CI, published with provenance (npm provenance, PyPI trusted publishing, Sigstore) and an SBOM. | Faster delivery, ecosystem leverage | Transitive risk and upgrade work | Most libraries and SDKs |
-| **D3** | Umbrella / Monorepo | Many packages, independent versions (pnpm workspaces + Turborepo / Nx, uv workspaces, Cargo workspaces, changesets). | Consumers take only what they need | Release and tooling overhead | Large SDKs, multi-language clients |
-
-**If purpose = E (Infrastructure / CLI / DevOps):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **E1** ⭐ | Single Binary | One static binary (Go, Rust). | Zero-install distribution, simple CI | Grows into a monolith of flags | CLIs, single-purpose tools, providers |
-| **E2** | Multi-Binary | Several binaries over shared libraries. | Independent releases | Version coordination | Tool suites |
-| **E3** | Plugin-Based | Core + plugins (WASM components via Wasmtime / Extism, or gRPC plugins). | Community extension without forks; WASM plugins are sandboxed | Plugin API stability burden | Extensible tools and platforms |
-| **E4** | Declarative / Pipeline | IaC and pipelines: OpenTofu / Terraform, Pulumi, Bicep, Ansible, CI YAML, data pipelines (dbt, Dagster, Airflow, Polars). | Reviewable, reproducible, no build step | Weak testing, state drift, runtime dependencies | Infrastructure, CI/CD, ETL, dataset preparation |
-| **E5** | MCP Server / Agent Tool | A Model Context Protocol server (stdio or streamable HTTP) or agent tool exposing typed tools / resources to AI clients; official SDKs (TypeScript, Python, C#, Go, Kotlin). | One integration reaches every MCP client | Tool-poisoning and prompt-injection surface; auth (OAuth 2.1) for remote servers; protocol still evolving | Exposing an internal system to agents, developer tooling |
-
-**If purpose = F (Game):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **F1** ⭐ | Engine-Centric | Unity, Unreal 5, Godot 4, Bevy (pre-1.0). | Tooling, asset pipelines, console ports | Engine lock-in, licence terms, build size | Most games |
-| **F2** | Custom Engine | Own engine on wgpu / Vulkan / SDL3, ECS. | Full control, no licence | Years of engine work | Unusual tech, learning |
-| **F3** | Web | Browser games (Phaser, PixiJS 8, Three.js / Babylon.js with WebGPU). | Zero install, instant sharing | Performance ceiling, browser quirks | Casual, jam, educational games |
-
-**If purpose = G (Browser Extension):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **G1** | Simple | One browser, MV3 manifest, content script + popup, no build tooling. | Fastest, smallest permission set | Single store, little structure | Personal and internal utilities |
-| **G2** | Full MV3 | Service worker, popup / options / side panel, storage, offscreen documents, a build tool (Vite / CRXJS). | Full API surface, structured project | MV3 constraints (no persistent background, alarm wake-ups) | Feature-rich extensions |
-| **G3** ⭐ | Cross-Browser | One codebase for Chrome, Edge, Firefox and Safari via WXT (or Plasmo); Safari through the Xcode converter. | Every store, one codebase | Per-browser quirks, longer reviews | Public and commercial extensions |
-
-**If purpose = H (Research / Notebook):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **H1** | Single Notebook | Jupyter, marimo (reactive, stored as .py), Quarto, Pluto.jl. | Zero setup, shareable | No reuse; hidden state (Jupyter) | Exploration, teaching, one-off reports |
-| **H2** ⭐ | Notebook + Modules | Notebooks for narrative, importable modules for logic, uv-locked environment. | Reuse, reviewable diffs | Import-path and environment discipline | Research with shared preprocessing |
-| **H3** | Package + Notebooks | A tested package (src layout, pytest / testthat), notebooks as examples, CI. | Reproducible, publishable | Slower research velocity | Research that becomes a product |
-
-**If purpose = I (IoT / Embedded):**
-
-| Option | Name | Description | Pros | Cons | Best for |
-|--------|------|-------------|------|------|----------|
-| **I1** | Bare-Metal / RTOS | Zephyr, FreeRTOS, ESP-IDF, or async Rust (Embassy). | Lowest latency and power | No memory protection, manual drivers | Sensors, controllers, wearables |
-| **I2** | Linux Embedded | Yocto, Buildroot, Ubuntu Core; containerised apps; A/B OTA updates. | Rich ecosystem, networking | Footprint, boot time, patching duty | Gateways, cameras, robots |
-| **I3** | High-Level Firmware | Arduino, MicroPython, CircuitPython. | Fastest prototype | Limited performance and control | Prototypes, education, hobby |
-
-Devices, desktop apps and commercial libraries sold in the EU fall under the Cyber Resilience Act
-(vulnerability reporting from 11 Sep 2026, full obligations from 11 Dec 2027) — note it in the
-constitution when it applies.
-
-```
-ASK: "Given your purpose [A|B|C|D|E|F|G|H|I], which architecture approach fits?"
-RECORD: architecture = [A1–A5 | B1–B3 | C1–C3 | D1–D3 | E1–E5 | F1–F3 | G1–G3 | H1–H3 | I1–I3]
-```
-
----
-
-## Level 3 — Technology Choice Brackets
-
-Present 3 options per bracket (language · frameworks · pros · cons), the ⭐ architecture's first.
-
-```
-A  A1: Rails 8, Laravel, Django, ASP.NET Core (Razor / Blazor SSR), Next.js / Nuxt / SvelteKit / React Router 7
-   A2: ASP.NET Core modular monolith, Spring Boot + Spring Modulith, NestJS, Django apps, Phoenix contexts
-   A3: Go, ASP.NET Core minimal APIs (+ .NET Aspire for local orchestration), Rust (Axum), Kotlin (Ktor)
-   A4: TypeScript (Workers, Lambda, Vercel), Python (Lambda, Azure Functions), C# (Azure Functions isolated), containers on Cloud Run / Container Apps
-   A5: Python (FastAPI + LangGraph / Pydantic AI), TypeScript (Vercel AI SDK, Mastra), C# (Microsoft.Extensions.AI, Semantic Kernel);
-       retrieval: PostgreSQL + pgvector, Azure AI Search, Qdrant; evals: promptfoo, Ragas, DeepEval; tracing: OpenTelemetry GenAI conventions, Langfuse
-B  B1: Astro, Hugo, 11ty; docs: Starlight, VitePress, Docusaurus
-   B2: Astro or Next.js + Sanity / Payload / Storyblok / Contentful
-   B3: Hono (Node, Bun, Workers), Flask, PHP — + htmx
-C  C1: Swift (SwiftUI), Kotlin (Compose), C# (WinUI 3), C++ (Qt 6)
-   C2: Dart (Flutter), TypeScript (React Native + Expo), Kotlin (Compose Multiplatform), C# (.NET MAUI / Avalonia), Rust + TS (Tauri 2)
-   C3: TypeScript (PWA, Capacitor, Electron), C# (Blazor Hybrid)
-D  D1: Go stdlib, Rust no-std, Python stdlib, TypeScript without runtime deps (publish to npm + JSR)
-   D2: the target ecosystem's standard toolchain (uv / hatch, tsup / tsdown, cargo, Gradle)
-   D3: pnpm workspaces + Turborepo / Nx, uv workspaces, Cargo workspaces; changesets for releases
-E  E1: Go (cobra), Rust (clap) · E2: Go, Rust · E3: Rust / Go host + WASM components
-   E4: OpenTofu / Terraform, Pulumi (TS / Python / C#), Bicep, Ansible; data: Python + uv, Polars, DuckDB, dbt, Dagster
-   E5: TypeScript or Python MCP SDK (most mature), C# MCP SDK, Go; stdio for local tools, streamable HTTP + OAuth for remote
-F  F1: C# (Unity), C++ (Unreal 5), GDScript / C# (Godot 4), Rust (Bevy)
-   F2: Rust (wgpu, winit), C++ (SDL3, Vulkan), C# (MonoGame)
-   F3: TypeScript (Phaser, PixiJS 8, Three.js / Babylon.js), Lua (LÖVE)
-G  G1: TypeScript + plain manifest · G2: TypeScript + Vite / CRXJS, React / Svelte / Vue UI · G3: TypeScript + WXT (or Plasmo)
-H  H1: Python (Jupyter, marimo), R / Python (Quarto), Julia (Pluto) · H2: Python + modules + uv, R + scripts + renv
-   H3: Python (src layout, pytest, uv), R (package, testthat, vignettes), Julia (Pkg)
-I  I1: C (Zephyr, FreeRTOS, ESP-IDF), Rust (Embassy, esp-hal), C++ (constrained)
-   I2: C / C++, Rust, Go, Python on Yocto / Buildroot · I3: C++ (Arduino), Python (MicroPython, CircuitPython)
-```
-
-**2026 baseline — present once after Level 3, as recommendations, never as gates:** OpenTelemetry
-for traces, metrics and logs · dependency + secret scanning in CI and an SBOM per release · OIDC
-sign-in with passkeys where users log in · IaC for anything deployed · lock files committed ·
-AI coding agents governed by the constitution (what they may read, push, deploy).
-
----
+Loaded by `spec-kit-constitution` **only when project files are detected** (greenfield uses
+`constitution-greenfield.md`). Match the files below, pre-fill the ⭐ defaults, infer the purpose
+and option (A1–K3) from the closest row, and the traits (Runs where / Regulated / Lifecycle)
+from what the code shows (tenant filters, on-prem installers, a legacy stack → modernization).
+No row fits → the closest purpose + *(not from the reference tables)*.
 
 ## Brownfield Detection Examples
 
@@ -198,6 +68,24 @@ AI coding agents governed by the constitution (what they may read, push, deploy)
 | **Scala** | `build.sbt` (Play) | play in deps | ScalaTest | — | B (TDD), A (Lint), A (Arch), B (Deps), B (Git) |
 | **Deno** | `deno.json` / `deno.jsonc` | deno std | deno test | — | B (TDD), B (Lint), C (Arch), A (Deps), B (Git) |
 | **Bicep** | `*.bicep` | Azure IaC | — (what-if) | Azure DevOps / GitHub Actions | C (TDD), A (Lint), E4 (Declarative), A (Deps), A (Git) |
+| **C / C++** | `CMakeLists.txt` / `meson.build` / `vcpkg.json` / `conanfile.*` | app or library | CTest / GoogleTest / Catch2 | GitHub Actions | B (TDD), A (Lint), B (Arch), A (Deps), B (Git) |
+| **F#** | `*.fsproj` | F# app / library | Expecto / xUnit | — | A (TDD), A (Lint), B (Arch), B (Deps), B (Git) |
+| **PowerShell** | `*.psd1` / `*.psm1` | PowerShell module | Pester | Azure DevOps | B (TDD), A (Lint), E4 (Pipeline), A (Deps), B (Git) |
+| **Zig** | `build.zig` | Zig | zig test | — | A (TDD), A (Lint), E1 / J2, A (Deps), B (Git) |
+| **Haskell / OCaml** | `*.cabal` / `stack.yaml` / `dune-project` | functional app / library | hspec / alcotest | — | A (TDD), A (Lint), B (Arch), A (Deps), B (Git) |
+| **Julia** | `Project.toml` + `Manifest.toml` | Julia package | Test stdlib | — | B (TDD), B (Lint), H3 / J3, B (Deps), A (Git) |
+| **Fortran / MPI** | `*.f90` + `CMakeLists.txt` / `mpirun` scripts | scientific code | pFUnit | — | C (TDD), B (Lint), J3 (HPC), A (Deps), B (Git) |
+| **COBOL / mainframe** | `*.cbl` / `*.cpy` / JCL | legacy mainframe | — | — | C (TDD), C (Lint), —, A (Deps), C (Git); trait: modernization |
+| **Kernel / eBPF** | `Kconfig` / `Kbuild` / `*.bpf.c` | kernel code | KUnit / kselftest | — | A (TDD), A (Lint), J1 (Kernel), A (Deps), B (Git) |
+| **dbt** | `dbt_project.yml` | analytics engineering | dbt tests | — | B (TDD), B (Lint), H4 (Data platform), B (Deps), B (Git) |
+| **Spark / Databricks** | `pyspark` in deps / `databricks.yml` | data platform | pytest + chispa | — | B (TDD), B (Lint), H4 (Data platform), B (Deps), B (Git) |
+| **ML pipeline** | `MLproject` / `mlflow` / `kfp` / `azureml` in deps | ML training & serving | pytest + evals | — | B (TDD), B (Lint), H5 (ML), B (Deps), B (Git) |
+| **Salesforce** | `sfdx-project.json` / `force-app/` | Salesforce DX | Apex tests / Jest (LWC) | — | B (TDD), B (Lint), K2 (Platform code), B (Deps), B (Git) |
+| **Power Platform / Dynamics** | `solution.xml` / `*.cdsproj` / `pac` scripts | Dataverse solution | FakeXrmEasy / xUnit | Azure DevOps | B (TDD), B (Lint), K1 / K2, B (Deps), B (Git) |
+| **VS Code extension** | `package.json` with `engines.vscode` | IDE extension | @vscode/test-electron | GitHub Actions | B (TDD), B (Lint), G4 (Host plugin), A (Deps), B (Git) |
+| **Office add-in / Figma plugin** | `manifest.xml` (Office) / `manifest.json` with `figma` | host plugin | Vitest / Jest | — | B (TDD), B (Lint), G4 (Host plugin), A (Deps), B (Git) |
+| **Smart contracts** | `foundry.toml` / `hardhat.config.*` / `Move.toml` | on-chain code | forge test / Hardhat | GitHub Actions | A (TDD), A (Lint), D4 (Contracts), A (Deps), B (Git) |
+| **Kafka / stream workers** | Kafka / Flink / MassTransit / Spring Cloud Stream in deps, no HTTP host | event-driven service | integration tests (Testcontainers) | — | A (TDD), B (Lint), A6 (Event-driven), B (Deps), B (Git) |
 | **Docker** | `Dockerfile` only | any language | — | — | C (TDD), C (Lint), C (Arch), A (Deps), B (Git) |
 | **Nix** | `flake.nix` / `shell.nix` | nix language | — | — | C (TDD), A (Lint), B (Arch), A (Deps), A (Git) |
 | **Unity Game** | `Assembly-CSharp*` / `.unity` files | Unity engine | Unity Test Runner / NUnit | Unity Cloud Build | C (TDD), B (Lint), F1 (Engine), C (Deps), B (Git) |
