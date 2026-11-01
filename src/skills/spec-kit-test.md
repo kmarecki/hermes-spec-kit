@@ -21,7 +21,7 @@ metadata:
 - `spec-kit/references/preflight.md`. **ERROR** if `spec.md` is missing. `bugs.md` missing → `spec-kit/templates/bugs-template.md`; exists → summary, **ASK**: add, bugfix, or verify?
 
 ## Log a bug
-1. Id `mcp_spec_kit_next_id(kind="BUG")`. Entry `### BUG-NNN: summary` — Severity, Area, Description (observed vs expected), Steps, Actual, Expected, Requires Clarification, Plan Ref (empty), **Status: open**.
+1. Id `mcp_spec_kit_next_id(kind="BUG")`. Entry `### BUG-NNN: summary` — Severity, Area, Description (observed vs expected), Steps, Actual, Expected, Requires Clarification, Plan Ref (empty), **Status: open**; `compliance: baseline` → `Security: yes|no` (yes: no exploit payload or secret; in production → the user's incident procedure — `spec-kit/references/compliance.md` §5).
 2. Insert before the `---` preceding `## Summary`; add the Summary row; fix counts. Confirm each: "Logged BUG-NNN — correct?"
 3. 0 open → suggest `final review [feature]`; > 0 → `bugfix [feature]`. **Never fix directly.**
 

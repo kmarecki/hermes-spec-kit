@@ -7,6 +7,7 @@
 - `[P]` parallel (different files, no dependency) · `[US#]` user story
 - `[TEST]` written and run RED before the phase's code (RED and GREEN files saved under `evidence/`, every size — `spec-kit/references/evidence.md`)
 - `[AC-###]` on a `[TEST]` task: the test proves that criterion; its NAME carries the id (`AC003_…` / `'AC-003 …'`); frozen after RED
+- `[SEC]` implements or tests a Security & Privacy row / threat mitigation (`compliance: baseline`, `spec-kit/references/compliance.md`); tasks without it need no security assessment
 - `[SEAM]` touches an external seam — starts with a read-only probe saved as `evidence/<ID>-probe-<seam>.txt`; the fixture matches its shape
 
 > Size S: one flat list, tests first. M / L: phases below; every FR and AC maps to a task.

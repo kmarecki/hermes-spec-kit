@@ -42,6 +42,7 @@ Constitution → Specify (size S/M/L, ACs, Security & Privacy) → [Clarify] →
 - **Evidence** (`spec-kit/references/evidence.md`): the agent's word is never evidence; probes per seam, GREEN files every level (RED by process level; test-after: GREEN), `ci:`/`user`/`review:<other-agent>` verify.
 - **Rigor** (`spec-kit/references/rigor.md`): project-wide lean / standard / strict from the constitution's Level 0 — lean: trunk, test-after when Principle 1 = C, self-check review; strict: RED/GREEN always, other-agent + human approval. `ceremony = rigor × size` → process level P1 / P2 / P3 (evidence files, devil's advocate, commits, review length, history, archive); the floor never moves.
 - **Size** (`spec-kit/references/sizing.md`): S / M / L — leaner workflow and shorter artifacts (S = a bugfix or small enhancement: a few-line spec, 1–2 ACs, one commit for spec+plan+tasks); evidence and the acceptance round never shrink.
+- **Compliance** (`spec-kit/references/compliance.md`, opt-in `compliance: baseline`): per-feature `**Security**:` level (none skips the assessment), `[SEC]` tasks, threat model + human approver for high, security scans in the merge checklist.
 - **Additive only**: no spec artifact is ever rewritten (`spec-kit/references/preflight.md`).
 - **Decisions**: questions the user would want to decide → `decisions.md` (ruling quotes them; assumption otherwise); design choices stay in plan.md.
 - Templates: `spec-kit/templates/<name>-template.md`. Git: `specs/git-conventions.md` (`feat/NNN-name`, `bug/NNN-name`, reopen suffix `-bugfixing`).

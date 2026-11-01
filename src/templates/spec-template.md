@@ -3,6 +3,7 @@
 **Feature Branch**: [###-feature-name] · **Created**: [DATE] · **Status**: Draft
 **Size**: [S | M | L] — [one-line reason; `spec-kit/references/sizing.md`]
 **Epic**: [NNN-epic-name — the epic directory under `epics_dir`; delete the line when the project keeps none]
+**Security**: [none | low | medium | high — reason; only with `compliance: baseline` (`spec-kit/references/compliance.md`); delete otherwise]
 **History**: [on | off — only to override the project default (`history:` in git-conventions, default large = L only); delete otherwise]
 **Input**: "[USER DESCRIPTION]"
 
@@ -44,6 +45,15 @@
 | New external surface — endpoint, file upload, integration, secret, dependency? | |
 | Input reaching a sensitive operation — validated where? | |
 | Audit / logging — what must be recorded, what must never be logged? | |
+
+*`compliance: baseline`*: `**Security**: none` → delete the table (that line is the answer) · `medium` / `high` → append these rows:
+
+| Question | Answer |
+|----------|--------|
+| Secrets & cryptography — what is stored or transmitted, how are keys handled? | |
+| Availability & recovery — failure mode, rollback, backup? | |
+| Third parties & dependencies — new package or service, known vulnerabilities, data shared? | |
+| Data lifecycle — retention, deletion, test data, no production data outside production? | |
 
 The pre-implement review checks this table; the final review verdicts it under §2.
 

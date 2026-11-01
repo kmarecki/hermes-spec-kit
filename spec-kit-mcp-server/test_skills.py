@@ -82,6 +82,7 @@ EXPECTED_TEMPLATES = {
 EXPECTED_REFERENCES = {
     "acceptance.md",
     "commits.md",
+    "compliance.md",
     "constitution-principles.md",
     "constitution-detection.md",
     "constitution-greenfield.md",
@@ -368,7 +369,7 @@ def test_no_loose_reference_files():
     budget = sum(p.stat().st_size for p in SKILLS_DIR.rglob("*.md")) + sum(p.stat().st_size for p in REFERENCES_DIR.rglob("*.md")) + sum(p.stat().st_size for p in TEMPLATES_DIR.glob("*.md"))
     mc = (TEMPLATES_DIR / "merge-checklist-template.md").read_text()
     check("merge-checklist default review_run is local; ci keys present", re.search(r"^review_run:\s+local\b", mc, re.M) is not None and all(k in mc for k in ("ci_jobs:", "ci_queue:", "ci_status:")))
-    check("skills + references + templates stay under ~62k tokens (250 KB)", budget <= 250_000, f"{budget // 1024} KB")
+    check("skills + references + templates stay under ~64k tokens (256 KB)", budget <= 256_000, f"{budget // 1024} KB")
 
 
 def test_workflow_diagram_phases():

@@ -100,6 +100,7 @@ REVIEW_LINE_CAP = {1: 30, 2: 80, 3: 150}
 ARCHIVE_WARN_BYTES = 40_000
 _EPIC_RE = re.compile(r"^\*\*Epic\*\*:\s*\[?([A-Za-z0-9][\w.-]*)", re.M)
 _MODULES_RE = re.compile(r"^\*\*Modules\*\*:\s*(.+)$", re.M)
+_SECURITY_RE = re.compile(r"^\*\*Security\*\*:\s*\[?(none|low|medium|high)\b", re.M | re.I)
 _ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
 _VERDICT_RE = re.compile(r"\*\*Verdict\*\*:\s*(READY-WITH-FOLLOWUPS|AWAITING-OWNER|NOT READY|READY)\b")
 _REVIEWED_COMMIT_RE = re.compile(r"\*\*Reviewed-commit\*\*:\s*([0-9a-f]{7,40})\b")
@@ -472,11 +473,23 @@ def _review_run():
     return m.group(1).lower() if m else "local"
 
 
+def _security_of(fd):
+    """`compliance: baseline` → the spec's `**Security**:` level (none|low|medium|high), or
+    "missing" when the line is absent. None when the project keeps no compliance profile."""
+    if (_conventions().get("compliance") or "none").lower() != "baseline":
+        return None
+    f = fd / "spec.md"
+    m = _SECURITY_RE.search(f.read_text(errors="replace")) if f.exists() else None
+    return m.group(1).lower() if m else "missing"
+
+
 def _approval_required(fd):
     """Why the latest final-review round must name a human approver (references/rigor.md:
-    rigor strict + size L); None when no rule applies. Other profiles add their reasons here."""
+    rigor strict + size L; references/compliance.md: **Security**: high); None when no rule applies."""
     if _rigor(fd)[0] == "strict" and (_parse_size(fd) or "M") == "L":
         return "rigor strict + size L"
+    if _security_of(fd) == "high":
+        return "**Security**: high"
     return None
 
 
@@ -514,7 +527,7 @@ def _final_review_problem(fr):
     if fr["stale"]:
         return f"{FINAL_REVIEW}: code changed after the reviewed commit {fr['reviewed_commit']} — re-run the final review"
     if fr.get("approval_missing"):
-        return f"{FINAL_REVIEW}: {fr['approval_missing']} needs '**Approved-by**: <human> — \"<quoted words>\"' (or '— pr:<id>', the PR approval) in the latest round (references/rigor.md)"
+        return f"{FINAL_REVIEW}: {fr['approval_missing']} needs '**Approved-by**: <human> — \"<quoted words>\"' (or '— pr:<id>', the PR approval) in the latest round (references/rigor.md, compliance.md §5)"
     return None
 
 
@@ -1276,6 +1289,13 @@ def lint_artifacts(feature: str) -> str:
         findings.append({"file": "spec.md", "severity": "warning", "msg": f"**Rigor**: {spec_rigor.group(1)} lowers the project's {project_rigor} — record the ruling in decisions.md (references/rigor.md)"})
     if conv.get("blocked_branches", "").lower() == "none" and project_rigor != "lean":
         findings.append({"file": "specs/git-conventions.md", "severity": "warning", "msg": f"blocked_branches: none (trunk) is for rigor lean — the project is {project_rigor}"})
+    security = _security_of(fd)
+    if security == "missing" and (fd / "spec.md").exists():
+        findings.append({"file": "spec.md", "severity": "warning", "msg": "compliance: baseline but no '**Security**: none | low | medium | high' header line (references/compliance.md §1)"})
+    if security == "high" and (fd / "plan.md").exists() and "## Threat Model" not in (fd / "plan.md").read_text(errors="replace"):
+        findings.append({"file": "plan.md", "severity": "warning", "msg": "**Security**: high but plan.md has no '## Threat Model' section (references/compliance.md §3)"})
+    if security in ("low", "medium", "high") and (fd / "tasks.md").exists() and "[SEC]" not in (fd / "tasks.md").read_text(errors="replace"):
+        findings.append({"file": "tasks.md", "severity": "warning", "msg": f"**Security**: {security} but no task carries [SEC] (references/compliance.md §4)"})
 
     if any((fd / c).exists() for c in CLOSE_DOCS):
         close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
