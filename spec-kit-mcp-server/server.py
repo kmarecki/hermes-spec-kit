@@ -1000,8 +1000,8 @@ def close_feature(feature: str) -> str:
     close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
     if "## Architecture Decisions" not in close_text:
         problems.append("close document has no '## Architecture Decisions' section (write 'none met the ADR bar' if so)")
-    if not (fd / "change-record.md").exists():
-        problems.append("change-record.md missing — the auditor's page (change-record-template.md)")
+    if not (fd / "change-record.md").exists() and (_process(fd) == 3 or _security_of(fd) == "high"):
+        problems.append("change-record.md missing — required at P3 and Security high (rigor.md, compliance.md §6)")
     for problem in (_acceptance_problem(fd), _final_review_problem(_final_review(fd))):
         if problem:
             problems.append(problem)
@@ -1170,8 +1170,8 @@ def lint_artifacts(feature: str) -> str:
             if "[SEAM]" in line and rigor != "lean" and not any(e.startswith(f"{tid}-probe") for e in evidence):
                 findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [SEAM] marked done without evidence/{tid}-probe-*.txt"})
             if "[TEST]" in line and not test_after and not any("-red" in e for e in evidence) \
-                    and (process == 3 or (process == 2 and "[AC-" in line)):
-                findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [TEST] marked done but no *-red* file in evidence/ (process P{process}, rigor.md)"})
+                    and (process == 3 or (process == 2 and "[AC-" in line) or "[SEC]" in line):
+                findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [TEST] marked done but no *-red* file in evidence/ ({'[SEC] at every level, compliance.md §6' if '[SEC]' in line else f'process P{process}, rigor.md'})"})
         for kind in ("T", "BF"):
             nums = [t["num"] for t in tasks if t["kind"] == kind]
             if nums != sorted(nums):
@@ -1301,7 +1301,7 @@ def lint_artifacts(feature: str) -> str:
         close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
         if "## Architecture Decisions" not in close_text:
             findings.append({"file": "close.md", "severity": "warning", "msg": "close document has no '## Architecture Decisions' section"})
-        if not (fd / "change-record.md").exists() and _rigor(fd)[0] != "lean":
+        if not (fd / "change-record.md").exists() and _process(fd) >= 2:
             findings.append({"file": "change-record.md", "severity": "warning", "msg": "closed feature without change-record.md — write it from change-record-template.md"})
 
     if (fd / "history.md").exists():

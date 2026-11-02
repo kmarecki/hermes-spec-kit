@@ -40,7 +40,14 @@ authorization / tenant row has a negative `[TEST] [SEC]` (another tenant's id, a
   127 or a missing tool / network = **could not run**: ❌ not run, ASK — never a finding, never a bug.
 - **Approval** (high): the final round needs `**Approved-by**: <human> — "<quoted words>"`;
   missing → `AWAITING-OWNER`. An agent's review is evidence, never approval.
-- **Bugs**: `**Security**: yes | no`. Yes → no exploit payload or secret in the repo (describe the
-  class, reference the private channel); found in production → tell the user to start the
-  project's incident procedure (it may carry legal reporting deadlines) — spec-kit does not report.
+- **Bugs**: `**Security**: yes | no`. Yes → no exploit payload or secret in the repo; found in
+  production → tell the user to start the project's incident procedure — spec-kit does not report.
 - **Change record**: security level + reason, scan results, approver.
+
+## 6. On top of the process level (`rigor.md`) — added at every P1–P3, never below
+
+| Level | Adds |
+|---|---|
+| `low` | the Security & Privacy row answered in the plan; S1–S2 cited in the final round |
+| `medium` | `[SEC]` tasks; every `[TEST] [SEC]` keeps its RED file (test-after too: the negative test fails before the fix); final §4 abuse cases per Security row |
+| `high` | + threat model; the final devil's advocate's security pass by a **different agent** even at P1 / P2; `**Approved-by**:` a named human (or the PR's approval `— pr:<id>`); change record required |

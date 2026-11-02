@@ -68,6 +68,9 @@ chased unrelated, load-induced timeouts.
 
 ### Added — security compliance profile `baseline` (opt-in)
 
+- Security level scales evidence **on top of** the process level (`compliance.md` §6): medium → `[TEST] [SEC]` keeps
+  its RED file at every level, abuse cases in the final §4; high → the security pass of the devil's advocate by a
+  different agent even at P1 / P2, approver (may be the PR's), change record required (close gate). Budget 260 KB.
 - `compliance: baseline` in git-conventions turns on: a per-feature `**Security**: none | low |
   medium | high` level asked at specify (`none` skips the assessment); four extended Security &
   Privacy rows for medium/high; a `## Threat Model` (STRIDE) for high; `[SEC]` task marker with

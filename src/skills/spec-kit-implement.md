@@ -23,7 +23,7 @@ metadata:
 - MCP: `mcp_spec_kit_get_next_actions` — read the phase card now and after every compaction.
 
 ## Per phase
-1. **RED** — `> **TDD**: test-after` → skip RED: write the code, then the phase's tests, freeze after GREEN (`spec-kit/references/rigor.md`). Else write every `[TEST]` task of the phase; run them; each fails for the right reason. Save `evidence/<phase>-red.txt` (phase card `process:` — P3 every phase; P2 only a phase with an `[AC-###]` test or a `[SEAM]`; P1 none). Then `mcp_spec_kit_acceptance_freeze(feature)` — a frozen `[AC-###]` test changes only with the user's approval (`spec-kit/references/acceptance.md`).
+1. **RED** — `> **TDD**: test-after` → skip RED: write the code, then the phase's tests, freeze after GREEN (`spec-kit/references/rigor.md`). Else write every `[TEST]` task of the phase; run them; each fails for the right reason. Save `evidence/<phase>-red.txt` (phase card `process:` — P3 every phase; P2 only a phase with an `[AC-###]` test or a `[SEAM]`; P1 none; a `[TEST] [SEC]` always). Then `mcp_spec_kit_acceptance_freeze(feature)` — a frozen `[AC-###]` test changes only with the user's approval (`spec-kit/references/acceptance.md`).
 2. **`[SEAM]`** — before the fixture: read-only probe of the real system → `evidence/<TASK>-probe-<seam>.txt`; the fixture matches its shape. All sizes; rigor lean: recommended, not required.
 3. **GREEN** — simplest code; run this phase's tests; save `evidence/<phase>-green.txt`; run the build (TypeScript must compile).
 4. Mark the phase's tasks `[X]`; fixed bugs → `claimed` + `Evidence:` (never `verified`).

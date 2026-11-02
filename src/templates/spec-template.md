@@ -46,14 +46,7 @@
 | Input reaching a sensitive operation — validated where? | |
 | Audit / logging — what must be recorded, what must never be logged? | |
 
-*`compliance: baseline`*: `**Security**: none` → delete the table (that line is the answer) · `medium` / `high` → append these rows:
-
-| Question | Answer |
-|----------|--------|
-| Secrets & cryptography — what is stored or transmitted, how are keys handled? | |
-| Availability & recovery — failure mode, rollback, backup? | |
-| Third parties & dependencies — new package or service, known vulnerabilities, data shared? | |
-| Data lifecycle — retention, deletion, test data, no production data outside production? | |
+*`compliance: baseline`*: `**Security**: none` → delete the table (that line is the answer) · `medium` / `high` → append the rows Secrets & cryptography · Availability & recovery · Third parties & dependencies · Data lifecycle (`spec-kit/references/compliance.md` §2).
 
 The pre-implement review checks this table; the final review verdicts it under §2.
 
