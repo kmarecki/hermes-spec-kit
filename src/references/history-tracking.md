@@ -7,8 +7,8 @@ guard can prove the entry was written before the commit.
 
 It is **not** the place for narrative. Decisions, rationale and what-went-wrong belong in
 `close.md` / `change-record.md` (phase 6), `decisions.md` (assumptions) or the commit body.
-It survives the squash-merge; the close copies its timeline into `change-record.md`. The format
-below is capped and machine-appended; P3 only (`rigor.md`), earlier rounds archived at close.
+The close copies its timeline into `change-record.md`, then `archive_feature` moves it to
+`history-archive.md` (cold). Capped, machine-appended; P3 only (`rigor.md`).
 
 ## When it is kept
 

@@ -8,6 +8,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — `context.md` per feature; the close makes the folder cold
+- `get_next_actions` generates `specs/<feature>/context.md` (≤ 2 KB, no timestamp: phase-card facts, FR list, AC
+  outcomes from the latest acceptance round, open assumptions, "Read next" with open tasks / bugs, the cold files).
+  Preflight 5: read it first, open other artifacts only as the phase needs them, never a closed feature's folder.
+- `archive_feature` (close step 3b, every level): history.md entries → `history-archive.md`, verified / superseded
+  bugs → `bugs-archive.md`, earlier review rounds → `review-archive.md`; `Implemented-by` and `next_id` read the
+  archives; closed features' context.md says **COLD**.
+
 ### Changed — process level P1 / P2 / P3 (size × rigor) scales the ceremony
 - `references/rigor.md`: one table sets, per level, the RED evidence file (P1 none · P2 `[AC-]`/`[SEAM]` phases · P3 every
   phase), the devil's advocate (P1 final required inline, pre-implement optional · P2 pre-implement required, final

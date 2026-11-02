@@ -712,6 +712,41 @@ async def test_process_levels(s, root):
     check("next_id reads bugs-archive.md → BUG-008", d.get("next_id") == "BUG-008", json.dumps(d))
 
 
+async def test_context_and_archive(s, root):
+    print("\n═══ context.md + archive_feature ═══")
+    write(root, "k1", "spec.md", "# Spec\n\n**Size**: M — x\n\n- **FR-001**: System MUST greet\n- **FR-002**: System MUST log\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n- **AC-002** (FR-002) Given a, When b, Then c — Verify: manual\n")
+    write(root, "k1", "plan.md", "# Plan\n\n## Current Design\n")
+    write(root, "k1", "tasks.md", "# Tasks\n- [x] T001 a — src/a.py\n- [ ] T002 b — src/b.py\n")
+    write(root, "k1", "decisions.md", "# Decisions\n\n| ID | Date (UTC) | Kind | Phase | Question | Taken | Alternative not taken | Source |\n|---|---|---|---|---|---|---|---|\n| D-001 | 2026-11-03 | assumption | Phase 2 | which store? | sqlite | postgres | agent:claude |\n| D-002 | 2026-11-03 | ruling | Phase 1 | size? | M | — | user: \"M\" |\n")
+    write(root, "k1", "bugs.md", "# Bugs\n\n### BUG-001: old\n**Status**: verified\n**Verified-by**: user\n\n### BUG-002: live\n**Status**: open\n")
+    write(root, "k1", "history.md", "# Process History\n\n## 2026-11-03T10:00:00+00:00 | Phase 4 — implement | spec-kit-implement | hermes\n- Note: p1\n")
+    write(root, "k1", "acceptance.md", "# Acceptance\n\n## Round 1 — 2026-11-03 — claude\n\n**Result**: FAIL\n**Commit**: abc1234\n\n| AC | FRs | Level | Outcome | Tests | Bug |\n|---|---|---|---|---|---|\n| AC-001 | FR-001 | unit | ✅ pass | t | — |\n| AC-002 | FR-002 | manual | 👤 manual | — | — |\n")
+    d = await call(s, "get_next_actions", {"feature": "k1"})
+    ctx = Path(root, "specs/k1/context.md")
+    check("get_next_actions writes context.md", ctx.exists())
+    text = ctx.read_text() if ctx.exists() else ""
+    check("  ≤ 2 KB", len(text.encode()) <= 2048, str(len(text.encode())))
+    check("  FR list + AC outcomes from the latest round", "FR-001 System MUST greet" in text and "AC-001 ✅" in text and "AC-002 👤" in text, text)
+    check("  open ruling = the assumption only", "D-001 (Phase 2): which store?" in text and "D-002" not in text, text)
+    check("  Read next names open task / bug; cold names history.md", "open: T002" in text and "open: BUG-002" in text and "history.md" in text.split("Cold")[1], text)
+    mtime = ctx.stat().st_mtime
+    await call(s, "get_next_actions", {"feature": "k1"})
+    check("  unchanged state → file not rewritten", ctx.stat().st_mtime == mtime)
+    write(root, "k1", "review-final.md", "# Final review\n\n## Round 1 — 2026-11-02 — review:codex\n\n**Verdict**: NOT READY\n**Reviewed-commit**: abc1234\n\n## Round 2 — 2026-11-03 — review:codex\n\n**Verdict**: READY\n**Reviewed-commit**: abc1234\n")
+    d = await call(s, "archive_feature", {"feature": "k1"})
+    check("archive_feature moves history, verified bug, round 1", d.get("moved") == {"history": 1, "bugs": 1, "review_rounds": 1}, json.dumps(d))
+    check("  live files keep only the open bug and the latest round", "BUG-002" in Path(root, "specs/k1/bugs.md").read_text() and "BUG-001" not in Path(root, "specs/k1/bugs.md").read_text() and "Round 1" not in Path(root, "specs/k1/review-final.md").read_text() and "## 2026" not in Path(root, "specs/k1/history.md").read_text())
+    check("  archives hold them", "BUG-001" in Path(root, "specs/k1/bugs-archive.md").read_text() and "Round 1" in Path(root, "specs/k1/review-archive.md").read_text() and "hermes" in Path(root, "specs/k1/history-archive.md").read_text())
+    st = await call(s, "get_feature_state", {"feature": "k1"})
+    check("  Implemented-by still reads the history archive", st["state"]["implemented_by"] == ["hermes"], json.dumps(st["state"]["implemented_by"]))
+    d = await call(s, "next_id", {"feature": "k1", "kind": "BUG"})
+    check("  next_id stays unique → BUG-003", d.get("next_id") == "BUG-003", json.dumps(d))
+    write(root, "k1", "close.md", "# Close\n\n## Architecture Decisions\nnone\n")
+    write(root, "k1", "bugs.md", "# Bugs\n")
+    await call(s, "get_next_actions", {"feature": "k1"})
+    check("closed → context.md says COLD", "**COLD**" in ctx.read_text(), ctx.read_text()[:200])
+
+
 async def run_in_tmp(test_fn):
     root = tempfile.mkdtemp(prefix="spec-kit-test-")
     try:
@@ -731,7 +766,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates, test_cross_agent, test_process_levels]:
+              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates, test_cross_agent, test_process_levels, test_context_and_archive]:
         try:
             await run_in_tmp(t)
         except Exception as e:

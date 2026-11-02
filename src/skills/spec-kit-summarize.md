@@ -28,7 +28,7 @@ metadata:
 1. Tasks: count, mark done ones `[X]` only. Bugs: count; **never change a status**; `claimed` without `Verified-by` → *Unverified claims*.
 2. **Evidence table** (`spec-kit/references/evidence.md`): acceptance/regression `output:`/`ci:`, a `probe:` per seam, the final review's verdict + reviewer label. No oracle → ❌ unverified.
 3. Gaps (P3; P2 exceptions only): every FR / story / entity / contract; health = (resolved + acknowledged) / total. Follow-ups from the review → *Open questions*.
-3b. **Archive** (P2+, also on reopen): rounds before the latest → `review-archive.md`; verified / superseded bugs → `bugs-archive.md`; P3: earlier rounds' history entries → `history-archive.md`. Move, never delete; `mcp_spec_kit_next_id` reads the archives.
+3b. **Cold** (after step 7's change record; also on reopen): `mcp_spec_kit_archive_feature(feature)` — history, verified / superseded bugs, earlier rounds → `*-archive.md`; context.md marks the folder COLD (forensics in the archives, the outcome in the patched docs).
 4. Deviations → propose each spec/plan patch; **WAIT**; rejected → ⚠️ needs review. Regenerate `plan.md` → `## Current Design` (≤ 1 page, what is BUILT).
 5. **ADRs**: harvest (decisions.md rulings, plan Rounds, research, review findings, deviations); apply the ADR bar; per candidate propose new / supersede / append-evidence (`mcp_spec_kit_next_id(kind="ADR")`, project template else `spec-kit/templates/adr-template.md`); **WAIT** per ADR; update the index. Fill *Architecture Decisions* — "none met the bar" is a valid row.
 6. **AGENTS.md** (+ CLAUDE.md / rule files): statements the diff or new ADRs make wrong (commands, layout, boundaries, versions, conventions, debt, ADR list) → targeted patches; **WAIT**; never rewrite.

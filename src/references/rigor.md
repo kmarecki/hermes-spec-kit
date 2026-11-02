@@ -51,7 +51,7 @@ Phase card `process: P2`; compliance adds security evidence on top.
 | Final review | self-check round ≤ 30 lines: checklist + diff scan, one line per section, the floor's oracle quoted | exceptions only, ≤ 80 lines; round N+1 records the delta | ≤ 150 lines; the other agent; strict L: named human `**Approved-by**:` |
 | Close | short `close.md`, change record optional, AGENTS.md patch, ADR only if obvious; health = the server's | close + change record; health = the server's | `summarize` (full gap table) + change record |
 | `history.md` (when `history:` is not set) | off | off — timeline from git at close | on |
-| Archive (close, reopen) | — | rounds before the latest → `review-archive.md` · verified / superseded bugs → `bugs-archive.md` | + earlier rounds' entries → `history-archive.md`; lint warns at 40 KB |
+| Cold at close (`archive_feature`) | history, verified bugs, earlier rounds → `*-archive.md` (forensics only) | same | same; lint warns at 40 KB live |
 | Engineering guidelines | lean: one line · else MUSTs → merge-checklist P-items | MUSTs → P-items | + architecture tests |
 
 Lint warns past the line caps and at 40 KB per live file; `next_id` reads the archives.

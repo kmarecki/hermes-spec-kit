@@ -44,6 +44,5 @@ the change record. A small change still has to prove it works.
 
 ## Changing the tier
 
-A bigger change than the tier (new seam, third layer): stop, say so, ask. On approval edit the
-`**Size**:` line, add the missing artifacts additively, record the ruling. No downgrade once
-higher-tier artifacts exist.
+A bigger change than the tier (new seam, third layer): stop, ask; on approval edit `**Size**:`,
+add the missing artifacts additively, record the ruling. No downgrade once higher-tier artifacts exist.

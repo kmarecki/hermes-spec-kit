@@ -27,7 +27,7 @@ feature (`history-tracking.md`: default size L only). Project overrides: `specs/
   when off the guard answers ok and the close reads `spec-kit/scripts/spec-kit-history.sh`.
 - **Intent before code.** A change to requirements or design intent (spec FRs, plan decisions)
   is committed before the code that follows it. Status-only edits (task `[X]`, bug status,
-  evidence files, history entry) ride the phase's code commit — one commit per phase boundary.
+  evidence files, history entry, context.md) ride the phase's code commit — one commit per phase boundary.
 - **Agent trailer.** Every commit names its agent: `git commit --trailer "Spec-Kit-Agent: <agent>"`
   (`hermes`, `claude`, …). Hermes adds `--trailer "Co-Authored-By: Hermes Agent <noreply@nousresearch.com>"`
   (`coauthor:` in git-conventions overrides); Claude Code keeps its own line. Implemented-by reads both.
