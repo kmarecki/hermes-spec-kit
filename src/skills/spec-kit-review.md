@@ -1,7 +1,8 @@
 ---
 name: spec-kit-review
-description: Load when the user says 'spec-kit review [feature]', 'speckit review [feature]', "review [feature]", "quality check [feature]", or "analyze [feature]" — cross-artifact consistency check (pre-implement) and code quality review (post-implement).
-version: 1.1.0
+description: >
+  Load when the user says 'spec-kit review [feature]', 'speckit review [feature]', 'spec-kit final review [feature]', 'speckit final review [feature]', "review [feature]", "final review [feature]", "merge readiness [feature]", "is [feature] ready to merge", "quality check [feature]", or "analyze [feature]" — pre-implement cross-artifact check (3.5) and the mandatory final merge-readiness review (5.5): spec conformance, constitution rules, code quality, merge checklist.
+version: 2.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -13,413 +14,37 @@ metadata:
 
 # spec-kit-review
 
-**Phase**: 3.5 (Pre-implement optional gate) / 5.5 (Post-implement optional gate)
-
-**Purpose**: Provides quality checks at two points in the workflow, plus a
-third mode for reviewing already-closed features without altering history:
-
-1. **Pre-implement** (after tasks.md, before code): Verify spec/plan/tasks are coherent and internally consistent. READ-ONLY — outputs a report, no file changes.
-
-2. **Post-implement** (after tests green, before close): Review code quality — does the implementation match the constitution? Does it fulfill the spec? Are there deviations, quality issues, or technical debt introduced?
-
-3. **Closed-review** (feature is already closed): Same checks as post-implement but does NOT update history.md. If issues are found, offers to add refactoring tasks to tasks.md and reopen the feature.|
-
-**Prerequisites**:
-- Pre-implement mode: `spec.md` + `plan.md` + `tasks.md` must exist
-- Post-implement mode: `spec.md` + implemented code + passing tests
-
-**Artifacts**: None (read-only analysis output)
-
-**Routing**: Load this skill when the user says "review [feature]", "analyze [feature]", or "quality check [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
-
-**Task Persona**: Adopt the mindset of a thorough code auditor. Check every artifact against every other — spec vs plan vs tasks vs code. Use web search to research best patterns and practices when evaluating architecture or implementation quality. Every finding must be actionable and backed by evidence. Does this hold up under scrutiny?
-
-## Pre-flight
-Load and follow `spec-kit/references/preflight.md` before any action in this skill.
-
-## Execution
-
-### Determine mode
-```
-DETECT current artifacts:
-  IF close.md or implementation-summary.md EXISTS:
-    MODE = closed-review (post-close code quality check)
-    NOTE: "Feature [feature] is closed. Review will NOT update history.md."
-
-  IF tasks.md exists AND no implementation code exists:
-    MODE = pre-implement (cross-artifact consistency check)
-
-  IF tests have passed AND writeable source code exists AND no close.md:
-    MODE = post-implement (code quality review)
-
-  IF both pre-implement and post-implement conditions match:
-    ASK user: "Run pre-implement review (spec/plan/tasks), post-implement review (code quality), or both?"
-
-  IF mode is still undetermined:
-    ASK user: "Cannot auto-detect mode. Which review? (pre-implement / post-implement / closed-review)"
-```
-
----
-
-## Pre-Implement Mode: Cross-Artifact Consistency
-
-### Step 1: Validate prerequisites
-```
-IF specs/[feature]/spec.md NOT EXISTS:
-  ERROR: "Run spec-kit-specify first"
-IF specs/[feature]/plan.md NOT EXISTS:
-  WARN: "No plan.md — analysis limited to spec only"
-IF specs/[feature]/tasks.md NOT EXISTS:
-  WARN: "No tasks.md — cannot verify task coverage"
-```
-
-### Step 2: Load artifacts
-From **spec.md**:
-- Functional Requirements (FR-###)
-- Success Criteria (SC-###)
-- User Stories
-- Edge Cases
-
-From **plan.md** (IF EXISTS):
-- Architecture/Stack choices
-- Data Model references
-- Constitutional Gates
-- Technical constraints
-
-From **tasks.md** (IF EXISTS):
-- Task IDs
-- Descriptions
-- Phase grouping
-- Parallel markers [P]
-- File path references
-
-From **constitution.md** (IF EXISTS):
-- Principle names
-- MUST/SHOULD statements
-
-From **bugs.md** (bugfix mode only, IF EXISTS):
-- Bug IDs (BUG-###)
-- Bugfix tasks (BF-###)
-- Severity levels
-- Requires Clarification flags
-
-### Step 3: Build semantic models
-Create internal representations:
-- **Requirements inventory**: FR-### with imperative-phrase slug
-- **User story inventory**: Discrete actions with acceptance criteria
-- **Task coverage mapping**: Task → Requirement mapping
-- **Constitution rule set**: Principles and normative statements
-
-### Step 4: Detection passes
-
-**A. Duplication Detection**
-- Identify near-duplicate requirements
-- Mark lower-quality phrasing for consolidation
-
-**B. Ambiguity Detection**
-- Flag vague adjectives (fast, scalable, secure, intuitive, robust)
-- Flag unresolved placeholders (TODO, TKTK, ???, <placeholder>)
-
-**C. Underspecification**
-- Requirements with verbs but missing object or measurable outcome
-- User stories missing acceptance criteria alignment
-- Tasks referencing undefined files/components
-
-**D. Constitution Alignment**
-- Any requirement or plan element conflicting with MUST principles
-- Missing mandated sections or quality gates
-
-**E. Naming Conventions** (pre-implement)
-- Consistent naming patterns across spec, plan, and tasks
-- File paths in tasks follow project conventions
-- Terminology consistent between spec and plan
-
-**F. Documentation Completeness** (pre-implement)
-- Are all required spec sections present (FRs, edge cases, success criteria)?
-- Does plan.md document architecture decisions?
-- Are there TODOs or placeholders that should be resolved before coding?
-
-**G. User-Defined Custom Gates** (pre-implement)
-**H. Coverage Gaps** (only if tasks.md exists)
-- Requirements with zero associated tasks
-- Tasks with no mapped requirement/story
-- Success Criteria requiring buildable work not in tasks
-
-**I. Inconsistency**
-- Terminology drift (same concept named differently)
-- Data entities in plan but absent in spec
-- Task ordering contradictions
-
-**J. Bugfix Coverage (bugfix mode only)**
-- Bugs with no corresponding bugfix task (BF-###)
-- Bugfix tasks not referencing a plan bugfix section
-- Bugfix tasks without verification/regression test tasks
-- Unclear mapping between bug and fix approach
-
-### Step 5: Severity assignment
-Use heuristic:
-- **CRITICAL**: Violates constitution MUST, or requirement with zero coverage blocking baseline
-- **HIGH**: Duplicate/conflicting requirement, ambiguous security/performance attribute
-- **MEDIUM**: Terminology drift, missing non-functional task coverage
-- **LOW**: Style/wording improvements, minor redundancy
-
-### Step 6: Produce pre-implement report
-OUTPUT:
-
-```
-# Pre-Implement Review: [Feature]
-
-## Findings Table
-
-| ID | Category | Severity | Location | Summary | Recommendation |
-|----|----------|----------|----------|---------|----------------|
-| A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements... | Merge phrasing |
-...
-
-## Coverage Summary Table
-
-| Requirement | Has Task? | Task IDs | Notes |
-|-------------|-----------|----------|-------|
-| FR-001 | Yes | T001, T002 | |
-| FR-002 | No | --- | Missing coverage |
-
-## Constitution Alignment Issues
-[If any]
-
-## Unmapped Tasks
-[If any]
-
-## Uncovered Bugs (bugfix mode)
-[If any]
-
-## Metrics
-- Total Requirements: N
-- Total Tasks: N
-- Coverage %: X%
-- Ambiguity Count: N
-- Duplication Count: N
-- Critical Issues: N
-```
-
-### Step 7: Next actions (pre-implement)
-```
-IF CRITICAL issues exist:
-  - Recommend resolving before spec-kit-implement
-  - Suggest explicit remediation commands
-  - In bugfix mode: Recommend fixing bug coverage gaps before implementing fixes
-
-IF only LOW/MEDIUM:
-  - User may proceed
-  - Provide improvement suggestions
-```
-
----
-
-## Post-Implement Mode: Code Quality Review
-
-### Step 1: Validate prerequisites
-```
-IF specs/[feature]/spec.md NOT EXISTS:
-  ERROR: "Run spec-kit-specify first — cannot review without requirements"
-IF no implementation code detected:
-  ERROR: "No implementation found — run spec-kit-implement first"
-```
-
-### Step 2: Load context
-```
-LOAD specs/[feature]/spec.md (REQUIRED)
-LOAD specs/[feature]/constitution.md (IF EXISTS)
-LOAD specs/[feature]/plan.md (IF EXISTS)
-LOAD specs/[feature]/tasks.md (IF EXISTS)
-
-CAPTURE git diff or file list showing what was implemented
-```
-
-### Step 3: Code quality checks
-
-**A. Architecture & Design**
-- Does the code structure follow the plan's architecture?
-- Are there architectural violations (layers bypassed, circular dependencies)?
-- Is the code in the correct locations per the plan?
-
-**B. Spec Fulfillment**
-- For each FR-### in spec.md: does the implementation satisfy it?
-- For each success criterion: is it demonstrably met?
-- Are there edge cases from the spec that are unhandled?
-
-**C. Constitution Alignment**
-- Does the code respect MUST principles from constitution.md?
-- Are there quality gates or standards that were skipped?
-
-**D. Naming Conventions** (post-implement)
-- Does the code follow project naming conventions?
-- Are file/module/function names consistent with plan.md?
-- Public API names match spec terminology?
-
-**E. Documentation Completeness** (post-implement)
-- Are there README, API docs, or inline docs that need updating?
-- If this feature adds or changes a public interface, is it documented?
-- Are there changelog entries or migration notes needed?
-
-**F. User-Defined Custom Gates** (post-implement)
-**G. Code Quality**
-- Naming conventions — consistent and descriptive?
-- Error handling — are failures caught and reported appropriately?
-- Duplication — are there copy-paste patterns that should be extracted?
-- Complexity — are there functions/modules that are too complex?
-- Security — obvious vulnerabilities (hardcoded secrets, injection vectors)?
-
-**H. Test Quality** (if tests exist)
-- Do tests actually test the behaviors described in spec.md?
-- Are there tests for edge cases from the spec?
-- Are tests meaningful (assert behavior, not implementation)?
-
-### Step 4: Severity assignment
-Same heuristic as pre-implement mode.
-
-### Step 5: Produce post-implement report
-```
-# Post-Implement Review: [Feature]
-
-## Spec Fulfillment
-
-| FR-ID | Status | Notes |
-|-------|--------|-------|
-| FR-001 | ✅ Fulfilled | Implemented as specified |
-| FR-002 | ⚠️ Partial | Missing error handling for edge case |
-| FR-003 | ❌ Missing | Not implemented |
-
-## Constitution Alignment
-[If any violations]
-
-## Code Quality Findings
-
-| ID | Category | Severity | File | Finding | Suggestion |
-|----|----------|----------|------|---------|------------|
-| Q1 | Duplication | MEDIUM | src/auth.py:45-60 | Repeated validation logic | Extract to helper |
-...
-
-## Metrics
-- Requirements fulfilled: N/Total
-- Code quality issues: N (Critical/High/Medium/Low)
-- Constitution violations: N
-- Test coverage adequacy: Satisfactory / Needs improvement / Not assessed
-```
-### Step 6: Next actions — deviation resolution (post-implement)
-
-For each deviation found between code and spec/plan during post-implement review:
-
-```
-FOR each FR-### or plan section where code differs from spec/plan:
-  PRESENT the discrepancy to the user:
-    "FR-NNN in spec.md says: [original requirement]
-     Implementation does: [what code actually does]
-     
-     Options:
-     1. Update spec/plan to match implementation (intentional deviation — document it)
-     2. Keep spec/plan as-is — change code to match (create a bugfix task)
-     3. Skip for now (flag for Phase 6 close to resolve)"
-
-  WAIT for user decision before proceeding to the next discrepancy.
-
-  IF user picks 1:
-    PATCH spec.md or plan.md to reflect what was implemented
-    ADD note: "(Updated by post-implement review)"
-    NOTE: "spec.md updated — deviation documented."
-    These spec/plan patches will be committed by Phase 6 (summarize/close).
-
-  IF user picks 2:
-    ADD bug to bugs.md: "BUG-NNN: Implementation does not match spec FR-NNN"
-    NOTE: "Bug logged — run 'bugfix [feature]' to align implementation with spec."
-
-  IF user picks 3:
-    NOTE: "Deferred to Phase 6 close."
-```
-
-### Step 7: Next actions (non-deviation)
-
-```
-IF mode == closed-review:
-  PRESENT findings to user
-  IF CRITICAL or HIGH issues exist:
-    PROMPT: "N issues found. Options:
-      1. Add refactoring tasks to tasks.md (no reopen)
-      2. Add tasks and reopen the feature (reopen [feature])
-      3. Note for future work, no changes"
-    IF user picks 1 or 2:
-      APPEND refactoring tasks to tasks.md for each issue
-      NOTE: "Refactoring tasks added to tasks.md."
-    IF user picks 2:
-      NOTE: "Feature needs reopening. Run 'reopen [feature]' to start the fix loop."
-    IF user picks 3:
-      NOTE: "Issues noted for future work. No changes made."
-  ELSE (only LOW/MEDIUM):
-    NOTE: "Minor issues found. No code changes needed."
-
-ELSE (normal pre/post-implement):
-  IF CRITICAL issues exist:
-    - Block: Resolve before closing feature
-    - Recommend adding bugs to bugs.md
-    - Proceed to bugfix cycle
-
-  IF only LOW/MEDIUM:
-    - User may proceed to close
-    - Note improvement suggestions for future
-```
-
-### Append to history.md and Commit
-
-```text
-IF mode == closed-review:
-  NOTE: "Review on closed feature — history.md not updated."
-ELSE:
-  Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
-  - Phase: Phase 3.5 or Phase 5.5 (mode-dependent) — Review
-  - Artifact: review report
-  - Scope: review findings
-  - Message: `"spec(review): [feature] review findings"`
-```
-
-## Completion
-
-Report:
-- Mode used: Pre-implement / Post-implement / Both
-- Findings count by severity
-- Coverage percentage (pre-implement)
-- Spec fulfillment status (post-implement)
-- Overall recommendation: Proceed / Fix critical issues first
-
-## Next Skills
-
-- Pre-implement mode: Propose `spec-kit-implement` when all CRITICAL issues resolved
-- Post-implement mode: Propose `spec-kit-summarize` to close the feature
-- Closed-review mode: Propose `reopen [feature]` if issues need fixing
-- Either mode: Propose `spec-kit-specify` or `spec-kit-plan` to fix issues found
-- In bugfix mode: Propose `spec-kit-tasks` to add missing bugfix tasks
-
-**Re-running this skill**:
-1. Re-run the relevant detection passes based on mode
-2. COMPARE results against previous run
-3. Report only changes/new findings
-4. Preserve previous report for comparison
-
-## Prerequisite Enforcement
-
-Pre-implement:
-- **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)
-- **WARN** if: plan.md or tasks.md missing — analysis limited to what exists
-
-Post-implement:
-- **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)
-- **BLOCKED** if: No implementation code detected
-- **WARN** if: constitution.md missing — cannot check constitutional alignment
-
-Closed-review:
-- **BLOCKED** if: `spec-kit-specify` has not been run (spec.md required)
-- **BLOCKED** if: No implementation code detected
-- **NOTE**: tasks.md will be modified only with user approval
-
-## Key Constraint
-
-**READ-ONLY on source code** — This skill does NOT modify source code files. It only outputs a report.
-**Exception**: In closed-review mode, may append refactoring/remediation tasks to `tasks.md` with user approval.
+**Phase**: 3.5 (pre-implement) / 5.5 (final — **mandatory before close**) / closed-review · **Persona**: senior architect and last reviewer before merge — structural problems, spec drift, broken rules, security; not a style checker.
+**Purpose**: pre-implement = does spec/plan/tasks hold together and fit the codebase (report). **Final** = does the code do what the spec says, obey the rules, is it good, is it mergeable → `review-final.md` round whose verdict gates the close. Both include a **devil's advocate** pass.
+**Full procedure**: `spec-kit/references/skills/spec-kit-review.md` · template `spec-kit/templates/review-final-template.md`.
+
+## Before reviewing
+- Preflight checks 1 and 4 (`spec-kit/references/preflight.md`). Mode: close doc → closed-review; tasks.md and no code → pre-implement; all tasks `[X]`, no open bug → **final**; open bugs → refuse ("bugfix first"); unclear → **ASK**.
+- PROCESS LEVEL from the phase card (`spec-kit/references/rigor.md`, size × rigor): **P1** → no pre-implement review; final = a **self-check round** ≤ 30 lines (checklist commands + diff scan, one line per section, the floor's oracle quoted, §4 inline by the same reviewer, Verdict + Reviewed-commit) · **P2** → lite pre-implement **with** devil's advocate; final exceptions-only ≤ 80 lines, §4 optional, round N+1 = the delta since round N · **P3** → full pre-implement; both devil's advocates by a **different agent**; final ≤ 150 lines by the other agent; strict L needs `**Approved-by**:` a named human. Objections are never capped. S skips the stack research; acceptance is checked the same way at every level.
+- **Author check** (`spec-kit/references/evidence.md`): `Implemented-by` (history.md implement entries, or the tasks.md header when history is off; the phase card lists them) **includes** you → *self-review*, even if another agent did other phases; for the final review prefer the other agent, else a **fresh-context sub-agent** (procedure + feature path + base only; no transcript).
+- Final review: read the code and the spec **before** `decisions.md` so the author's reasoning does not anchor you; then every assumption is a review item.
+
+## Pre-implement (3.5)
+1. Load spec, plan, tasks, constitution, the epic's cross-feature rules and the modules' design docs when the project keeps them; requirement ↔ task coverage; the Security & Privacy table answered in the plan.
+2. M (lite): underspecification, coverage gaps, codebase fit, design soundness. L: + duplication, ambiguity, naming, completeness, inconsistency, best practice (research the stack).
+3. **Devil's advocate**: the strongest case against the plan + a simpler alternative; a pre-mortem ("three months later it failed — why?"); abuse cases per new seam (authz, tenant crossover, input, data exposure, logging); the riskiest assumptions in decisions.md. ≤ 5 objections, each answered: accepted / rebutted with evidence / deferred. L: run it as a separate sub-agent (different model when available).
+4. Report + commit `spec(review): [feature] review findings`. CRITICAL → resolve before implement.
+
+## Final (5.5) — one `## Round N` appended, **exceptions only**
+1. Inputs: spec, plan, tasks, data-model, contracts, constitution, `specs/merge-checklist.md` (missing → from `spec-kit/templates/merge-checklist-template.md`, **ASK** to confirm), AGENTS.md / rule files, `git diff <base>...HEAD`, `evidence/`, bugs.md, acceptance.md.
+2. Mechanical: `mcp_spec_kit_diff_scan(feature)` → `evidence/final-diff-scan.txt`; every checklist command → `evidence/final-<check>.txt` — `review_run: ci | pr` → CI / the PR's checks are the evidence (full procedure), the rest locally; `ci:<id>` for the reviewed commit. Only specs/docs changed since a green `ci:<id>` → cite it, no re-run.
+3. **§1** — one coverage line (FR n/N, SC, edge cases, acceptance round PASS @ sha, frozen unchanged) + rows ONLY for ⚠️ / ❌ / ↔ / 👤. Missing = CRITICAL; ↔ → **WAIT** (patch spec, log a bug, or defer). Manual / deferred ACs unconfirmed → 👤.
+4. **§2** — every applicable constitution MUST, checklist P-item, AGENTS.md rule, epic cross-feature rule, design-doc invariant and **spec Security & Privacy row** verdicted with `path:line`; violated MUST = HIGH (CRITICAL if security / data / non-negotiable).
+5. **§3** — findings on the changed code: architecture, error chains, security, data integrity, concurrency, duplication, complexity, API surface, tests (behaviour not implementation; fixtures match `probe:` files; RED/GREEN files per phase). Stack research: M/L.
+6. **§4 Devil's advocate** — try to break it with concrete inputs (another tenant's id, empty/stale period, concurrent edit, failing dependency, unauthorized role); "would this test still pass if the code were wrong?"; argue the opposite of the verdict. P3: a different agent. Every objection answered; unanswered blocks READY at P3.
+7. **§5** checklist table with evidence files. **Verdict**: CRITICAL/HIGH or blocking ❌ → `NOT READY`; no defect but owner confirmations pending → `AWAITING-OWNER`; MEDIUM / non-blocking only → `READY-WITH-FOLLOWUPS`; else `READY`. Write `**Verdict**:` and `**Reviewed-commit**:`.
+8. NOT READY → bugs for each CRITICAL/HIGH (`mcp_spec_kit_next_id`), confirm with the user → `bugfix [feature]`, new round. AWAITING-OWNER → ask the owner; their quoted answer → specs-only Round N+1 (no code change ⇒ not stale). §6: PR description incl. "strongest objections and how they were answered".
+
+## Severity
+CRITICAL / HIGH / MEDIUM only; a finding must harm correctness, security, performance, maintainability or testability — style and taste → delete. A broken explicit project rule is never a nitpick.
+
+## Done when
+- [ ] Pre: report, history entry when on (`Phase 3.5`), commit. Final: round with Verdict + Reviewed-commit, §2 rules verdicted, §4 objections answered, §5 evidence; `mcp_spec_kit_lint_artifacts` → 0 errors; history entry when on (`Phase 5.5`), commit `spec(review): [feature] final review (verdict: X)`. Closed-review: report only, no history entry.
+
+## Next
+Pre → `spec-kit-implement`. Final READY / READY-WITH-FOLLOWUPS → `spec-kit-summarize`. AWAITING-OWNER → the owner, then Round N+1. NOT READY → `bugfix [feature]`.

@@ -1,0 +1,573 @@
+#!/usr/bin/env python3
+"""Validate all spec-kit skill files for consistency and correctness.
+
+Tests:
+  1. Every skill has valid YAML frontmatter with required fields
+  2. All 7 phases (0-6) have corresponding skills
+  3. Every `spec-kit/references/*` reference in skill content points to an existing file
+  4. Every template reference points to an existing template
+  5. All cross-skill references point to existing skills
+  6. Skills follow correct naming convention
+  7. Each skill lists correct trigger phrases
+  8. Every phase skill (except workflow) references preflight.md
+  9. Phase numbers in skills match expected phases
+ 10. No orphan references and no missing phases
+"""
+
+import os, re, sys, yaml, json
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+SKILLS_DIR = REPO / "src" / "skills"
+REFERENCES_DIR = REPO / "src" / "references"
+TEMPLATES_DIR = REPO / "src" / "templates"
+
+failures = 0
+
+def check(label, ok, detail=""):
+    global failures
+    if ok:
+        print(f"  ✓ {label}")
+    else:
+        print(f"  ✗ {label}  {detail}")
+        failures += 1
+
+# ── Expected skill inventory ──────────────────────────────────────────────
+
+# Phase -> skill name, expected phase number
+PHASE_SKILLS = {
+    0:   "spec-kit-constitution",
+    1:   "spec-kit-specify",
+    1.5: "spec-kit-clarify",
+    2:   "spec-kit-plan",
+    3:   "spec-kit-tasks",
+    3.5: "spec-kit-review",
+    4:   "spec-kit-implement",
+    5:   "spec-kit-test",
+    6:   "spec-kit-summarize",
+}
+
+NON_PHASE_SKILLS = {"spec-kit-refresh", "spec-kit-workflow", "spec-kit-epic", "spec-kit-design"}
+UMBRELLA_DIR = "spec-kit"  # umbrella SKILL.md inside spec-kit/ directory
+ALL_SKILLS = set(PHASE_SKILLS.values()) | NON_PHASE_SKILLS | {UMBRELLA_DIR}
+
+EXPECTED_TEMPLATES = {
+    "AGENTS-template.md",
+    "acceptance-template.md",
+    "adr-template.md",
+    "merge-checklist-template.md",
+    "review-final-template.md",
+    "bugs-template.md",
+    "close-template.md",
+    "constitution-template.md",
+    "data-model-template.md",
+    "decisions-template.md",
+    "git-conventions-template.md",
+    "design-index-template.md",
+    "gitignore-template.md",
+    "change-record-template.md",
+    "design-doc-template.md",
+    "epic-template.md",
+    "epics-index-template.md",
+    "epic-plan-template.md",
+    "epic-features-template.md",
+    "epic-review-template.md",
+    "history-template.md",
+    "plan-template.md",
+    "research-template.md",
+    "spec-template.md",
+    "tasks-template.md",
+}
+
+EXPECTED_REFERENCES = {
+    "acceptance.md",
+    "commits.md",
+    "constitution-principles.md",
+    "constitution-detection.md",
+    "constitution-greenfield.md",
+    "evidence.md",
+    "history-tracking.md",
+    "preflight.md",
+    "rigor.md",
+    "sizing.md",
+}
+
+# Skills whose one-screen SKILL.md is the whole procedure (no references/skills/ file).
+SELF_CONTAINED_SKILLS = {"spec-kit-clarify", "spec-kit-refresh", "spec-kit-epic"}
+
+# ── Helpers ────────────────────────────────────────────────────────────────
+
+def parse_frontmatter(path):
+    """Parse YAML frontmatter from a markdown file."""
+    content = path.read_text()
+    m = re.match(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
+    if not m:
+        return None, content
+    try:
+        return yaml.safe_load(m.group(1)), content
+    except yaml.YAMLError:
+        return None, content
+
+
+def collect_skill_names():
+    """Return set of all skill names (both flat .md files and umbrella dirs)."""
+    names = set()
+    for p in SKILLS_DIR.rglob("SKILL.md"):
+        # umbrella: spec-kit/SKILL.md -> spec-kit
+        names.add(p.parent.name)
+    for p in SKILLS_DIR.glob("spec-kit-*.md"):
+        names.add(p.stem)
+    return names
+
+
+def collect_refs_in_text(text):
+    """Find all `spec-kit/references/*` references in text (placeholders like <skill>.md skipped)."""
+    return {r for r in re.findall(r'`(?:spec-kit/)?references/([^`]+)`', text) if '<' not in r}
+
+
+def collect_templates_in_text(text):
+    """Find all `spec-kit/templates/*` references in text."""
+    # Exclude placeholder patterns like <name>.md
+    refs = set()
+    for m in re.finditer(r'`(?:spec-kit/)?templates/([^`]+)`', text):
+        name = m.group(1)
+        if '<' not in name and '>' not in name:  # skip placeholders like <name>.md
+            refs.add(name)
+    return refs
+
+
+def collect_skill_refs_in_text(text):
+    """Find all `spec-kit-*` skill references in text."""
+    refs = set()
+    for m in re.finditer(r'`(spec-kit-[a-z-]+)`', text):
+        refs.add(m.group(1))
+    return refs
+
+
+# ── Tests ──────────────────────────────────────────────────────────────────
+
+
+def test_all_skills_present():
+    """Every expected skill has a file."""
+    print("\n═══ Skill inventory ═══")
+    existing = collect_skill_names()
+
+    for name in sorted(ALL_SKILLS):
+        if name == UMBRELLA_DIR:
+            path = SKILLS_DIR / name / "SKILL.md"
+        else:
+            path = SKILLS_DIR / f"{name}.md"
+        check(f"skill exists: {name}", path.exists(), f"missing: {path}")
+
+    # No unexpected skills
+    expected_files = set()
+    for name in ALL_SKILLS:
+        if name == UMBRELLA_DIR:
+            expected_files.add(name)
+        else:
+            expected_files.add(f"{name}.md")
+    unexpected = set()
+    for p in SKILLS_DIR.glob("spec-kit-*.md"):
+        if p.stem not in ALL_SKILLS:
+            unexpected.add(p.stem)
+    # Also check for unexpected umbrella dirs
+    for d in SKILLS_DIR.iterdir():
+        if d.is_dir() and (d / "SKILL.md").exists() and d.name not in ALL_SKILLS:
+            unexpected.add(d.name)
+    check("no unexpected skills", len(unexpected) == 0, f"unexpected: {unexpected}")
+
+
+def test_frontmatter():
+    """Every skill file has valid YAML frontmatter with required fields."""
+    print("\n═══ Frontmatter validation ═══")
+    required = {"name", "description"}
+    for name in sorted(ALL_SKILLS):
+        if name == UMBRELLA_DIR:
+            path = SKILLS_DIR / name / "SKILL.md"
+        else:
+            path = SKILLS_DIR / f"{name}.md"
+        if not path.exists():
+            continue
+
+        fm, _ = parse_frontmatter(path)
+        check(f"{name}: frontmatter parses", fm is not None)
+        if fm:
+            for field in required:
+                check(f"{name}: has field '{field}'", field in fm, f"missing: {field}")
+            check(f"{name}: has description", bool(fm.get("description", "").strip()))
+
+
+def test_phase_coverage():
+    """All 7 phases have a skill, and phase numbers match."""
+    print("\n═══ Phase coverage ═══")
+    for phase, name in sorted(PHASE_SKILLS.items()):
+        path = SKILLS_DIR / f"{name}.md"
+        if not path.exists():
+            check(f"phase {phase} ({name}): file missing", False)
+            continue
+        fm, content = parse_frontmatter(path)
+        if not fm:
+            continue
+
+        # Check phase mention in content
+        phase_refs = re.findall(r'\*\*Phase\*\*:?\s*([0-9.]+)', content)
+        phase_match = False
+        for pr in phase_refs:
+            expected = str(phase).rstrip('0').rstrip('.')
+            actual = str(pr).rstrip('0').rstrip('.')
+            if actual == expected:
+                phase_match = True
+        check(f"phase {phase} ({name}): mentions correct phase", phase_match,
+              f"expected Phase {phase}, found: {phase_refs}")
+
+
+def test_reference_files_exist():
+    """Every reference mentioned in skill content exists in references/."""
+    print("\n═══ Reference files ═══")
+    existing_refs = {str(p.relative_to(REFERENCES_DIR)) for p in REFERENCES_DIR.rglob("*.md")}
+
+    for name in sorted(ALL_SKILLS):
+        if name == UMBRELLA_DIR:
+            path = SKILLS_DIR / name / "SKILL.md"
+        else:
+            path = SKILLS_DIR / f"{name}.md"
+        if not path.exists():
+            continue
+        _, content = parse_frontmatter(path)
+        if content is None:
+            continue
+        refs = collect_refs_in_text(content)
+        for ref in refs:
+            check(f"{name}: reference '{ref}' exists", ref in existing_refs,
+                  f"not found in references/ ({ref})")
+
+
+def test_templates_exist():
+    """Every template mentioned in skill content exists in templates/."""
+    print("\n═══ Template files ═══")
+    existing_templates = {p.name for p in TEMPLATES_DIR.glob("*.md")}
+    check("all expected templates present",
+          existing_templates == EXPECTED_TEMPLATES,
+          f"missing: {EXPECTED_TEMPLATES - existing_templates}, "
+          f"extra: {existing_templates - EXPECTED_TEMPLATES}")
+
+    for name in sorted(ALL_SKILLS):
+        if name == UMBRELLA_DIR:
+            path = SKILLS_DIR / name / "SKILL.md"
+        else:
+            path = SKILLS_DIR / f"{name}.md"
+        if not path.exists():
+            continue
+        _, content = parse_frontmatter(path)
+        if content is None:
+            continue
+        refs = collect_templates_in_text(content)
+        for ref in refs:
+            check(f"{name}: template '{ref}' exists", ref in existing_templates,
+                  f"not found in templates/ ({ref})")
+
+
+def test_cross_skill_references_exist():
+    """Every cross-skill reference points to an existing skill."""
+    print("\n═══ Cross-skill references ═══")
+    existing = collect_skill_names()
+
+    for name in sorted(ALL_SKILLS):
+        if name == UMBRELLA_DIR:
+            path = SKILLS_DIR / name / "SKILL.md"
+        else:
+            path = SKILLS_DIR / f"{name}.md"
+        if not path.exists():
+            continue
+        _, content = parse_frontmatter(path)
+        if content is None:
+            continue
+        refs = collect_skill_refs_in_text(content)
+        for ref in refs:
+            check(f"{name}: references '{ref}'", ref in existing,
+                  f"not an existing skill")
+
+
+def test_preflight_reference():
+    """Every phase skill references preflight.md for its pre-action checks."""
+    print("\n═══ Pre-flight reference ═══")
+    skip = {"spec-kit-workflow", "spec-kit-refresh", "spec-kit-review", "spec-kit-epic", "spec-kit-design", UMBRELLA_DIR}
+    for name in sorted(ALL_SKILLS):
+        if name in skip:
+            continue
+        if name == UMBRELLA_DIR:
+            path = SKILLS_DIR / name / "SKILL.md"
+        else:
+            path = SKILLS_DIR / f"{name}.md"
+        if not path.exists():
+            continue
+        _, content = parse_frontmatter(path)
+        if content is None:
+            continue
+        has_preflight = "spec-kit/references/preflight.md" in content or "references/preflight.md" in content
+        check(f"{name}: references preflight.md", has_preflight)
+
+
+def test_trigger_descriptions():
+    """Skill description mentions correct trigger phrases."""
+    print("\n═══ Trigger descriptions ═══")
+    for name in sorted(ALL_SKILLS):
+        if name == UMBRELLA_DIR:
+            path = SKILLS_DIR / name / "SKILL.md"
+        else:
+            path = SKILLS_DIR / f"{name}.md"
+        if not path.exists():
+            continue
+        fm, _ = parse_frontmatter(path)
+        if not fm:
+            continue
+        desc = fm.get("description", "")
+        # Each skill should mention its own name in the trigger description
+        if name.startswith("spec-kit-"):
+            short_name = name.replace("spec-kit-", "")
+            # Workflow is a router, not a direct-trigger skill
+            if short_name == "workflow":
+                continue
+            check(f"{name}: mentions 'speckit {short_name}' in triggers",
+                  f"speckit {short_name}" in desc.lower())
+
+
+def test_umbrella_coverage():
+    """Umbrella SKILL.md mentions all phase skills."""
+    print("\n═══ Umbrella coverage ═══")
+    path = SKILLS_DIR / UMBRELLA_DIR / "SKILL.md"
+    if not path.exists():
+        check("umbrella SKILL.md exists", False)
+        return
+    content = path.read_text()
+    for phase, name in sorted(PHASE_SKILLS.items()):
+        check(f"umbrella references phase {phase} ({name})", name in content,
+              f"missing reference to {name}")
+    for name in NON_PHASE_SKILLS:
+        check(f"umbrella references {name}", name in content,
+              f"missing reference to {name}")
+
+
+def test_no_loose_reference_files():
+    """No extra/missing files in references/ (top level); references/skills/ mirrors the skill set."""
+    print("\n═══ Reference inventory ═══")
+    existing = {p.name for p in REFERENCES_DIR.glob("*.md")}
+    check("no unexpected reference files", existing == EXPECTED_REFERENCES,
+          f"extra: {existing - EXPECTED_REFERENCES}, "
+          f"missing: {EXPECTED_REFERENCES - existing}")
+    full = {p.stem for p in (REFERENCES_DIR / "skills").glob("spec-kit-*.md")}
+    expected_full = ALL_SKILLS - {UMBRELLA_DIR} - SELF_CONTAINED_SKILLS
+    check("references/skills/ has one full procedure per non-self-contained skill", full == expected_full,
+          f"extra: {full - expected_full}, missing: {expected_full - full}")
+    for name in sorted(ALL_SKILLS - {UMBRELLA_DIR}):
+        skill_text = (SKILLS_DIR / f"{name}.md").read_text()
+        if name in expected_full:
+            check(f"{name}: SKILL.md points at its full procedure", f"spec-kit/references/skills/{name}.md" in skill_text)
+        lines = skill_text.count("\n")
+        check(f"{name}: SKILL.md is one screen (<= 60 lines)", lines <= 60, f"{lines} lines")
+    budget = sum(p.stat().st_size for p in SKILLS_DIR.rglob("*.md")) + sum(p.stat().st_size for p in REFERENCES_DIR.rglob("*.md")) + sum(p.stat().st_size for p in TEMPLATES_DIR.glob("*.md"))
+    mc = (TEMPLATES_DIR / "merge-checklist-template.md").read_text()
+    check("merge-checklist default review_run is local; ci keys present", re.search(r"^review_run:\s+local\b", mc, re.M) is not None and all(k in mc for k in ("ci_jobs:", "ci_queue:", "ci_status:")))
+    check("skills + references + templates stay under ~62k tokens (250 KB)", budget <= 250_000, f"{budget // 1024} KB")
+
+
+def test_workflow_diagram_phases():
+    """Workflow skill mentions all phase numbers in its diagram."""
+    print("\n═══ Workflow diagram phases ═══")
+    path = SKILLS_DIR / "spec-kit-workflow.md"
+    if not path.exists():
+        return
+    content = path.read_text()
+    for phase, name in sorted(PHASE_SKILLS.items()):
+        check(f"workflow mentions phase {phase} ({name})", name.replace("spec-kit-", "") in content,
+              f"missing phase {name} in workflow")
+
+
+def _server_tool_names():
+    """Extract @mcp.tool(name=...) names from server.py via regex (no mcp import needed)."""
+    server = REPO / "spec-kit-mcp-server" / "server.py"
+    if not server.exists():
+        return None
+    return set(re.findall(r'@mcp\.tool\(name="([^"]+)"\)', server.read_text()))
+
+
+def test_mcp_tool_names_match_server():
+    """Every mcp_spec_kit_* tool named in a skill/doc must exist in server.py — and vice versa.
+
+    Guards against skill files referencing removed/renamed tools (happened with
+    log_bug after adc6b79) and against the server gaining tools the docs never
+    mention. The known-removed tools are asserted absent everywhere.
+    """
+    print("\n═══ MCP tool-name drift ═══")
+    server_tools = _server_tool_names()
+    if server_tools is None:
+        check("server.py found", False, "spec-kit-mcp-server/server.py missing")
+        return
+
+    REMOVED_TOOLS = {"log_bug", "set_bug_status", "set_bug_plan_ref"}
+
+    # 1. Removed tools must not exist in the server
+    for t in sorted(REMOVED_TOOLS):
+        check(f"server has no '{t}' tool (removed)", t not in server_tools)
+
+    # 2. Every mcp_spec_kit_* mention in skills/ + docs maps to a real server tool
+    doc_dirs = [
+        SKILLS_DIR,
+        REPO / "spec-kit-mcp-server",   # README.md, *.py docstrings excluded below
+    ]
+    doc_files = []
+    for d in doc_dirs:
+        doc_files.extend(d.rglob("*.md"))
+    doc_files.extend([REPO / "README.md", REPO / "AGENT.md", REPO / "user-guide.md"])
+
+    pattern = re.compile(r'mcp_spec_kit_([a-z_]+)')
+    bad = []
+    for f in doc_files:
+        content = f.read_text()
+        for m in pattern.finditer(content):
+            tool = m.group(1)
+            if tool not in server_tools:
+                bad.append(f"{f.relative_to(REPO)}: mcp_spec_kit_{tool}")
+    check("all mcp_spec_kit_* doc mentions exist in server", not bad,
+          "; ".join(bad[:8]))
+
+    # 3. Every server tool is mentioned somewhere in the docs
+    mentioned = set()
+    for f in doc_files:
+        mentioned.update(pattern.findall(f.read_text()))
+    unmentioned = server_tools - mentioned
+    check("every server tool is documented", not unmentioned,
+          f"undocumented tools: {sorted(unmentioned)}")
+
+
+def test_skills_yaml_parse():
+    """All frontmatter YAML parses correctly (no syntax errors)."""
+    print("\n═══ YAML parse check ═══")
+    for name in sorted(ALL_SKILLS):
+        if name == UMBRELLA_DIR:
+            path = SKILLS_DIR / name / "SKILL.md"
+        else:
+            path = SKILLS_DIR / f"{name}.md"
+        if not path.exists():
+            continue
+        content = path.read_text()
+        # Extract all frontmatter blocks
+        blocks = re.findall(r'^---\s*\n(.*?)\n---', content, re.DOTALL)
+        for i, block in enumerate(blocks):
+            try:
+                parsed = yaml.safe_load(block)
+                check(f"{name}: YAML block {i} parses", parsed is not None or block.strip() == "")
+            except yaml.YAMLError as e:
+                check(f"{name}: YAML block {i} valid", False, str(e))
+
+
+# ── Main ───────────────────────────────────────────────────────────────────
+
+
+def test_hermes_paths_resolve():
+    """Every `spec-kit/references|templates/<file>` a Hermes skill or reference names exists in src/."""
+    print("\n═══ Hermes edition: shared paths resolve ═══")
+    names = re.compile(r"(?<![\w/~.])spec-kit/(references|templates)/([\w./-]+\.md)")
+    missing = set()
+    for f in list(SKILLS_DIR.rglob("*.md")) + list(REFERENCES_DIR.rglob("*.md")) + list(TEMPLATES_DIR.glob("*.md")):
+        for kind, rel in names.findall(f.read_text()):
+            if not (REPO / "src" / kind / rel).exists():
+                missing.add(f"{f.name} → spec-kit/{kind}/{rel}")
+    check("every spec-kit/references|templates path exists", not missing, ", ".join(sorted(missing)))
+    # the server imports the mcp SDK; read its regex from the source instead of importing it
+    src = (REPO / "spec-kit-mcp-server" / "server.py").read_text()
+    line = next(l for l in src.splitlines() if l.startswith("_TEST_AFTER_RE = "))
+    test_after = eval(line.split("=", 1)[1].strip(), {"re": re})
+    tmpl = (TEMPLATES_DIR / "tasks-template.md").read_text()
+    check("tasks template example text does not trip the test-after regex", not test_after.search(tmpl))
+    check("  a real test-after header does", bool(test_after.search("# T\n> **TDD**: test-after (Principle 1 C)\n")))
+
+
+def test_claude_edition_parity():
+    """Generate the Claude Code edition into a temp dir and compare it with the Hermes sources."""
+    import subprocess, tempfile
+    print("\n═══ Claude Code edition: parity with the Hermes sources ═══")
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(tmp), "CLAUDE_SKILLS_DIR": str(tmp / "claude"),
+               "HERMES_SKILLS_DIR": str(tmp / "no-hermes")}
+        r = subprocess.run(["bash", str(REPO / "scripts/install-claude.sh"), "--no-mcp"], env=env,
+                           capture_output=True, text=True)
+        check("install-claude.sh runs (no Hermes tree → copies from src/)", r.returncode == 0, r.stderr[-300:])
+        out = tmp / "claude"
+        src_skills = {p.stem for p in SKILLS_DIR.glob("*.md")} | {"spec-kit"}
+        gen = {p.parent.name for p in out.glob("*/SKILL.md")}
+        check("one generated SKILL.md per Hermes skill", gen == src_skills, f"missing {src_skills - gen}, extra {gen - src_skills}")
+        leftovers, unresolved = [], set()
+        ref = re.compile(r"~/\.claude/skills/spec-kit/(references|templates|scripts)/([\w./-]+\.(?:md|sh))")
+        for s in out.glob("*/SKILL.md"):
+            text = s.read_text()
+            body = "\n".join(l for l in text.splitlines() if "`mcp_spec_kit_x` → `mcp__spec-kit__x`" not in l)  # the mapping note
+            if "mcp_spec_kit_" in body or "Hermes Agent" in body or re.search(r"(?<![\w/~.])spec-kit/(references|templates|scripts)/", body):
+                leftovers.append(s.parent.name)
+            for kind, rel in ref.findall(text):
+                if not (out / "spec-kit" / kind / rel).exists():
+                    unresolved.add(f"{s.parent.name} → {kind}/{rel}")
+            src = (SKILLS_DIR / "spec-kit" / "SKILL.md") if s.parent.name == "spec-kit" else SKILLS_DIR / f"{s.parent.name}.md"
+            steps = lambda x: len(re.findall(r"^\s*(?:\d+[a-z]?\.|- \[ \]) ", x, re.M))
+            if steps(text) != steps(src.read_text()):
+                leftovers.append(f"{s.parent.name} (step count differs)")
+        check("no untranslated Hermes names, same steps as the source", not leftovers, ", ".join(leftovers))
+        check("every path a Claude skill names exists in the generated tree", not unresolved, ", ".join(sorted(unresolved)))
+        same = all((out / "spec-kit" / "references" / f.relative_to(REFERENCES_DIR)).read_bytes() == f.read_bytes()
+                   for f in REFERENCES_DIR.rglob("*.md"))
+        check("references are byte-identical in both editions", same)
+        check("design skill advertises map in its argument hint", 'argument-hint: "[module | map]"' in (out / "spec-kit-design" / "SKILL.md").read_text())
+        # a stale Hermes tree must be refused, not linked
+        stale = tmp / "hermes" / "spec-kit"
+        for d in ("references", "templates", "mcp-server"):
+            (stale / d).mkdir(parents=True)
+        env2 = dict(env, CLAUDE_SKILLS_DIR=str(tmp / "claude2"), HERMES_SKILLS_DIR=str(tmp / "hermes"))
+        r = subprocess.run(["bash", str(REPO / "scripts/install-claude.sh"), "--no-mcp"], env=env2, capture_output=True, text=True)
+        check("stale Hermes tree → install-claude.sh refuses (parity guard)", r.returncode != 0 and "out of date" in r.stderr, r.stderr[-200:])
+
+
+def main():
+    print("═" * 55)
+    print("  spec-kit Skills — Validation Tests")
+    print("═" * 55)
+
+    tests = [
+        test_all_skills_present,
+        test_frontmatter,
+        test_skills_yaml_parse,
+        test_phase_coverage,
+        test_trigger_descriptions,
+        test_reference_files_exist,
+        test_templates_exist,
+        test_cross_skill_references_exist,
+        test_preflight_reference,
+        test_umbrella_coverage,
+        test_no_loose_reference_files,
+        test_workflow_diagram_phases,
+        test_mcp_tool_names_match_server,
+        test_hermes_paths_resolve,
+        test_claude_edition_parity,
+    ]
+
+    for t in tests:
+        try:
+            t()
+        except Exception as e:
+            print(f"  ✗ {t.__name__} crashed: {e}")
+            import traceback
+            traceback.print_exc()
+            global failures
+            failures += 1
+
+    print(f"\n{'═' * 55}")
+    if failures:
+        print(f"  FAILURES: {failures} check(s) failed")
+    else:
+        print(f"  All checks passed!")
+    print(f"{'═' * 55}")
+    return 0 if failures == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

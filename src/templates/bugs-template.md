@@ -21,7 +21,9 @@
 - **Expected Result**: [What should happen]
 - **Requires Clarification**: [ ] no / [ ] yes (if yes, run spec-kit-clarify before plan)
 - **Plan Ref**: [Populated by plan phase — reference to plan.md fix section]
-- **Status**: [open/in-progress/resolved/verified]
+- **Status**: [open/in-progress/claimed/verified/superseded]
+- **Evidence**: [set with `claimed` — `output:<path>`, `probe:<path>` under specs/[feature]/evidence/]
+- **Verified-by**: [set with `verified` — `user` / `ci:<run-id>` / `review:<other-agent>`; never the implementing agent's own word]
 
 ### BUG-002: [Short descriptive title]
 
@@ -35,7 +37,9 @@
 - **Expected Result**: [What should happen]
 - **Requires Clarification**: [ ] no / [ ] yes
 - **Plan Ref**: [Populated by plan phase]
-- **Status**: [open/in-progress/resolved/verified]
+- **Status**: [open/in-progress/claimed/verified/superseded]
+- **Evidence**: [output:/probe: files]
+- **Verified-by**: [user / ci:<run-id> / review:<other-agent>]
 
 *New bugs are inserted here — before the `---` separator below.*
 
@@ -51,5 +55,7 @@
 **Total Bugs**: N
 **Open**: N
 **In Progress**: N
-**Resolved**: N
-**Verified**: N
+**Claimed** (agent says fixed, awaiting an oracle): N
+**Verified** (user / CI / other-agent review): N
+
+> Status rules: `spec-kit/references/evidence.md`. Legacy `resolved`/`fixed` read as `claimed`.

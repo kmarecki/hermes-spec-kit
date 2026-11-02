@@ -1,72 +1,86 @@
-# Process History
+# Process History — the record, not the story
 
-Every spec feature directory maintains `specs/[feature]/history.md` — an append-only process history. Each phase skill appends one entry when it completes.
+`specs/[feature]/history.md` is an append-only **record**: one fixed-field entry per phase
+completion, bugfix, regression run or close. An agent or a human reads in ten
+seconds what was done, when, with what evidence, by whom; the pre-commit guard proves the entry
+preceded the commit.
 
-## Standard Entry Format
+Not narrative: decisions, rationale and what-went-wrong belong in `close.md` /
+`change-record.md`, `decisions.md` or the commit body.
+The close copies its timeline into `change-record.md`, then `archive_feature` moves it to
+`history-archive.md` (cold). Capped, machine-appended; P3 only (`rigor.md`).
+
+## When it is kept
+
+`history:` in `specs/git-conventions.md` — `always` · `large` (default: size L only) · `never`;
+not set → from the rigor (`rigor.md`: lean never · standard large · strict always);
+`**History**: on | off` in spec.md overrides it for one feature. The phase card says which
+applies. **On**: every phase appends an entry before its commit (`history_guard` enforces).
+**Off**: no entries; the close builds the change record's timeline from the branch's git log
+(`spec-kit/scripts/spec-kit-history.sh`, run before the squash) and `Implemented-by` comes from
+the `**Implemented-by**:` line implement writes into the tasks.md header. S/M bugfixes and small
+enhancements rarely need the per-phase record; L — many phases, weeks, the features auditors
+sample — does.
+
+## Entry format
 
 ```markdown
-## [ISO_TIMESTAMP] | [Phase Name] → Complete
-- **Skill**: spec-kit-[skill-name]
-- **Artifacts**: [comma-separated list of files created or modified]
-- **Commit**: [commit hash from git rev-parse HEAD, or "N/A" if no commit]
-- **Notes**: [optional — key decisions, deviations, or notable events]
+## <UTC ISO timestamp> | <Phase label> | <skill> | <agent>
+- Artifacts: <comma-separated files created or modified>
+- Tests: <command> → <N passed, M failed>   (or "none")
+- Evidence: <output:…; probe:…; ci:…; review:…>   (or "none — unverified")
+- Commit: <commit message that follows>
+- Note: <≤ 25 words — the one fact a reader needs; nothing else>
 ```
 
-## Example
+Rules:
+- **Timestamp from the clock**, never from memory: `mcp_spec_kit_timestamp()` or `date -u +%Y-%m-%dT%H:%M:%S+00:00`.
+- `<agent>` is `hermes`, `claude`, or the human's name — this is the `Implemented-by` the review and evidence rules read.
+- Whole entry ≤ 60 words after the header. The appender refuses longer notes.
+- Append only. Never edit or delete a past entry; a correction is a new entry.
+- No commit hashes (branches are squash-merged; the commit *message* is the traceability link).
 
-```markdown
-## 2026-06-08T10:00:00 | Phase 1 → Complete
-- **Skill**: spec-kit-specify
-- **Artifacts**: specs/001-user-auth/spec.md
-- **Commit**: a1b2c3d4
-- **Notes**: OAuth2 with JWT tokens, 3 user stories
+## How to append
+
+With the MCP server (preferred — it stamps the real time and enforces the cap):
+
+```text
+CALL mcp_spec_kit_append_history(feature="[feature]", phase="Phase 2", skill="spec-kit-plan",
+     agent="claude", artifacts="plan.md, research.md", tests="none",
+     evidence="none", commit="spec(phase-2): [feature] plan", note="HQ-currency resolution deferred to F")
 ```
 
-## How to Use
+Without MCP — the shipped script does the same from the shell:
 
-At the end of any phase skill, after all artifacts are written and committed, append to history.md:
-
+```bash
+~/.hermes/skills/spec-kit/scripts/spec-kit-log.sh <feature> "<Phase label>" <skill> <agent> \
+    --artifacts "plan.md, research.md" --tests "none" --evidence "none" \
+    --commit "spec(phase-2): [feature] plan" --note "HQ-currency resolution deferred to F"
 ```
-FULL_PATH="specs/[feature]/history.md"
+(Claude Code: the same path under `~/.claude/skills/spec-kit/scripts/`.)
 
-CREATE history.md IF NOT EXISTS with header:
-  # Process History: [Feature]
+If neither is available, write the entry by hand in the exact format, taking the time from `date -u`.
 
-APPEND entry:
-  ## [$(date -u +"%Y-%m-%dT%H:%M:%SZ")] | [Phase] → Complete
-  - **Skill**: spec-kit-[skill]
-  - **Artifacts**: [files]
-  - **Commit**: $(git rev-parse HEAD 2>/dev/null || echo "N/A")
-  - **Notes**: [summary of what was done]
-```
+## Phase labels
 
-## Phase Name Reference
+| Skill | Phase label |
+|-------|-------------|
+| spec-kit-specify | `Phase 1` |
+| spec-kit-clarify | `Phase 1.5` |
+| spec-kit-plan | `Phase 2` (bugfix round: `Phase 2 — bugfix round N`) |
+| spec-kit-tasks | `Phase 3` (bugfix round: `Phase 3 — bugfix round N`) |
+| spec-kit-review | `Phase 3.5` / `Phase 5.5` |
+| spec-kit-implement | `Phase 4 — <sub-phase name>` · `BF-###` · `Regression` · `Regression fix` |
+| spec-kit-test | `Phase 5` |
+| spec-kit-summarize | `Phase 6` |
+| spec-kit-refresh | `Refresh` |
+| workflow reopen | `Reopen` |
 
-| Skill | Phase Name |
-|-------|-----------|
-| spec-kit-constitution | Phase 0 |
-| spec-kit-specify | Phase 1 |
-| spec-kit-clarify | Phase 1.5 |
-| spec-kit-plan | Phase 2 |
-| spec-kit-tasks | Phase 3 |
-| spec-kit-review (pre-implement) | Phase 3.5 |
-| spec-kit-implement | Phase 4 (each sub-phase logged as Phase N) |
-| spec-kit-implement | Phase 4 → Full Regression → Pass (after all phases, full suite passes) |
-| spec-kit-implement | Phase 4 → Regression Fix → Complete (BF-REGRESSION-001 resolved) |
-| spec-kit-implement | Phase 4 → Bugfix BF-### → Complete (per-bugfix during bugfix mode) |
-| spec-kit-test | Phase 5 |
-| spec-kit-review (post-implement) | Phase 5.5 |
-| spec-kit-summarize | Phase 6 |
-| spec-kit-refresh | Refresh |
-| Reopen (workflow) | Reopen |
+The constitution is project-level and has no feature history.
 
-## Guard: history.md Before Every Commit
+## Guard: history before every commit
 
-**history.md entries MUST be written before the corresponding git commit — never after.** Every commit in `spec-kit-implement` is preceded by a history.md entry:
-
-1. **Per-phase commit**: Entry appended in step 4f — includes test pass count and task completion count.
-2. **Bugfix commit (BF-###)**: Entry appended in bugfix mode step 3 — includes which BUG-NNN was fixed and test verification.
-3. **Regression fix commit (BF-REGRESSION-001)**: Entry appended in regression fix flow — includes full suite pass confirmation.
-4. **Full regression pass**: Entry appended in step 7 when all tests pass — standalone verification record (no commit, documents the checkpoint).
-
-The PRE-COMMIT GUARD reads history.md and blocks the commit if the entry is missing. This ensures the process log is never behind the git log.
+Every commit touching `specs/[feature]/` or the feature's code is preceded by an entry.
+`mcp_spec_kit_history_guard(feature, phase)` checks that an entry mentioning the phase label is
+newer than the last commit touching the feature; the Shared Commit Procedure in `preflight.md`
+calls it. Without MCP, read the last entry's header before `git commit`.

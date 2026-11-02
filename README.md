@@ -1,6 +1,6 @@
 # Hermes Spec-Kit
 
-Spec-driven development for Hermes Agent. 13 skills implementing a structured phase-based workflow with three development modes, a constitution 3-level decision tree (9 purposes × 25 architecture options), mandatory close with spec health scoring, and a reopen flow for fixing closed features.
+Spec-driven development for Hermes Agent. 14 skills implementing a structured phase-based workflow with three development modes, a constitution decision tree (11 purposes × 44 architecture options + project traits), mandatory close with spec health scoring, and a reopen flow for fixing closed features. Includes an optional MCP server for deterministic state management.
 
 ## Quick Start
 
@@ -8,10 +8,12 @@ Spec-driven development for Hermes Agent. 13 skills implementing a structured ph
 # 1. Clone (if you haven't already) and install
 git clone https://github.com/kmarecki/hermes-spec-kit.git
 cd hermes-spec-kit
-./scripts/install.sh          # copies skills + templates to ~/.hermes/skills/
+./scripts/install.sh          # copies skills + templates + MCP server to ~/.hermes/skills/
+./scripts/install-claude.sh   # (optional) the same skills for Claude Code → ~/.claude/skills/
 
-# 2. Reload skills in your Hermes session
+# 2. Reload skills and MCP in your Hermes session
 /reload-skills                # or start a new session
+/reload-mcp                   # if MCP server was auto-configured
 
 # 3. Go to your project, create a spec
 cd /path/to/your-project
@@ -43,12 +45,20 @@ Full workflow documentation: **[user-guide.md](user-guide.md)**
 
 ```text
 src/
-  skills/                # Skill source files (12 .md + 1 umbrella directory)
+  skills/                # Skill source files (13 .md + 1 umbrella directory)
     spec-kit/SKILL.md    # Umbrella skill — overview and quick reference
-  templates/             # Template source files (14 templates, all *-template.md)
-  references/            # Reference files (4: preflight, auto-commit, history-tracking, + more)
+  templates/             # Template source files (23 templates, all *-template.md)
+  references/            # preflight, commits, history-tracking, evidence, sizing, acceptance, constitution-*
+    skills/              # Full procedure per skill — loaded on demand by the one-screen SKILL.md
+  skills/
+    spec-kit-bugfix/      [removed] — function absorbed into spec-kit-workflow
 scripts/
-  install.sh             # Installs to ~/.hermes/skills/
+  install.sh             # Installs to ~/.hermes/skills/ + MCP config
+  uninstall.sh           # Full clean uninstall (skills, MCP, config)
+spec-kit-mcp-server/
+  server.py              # MCP server — 19 tools, Python + mcp SDK (<2)
+  README.md              # MCP server docs
+  test_server.py         # Smoke test
 ```
 
 ## Three Development Modes
@@ -61,7 +71,10 @@ scripts/
 
 ## Skills
 
-13 skills covering every phase + refresh and workflow routing.
+14 skills covering every phase + refresh, review, epic, design and workflow routing.
+(The former `spec-kit-bugfix` alias skill was removed — its function is absorbed into the
+workflow skill's bugfix routing.)
+
 See the [Phase Reference section](user-guide.md#phase-reference) in the user-guide for phases, purposes, and personas.
 
 All skills respond to three trigger styles: `spec-kit` prefix, `speckit` prefix, and natural language
@@ -73,22 +86,24 @@ The constitution phase (Phase 0) guides users through a 3-level decision tree th
 narrows from general purpose to specific technology choices, then pre-fills the 12
 project principles with weighted defaults.
 
-**Level 1 — Purpose** (9 options):
+**Level 1 — Purpose** (11 options) + **Level 1.5 — traits** (runs where · regulated domain · lifecycle):
 
 | Code | Purpose | Example use cases |
 |------|---------|-------------------|
-| **A** | User-Facing Application | SaaS, e-commerce, dashboard, CMS, API server |
-| **B** | Content Site / Marketing | Portfolio, blog, docs site, landing page |
-| **C** | Native / Desktop Client | iOS app, Android app, Electron, Tauri, Qt app |
-| **D** | Library / SDK / Package | npm package, PyPI lib, Go module, Rust crate |
-| **E** | Infrastructure / CLI / DevOps | CLI tool, Terraform module, CI pipeline, daemon, AI pipeline |
-| **F** | Game | Unity/Unreal/Godot game, WebGL game, custom-engine game |
-| **G** | Browser Extension | Chrome MV3, Firefox add-on, Safari extension, cross-browser |
-| **H** | Research / Notebook | Jupyter, R Markdown, Quarto, MATLAB, experimental analysis |
-| **I** | IoT / Embedded | Arduino, ESP32, STM32, Zephyr RTOS, Raspberry Pi Linux |
+| **A** | Applications & Services | SaaS, APIs, workers / event processing, AI-native apps |
+| **B** | Content Site | Portfolio, blog, docs site, landing page |
+| **C** | Native / Desktop Client | iOS, Android, Flutter, Tauri, Qt |
+| **D** | Library / SDK | npm / PyPI / NuGet package, Rust crate, smart contracts |
+| **E** | Infrastructure / CLI / DevOps | CLI, Terraform / OpenTofu, CI pipeline, MCP server |
+| **F** | Game / XR | Unity / Unreal / Godot, WebGL, VR / AR |
+| **G** | Extensions & Integrations | Browser extension, IDE plugin, Office add-in, chat bot |
+| **H** | Research, Data & ML | Jupyter / marimo, dbt / lakehouse, model training and serving |
+| **I** | IoT / Embedded | Zephyr, ESP32, embedded Linux, device fleets |
+| **J** | Systems Software | Kernel, driver, database engine, compiler, HPC |
+| **K** | Business Platform | Salesforce, Dynamics / Power Platform, SAP, ServiceNow |
 
-**Level 2 — Architecture** (25 options across all purposes): Each purpose has 2-4 architecture
-variants — e.g., User-Facing App offers Monolith / Modular Monolith / Microservices / Serverless,
+**Level 2 — Architecture** (44 options across all purposes, refreshed 2026-11): Each purpose has 3-6 architecture
+variants — e.g., User-Facing App offers Monolith / Modular Monolith / Microservices / Serverless / AI-native,
 while Libraries offer Zero-Dependency / Curated / Umbrella.
 
 **Level 3 — Technology choices**: Per-purpose language/framework bracketing — e.g., an Engine-Centric
@@ -117,11 +132,134 @@ monorepo?" If yes, Levels 1-3 run independently per sub-project, and the constit
 Full walkthrough: see [Constitution Decision Tree](user-guide.md#constitution-decision-tree)
 in the user-guide.
 
+## MCP Server (Optional)
+
+An MCP server (`spec-kit-mcp-server/server.py`) is a **derive-and-enforce** service: it
+keeps no state, derives every feature's phase from the files under `specs/<feature>/` on
+each call, and does the things an agent does badly — id allocation, artifact lint, real
+timestamps, the acceptance matrix, the merge-readiness diff scan, and a ten-line phase card to
+re-read after context compaction. 19 tools exposed as `mcp_spec_kit_*` in Hermes (`mcp__spec-kit__*` in
+Claude Code).
+
+**Tools:**
+
+| Tool | Purpose |
+|------|---------|
+| `init_feature` | Create `specs/<feature>/` with a history.md header |
+| `get_feature_state` | Derived phase, artifacts, task/bug counts, phase card |
+| `get_next_actions` | Available actions + the phase card |
+| `advance_phase` | Validate a transition against the files (writes nothing) |
+| `project_status` | Constitution present?, feature count, legacy state file? |
+| `project_set_constitution` | Confirm `specs/constitution.md` exists |
+| `list_features` | Every feature's derived state |
+| `reopen_feature` | Check closed, return branch hint |
+| `close_feature` | Validate the close (bugs verified with Verified-by; lists claimed-unverified) |
+| `update_artifact` | Confirm an artifact is on disk |
+| `auto_detect_features` | Derived state of all features |
+| `next_id` | Next BUG / T / BF id by scanning the files |
+| `lint_artifacts` | Schema lint of bugs.md, tasks.md, spec ACs, acceptance.md, review-final.md (size-aware) |
+| `timestamp` | Real UTC time |
+| `acceptance_freeze` / `acceptance_status` | Freeze the AC tests after RED; AC → test → result matrix |
+| `diff_scan` | Mechanical merge-readiness scan of the branch diff |
+| `history_guard` | Fresh history entry since the last commit? |
+| `append_history` | Append a fixed-field, time-stamped, word-capped history entry |
+
+**State file**: none. The files are the state. A legacy `specs/.spec-kit/state.json` is
+ignored — delete it and add `specs/.spec-kit/` to `.gitignore` (the gitignore template does).
+
+**Bug tracking is file-based**: bugs live in `specs/NNN-name/bugs.md` — the single
+source of truth. The MCP server intentionally has no bug tools; bugfix routing
+parses bugs.md directly.
+
+**Dependency**: Requires the [mcp Python SDK](https://pypi.org/project/mcp/) pinned
+to `<2` (`mcp 2.x` renamed FastMCP → MCPServer and breaks this server). Install
+from `spec-kit-mcp-server/requirements.txt`; the install script auto-installs it
+in a venv at `~/.hermes-venv/`.
+
+**Fallback**: When the MCP server is not configured, all skills fall back to
+filesystem-based artifact detection — backward compatible, no skill changes needed.
+
+**Installation**: `install.sh` copies the server and auto-configures via `hermes mcp add`.
+Activate in Hermes with `/reload-mcp`.
+
+**Claude Code**: `install-claude.sh` registers the same server at user scope
+(`claude mcp add -s user spec-kit …`); the tools appear as `mcp__spec-kit__<tool>`.
+Both agents derive the same state from the same files; nothing is persisted.
+
+Full docs: [spec-kit-mcp-server/README.md](spec-kit-mcp-server/README.md)
+
+## Claude Code (dual-agent use)
+
+The same skills install for **Claude Code** from the same sources, so Hermes and
+Claude Code can hand phases to each other on one `specs/` tree — e.g. Claude Code
+runs `/spec-kit-specify`, `/spec-kit-plan`, `/spec-kit-tasks`, Hermes runs
+`spec-kit implement`, Claude Code runs `/spec-kit-summarize`.
+
+```bash
+./scripts/install-claude.sh            # → ~/.claude/skills/spec-kit*/SKILL.md + MCP registration
+./scripts/install-claude.sh --no-mcp   # skills only
+./scripts/install-claude.sh --from-src # copy shared files from src/ instead of linking the Hermes tree
+./scripts/install-claude.sh --uninstall
+```
+
+What the installer does:
+
+1. Transforms each `src/skills/*.md` into a Claude Code `SKILL.md` — frontmatter
+   reduced to `name` / `description` / `argument-hint`, Hermes tool names translated
+   (`terminal` → `Bash`, `write_file`/`patch` → `Write`/`Edit`, `read_file` → `Read`,
+   `search_files` → `Grep`/`Glob`, `skill_view` → `Skill`, `mcp_spec_kit_*` →
+   `mcp__spec-kit__*`), shared-file paths resolved, and a "Claude Code edition" note
+   added under the title (arguments, how to load another skill, tool mapping).
+2. **Symlinks** `references/`, `templates/` and `mcp-server/` to the installed Hermes
+   tree (`~/.hermes/skills/spec-kit/…`), including per-skill `references/` folders —
+   one source of truth, so what Hermes reads is what Claude Code reads. Falls back to
+   copying from `src/` when Hermes is not installed. **Parity guard**: an installed Hermes
+   tree that differs from `src/` is refused — run `./scripts/install.sh` first, or pass
+   `--from-src`. `test_skills.py` generates the Claude edition in a temp dir and checks it
+   against the Hermes sources (same skills, same steps, every named file present).
+3. Registers the MCP state server for Claude Code at user scope (skipped with `--no-mcp`
+   or when already registered).
+
+Invoke in Claude Code as `/spec-kit-specify <feature>`, `/spec-kit-plan <feature>`, …
+(`$ARGUMENTS` carries the feature) or by the same natural phrases as in Hermes.
+Restart Claude Code after installing. Re-run the installer after editing any
+`src/skills/*.md` — the generated files say so in their header and must not be
+edited by hand.
+
+## Running Tests
+
+Two test suites validate the project:
+
+**MCP server workflow tests** (11 tests) — exercises the server state machine
+via the `mcp` Python SDK client. No Hermes session needed.
+
+```bash
+cd spec-kit-mcp-server
+pip install mcp
+python3 test_workflow.py
+```
+
+**Skill validation tests** (12 checks) — validates all skill markdown files:
+frontmatter YAML, reference/template file existence, cross-skill links,
+phase coverage, pre-flight compliance, and workflow diagram completeness.
+
+```bash
+pip install pyyaml
+python3 test_skills.py
+```
+
+Run both together:
+
+```bash
+pip install -r spec-kit-mcp-server/requirements.txt
+python3 spec-kit-mcp-server/test_workflow.py && python3 spec-kit-mcp-server/test_skills.py
+```
+
 ## Key Design Decisions
 
 - Constitution is mandatory for all features — specify and plan block if missing
 - Constitution uses a 3-level decision tree: Purpose → Architecture → Tech stack
-- 9 purpose types (A-I) with 25 architecture variants across all purposes
+- 11 purpose types (A-K) with 44 architecture variants and project traits
 - Purpose-to-principle default mappings for each of the 12 constitution principles
 - Design phases (0-3) each commit immediately — no batch commit
 - Bugfix sub-rounds: separate phase commits by default (`bugfix`), opt-in batch via `quickfix`
@@ -132,3 +270,5 @@ in the user-guide.
 - Spec health score computed at close (0-100%)
 - Branch guardrails block git operations on main/master
 - Pre-action self-check in every skill (branch, mode, workflow)
+- MCP server (optional): deterministic state, compaction-proof, uses `mcp` Python SDK
+- Skills fall back to filesystem detection when MCP server is not configured (backward compatible)

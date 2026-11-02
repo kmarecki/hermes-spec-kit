@@ -75,8 +75,8 @@ TEMPLATES_DIR="$SKILLS_DIR/spec-kit/templates"
 mkdir -p "$TEMPLATES_DIR"
 
 # Remove obsolete template files
-rm -f "$TEMPLATES_DIR/checklist-template.md"
-rm -f "$TEMPLATES_DIR/comparison-template.md"
+rm -f "$TEMPLATES_DIR/checklist-template.md" "$TEMPLATES_DIR/comparison-template.md" "$TEMPLATES_DIR/soul-template.md"
+rm -f "$TEMPLATES_DIR/implementation-summary-template.md"
 
 for tmpl in "$PROJECT_DIR"/src/templates/*-template.md; do
   if [ -f "$tmpl" ]; then
@@ -97,6 +97,41 @@ for ref in "$PROJECT_DIR"/src/references/*.md; do
     cp "$ref" "$REFERENCES_DIR/$ref_name"
   fi
 done
+# Top-level references that spec-kit no longer ships (superseded, or notes an agent added by
+# hand) are moved aside, not deleted: nothing in the skills loads them, so they only cost
+# attention. They stay readable under references/local/.
+mkdir -p "$REFERENCES_DIR/local"
+for installed in "$REFERENCES_DIR"/*.md; do
+  [ -f "$installed" ] || continue
+  if [ ! -f "$PROJECT_DIR/src/references/$(basename "$installed")" ]; then
+    echo "  Moving unshipped reference aside: $(basename "$installed") -> references/local/"
+    mv -f "$installed" "$REFERENCES_DIR/local/"
+  fi
+done
+rmdir "$REFERENCES_DIR/local" 2>/dev/null || true
+# Shell helpers (spec-kit-log.sh — the no-MCP history appender; spec-kit-history.sh — the git timeline when history is off)
+if [ -d "$PROJECT_DIR/src/scripts" ]; then
+  mkdir -p "$SKILLS_DIR/spec-kit/scripts"
+  for sh in "$PROJECT_DIR"/src/scripts/*.sh; do
+    [ -f "$sh" ] || continue
+    echo "  Installing script: $(basename "$sh")"
+    cp "$sh" "$SKILLS_DIR/spec-kit/scripts/$(basename "$sh")"
+    chmod +x "$SKILLS_DIR/spec-kit/scripts/$(basename "$sh")"
+  done
+fi
+# Full per-skill procedures (loaded on demand by the one-screen SKILL.md files)
+if [ -d "$PROJECT_DIR/src/references/skills" ]; then
+  mkdir -p "$REFERENCES_DIR/skills"
+  for ref in "$PROJECT_DIR"/src/references/skills/*.md; do
+    [ -f "$ref" ] || continue
+    echo "  Installing full procedure: skills/$(basename "$ref")"
+    cp "$ref" "$REFERENCES_DIR/skills/$(basename "$ref")"
+  done
+  for installed in "$REFERENCES_DIR"/skills/*.md; do
+    [ -f "$installed" ] || continue
+    [ -f "$PROJECT_DIR/src/references/skills/$(basename "$installed")" ] || { echo "  Removing superseded full procedure: skills/$(basename "$installed")"; rm -f "$installed"; }
+  done
+fi
 
 # --- SOUL.md prompt ---
 SOUL_TEMPLATE="$TEMPLATES_DIR/soul-template.md"
@@ -132,6 +167,67 @@ if [ -f "$SOUL_TEMPLATE" ]; then
       echo "  -> Skipping SOUL.md (left unchanged)"
       ;;
   esac
+fi
+
+echo ""
+
+# --- MCP Server ---
+MCP_SERVER_DIR="$PROJECT_DIR/spec-kit-mcp-server"
+MCP_SERVER_DST="$SKILLS_DIR/spec-kit/mcp-server"
+if [ -f "$MCP_SERVER_DIR/server.py" ]; then
+  mkdir -p "$MCP_SERVER_DST"
+  cp "$MCP_SERVER_DIR/server.py" "$MCP_SERVER_DST/server.py"
+  cp "$MCP_SERVER_DIR/README.md" "$MCP_SERVER_DST/README.md" 2>/dev/null || true
+  chmod +x "$MCP_SERVER_DST/server.py"
+  echo "  Installing MCP server: spec-kit-mcp-server/server.py"
+
+  # Determine Python for MCP — prefer venv with mcp SDK, fallback to system
+  MCP_PYTHON=""
+  if python3 -c "import mcp" 2>/dev/null; then
+    MCP_PYTHON="python3"
+    echo "  -> mcp SDK found (system python)"
+  else
+    # Try creating a venv with mcp installed
+    MCP_VENV="$HOME/.hermes-venv"
+    if [ ! -f "$MCP_VENV/bin/python3" ]; then
+      echo "  -> Creating venv at $MCP_VENV..."
+      python3 -m venv "$MCP_VENV"
+      echo "  -> Installing mcp SDK (from requirements.txt, mcp pinned <2)..."
+      "$MCP_VENV/bin/pip" install -r "$MCP_SERVER_DIR/requirements.txt"
+    fi
+    if "$MCP_VENV/bin/python3" -c "import mcp" 2>/dev/null; then
+      MCP_PYTHON="$MCP_VENV/bin/python3"
+      echo "  -> mcp SDK installed in venv"
+    else
+      echo "  -> WARNING: Failed to install mcp SDK in venv."
+      echo "     Try: $MCP_VENV/bin/pip install mcp"
+    fi
+  fi
+
+  # Configure MCP server in config.yaml
+  #
+  # NOTE: We write config.yaml directly instead of using 'hermes mcp add'.
+  # 'hermes mcp add' tries to hot-reload into a running Hermes process, which
+  # times out when no session is active (typical during installation).
+  #
+  CONFIG_FILE="$HOME/.hermes/config.yaml"
+  if [ -n "$MCP_PYTHON" ]; then
+    echo "  -> Configuring MCP server in $CONFIG_FILE..."
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+    [ -f "$CONFIG_FILE" ] || touch "$CONFIG_FILE"
+
+    # Replace the spec-kit entry by indentation (never by line count — a block
+    # written with a YAML list for args is 4 lines, not 3), keep other servers,
+    # reuse an existing mcp_servers: key. See scripts/hermes-mcp-config.py.
+    cp "$CONFIG_FILE" "$CONFIG_FILE.spec-kit-backup"
+    python3 "$PROJECT_DIR/scripts/hermes-mcp-config.py" add "$CONFIG_FILE" "$MCP_PYTHON" "$MCP_SERVER_DST/server.py"
+    echo "  -> spec-kit MCP server entry written (backup: $CONFIG_FILE.spec-kit-backup)"
+    echo "  -> Activate in Hermes with: /reload-mcp"
+  else
+    echo "  -> WARNING: mcp Python package not available."
+    echo "     Hermes needs it for MCP support. Install manually:"
+    echo "     python3 -m venv ~/.hermes-venv && ~/.hermes-venv/bin/pip install -r $MCP_SERVER_DIR/requirements.txt"
+  fi
 fi
 
 echo ""
