@@ -135,6 +135,7 @@ subs = [
     # shared-file paths (the skills say `spec-kit/references/…` — resolve them)
     (r"(?<![\w/~.])spec-kit/references/", "~/.claude/skills/spec-kit/references/"),
     (r"(?<![\w/~.])spec-kit/templates/", "~/.claude/skills/spec-kit/templates/"),
+    (r"(?<![\w/~.])spec-kit/scripts/", "~/.claude/skills/spec-kit/scripts/"),
     # MCP tool prefix: Hermes `mcp_spec_kit_x` → Claude Code `mcp__spec-kit__x`
     (r"mcp_spec_kit_", "mcp__spec-kit__"),
     (r"\(In Hermes the tools appear with the `mcp__spec-kit__` prefix — call them by this full name\.\)",

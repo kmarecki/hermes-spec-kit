@@ -497,11 +497,11 @@ def test_claude_edition_parity():
         gen = {p.parent.name for p in out.glob("*/SKILL.md")}
         check("one generated SKILL.md per Hermes skill", gen == src_skills, f"missing {src_skills - gen}, extra {gen - src_skills}")
         leftovers, unresolved = [], set()
-        ref = re.compile(r"~/\.claude/skills/spec-kit/(references|templates)/([\w./-]+\.md)")
+        ref = re.compile(r"~/\.claude/skills/spec-kit/(references|templates|scripts)/([\w./-]+\.(?:md|sh))")
         for s in out.glob("*/SKILL.md"):
             text = s.read_text()
             body = "\n".join(l for l in text.splitlines() if "`mcp_spec_kit_x` → `mcp__spec-kit__x`" not in l)  # the mapping note
-            if "mcp_spec_kit_" in body or "Hermes Agent" in body:
+            if "mcp_spec_kit_" in body or "Hermes Agent" in body or re.search(r"(?<![\w/~.])spec-kit/(references|templates|scripts)/", body):
                 leftovers.append(s.parent.name)
             for kind, rel in ref.findall(text):
                 if not (out / "spec-kit" / kind / rel).exists():

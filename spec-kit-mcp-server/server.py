@@ -84,6 +84,8 @@ VERIFIED_BY_RE = re.compile(r"^(user|ci:\S+|review:\S+)$")
 _BUG_HEADER_RE = re.compile(r"^### (BUG-(\d+)):", re.M)
 # "- [X] T001 …" (template) and "- T001 [X] …" (id first) are both task lines.
 _TASK_RE = re.compile(r"^- (?:\[(?P<pre>[ xX])\] )?(?P<id>(?:T|BF-?)(?P<num>\d+))\b(?: \[(?P<post>[ xX])\])?", re.M)
+_IMPLEMENTED_BY_RE = re.compile(r"^\*\*Implemented-by\*\*:\s*(.+)$", re.M)
+_REVIEW_LABEL_RE = re.compile(r"^## Round \d+\b[^\n]*\breview:([\w.-]+)", re.M)
 _HISTORY_ENTRY_RE = re.compile(r"^## \[?([0-9T:\-+.Z]+)\]? *\| *(.*)$", re.M)
 _SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
 _HISTORY_RE = re.compile(r"^\*\*History\*\*:\s*\[?(on|off)\b", re.M | re.I)
@@ -199,6 +201,28 @@ def _rigor(fd):
         return m.group(1).lower(), "spec override"
     level = (_conventions().get("rigor") or "standard").lower()
     return (level if level in RIGOR_LEVELS else "standard"), "project" if _conventions().get("rigor") else "default"
+
+
+def _implemented_by(fd):
+    """Every agent that implemented the feature (references/evidence.md): the <agent> of the
+    history.md implement entries plus the tasks.md `**Implemented-by**:` list. Sorted, lower-case."""
+    agents = set()
+    h = fd / "history.md"
+    if h.exists():
+        for m in _HISTORY_ENTRY_RE.finditer(h.read_text(errors="replace")):
+            parts = [x.strip() for x in m.group(2).split("|")]
+            if len(parts) >= 3 and ("implement" in parts[1].lower() or parts[0].lower().startswith("phase 4")):
+                agents.add(parts[2].lower())
+    tf = fd / "tasks.md"
+    if tf.exists():
+        m = _IMPLEMENTED_BY_RE.search(tf.read_text(errors="replace"))
+        if m and not m.group(1).strip().startswith("<"):
+            # "claude, hermes" · "claude (Phase 1); hermes (Phase 2)" · "`claude`" — the first word of each item
+            for item in re.split(r"[,;]", m.group(1)):
+                w = re.match(r"\s*`?([A-Za-z][\w.-]*)", item)
+                if w:
+                    agents.add(w.group(1).lower())
+    return sorted(agents)
 
 
 def _history_setting(fd, size):
@@ -463,6 +487,7 @@ def _derive(feature):
         "size": size or "M",
         "size_declared": size is not None,
         "rigor": dict(zip(("level", "source"), _rigor(fd))),
+        "implemented_by": _implemented_by(fd),
         "history": dict(zip(("on", "source"), _history_setting(fd, size))),
         "final_review": _final_review(fd) if phase >= 5 else None,
         "acceptance": ({"criteria": len(acs), "round": _acceptance_round(fd) if phase >= 5 else None}
@@ -513,7 +538,7 @@ def _phase_card(state):
         f"phase: {phase} ({state['phase_name']})  status: {state['status']}  size: {state['size']}{'' if state['size_declared'] else ' (undeclared — treated as M)'}  rigor: {state['rigor']['level']} ({state['rigor']['source']})",
         f"allowed writes: {allowed}",
         f"next gate: {gate}",
-        f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF)",
+        f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF) · implemented by: {', '.join(state['implemented_by']) or '—'} (a reviewer in this list = self-review)",
         f"bugs: {state['bugs']['open']} open · {state['bugs']['claimed']} claimed · {state['bugs']['verified']} verified",
         f"rules: history.md {'ON — entry before every commit' if state['history']['on'] else 'OFF — timeline from git at close'} ({state['history']['source']}) · additive-only · evidence before claims",
         acc_line or "ids: call next_id before adding a BUG/T/BF · lint_artifacts before every commit",
@@ -992,6 +1017,10 @@ def lint_artifacts(feature: str) -> str:
                 findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"Round {m.group(1)}: no '**Verdict**: READY | READY-WITH-FOLLOWUPS | AWAITING-OWNER | NOT READY'"})
             if not _REVIEWED_COMMIT_RE.search(body):
                 findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"Round {m.group(1)}: no '**Reviewed-commit**: <sha>'"})
+        authors = _implemented_by(fd)
+        for lm in _REVIEW_LABEL_RE.finditer(text):
+            if lm.group(1).lower() in authors:
+                findings.append({"file": FINAL_REVIEW, "severity": "warning", "msg": f"round labelled review:{lm.group(1)} but {lm.group(1)} implemented this feature ({', '.join(authors)}) — label it self-review (references/evidence.md)"})
         nums = [int(m.group(1)) for m in rounds]
         if nums != list(range(1, len(nums) + 1)):
             findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"rounds not numbered 1..N: {nums}"})

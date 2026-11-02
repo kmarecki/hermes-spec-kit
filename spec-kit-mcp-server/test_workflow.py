@@ -623,6 +623,30 @@ async def test_rigor_gates(s, root):
     check("strict + M → no approver needed", d.get("success"), json.dumps(d))
 
 
+async def test_cross_agent(s, root):
+    print("\n═══ cross-agent handoff: Implemented-by lists every agent ═══")
+    write(root, "x1", "spec.md", "# Spec\n\n**Size**: S — x\n")
+    write(root, "x1", "plan.md", "# Plan\n")
+    write(root, "x1", "tasks.md", "# Tasks\n**Implemented-by**: claude, hermes\n- [x] T001 a — src/a.py\n- [x] T002 b — src/b.py\n")
+    d = await call(s, "get_feature_state", {"feature": "x1"})
+    check("state lists both implementing agents", d["state"]["implemented_by"] == ["claude", "hermes"], json.dumps(d["state"]["implemented_by"]))
+    check("phase card shows them", "implemented by: claude, hermes" in d["phase_card"])
+    write(root, "x1", "review-final.md", "# Final review\n\n## Round 1 — 2026-11-02 — review:hermes\n\n**Verdict**: READY\n**Reviewed-commit**: abcdef1\n")
+    d = await call(s, "lint_artifacts", {"feature": "x1"})
+    check("review:hermes on a feature hermes helped implement → warning", any("label it self-review" in f["msg"] for f in d["findings"]))
+    write(root, "x1", "review-final.md", "# Final review\n\n## Round 1 — 2026-11-02 — review:codex\n\n**Verdict**: READY\n**Reviewed-commit**: abcdef1\n")
+    d = await call(s, "lint_artifacts", {"feature": "x1"})
+    check("  a third agent's review → quiet", not any("self-review" in f["msg"] for f in d["findings"]))
+    write(root, "x2", "spec.md", "# Spec\n\n**Size**: L — x\n")
+    write(root, "x2", "history.md", "# Process History\n\n## 2026-11-02T10:00:00+00:00 | Phase 4 — implement | spec-kit-implement | claude\n- Note: p1\n\n## 2026-11-02T11:00:00+00:00 | Phase 4 — implement | spec-kit-implement | hermes\n- Note: p2\n")
+    d = await call(s, "get_feature_state", {"feature": "x2"})
+    write(root, "x3", "spec.md", "# Spec\n\n**Size**: S — x\n")
+    write(root, "x3", "tasks.md", "# Tasks\n**Implemented-by**: claude (Phase 1); hermes (Phase 2)\n- [x] T001 a — src/a.py\n")
+    d3 = await call(s, "get_feature_state", {"feature": "x3"})
+    check("per-phase form 'claude (Phase 1); hermes (Phase 2)' → both listed", d3["state"]["implemented_by"] == ["claude", "hermes"], json.dumps(d3["state"]["implemented_by"]))
+    check("history entries of both agents → both listed", d["state"]["implemented_by"] == ["claude", "hermes"], json.dumps(d["state"]["implemented_by"]))
+
+
 async def run_in_tmp(test_fn):
     root = tempfile.mkdtemp(prefix="spec-kit-test-")
     try:
@@ -642,7 +666,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates]:
+              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates, test_cross_agent]:
         try:
             await run_in_tmp(t)
         except Exception as e:

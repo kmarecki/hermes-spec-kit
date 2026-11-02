@@ -22,7 +22,7 @@ metadata:
 - Preflight checks 1 and 4 (`spec-kit/references/preflight.md`). Mode: close doc → closed-review; tasks.md and no code → pre-implement; all tasks `[X]`, no open bug → **final**; open bugs → refuse ("bugfix first"); unclear → **ASK**.
 - RIGOR (`spec-kit/references/rigor.md`): **lean** → no pre-implement review; final = a **self-check round** (checklist commands + diff scan, one line per section, the floor's oracle quoted, no devil's advocate, Verdict + Reviewed-commit still written) · **strict** → final by the other agent + devil's advocate; L needs `**Approved-by**:` a named human. Standard = below.
 - SIZE from spec.md (`spec-kit/references/sizing.md`): S skips the pre-implement review and the stack research; M runs the lite pre-implement; L requires it in full. Evidence and the acceptance round are checked the same way at every size.
-- **Author check** (`spec-kit/references/evidence.md`): `Implemented-by` (history.md implement entries, or the tasks.md header when history is off) = you → *self-review*; for the final review prefer the other agent, else a **fresh-context sub-agent** (procedure + feature path + base only; no transcript).
+- **Author check** (`spec-kit/references/evidence.md`): `Implemented-by` (history.md implement entries, or the tasks.md header when history is off; the phase card lists them) **includes** you → *self-review*, even if another agent did other phases; for the final review prefer the other agent, else a **fresh-context sub-agent** (procedure + feature path + base only; no transcript).
 - Final review: read the code and the spec **before** `decisions.md` so the author's reasoning does not anchor you; then every assumption is a review item.
 
 ## Pre-implement (3.5)
