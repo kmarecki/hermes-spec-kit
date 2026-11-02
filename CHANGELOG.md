@@ -8,6 +8,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — agent commit trailer
+- Every spec-kit commit carries `Spec-Kit-Agent: <agent>`; Hermes also adds a `Co-Authored-By: Hermes Agent` line
+  (Claude Code keeps its own). Git history now shows which agent wrote each commit, and `Implemented-by` also reads
+  the trailers of the feature's `feat:`/`fix:` commits (`references/commits.md`, `evidence.md`).
+
 ### Added — project rigor (lean / standard / strict) and Hermes ↔ Claude Code parity checks
 
 - **`references/rigor.md`**: `ceremony = rigor (project) × size (feature)`. The constitution asks

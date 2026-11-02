@@ -222,6 +222,15 @@ def _implemented_by(fd):
                 w = re.match(r"\s*`?([A-Za-z][\w.-]*)", item)
                 if w:
                     agents.add(w.group(1).lower())
+    # implementation commits touching the feature: `Spec-Kit-Agent:` / `Co-Authored-By:` trailers (commits.md)
+    rc, out = _git("log", "--format=%s%x1f%(trailers:key=Spec-Kit-Agent,key=Co-Authored-By,valueonly,separator=%x1f)%x1e", "--", str(fd))
+    for rec in out.split("\x1e") if rc == 0 else []:
+        subject, *values = rec.strip().split("\x1f")
+        if re.match(r"(feat|fix)\b", subject):
+            for v in values:
+                w = re.match(r"\s*([A-Za-z][\w.-]*)", v)
+                if w:
+                    agents.add(w.group(1).lower())
     return sorted(agents)
 
 

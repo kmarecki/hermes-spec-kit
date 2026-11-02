@@ -51,7 +51,8 @@ implementing agent never sets `verified`.
 
 `Implemented-by` = **every** `<agent>` of the history.md implement entries, or — history off —
 the comma-separated `**Implemented-by**:` line in the tasks.md header (each implement phase adds
-its agent: a feature Claude starts and Hermes continues is `claude, hermes`). The review reads
+its agent: a feature Claude starts and Hermes continues is `claude, hermes`), plus the agent
+trailers of the feature's `feat:`/`fix:` commits (commits.md). The review reads
 it: an agent in none of them → `review:<agent>`; an agent in any of them → **self-review**
 (fresh-context sub-agent for L), which opens the merge gate but never verifies a bug. Lint warns
 when a round labelled `review:<agent>` names an implementing agent.

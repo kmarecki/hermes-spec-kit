@@ -645,6 +645,17 @@ async def test_cross_agent(s, root):
     d3 = await call(s, "get_feature_state", {"feature": "x3"})
     check("per-phase form 'claude (Phase 1); hermes (Phase 2)' → both listed", d3["state"]["implemented_by"] == ["claude", "hermes"], json.dumps(d3["state"]["implemented_by"]))
     check("history entries of both agents → both listed", d["state"]["implemented_by"] == ["claude", "hermes"], json.dumps(d["state"]["implemented_by"]))
+    write(root, "x4", "spec.md", "# Spec\n\n**Size**: S — x\n")
+    write(root, "x4", "tasks.md", "# Tasks\n- [x] T001 a — src/a.py\n")
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "-m", "spec(phase-1-3): x4 spec, plan, tasks", "--trailer", "Spec-Kit-Agent: codex")
+    write(root, "x4", "tasks.md", "# Tasks\n- [x] T001 a — src/a.py\n- [x] T002 b\n")
+    git(root, "commit", "-qam", "feat: x4 Phase 1 - a", "--trailer", "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>")
+    write(root, "x4", "tasks.md", "# Tasks\n- [x] T001 a — src/a.py\n- [x] T002 b\n- [x] T003 c\n")
+    git(root, "commit", "-qam", "feat: x4 Phase 2 - b", "--trailer", "Spec-Kit-Agent: hermes", "--trailer", "Co-Authored-By: Hermes Agent <noreply@nousresearch.com>")
+    d4 = await call(s, "get_feature_state", {"feature": "x4"})
+    check("commit trailers on feat commits → claude + hermes; spec commit's agent ignored", d4["state"]["implemented_by"] == ["claude", "hermes"], json.dumps(d4["state"]["implemented_by"]))
 
 
 async def run_in_tmp(test_fn):
