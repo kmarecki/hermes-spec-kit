@@ -1,6 +1,6 @@
 # spec-kit-review — full procedure
 
-> **Loaded on demand** — the one-screen SKILL.md is the entry point; this file holds only what it leaves out. Read the section you need. Hermes tools (`terminal`, `write_file`/`patch`, `read_file`, `search_files`, `skill_view`) map to Claude Code `Bash`, `Write`/`Edit`, `Read`, `Grep`/`Glob`, `Skill`; MCP `mcp_spec_kit_*` = `mcp__spec-kit__*`.
+> **Loaded on demand** — the one-screen SKILL.md is the entry point; this file holds only what it leaves out. Read the section you need.
 
 ## Mode detection
 ```
@@ -13,9 +13,8 @@ SIZE from spec.md. REVIEWED_COMMIT = `git rev-parse --short HEAD` before anythin
 BASE = merge-checklist `base_branch`, else `branch_source` in git-conventions, else main.
 
 ## Reviewer
-`Implemented-by` = the `<agent>` of the implement entries in `history.md`, or the
-`**Implemented-by**:` line in the tasks.md header when history is off for the feature.
-Another agent available → it reviews → `review:<agent>`. Else (Claude Code: the Agent tool) a
+`Implemented-by` = every implementing agent (`spec-kit/references/evidence.md`); you among them →
+self-review. Another agent not among them available → it reviews → `review:<agent>`. Else (Claude Code: the Agent tool) a
 **fresh-context sub-agent** given ONLY this procedure, the feature path, BASE and the project
 rule files — never the implementation transcript → `self-review by <agent> (fresh context: yes)`.
 Else `self-review by <agent>`. A self-review opens the merge gate; it never verifies a bug.
@@ -64,6 +63,11 @@ MECHANICAL  mcp_spec_kit_diff_scan(feature, base=BASE) → evidence/final-diff-s
             focused tests / TODO, list forbidden and > 1 MB files, unplanned files)
             every merge-checklist command → evidence/final-<name>.txt; a command that cannot
             run = ❌ unverified with the reason, never assumed green; ci:<id> for REVIEWED_COMMIT; code unchanged since a green ci:<id> → cite it
+CI RUN      review_run: ci (merge-checklist; default local) → branch pushed (not → ASK) · ci_queue
+            each pipeline of ci_jobs on the branch · ci_status until done; source commit ≠
+            REVIEWED_COMMIT → not evidence. Per check: job succeeded → final-<check>.txt = the
+            status lines, evidence ci:<run>/<job> · skipped / not run → run locally · failed →
+            ❌ as a local failure. No CLI / auth / timeout → all local, said in the round.
 §1  spec has ACs → latest acceptance round PASS and not stale (else NOT READY: "run accept");
     frozen tests unchanged. Deferred e2e → run now if the stack is up (evidence/final-AC-###.txt)
     else 👤; manual ACs → the user's quoted words or 👤.

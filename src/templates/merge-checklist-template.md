@@ -1,12 +1,10 @@
 # Merge Checklist
 # Checklist version: 1
 
-Copy to `specs/merge-checklist.md` and edit. `spec-kit-review` (final mode) runs every
-command below, saves each output under `specs/[feature]/evidence/final-<check>.txt`, and
-judges every item. A failing **blocking** item makes the verdict NOT READY.
-
-Empty command → the item is judged by reading the diff. Remove items that do not apply;
-add the project's own (they are the project rules the final review enforces).
+Copy to `specs/merge-checklist.md`; the project owns it — every key, item and table may be
+edited or dropped (absent key = the default shown). The final review runs each command
+(`review_run`), saves the output as `evidence/final-<check>.txt` and judges every item; a
+failing **blocking** item → NOT READY. Empty command → judged by reading the diff.
 
 ---
 
@@ -20,6 +18,12 @@ lint:          [e.g. npm run lint]
 format_check:  [e.g. dotnet format --verify-no-changes | npm run prettier:diff]
 extra:         [any other command that must pass, e.g. architecture tests]
 
+# Where the checks run (default local = every command above, on this machine)
+review_run:    local                       # local | ci (CI jobs first, the rest locally)
+ci_jobs:       [check=pipeline/job, …, e.g. test=Tests-BuildValidation/BffUnitTests, lint=Web/eslint]
+ci_queue:      [e.g. az pipelines run --name {pipeline} --branch {branch} | gh workflow run {pipeline} --ref {branch}]
+ci_status:     [per-job results + source commit, e.g. az pipelines runs show --id {run} | gh run view {run} --json headSha,jobs]
+
 # Acceptance loop (spec-kit/references/acceptance.md) — results must be JUnit XML or TRX
 acceptance_fast:          [the FULL unit + integration + component suites writing results, e.g.
                            dotnet test --logger "trx;LogFileName=acc.trx" && npm test -- --reporter=junit --outputFile=test-results/acc.xml]
@@ -31,7 +35,7 @@ acceptance_e2e_ready:     [exit 0 when the stack is up, e.g. curl -sf http://loc
 acceptance_max_rounds:    5
 ```
 
-## Generic gate (always checked)
+## Generic gate (default — edit, drop or add rows)
 
 | # | Item | Blocking |
 |---|------|----------|

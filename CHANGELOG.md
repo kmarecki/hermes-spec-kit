@@ -8,6 +8,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — final review can run the checklist in CI (`review_run`)
+- `specs/merge-checklist.md` is project-owned: every key, item and table may be edited or dropped; absent = default.
+  `review_run: local` (default, unchanged behaviour) or `ci`: the review pushes, queues `ci_jobs` with the project's
+  `ci_queue` / `ci_status` commands on the reviewed commit, cites each succeeded job as `ci:<run>/<job>` and runs
+  skipped or unmapped checks locally (`templates/merge-checklist-template.md`, review full procedure *CI RUN*).
+- The 8 full-procedure references no longer repeat the Hermes → Claude tool mapping (the Claude edition's SKILL.md note carries it).
+
 ### Changed — one PR per feature; no re-runs on CI-validated code; scoped AC matching
 Lessons from a consumer feature that was merged after implement and then needed a second, docs-only PR
 for accept / final review / close — where the full suites were re-run twice on unchanged code and

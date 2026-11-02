@@ -366,6 +366,8 @@ def test_no_loose_reference_files():
         lines = skill_text.count("\n")
         check(f"{name}: SKILL.md is one screen (<= 60 lines)", lines <= 60, f"{lines} lines")
     budget = sum(p.stat().st_size for p in SKILLS_DIR.rglob("*.md")) + sum(p.stat().st_size for p in REFERENCES_DIR.rglob("*.md")) + sum(p.stat().st_size for p in TEMPLATES_DIR.glob("*.md"))
+    mc = (TEMPLATES_DIR / "merge-checklist-template.md").read_text()
+    check("merge-checklist default review_run is local; ci keys present", re.search(r"^review_run:\s+local\b", mc, re.M) is not None and all(k in mc for k in ("ci_jobs:", "ci_queue:", "ci_status:")))
     check("skills + references + templates stay under ~62k tokens (250 KB)", budget <= 250_000, f"{budget // 1024} KB")
 
 
