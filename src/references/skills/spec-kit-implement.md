@@ -55,6 +55,7 @@ round". Trivial test-only fixes (missing assertion, wrong fixture) may be fixed 
   pipeline exists (no pipeline → "unverified claim"); failures → classify NEW vs PRE-EXISTING,
   one umbrella `BF-REGRESSION-001` task, fix, re-run, commit `fix: [feature] BF-REGRESSION-001 - fix regressions`.
 - `mcp_spec_kit_advance_phase(from_phase=4)`.
+- No PR here — one PR, after the close (commits.md).
 
 ## Guardrail
 Code-editing tools (`write_file`, `patch`, `terminal` for builds) are allowed ONLY here

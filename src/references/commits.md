@@ -31,6 +31,7 @@ feature (`history-tracking.md`: default size L only). Project overrides: `specs/
 - **Agent trailer.** Every commit names its agent: `git commit --trailer "Spec-Kit-Agent: <agent>"`
   (`hermes`, `claude`, …). Hermes adds `--trailer "Co-Authored-By: Hermes Agent <noreply@nousresearch.com>"`
   (`coauthor:` in git-conventions overrides); Claude Code keeps its own line. Implemented-by reads both.
+- **One PR per feature**, opened after the close (an early merge = a 2nd PR).
 - **Never `--no-verify`.** A hook that blocks a spec artifact is a hook to fix.
 - Never commit a red suite during implement; no commits inside a RED sub-phase.
 - No commit hashes in history entries (squash-merge kills them); the commit *message* is the link.

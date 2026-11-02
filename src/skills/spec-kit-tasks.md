@@ -1,7 +1,7 @@
 ---
 name: spec-kit-tasks
 description: Load when the user says 'spec-kit tasks for [feature]', 'speckit tasks for [feature]', 'spec-kit break down [feature]', 'speckit break down [feature]', "generate tasks for [feature]", "break down [feature]", or "create tasks for [feature]" — Phase 3 task breakdown.
-version: 1.1.0
+version: 1.2.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -23,7 +23,7 @@ metadata:
 ## Steps
 1. Copy `spec-kit/templates/tasks-template.md`. **TDD from the constitution** (`spec-kit/references/rigor.md`): Principle 1 A/B or rigor strict → active; Principle 1 C → header `> **TDD**: test-after (Principle 1 C)`. **ASK** only when the constitution has no Principle 1 (skip → `> **TDD**: Bypassed by user request`). Never assume.
 2. S → one flat list; M/L → phases Setup/Foundational → stories → Polish. `T### [P] [US#] [TEST] [AC-###] [SEAM] Description — path`.
-3. Every FR and story → tasks. Every AC with level unit/integration/component/e2e → a `[TEST] [AC-###]` task at the plan's test file, test NAME carrying the id; command/probe ACs → a task writing the check. Every seam from the plan → `[SEAM]` on the task that touches it (`spec-kit/references/evidence.md`).
+3. Every FR and story → tasks. Every AC with level unit/integration/component/e2e → a `[TEST] [AC-###]` task at the plan's test file, test NAME carrying the id; command/probe ACs → a task writing the check. Every seam from the plan → `[SEAM]` on the task that touches it. No task needs this feature's own PR merged (`spec-kit/references/evidence.md`).
 4. Bugfix mode: per open bug a `BF-###` task + its verifying test, inserted before `## Dependencies & Execution Order`; never delete tasks.
 5. Ids: `mcp_spec_kit_next_id(kind="T"|"BF")` (no MCP: highest + 1). Dependencies and parallel opportunities in one short section.
 

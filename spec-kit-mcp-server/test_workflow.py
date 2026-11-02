@@ -496,7 +496,25 @@ async def test_acceptance(s, root):
     (Path(root) / "results/unit.xml").write_text(JUNIT.format(reg="><failure/>"))
     d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1})
     check("status: an untagged failing test is a regression → FAIL", d["result"] == "FAIL" and d["regression_count"] == 1)
+    d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1, "flaky": "other test"})
+    check("status: a regression named in flaky → reported, not blocking → PASS",
+          d["result"] == "PASS" and d["regression_count"] == 0 and d["flaky"] == ["OverdueTests other test"], json.dumps(d.get("flaky")))
+    d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1, "flaky": "nomatch"})
+    check("  flaky that names nothing → still FAIL", d["result"] == "FAIL")
     (Path(root) / "results/unit.xml").write_text(JUNIT.format(reg=">"))
+    (Path(root) / "results/other.xml").write_text("""<?xml version="1.0"?>
+<testsuites><testsuite name="other-feature.spec.ts">
+  <testcase classname="projects/app/other-feature.spec.ts" name="AC-002 another feature's criterion"/>
+  <testcase classname="projects/app/other-feature.spec.ts" name="AC-001 another feature fails"><failure/></testcase>
+</testsuite></testsuites>
+""")
+    d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1})
+    m = {r["ac"]: r for r in d["matrix"]}
+    check("status: another feature's AC-tagged tests never count for this one (scoped to the task files)",
+          d["foreign_ac_matches"] == 2 and all("other-feature" not in t["name"] for r in d["matrix"] for t in r["tests"])
+          and m["AC-001"]["outcome"] == "pass", json.dumps(d["scoped_to"]))
+    check("  …but a foreign failing test is still a regression → FAIL", d["result"] == "FAIL" and d["regression_count"] == 1)
+    (Path(root) / "results/other.xml").unlink()
 
     (Path(root) / "tests/OverdueTests.cs").write_text("// weakened\n")
     d = await call(s, "acceptance_status", {"feature": "f10", "results": "results/*.xml,results/int.trx", "round": 1})

@@ -1,7 +1,7 @@
 ---
 name: spec-kit-implement
 description: Load when the user says 'spec-kit implement [feature]', 'speckit implement [feature]', 'spec-kit start [feature]', 'speckit start [feature]', "implement [feature]", or "start implementing [feature]" — Phase 4 phase-level TDD execution.
-version: 1.2.0
+version: 1.3.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -41,4 +41,4 @@ metadata:
 - [ ] Every phase committed with its RED + GREEN files and its history entry (or tasks.md `Implemented-by` when history is off); AC tests frozen after RED; every `[SEAM]` has a matching `probe:`; fixed bugs `claimed`, none `verified` here; all tasks `[X]`.
 
 ## Next
-`accept [feature]` (automatic with ACs) → `spec-kit-test` for user-found bugs → **final review** (`spec-kit-review`) by the other agent or a fresh-context sub-agent.
+`accept [feature]` (automatic with ACs) → `spec-kit-test` for user-found bugs → **final review** (`spec-kit-review`) by the other agent or a fresh-context sub-agent. **No PR yet** — one PR, after the close.

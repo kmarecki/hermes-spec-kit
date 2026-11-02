@@ -106,4 +106,4 @@ from ✅ to worse → ASK: new entry (recommended) or overwrite.
 `mcp_spec_kit_close_feature` (errors: open bugs, verified without oracle, review missing / NOT READY /
 stale, no Architecture Decisions) · `mcp_spec_kit_lint_artifacts` · ONE commit
 `spec(phase-6): [feature] close (health: N%)` after the history entry (preflight commit procedure). Report: mode,
-health, tasks, bugs, patches, ADRs, AGENTS.md, change record.
+health, tasks, bugs, patches, ADRs, AGENTS.md, change record. Then open THE PR (`spec-kit/references/commits.md`).

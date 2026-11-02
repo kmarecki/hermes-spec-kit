@@ -329,25 +329,61 @@ def _ac_test_tasks(fd):
 
 
 def _parse_results(paths):
-    """Test cases from JUnit XML and TRX files: [{name, outcome: pass|fail|skip, file}]."""
+    """Test cases from JUnit XML and TRX files: [{name, outcome: pass|fail|skip, file, owner}].
+    `owner` is where the test lives — JUnit classname + its testsuite's name/file, TRX the
+    TestMethod className — used to keep AC matching inside the feature's own test files."""
     cases = []
     for path in paths:
         try:
             root = ET.parse(path).getroot()
         except (ET.ParseError, OSError):
             continue
+        trx_class = {}
+        for el in root.iter():
+            if el.tag.rsplit("}", 1)[-1] == "UnitTest":
+                tm = next((c for c in el if c.tag.rsplit("}", 1)[-1] == "TestMethod"), None)
+                if tm is not None:
+                    trx_class[el.get("id")] = tm.get("className") or ""
+        suites = [el for el in root.iter() if el.tag.rsplit("}", 1)[-1] == "testsuite"]
+        suite_of = {id(tc): su for su in suites for tc in su if tc.tag.rsplit("}", 1)[-1] == "testcase"}
         for el in root.iter():
             tag = el.tag.rsplit("}", 1)[-1]
             if tag == "testcase":                                 # JUnit (Vitest, Cypress, jest, pytest)
                 name = " ".join(filter(None, [el.get("classname"), el.get("name")]))
                 kids = {c.tag.rsplit("}", 1)[-1] for c in el}
                 outcome = "fail" if kids & {"failure", "error"} else "skip" if "skipped" in kids else "pass"
-                cases.append({"name": name, "outcome": outcome, "file": str(path)})
+                su = suite_of.get(id(el))
+                owner = " ".join(filter(None, [el.get("classname"), el.get("file"),
+                                               su.get("name") if su is not None else None,
+                                               su.get("file") if su is not None else None]))
+                cases.append({"name": name, "outcome": outcome, "file": str(path), "owner": owner})
             elif tag == "UnitTestResult":                         # TRX (dotnet test --logger trx)
                 o = (el.get("outcome") or "").lower()
                 outcome = "pass" if o == "passed" else "fail" if o in ("failed", "error", "timeout", "aborted") else "skip"
-                cases.append({"name": el.get("testName") or "", "outcome": outcome, "file": str(path)})
+                name = el.get("testName") or ""
+                owner = " ".join(filter(None, [trx_class.get(el.get("testId")), name]))
+                cases.append({"name": name, "outcome": outcome, "file": str(path), "owner": owner})
     return cases
+
+
+_NOT_TEST_EXT = {"txt", "md", "json", "xml", "yml", "yaml", "sh", "ps1", "net", "com", "io", "org", "eu"}
+
+
+def _test_file_stems(fd):
+    """Stems of the files named on [TEST] [AC-###] tasks ('tests/api/FooTests.cs' → 'FooTests',
+    'cypress/e2e/a-b.cy.js' → 'a-b'): a test result belongs to this feature when its owner
+    (class / spec file) carries one of them. Empty → no scoping (match AC ids repo-wide)."""
+    stems = set()
+    for lines in _ac_test_tasks(fd).values():
+        for line in lines:
+            for tok in _PATH_TOKEN_RE.findall(line):
+                base = tok.rsplit("/", 1)[-1]
+                if "evidence/" in tok or base.rsplit(".", 1)[-1].lower() in _NOT_TEST_EXT:
+                    continue                                # evidence files, docs, scripts, host names
+                stem = base.split(".", 1)[0]
+                if len(stem) >= 4:
+                    stems.add(stem)
+    return stems
 
 
 def _freeze(fd):
@@ -1174,7 +1210,7 @@ def acceptance_freeze(feature: str, refreeze: bool = False, reason: str = "") ->
 
 
 @mcp.tool(name="acceptance_status")
-def acceptance_status(feature: str, results: str = "", round: int = 0) -> str:
+def acceptance_status(feature: str, results: str = "", round: int = 0, flaky: str = "") -> str:
     """The acceptance matrix: every AC in spec.md → its verify level, its [TEST] [AC-###] tasks,
     and its outcome from test result files (JUnit XML or TRX; a test belongs to an AC when its
     name carries the id — 'AC-003 …', 'AC003_…', 'test_ac003_…'). command/probe ACs read
@@ -1182,10 +1218,17 @@ def acceptance_status(feature: str, results: str = "", round: int = 0) -> str:
     Outcomes: pass · fail · missing (automated, no result) · deferred (e2e not run) · manual.
     Also reports frozen tests that changed. Read-only; the accept loop writes acceptance.md.
 
+    AC matching is scoped to the feature's own test files (the files on its [TEST] [AC-###]
+    tasks): another feature's 'AC-003' test never counts for this one (`foreign_ac_matches`).
+    A failing test outside any AC is a regression and fails the round — unless `flaky` names it:
+    only tests the feature does not touch that passed an isolation re-run, with the owner's
+    ruling quoted in the round (references/acceptance.md §6). Flaky tests never cover an AC.
+
     Args:
         feature: Feature ID
         results: Comma-separated result files or globs, relative to the project root
         round: Acceptance round number (for the command/probe evidence files)
+        flaky: '|'-separated substrings of regression test names to report as flaky, not blocking
     """
     state = _derive(feature)
     if state is None:
@@ -1199,9 +1242,14 @@ def acceptance_status(feature: str, results: str = "", round: int = 0) -> str:
         matches = sorted(Path(".").glob(pattern)) if any(ch in pattern for ch in "*?[") else [Path(pattern)]
         files.extend(m for m in matches if m.is_file())
     cases = _parse_results(files)
-    by_ac = {}
+    stems = _test_file_stems(fd)
+    by_ac, foreign = {}, 0
     for c in cases:
-        for n in _AC_IN_NAME_RE.findall(c["name"]):
+        ids = _AC_IN_NAME_RE.findall(c["name"])
+        if ids and stems and not any(st in c["owner"] for st in stems):
+            foreign += 1
+            continue
+        for n in ids:
             by_ac.setdefault(f"AC-{n}", []).append(c)
     tagged = _ac_test_tasks(fd)
     matrix = []
@@ -1227,14 +1275,21 @@ def acceptance_status(feature: str, results: str = "", round: int = 0) -> str:
     counts = {k: sum(m["outcome"] == k for m in matrix) for k in ("pass", "fail", "missing", "deferred", "manual")}
     changed = _frozen_changed(fd)
     # the acceptance run is also the full regression: a failing test outside any AC fails the round
-    regressions = [c["name"][:160] for c in cases if c["outcome"] == "fail" and not _AC_IN_NAME_RE.search(c["name"])]
+    # (another feature's failing AC-tagged test is a regression for this one too)
+    in_scope = {id(c) for tests in by_ac.values() for c in tests}
+    failing = [c["name"][:160] for c in cases if c["outcome"] == "fail" and id(c) not in in_scope]
+    marks = [f.strip() for f in flaky.split("|") if f.strip()]
+    flaky_hits = [n for n in failing if any(m in n for m in marks)]
+    regressions = [n for n in failing if n not in flaky_hits]
     blocking = counts["fail"] + counts["missing"] + len(regressions)
     result = "STOPPED" if changed else "PASS" if blocking == 0 else "FAIL"
     _, head = _git("rev-parse", "--short", "HEAD")
     return _json({"success": True, "result": result, "commit": head.strip() or None, "counts": counts,
                   "matrix": matrix, "regressions": regressions[:30], "regression_count": len(regressions),
+                  "flaky": flaky_hits[:30], "foreign_ac_matches": foreign, "scoped_to": sorted(stems),
                   "frozen_changed": changed, "result_files": [str(f) for f in files], "test_cases": len(cases),
-                  "note": "PASS = no automated AC failing or missing and no regression; deferred e2e and manual ACs go to the final review"})
+                  "note": "PASS = no automated AC failing or missing and no regression; deferred e2e and manual ACs go to the final review"
+                          + ("; flaky tests need the isolation evidence and the owner's ruling in the round (**Flaky**:)" if flaky_hits else "")})
 
 
 # Added lines matching these are reported by diff_scan. Kept to high-signal patterns: every

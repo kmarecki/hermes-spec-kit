@@ -8,6 +8,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed — one PR per feature; no re-runs on CI-validated code; scoped AC matching
+Lessons from a consumer feature that was merged after implement and then needed a second, docs-only PR
+for accept / final review / close — where the full suites were re-run twice on unchanged code and
+chased unrelated, load-induced timeouts.
+- **One PR per feature** (`references/commits.md`): spec, code, evidence, acceptance, final review and close
+  travel in one pull request, opened after the close. Implement no longer offers a PR; asked early, the agent
+  warns that it splits the feature and records the ruling. Summarize opens THE PR.
+- **Deployed-environment ACs are settled in the plan** (`references/acceptance.md` §2): pre-merge run (branch
+  deploy — ask first — or a local/ephemeral stack), a lower level in the PR, or a post-deploy follow-up on the
+  ticket (an SC, never a task). Tasks may not depend on the feature's own PR being merged or deployed. An AC
+  proven by a whole existing suite is `command`, not `integration`.
+- **No re-runs on CI-validated code**: when only specs/docs/evidence changed since a code commit whose `ci:<id>`
+  ran the suites green, accept cites that run (`**Runs**: ci:<id>`) and the final review cites it for
+  build/test/lint instead of re-running them (diff_scan and the merge-tree check still run).
+- **Failures outside the feature**: one isolation re-run; passes → ask the owner; out of scope →
+  `acceptance_status(flaky=…)` + a `**Flaky**:` line with the evidence and the quoted ruling. No bug in this
+  feature, no environment chasing.
+- **MCP `acceptance_status`**: AC matching is scoped to the files on the feature's `[TEST] [AC-###]` tasks
+  (TRX `TestMethod className`, JUnit classname / testsuite file) — another feature's `AC-004` test no longer
+  "passes" this feature's AC-004 (`foreign_ac_matches`, `scoped_to`); a foreign failing test is still a
+  regression. New `flaky` parameter reports named regressions without blocking. Tests added.
+
 ### Added — agent commit trailer
 - Every spec-kit commit carries `Spec-Kit-Agent: <agent>`; Hermes also adds a `Co-Authored-By: Hermes Agent` line
   (Claude Code keeps its own). Git history now shows which agent wrote each commit, and `Implemented-by` also reads

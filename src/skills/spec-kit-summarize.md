@@ -2,7 +2,7 @@
 name: spec-kit-summarize
 description: >
   Load when the user says 'spec-kit summarize [feature]', 'speckit summarize [feature]', 'spec-kit close [feature]', 'speckit close [feature]', "summarize [feature]", "close [feature]", or "implementation summary for [feature]" — Phase 6 mandatory close: spec health score, ADRs written/updated, AGENTS.md kept current.
-version: 2.0.0
+version: 2.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -42,4 +42,4 @@ metadata:
 - [ ] history.md entry when on (`Phase 6`, health %, ADRs), then ONE commit: close doc, change record, patched spec/plan/data-model, ADRs + index, AGENTS.md, runbooks, changelog line, design doc, epic + index rows — `spec(phase-6): [feature] close (health: N%)`.
 
 ## Next
-Feature **Complete**. Propose the PR (description drafted by the final review; the human reviewer's name goes into the change record when known), `spec-kit-specify` for the next feature, `bugfix [feature]` if gaps became bugs.
+Feature **Complete**. Open THE PR, the only one (description drafted by the final review; the human reviewer's name goes into the change record when known), `spec-kit-specify` for the next feature, `bugfix [feature]` if gaps became bugs.

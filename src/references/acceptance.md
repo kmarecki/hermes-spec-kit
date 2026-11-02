@@ -37,6 +37,10 @@ environment it needs (none / Testcontainers / the running stack) and how its res
 produced (JUnit XML / TRX path, or the command). The plan decides where each test lives;
 implement does not.
 
+**Deployed-environment ACs** are settled here — one PR (`commits.md`), and shared environments
+deploy after the merge: pre-merge run (branch deploy — ASK — or a local stack) · a lower level
+in the PR · or a post-deploy SC on the ticket (never a task). A whole-suite AC is `command`.
+
 ## 3. Tasks: tag the tests
 
 Every AC whose level is `unit`, `integration`, `component` or `e2e` has at least one
@@ -93,6 +97,9 @@ acceptance_max_rounds:    5
    `spec-kit/templates/acceptance-template.md`) with `**Result**:` and `**Commit**:` (HEAD
    when the run started) and the matrix. Save the console output as `evidence/acceptance-r<N>.txt`.
 
+Matching is scoped to the files on the feature's `[TEST] [AC-###]` tasks (`foreign_ac_matches`).
+Only specs/docs/evidence changed since a green `ci:<id>` → cite it (`**Runs**: ci:<id>`), no re-run.
+
 ## 6. The loop
 
 ```
@@ -116,6 +123,9 @@ LOOP:
     run the bugfix chain: spec-kit-plan → spec-kit-tasks → spec-kit-implement (bugfix mode)
     round += 1
 ```
+
+**Failure outside the feature's files**: isolation re-run; passes → ASK; out of scope →
+`flaky="<names>"` + `**Flaky**: <tests> — <file> — owner: "<quote>"`.
 
 Inside the loop every question that cannot wait is an **assumption** in decisions.md
 (preflight check 7), never an invented ruling. Bugs fixed by the loop are `claimed` with

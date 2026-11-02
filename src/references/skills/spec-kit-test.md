@@ -24,7 +24,7 @@ Confirm each entry with the user. Status vocabulary and the oracle rule:
 PREREQ: every task [X]; spec.md has ACs; lint shows no "has no [TEST] [AC-###] task" error
 N = rounds in acceptance.md + 1;  COMMIT = git rev-parse --short HEAD
 COMMANDS = specs/merge-checklist.md acceptance_* (missing → add from the template, ASK once)
-1. RUN acceptance_fast   (FULL unit + integration + component — also the regression)
+1. RUN acceptance_fast   (FULL unit + integration + component — also the regression) (§5: or cite ci:<id>)
 2. E2E_SPECS = this feature's [TEST] [AC-###] e2e files; run acceptance_e2e only if
    acceptance_e2e_ready exits 0 — else those ACs are "deferred" (the final review handles them)
 3. command / probe ACs → evidence/acceptance-r<N>-AC-###.txt ("RESULT: PASS|FAIL" first line)
@@ -39,6 +39,7 @@ COMMANDS = specs/merge-checklist.md acceptance_* (missing → add from the templ
    assertion, Expected = Then, Source: acceptance round N. No per-bug confirmation in the loop.
    STOP and ASK when: N == acceptance_max_rounds · same ACs + same first assertion as round N-1 ·
    the fix needs a spec or frozen-test change · the run could not execute twice.
+   Regression outside the feature's files → §6 (flaky=).
    Else hand to spec-kit-workflow 'bugfix [feature]', which routes 'accept' again after implement.
 ```
 Loop-fixed bugs stay `claimed` (`Evidence: output:evidence/acceptance-r<N>.txt`) until an oracle.

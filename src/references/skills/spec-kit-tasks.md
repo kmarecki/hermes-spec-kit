@@ -27,6 +27,7 @@ FOR each AC with level unit / integration / component / e2e:
   in the phase that delivers it; the test NAME carries the id (AC003_… / 'AC-003 …' / test_ac003_…)
 FOR each command / probe AC: a task that writes the check, tagged [AC-###]
 FOR each seam in the plan's External Seams: [SEAM] on the task that touches it
+NEVER a task that needs this feature's own PR merged or deployed (acceptance.md §2)
 mcp_spec_kit_lint_artifacts → no "[AC-###] has no [TEST] task" error
 ```
 

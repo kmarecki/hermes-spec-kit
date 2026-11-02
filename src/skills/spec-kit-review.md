@@ -2,7 +2,7 @@
 name: spec-kit-review
 description: >
   Load when the user says 'spec-kit review [feature]', 'speckit review [feature]', 'spec-kit final review [feature]', 'speckit final review [feature]', "review [feature]", "final review [feature]", "merge readiness [feature]", "is [feature] ready to merge", "quality check [feature]", or "analyze [feature]" — pre-implement cross-artifact check (3.5) and the mandatory final merge-readiness review (5.5): spec conformance, constitution rules, code quality, merge checklist.
-version: 2.0.0
+version: 2.1.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -33,7 +33,7 @@ metadata:
 
 ## Final (5.5) — one `## Round N` appended, **exceptions only**
 1. Inputs: spec, plan, tasks, data-model, contracts, constitution, `specs/merge-checklist.md` (missing → from `spec-kit/templates/merge-checklist-template.md`, **ASK** to confirm), AGENTS.md / rule files, `git diff <base>...HEAD`, `evidence/`, bugs.md, acceptance.md.
-2. Mechanical: `mcp_spec_kit_diff_scan(feature)` → `evidence/final-diff-scan.txt`; every checklist command → `evidence/final-<check>.txt`; `ci:<id>` for the reviewed commit.
+2. Mechanical: `mcp_spec_kit_diff_scan(feature)` → `evidence/final-diff-scan.txt`; every checklist command → `evidence/final-<check>.txt`; `ci:<id>` for the reviewed commit. Only specs/docs changed since a green `ci:<id>` → cite it, no re-run.
 3. **§1** — one coverage line (FR n/N, SC, edge cases, acceptance round PASS @ sha, frozen unchanged) + rows ONLY for ⚠️ / ❌ / ↔ / 👤. Missing = CRITICAL; ↔ → **WAIT** (patch spec, log a bug, or defer). Manual / deferred ACs unconfirmed → 👤.
 4. **§2** — every applicable constitution MUST, checklist P-item, AGENTS.md rule, epic cross-feature rule, design-doc invariant and **spec Security & Privacy row** verdicted with `path:line`; violated MUST = HIGH (CRITICAL if security / data / non-negotiable).
 5. **§3** — findings on the changed code: architecture, error chains, security, data integrity, concurrency, duplication, complexity, API surface, tests (behaviour not implementation; fixtures match `probe:` files; RED/GREEN files per phase). Stack research: M/L.

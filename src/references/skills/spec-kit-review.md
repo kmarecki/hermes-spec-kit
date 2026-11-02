@@ -63,7 +63,7 @@ MECHANICAL  mcp_spec_kit_diff_scan(feature, base=BASE) → evidence/final-diff-s
             (no MCP: git merge-tree, grep the added lines for secrets / conflict markers /
             focused tests / TODO, list forbidden and > 1 MB files, unplanned files)
             every merge-checklist command → evidence/final-<name>.txt; a command that cannot
-            run = ❌ unverified with the reason, never assumed green; ci:<id> for REVIEWED_COMMIT
+            run = ❌ unverified with the reason, never assumed green; ci:<id> for REVIEWED_COMMIT; code unchanged since a green ci:<id> → cite it
 §1  spec has ACs → latest acceptance round PASS and not stale (else NOT READY: "run accept");
     frozen tests unchanged. Deferred e2e → run now if the stack is up (evidence/final-AC-###.txt)
     else 👤; manual ACs → the user's quoted words or 👤.
