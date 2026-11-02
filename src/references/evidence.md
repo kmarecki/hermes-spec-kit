@@ -18,7 +18,7 @@ its own misunderstanding. Every gate needs an **oracle** the agent did not autho
 
 ## Files — every tier (`sizing.md`: the size changes the workflow, never the evidence)
 
-`specs/[feature]/evidence/`, one file per item, first line = command, second = UTC time.
+`specs/[feature]/evidence/`, one file per item: line 1 the command, line 2 the UTC time.
 
 | File | When |
 |------|------|

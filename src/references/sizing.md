@@ -2,7 +2,7 @@
 
 Size × rigor = the process level (`rigor.md`). Ceremony follows the size of the change — the
 **workflow** and the **length of the artifacts** shrink; the evidence does not. `spec-kit-specify` **always asks** the tier, recommendation first
-and marked "(Recommended)" with the signals that triggered it. The answer is a ruling in
+("(Recommended)") with its signals. The answer is a ruling in
 decisions.md and `**Size**: S | M | L — <reason>` in spec.md. Unattended → the recommendation is
 recorded as an assumption. A spec without the line is treated as M.
 
@@ -22,7 +22,7 @@ dimension is at least M.
 | Expected tasks | ≤ ~8 | ~9–25 | > 25 |
 | Unknowns to research | none | a few | many / spike |
 
-Typo, rename, config value → no spec-kit at all.
+Typo, rename, config value → no spec-kit.
 
 ## What each tier produces — the workflow and the artifacts get leaner, the evidence stays
 
