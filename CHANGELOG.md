@@ -8,6 +8,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — `review_run: pr`: the PR's required checks are the final review's evidence
+- On projects whose PRs carry required checks, the final review reads them (`pr_checks`) on the reviewed commit and
+  cites each as `ci:<run>/<job>` instead of re-running the suite; only the diff scan, probes, rulings and checks CI
+  did not run stay local. A required approval may be the PR's (`**Approved-by**: <name> — pr:<id>`).
+- Server: `review_run` in the state and on the phase card; lint warns when a `ci`/`pr` round cites no `ci:<run>`.
+
 ### Added — final review can run the checklist in CI (`review_run`)
 - `specs/merge-checklist.md` is project-owned: every key, item and table may be edited or dropped; absent = default.
   `review_run: local` (default, unchanged behaviour) or `ci`: the review pushes, queues `ci_jobs` with the project's

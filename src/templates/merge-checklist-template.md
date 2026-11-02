@@ -19,10 +19,11 @@ format_check:  [e.g. dotnet format --verify-no-changes | npm run prettier:diff]
 extra:         [any other command that must pass, e.g. architecture tests]
 
 # Where the checks run (default local = every command above, on this machine)
-review_run:    local                       # local | ci (CI jobs first, the rest locally)
+review_run:    local                       # local | ci (queue ci_jobs) | pr (the PR's required checks)
 ci_jobs:       [check=pipeline/job, …, e.g. test=Tests-BuildValidation/BffUnitTests, lint=Web/eslint]
 ci_queue:      [e.g. az pipelines run --name {pipeline} --branch {branch} | gh workflow run {pipeline} --ref {branch}]
 ci_status:     [per-job results + source commit, e.g. az pipelines runs show --id {run} | gh run view {run} --json headSha,jobs]
+pr_checks:     [the PR's checks, their commit + approvals, e.g. az repos pr show --id {pr} | gh pr view {pr} --json headRefOid,statusCheckRollup,reviews]
 
 # Acceptance loop (spec-kit/references/acceptance.md) — results must be JUnit XML or TRX
 acceptance_fast:          [the FULL unit + integration + component suites writing results, e.g.

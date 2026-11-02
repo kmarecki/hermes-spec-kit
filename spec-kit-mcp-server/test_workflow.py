@@ -673,6 +673,16 @@ async def test_cross_agent(s, root):
     write(root, "x4", "tasks.md", "# Tasks\n- [x] T001 a — src/a.py\n- [x] T002 b\n- [x] T003 c\n")
     git(root, "commit", "-qam", "feat: x4 Phase 2 - b", "--trailer", "Spec-Kit-Agent: hermes", "--trailer", "Co-Authored-By: Hermes Agent <noreply@nousresearch.com>")
     d4 = await call(s, "get_feature_state", {"feature": "x4"})
+    (Path(root) / "specs" / "merge-checklist.md").write_text("# Merge Checklist\n```\nreview_run:    pr\n```\n")
+    write(root, "x1", "review-final.md", "# Final review\n\n## Round 2 — 2026-11-03 — review:codex\n\n**Verdict**: READY\n**Reviewed-commit**: abcdef1\n")
+    d = await call(s, "get_feature_state", {"feature": "x1"})
+    check("review_run: pr → state + phase card", d["state"]["review_run"] == "pr" and "review_run: pr" in d["phase_card"], d["phase_card"][-300:])
+    d = await call(s, "lint_artifacts", {"feature": "x1"})
+    check("  a round without ci:<run> → warning", any("cites no ci:" in f["msg"] for f in d["findings"]))
+    write(root, "x1", "review-final.md", "# Final review\n\n## Round 2 — 2026-11-03 — review:codex\n\n§5 test: ci:4711/BffUnitTests\n**Verdict**: READY\n**Reviewed-commit**: abcdef1\n")
+    d = await call(s, "lint_artifacts", {"feature": "x1"})
+    check("  a round citing ci:<run>/<job> → quiet", not any("cites no ci:" in f["msg"] for f in d["findings"]))
+    (Path(root) / "specs" / "merge-checklist.md").unlink()
     check("commit trailers on feat commits → claude + hermes; spec commit's agent ignored", d4["state"]["implemented_by"] == ["claude", "hermes"], json.dumps(d4["state"]["implemented_by"]))
 
 

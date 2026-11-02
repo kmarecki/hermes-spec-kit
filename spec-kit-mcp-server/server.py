@@ -445,6 +445,17 @@ def _acceptance_problem(fd):
     return None
 
 
+_REVIEW_RUN_RE = re.compile(r"^review_run:\s*(local|ci|pr)\b", re.M | re.I)
+
+
+def _review_run():
+    """Where the final review's checklist checks run: specs/merge-checklist.md `review_run:
+    local | ci | pr` (review full procedure, CI RUN); absent → local."""
+    f = SPECS_DIR / "merge-checklist.md"
+    m = _REVIEW_RUN_RE.search(f.read_text(errors="replace")) if f.exists() else None
+    return m.group(1).lower() if m else "local"
+
+
 def _approval_required(fd):
     """Why the latest final-review round must name a human approver (references/rigor.md:
     rigor strict + size L); None when no rule applies. Other profiles add their reasons here."""
@@ -487,7 +498,7 @@ def _final_review_problem(fr):
     if fr["stale"]:
         return f"{FINAL_REVIEW}: code changed after the reviewed commit {fr['reviewed_commit']} — re-run the final review"
     if fr.get("approval_missing"):
-        return f"{FINAL_REVIEW}: {fr['approval_missing']} needs '**Approved-by**: <human> — \"<quoted words>\"' in the latest round (references/rigor.md)"
+        return f"{FINAL_REVIEW}: {fr['approval_missing']} needs '**Approved-by**: <human> — \"<quoted words>\"' (or '— pr:<id>', the PR approval) in the latest round (references/rigor.md)"
     return None
 
 
@@ -533,6 +544,7 @@ def _derive(feature):
         "size_declared": size is not None,
         "rigor": dict(zip(("level", "source"), _rigor(fd))),
         "implemented_by": _implemented_by(fd),
+        "review_run": _review_run(),
         "history": dict(zip(("on", "source"), _history_setting(fd, size))),
         "final_review": _final_review(fd) if phase >= 5 else None,
         "acceptance": ({"criteria": len(acs), "round": _acceptance_round(fd) if phase >= 5 else None}
@@ -570,6 +582,8 @@ def _phase_card(state):
     review_line = (f"final review: {fr.get('verdict') or 'missing verdict'} @ {fr.get('reviewed_commit') or '?'}"
                    f"{' — STALE, re-review' if fr.get('stale') else ''}" if fr.get("present")
                    else "final review: not run" if phase >= 5 else None)
+    if review_line and state.get("review_run", "local") != "local":
+        review_line += f" · review_run: {state['review_run']} — cite ci:<run>/<job>, re-run locally only what CI did not run"
     acc = state.get("acceptance") or {}
     if acc.get("round"):
         r = acc["round"]
@@ -1134,6 +1148,11 @@ def lint_artifacts(feature: str) -> str:
         rr = list(_ROUND_RE.finditer(rtext))
         if rr and not _ORACLE_RE.search(rtext[rr[-1].start():]):
             findings.append({"file": FINAL_REVIEW, "severity": "warning", "msg": "rigor lean without acceptance.md — the latest round must name the oracle (output:<file>, ci:<id> or the user's quoted words) (references/rigor.md floor)"})
+    if _review_run() != "local" and (fd / FINAL_REVIEW).exists():
+        rtext = (fd / FINAL_REVIEW).read_text(errors="replace")
+        rr = list(_ROUND_RE.finditer(rtext))
+        if rr and not re.search(r"\bci:\S", rtext[rr[-1].start():]):
+            findings.append({"file": FINAL_REVIEW, "severity": "warning", "msg": f"review_run: {_review_run()} but the latest round cites no ci:<run> — CI evidence first, local runs only for what CI did not run (review full procedure, CI RUN)"})
     spec_rigor = _RIGOR_RE.search((fd / "spec.md").read_text(errors="replace")) if (fd / "spec.md").exists() else None
     project_rigor = (conv.get("rigor") or "standard").lower()
     if spec_rigor and project_rigor in RIGOR_LEVELS and RIGOR_LEVELS.index(spec_rigor.group(1).lower()) < RIGOR_LEVELS.index(project_rigor) \
