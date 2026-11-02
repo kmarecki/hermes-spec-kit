@@ -21,7 +21,7 @@ metadata:
 - `spec-kit/references/preflight.md`. **BLOCK** if `plan.md` or `spec.md` is missing. Load plan, spec, data-model, contracts. `tasks.md` exists and not bugfix mode → **BLOCK**; bugfix mode → append only.
 
 ## Steps
-1. Copy `spec-kit/templates/tasks-template.md`. **ASK**: TDD or skip tests? Skip → header `> **TDD**: Bypassed by user request`. Never assume.
+1. Copy `spec-kit/templates/tasks-template.md`. **TDD from the constitution** (`spec-kit/references/rigor.md`): Principle 1 A/B or rigor strict → active; Principle 1 C → header `> **TDD**: test-after (Principle 1 C)`. **ASK** only when the constitution has no Principle 1 (skip → `> **TDD**: Bypassed by user request`). Never assume.
 2. S → one flat list; M/L → phases Setup/Foundational → stories → Polish. `T### [P] [US#] [TEST] [AC-###] [SEAM] Description — path`.
 3. Every FR and story → tasks. Every AC with level unit/integration/component/e2e → a `[TEST] [AC-###]` task at the plan's test file, test NAME carrying the id; command/probe ACs → a task writing the check. Every seam from the plan → `[SEAM]` on the task that touches it (`spec-kit/references/evidence.md`).
 4. Bugfix mode: per open bug a `BF-###` task + its verifying test, inserted before `## Dependencies & Execution Order`; never delete tasks.

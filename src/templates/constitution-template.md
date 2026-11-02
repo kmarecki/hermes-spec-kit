@@ -1,6 +1,6 @@
 # [PROJECT_NAME] Constitution
 
-> Ratified: [DATE] | Version: [VERSION]
+> Ratified: [DATE] | Version: [VERSION] | Rigor: [lean | standard | strict] (`spec-kit/references/rigor.md`)
 > Auto-detected from: [brownfield detected sources] *(remove if greenfield)*
 > *[If monorepo: Multi-project constitution — see Projects section]*
 
@@ -113,6 +113,12 @@
 [User-picked option's full text]
 
 **Rationale:** [Why this option was chosen]
+
+## Engineering Guidelines
+
+*(lean: one line. standard / strict: layout and module boundaries, lint / format config, testing shape, coverage target; every MUST also appears as a P-item in `specs/merge-checklist.md`.)*
+
+- [e.g., "Modules own their tables; no cross-module SQL" — MUST — P3]
 
 ## Rejected Alternatives
 

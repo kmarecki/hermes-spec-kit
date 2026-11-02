@@ -5,6 +5,8 @@
 > code commit after that sha makes the round stale. **Exceptions only**: the full AC → test
 > matrix is in acceptance.md, the FR → task map in tasks.md — do not repeat them here.
 
+> **Rigor lean**: a self-check round — Verdict, Reviewed-commit, one line per section, §5 checklist results, and the oracle (test output or the user's quoted words); no devil's advocate.
+
 ## Round 1 — [YYYY-MM-DD] — [review:<agent> | self-review by <agent> (fresh context: yes/no)]
 
 **Verdict**: READY | READY-WITH-FOLLOWUPS | AWAITING-OWNER | NOT READY

@@ -88,6 +88,7 @@ EXPECTED_REFERENCES = {
     "evidence.md",
     "history-tracking.md",
     "preflight.md",
+    "rigor.md",
     "sizing.md",
 }
 
@@ -461,6 +462,62 @@ def test_skills_yaml_parse():
 # ── Main ───────────────────────────────────────────────────────────────────
 
 
+def test_hermes_paths_resolve():
+    """Every `spec-kit/references|templates/<file>` a Hermes skill or reference names exists in src/."""
+    print("\n═══ Hermes edition: shared paths resolve ═══")
+    names = re.compile(r"(?<![\w/~.])spec-kit/(references|templates)/([\w./-]+\.md)")
+    missing = set()
+    for f in list(SKILLS_DIR.rglob("*.md")) + list(REFERENCES_DIR.rglob("*.md")) + list(TEMPLATES_DIR.glob("*.md")):
+        for kind, rel in names.findall(f.read_text()):
+            if not (REPO / "src" / kind / rel).exists():
+                missing.add(f"{f.name} → spec-kit/{kind}/{rel}")
+    check("every spec-kit/references|templates path exists", not missing, ", ".join(sorted(missing)))
+
+
+def test_claude_edition_parity():
+    """Generate the Claude Code edition into a temp dir and compare it with the Hermes sources."""
+    import subprocess, tempfile
+    print("\n═══ Claude Code edition: parity with the Hermes sources ═══")
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        env = {"PATH": "/usr/bin:/bin", "HOME": str(tmp), "CLAUDE_SKILLS_DIR": str(tmp / "claude"),
+               "HERMES_SKILLS_DIR": str(tmp / "no-hermes")}
+        r = subprocess.run(["bash", str(REPO / "scripts/install-claude.sh"), "--no-mcp"], env=env,
+                           capture_output=True, text=True)
+        check("install-claude.sh runs (no Hermes tree → copies from src/)", r.returncode == 0, r.stderr[-300:])
+        out = tmp / "claude"
+        src_skills = {p.stem for p in SKILLS_DIR.glob("*.md")} | {"spec-kit"}
+        gen = {p.parent.name for p in out.glob("*/SKILL.md")}
+        check("one generated SKILL.md per Hermes skill", gen == src_skills, f"missing {src_skills - gen}, extra {gen - src_skills}")
+        leftovers, unresolved = [], set()
+        ref = re.compile(r"~/\.claude/skills/spec-kit/(references|templates)/([\w./-]+\.md)")
+        for s in out.glob("*/SKILL.md"):
+            text = s.read_text()
+            body = "\n".join(l for l in text.splitlines() if "`mcp_spec_kit_x` → `mcp__spec-kit__x`" not in l)  # the mapping note
+            if "mcp_spec_kit_" in body or "Hermes Agent" in body:
+                leftovers.append(s.parent.name)
+            for kind, rel in ref.findall(text):
+                if not (out / "spec-kit" / kind / rel).exists():
+                    unresolved.add(f"{s.parent.name} → {kind}/{rel}")
+            src = (SKILLS_DIR / "spec-kit" / "SKILL.md") if s.parent.name == "spec-kit" else SKILLS_DIR / f"{s.parent.name}.md"
+            steps = lambda x: len(re.findall(r"^\s*(?:\d+[a-z]?\.|- \[ \]) ", x, re.M))
+            if steps(text) != steps(src.read_text()):
+                leftovers.append(f"{s.parent.name} (step count differs)")
+        check("no untranslated Hermes names, same steps as the source", not leftovers, ", ".join(leftovers))
+        check("every path a Claude skill names exists in the generated tree", not unresolved, ", ".join(sorted(unresolved)))
+        same = all((out / "spec-kit" / "references" / f.relative_to(REFERENCES_DIR)).read_bytes() == f.read_bytes()
+                   for f in REFERENCES_DIR.rglob("*.md"))
+        check("references are byte-identical in both editions", same)
+        check("design skill advertises map in its argument hint", 'argument-hint: "[module | map]"' in (out / "spec-kit-design" / "SKILL.md").read_text())
+        # a stale Hermes tree must be refused, not linked
+        stale = tmp / "hermes" / "spec-kit"
+        for d in ("references", "templates", "mcp-server"):
+            (stale / d).mkdir(parents=True)
+        env2 = dict(env, CLAUDE_SKILLS_DIR=str(tmp / "claude2"), HERMES_SKILLS_DIR=str(tmp / "hermes"))
+        r = subprocess.run(["bash", str(REPO / "scripts/install-claude.sh"), "--no-mcp"], env=env2, capture_output=True, text=True)
+        check("stale Hermes tree → install-claude.sh refuses (parity guard)", r.returncode != 0 and "out of date" in r.stderr, r.stderr[-200:])
+
+
 def main():
     print("═" * 55)
     print("  spec-kit Skills — Validation Tests")
@@ -480,6 +537,8 @@ def main():
         test_no_loose_reference_files,
         test_workflow_diagram_phases,
         test_mcp_tool_names_match_server,
+        test_hermes_paths_resolve,
+        test_claude_edition_parity,
     ]
 
     for t in tests:

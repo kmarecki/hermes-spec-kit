@@ -1,6 +1,7 @@
 # Size Tiers (S / M / L)
 
-Ceremony follows the size of the change — the **workflow** and the **length of the artifacts**
+Size works **inside the project's rigor** (`rigor.md`: lean / standard / strict — the table below is
+`standard`; lean relaxes it, strict tightens it, the floor never moves). Ceremony follows the size of the change — the **workflow** and the **length of the artifacts**
 shrink; the evidence does not. `spec-kit-specify` **always asks** the tier, recommendation first
 and marked "(Recommended)" with the signals that triggered it. The answer is a ruling in
 decisions.md and `**Size**: S | M | L — <reason>` in spec.md. Unattended → the recommendation is

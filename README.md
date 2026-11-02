@@ -198,6 +198,7 @@ runs `/spec-kit-specify`, `/spec-kit-plan`, `/spec-kit-tasks`, Hermes runs
 ```bash
 ./scripts/install-claude.sh            # → ~/.claude/skills/spec-kit*/SKILL.md + MCP registration
 ./scripts/install-claude.sh --no-mcp   # skills only
+./scripts/install-claude.sh --from-src # copy shared files from src/ instead of linking the Hermes tree
 ./scripts/install-claude.sh --uninstall
 ```
 
@@ -212,7 +213,10 @@ What the installer does:
 2. **Symlinks** `references/`, `templates/` and `mcp-server/` to the installed Hermes
    tree (`~/.hermes/skills/spec-kit/…`), including per-skill `references/` folders —
    one source of truth, so what Hermes reads is what Claude Code reads. Falls back to
-   copying from `src/` when Hermes is not installed.
+   copying from `src/` when Hermes is not installed. **Parity guard**: an installed Hermes
+   tree that differs from `src/` is refused — run `./scripts/install.sh` first, or pass
+   `--from-src`. `test_skills.py` generates the Claude edition in a temp dir and checks it
+   against the Hermes sources (same skills, same steps, every named file present).
 3. Registers the MCP state server for Claude Code at user scope (skipped with `--no-mcp`
    or when already registered).
 

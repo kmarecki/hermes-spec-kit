@@ -1,7 +1,7 @@
 # Tasks: [FEATURE NAME]
 
 **Input**: plan.md, spec.md (+ data-model.md, contracts/ when present) · **TDD**: active
-*(or `> **TDD**: Bypassed by user request`)*
+*(or `> **TDD**: test-after (Principle 1 C)` — from the constitution, `spec-kit/references/rigor.md` · or `> **TDD**: Bypassed by user request`)*
 
 **Format**: `- [ ] T### [P] [US#] [TEST] [AC-###] [SEAM] Description — exact/file/path.ext`
 - `[P]` parallel (different files, no dependency) · `[US#]` user story

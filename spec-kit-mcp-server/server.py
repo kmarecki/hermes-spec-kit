@@ -87,6 +87,10 @@ _TASK_RE = re.compile(r"^- (?:\[(?P<pre>[ xX])\] )?(?P<id>(?:T|BF-?)(?P<num>\d+)
 _HISTORY_ENTRY_RE = re.compile(r"^## \[?([0-9T:\-+.Z]+)\]? *\| *(.*)$", re.M)
 _SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
 _HISTORY_RE = re.compile(r"^\*\*History\*\*:\s*\[?(on|off)\b", re.M | re.I)
+_RIGOR_RE = re.compile(r"^\*\*Rigor\*\*:\s*\[?(lean|standard|strict)\b", re.M | re.I)
+_TEST_AFTER_RE = re.compile(r"\*\*TDD\*\*:\s*(test-after|Bypassed)", re.I)
+RIGOR_LEVELS = ("lean", "standard", "strict")
+RIGOR_HISTORY = {"lean": "never", "standard": "large", "strict": "always"}
 _EPIC_RE = re.compile(r"^\*\*Epic\*\*:\s*\[?([A-Za-z0-9][\w.-]*)", re.M)
 _MODULES_RE = re.compile(r"^\*\*Modules\*\*:\s*(.+)$", re.M)
 _ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
@@ -184,6 +188,17 @@ def _adr_dir():
     return None
 
 
+def _rigor(fd):
+    """The feature's rigor (references/rigor.md): spec.md `**Rigor**:` override, else the project's
+    `rigor:` (git-conventions.md), else standard. Returns (level, source)."""
+    f = fd / "spec.md"
+    m = _RIGOR_RE.search(f.read_text(errors="replace")) if f.exists() else None
+    if m:
+        return m.group(1).lower(), "spec override"
+    level = (_conventions().get("rigor") or "standard").lower()
+    return (level if level in RIGOR_LEVELS else "standard"), "project" if _conventions().get("rigor") else "default"
+
+
 def _history_setting(fd, size):
     """Is history.md kept for this feature? Project default `history: always | large | never`
     (git-conventions.md, default large = size L only); spec.md `**History**: on | off` overrides.
@@ -193,7 +208,7 @@ def _history_setting(fd, size):
         m = _HISTORY_RE.search(f.read_text(errors="replace"))
         if m:
             return m.group(1).lower() == "on", "spec override"
-    default = (_conventions().get("history") or "large").lower()
+    default = (_conventions().get("history") or RIGOR_HISTORY[_rigor(fd)[0]]).lower()
     if default == "always":
         return True, "project default: always"
     if default == "never":
@@ -341,10 +356,13 @@ def _acceptance_round(fd):
 
 
 def _acceptance_problem(fd):
-    """Why acceptance does not open the gate; None when it does or the spec has no ACs."""
+    """Why acceptance does not open the gate; None when it does or the spec has no ACs.
+    Rigor lean without acceptance.md: the final self-check carries the oracle (references/rigor.md)."""
     if not _parse_acs(fd):
         return None
     ar = _acceptance_round(fd)
+    if not ar["present"] and _rigor(fd)[0] == "lean":
+        return None
     if not ar["present"]:
         return f"no {ACCEPTANCE} — run the acceptance loop ('accept [feature]') first"
     if ar["result"] != "PASS":
@@ -429,6 +447,7 @@ def _derive(feature):
         "contracts": contracts,
         "size": size or "M",
         "size_declared": size is not None,
+        "rigor": dict(zip(("level", "source"), _rigor(fd))),
         "history": dict(zip(("on", "source"), _history_setting(fd, size))),
         "final_review": _final_review(fd) if phase >= 5 else None,
         "acceptance": ({"criteria": len(acs), "round": _acceptance_round(fd) if phase >= 5 else None}
@@ -457,7 +476,7 @@ def _phase_card(state):
     gate = {
         1: "spec.md written → commit spec(phase-1)",
         2: "plan artifacts written → commit spec(phase-2)",
-        3: "tasks.md written, TDD question asked → commit spec(phase-3)",
+        3: "tasks.md written, TDD from the constitution (Principle 1 / rigor) → commit spec(phase-3)",
         4: "phase RED/GREEN evidence saved, probes per [SEAM], tasks [X], history entry with Implemented-by → one commit per phase; then accept",
         5: f"{state['bugs']['open']} open, {state['bugs']['claimed']} claimed-unverified → verify with user/ci/other-agent or run 'bugfix {f}'; then the final review ({FINAL_REVIEW}) must say READY",
         6: "final review READY and fresh, every bug verified/superseded, close.md (Architecture Decisions) + change-record.md → one commit spec(phase-6)",
@@ -476,7 +495,7 @@ def _phase_card(state):
         acc_line = None
     lines = [
         f"PHASE CARD — {f}",
-        f"phase: {phase} ({state['phase_name']})  status: {state['status']}  size: {state['size']}{'' if state['size_declared'] else ' (undeclared — treated as M)'}",
+        f"phase: {phase} ({state['phase_name']})  status: {state['status']}  size: {state['size']}{'' if state['size_declared'] else ' (undeclared — treated as M)'}  rigor: {state['rigor']['level']} ({state['rigor']['source']})",
         f"allowed writes: {allowed}",
         f"next gate: {gate}",
         f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF)",
@@ -924,14 +943,16 @@ def lint_artifacts(feature: str) -> str:
         tasks_text = (fd / "tasks.md").read_text(errors="replace")
         tasks = _parse_tasks(tasks_text)
         evidence = [p.name for p in (fd / "evidence").glob("*")] if (fd / "evidence").is_dir() else []
+        rigor = _rigor(fd)[0]
+        test_after = bool(_TEST_AFTER_RE.search(tasks_text))
         for line in tasks_text.splitlines():
             m = _TASK_RE.match(line)
             if not m or (_task_mark(m) or " ") not in "xX":
                 continue
             tid = m.group("id")
-            if "[SEAM]" in line and not any(e.startswith(f"{tid}-probe") for e in evidence):
+            if "[SEAM]" in line and rigor != "lean" and not any(e.startswith(f"{tid}-probe") for e in evidence):
                 findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [SEAM] marked done without evidence/{tid}-probe-*.txt"})
-            if "[TEST]" in line and not any("-red" in e for e in evidence):
+            if "[TEST]" in line and not test_after and not any("-red" in e for e in evidence):
                 findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [TEST] marked done but no *-red* file in evidence/"})
         for kind in ("T", "BF"):
             nums = [t["num"] for t in tasks if t["kind"] == kind]
@@ -1019,11 +1040,19 @@ def lint_artifacts(feature: str) -> str:
         if not (Path(design_dir) / f"{module}.md").exists():
             findings.append({"file": "plan.md", "severity": "warning", "msg": f"module {module} has no {design_dir}/{module}.md — the close cannot patch it (spec-kit design {module})"})
 
+    spec_rigor = _RIGOR_RE.search((fd / "spec.md").read_text(errors="replace")) if (fd / "spec.md").exists() else None
+    project_rigor = (conv.get("rigor") or "standard").lower()
+    if spec_rigor and project_rigor in RIGOR_LEVELS and RIGOR_LEVELS.index(spec_rigor.group(1).lower()) < RIGOR_LEVELS.index(project_rigor) \
+            and "rigor" not in ((fd / "decisions.md").read_text(errors="replace").lower() if (fd / "decisions.md").exists() else ""):
+        findings.append({"file": "spec.md", "severity": "warning", "msg": f"**Rigor**: {spec_rigor.group(1)} lowers the project's {project_rigor} — record the ruling in decisions.md (references/rigor.md)"})
+    if conv.get("blocked_branches", "").lower() == "none" and project_rigor != "lean":
+        findings.append({"file": "specs/git-conventions.md", "severity": "warning", "msg": f"blocked_branches: none (trunk) is for rigor lean — the project is {project_rigor}"})
+
     if any((fd / c).exists() for c in CLOSE_DOCS):
         close_text = "".join((fd / c).read_text(errors="replace") for c in CLOSE_DOCS if (fd / c).exists())
         if "## Architecture Decisions" not in close_text:
             findings.append({"file": "close.md", "severity": "warning", "msg": "close document has no '## Architecture Decisions' section"})
-        if not (fd / "change-record.md").exists():
+        if not (fd / "change-record.md").exists() and _rigor(fd)[0] != "lean":
             findings.append({"file": "change-record.md", "severity": "warning", "msg": "closed feature without change-record.md — write it from change-record-template.md"})
 
     if (fd / "history.md").exists():

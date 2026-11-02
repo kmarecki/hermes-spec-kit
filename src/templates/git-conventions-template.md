@@ -17,7 +17,7 @@ feature_prefix: feat          # e.g. feat/011-user-auth
 bugfix_prefix: bug            # e.g. bug/011-login-crash
 reopen_suffix: -bugfixing     # e.g. feat/011-user-auth-bugfixing
 branch_source: main           # source branch for reopen (main, master, develop)
-blocked_branches: main, master
+blocked_branches: main, master   # rigor lean + trunk: none (commits on main allowed)
 ```
 
 ### Generated branch patterns
@@ -64,6 +64,7 @@ use the default.
 # adr_index: docs/adr/README.md # the ADR list to update; default: README.md / index.md in adr_dir
 agents_file: AGENTS.md          # the agent context file kept current at close (also CLAUDE.md if it restates it)
 merge_checklist: specs/merge-checklist.md
+# rigor: standard             # lean | standard | strict — set by the constitution (Level 0); absent = standard (spec-kit/references/rigor.md)
 history: large                  # always | large | never — keep specs/<feature>/history.md: large = size L only (default); spec.md `**History**: on|off` overrides
 # design_dir: docs/design       # living module design docs (design-doc-template.md); ABSENT → plan.md's Current Design is the only design, nothing else is created
 # epics_dir: specs/epics        # epics as specs/epics/NNN-name/{epic,plan,features,review}.md (NNN = tracker epic id, e.g. ADO); ABSENT → every feature is its own epic

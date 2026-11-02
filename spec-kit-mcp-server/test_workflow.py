@@ -539,6 +539,48 @@ async def test_acceptance(s, root):
 # ── Runner ─────────────────────────────────────────────────────────────────
 
 
+async def test_rigor(s, root):
+    print("\n═══ rigor: lean / standard / strict ═══")
+    write(root, "r1", "spec.md", "# Spec\n\n**Size**: L — x\n\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
+    d = await call(s, "get_feature_state", {"feature": "r1"})
+    check("no rigor key → standard (default), history large → on for L",
+          d["state"]["rigor"] == {"level": "standard", "source": "default"} and d["state"]["history"]["on"], json.dumps(d["state"]["rigor"]))
+    check("phase card shows the rigor", "rigor: standard (default)" in d["phase_card"])
+    conv = Path(root) / "specs/git-conventions.md"
+    conv.write_text("rigor: lean\nblocked_branches: none\n")
+    d = await call(s, "get_feature_state", {"feature": "r1"})
+    check("rigor lean → history never, even for size L", d["state"]["rigor"]["level"] == "lean" and not d["state"]["history"]["on"])
+    write(root, "r1", "plan.md", "# Plan\n")
+    write(root, "r1", "tasks.md", "# Tasks\n> **TDD**: test-after (Principle 1 C)\n- [x] T001 [TEST] [AC-001] check — tests/a.py\n- [x] T002 [SEAM] call api — src/a.py\n")
+    d = await call(s, "lint_artifacts", {"feature": "r1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("lean + test-after → no RED-file or probe warning", "-red" not in msgs and "probe" not in msgs, msgs)
+    check("lean + trunk → no blocked_branches warning", "trunk" not in msgs)
+    git(root, "init", "-q", "-b", "main"); git(root, "add", "-A"); git(root, "commit", "-q", "-m", "base")
+    head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=root, capture_output=True, text=True).stdout.strip()
+    write(root, "r1", "review-final.md", FINAL.format(n=1, v="READY", c=head))
+    d = await call(s, "advance_phase", {"feature": "r1", "from_phase": 5})
+    check("lean: ACs without acceptance.md → the self-check opens the gate", d.get("success"), json.dumps(d))
+    write(root, "r1", "close.md", "# Close\n\n## Architecture Decisions\n\nnone\n")
+    d = await call(s, "lint_artifacts", {"feature": "r1"})
+    check("lean close without change-record.md → no warning", not any("change-record" in f["msg"] for f in d["findings"]))
+
+    conv.write_text("rigor: strict\nblocked_branches: none\n")
+    write(root, "r2", "spec.md", "# Spec\n\n**Size**: S — x\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
+    d = await call(s, "get_feature_state", {"feature": "r2"})
+    check("rigor strict → history always, even for size S", d["state"]["history"]["on"])
+    d = await call(s, "lint_artifacts", {"feature": "r2"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("trunk on a strict project → warning", "trunk" in msgs, msgs)
+    write(root, "r2", "plan.md", "# Plan\n"); write(root, "r2", "tasks.md", "# Tasks\n- [x] T001 [TEST] [AC-001] t — tests/b.py\n")
+    d = await call(s, "advance_phase", {"feature": "r2", "from_phase": 5})
+    check("strict: ACs without acceptance.md → gate stays closed", "acceptance" in d.get("error", "").lower(), json.dumps(d))
+    write(root, "r2", "spec.md", "# Spec\n\n**Size**: S — x\n**Rigor**: lean\n")
+    d = await call(s, "lint_artifacts", {"feature": "r2"})
+    check("spec lowers the rigor without a ruling → warning", any("lowers the project's strict" in f["msg"] for f in d["findings"]))
+    write(root, "r2", "decisions.md", "# Decisions\n- D-1 ruling: rigor lean for this spike — \"fine\" (owner)\n")
+    d = await call(s, "lint_artifacts", {"feature": "r2"})
+    check("  with a ruling in decisions.md → quiet", not any("lowers" in f["msg"] for f in d["findings"]))
+
+
 async def run_in_tmp(test_fn):
     root = tempfile.mkdtemp(prefix="spec-kit-test-")
     try:
@@ -558,7 +600,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance]:
+              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor]:
         try:
             await run_in_tmp(t)
         except Exception as e:

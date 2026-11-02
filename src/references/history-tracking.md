@@ -14,6 +14,7 @@ timestamps — nobody read them. The format below is capped and machine-appended
 ## When it is kept
 
 `history:` in `specs/git-conventions.md` — `always` · `large` (default: size L only) · `never`;
+not set → from the rigor (`rigor.md`: lean never · standard large · strict always);
 `**History**: on | off` in spec.md overrides it for one feature. The phase card says which
 applies. **On**: every phase appends an entry before its commit (`history_guard` enforces).
 **Off**: no entries; the close builds the change record's timeline from the branch's git log

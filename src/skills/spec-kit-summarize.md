@@ -21,6 +21,7 @@ metadata:
 ## Before writing
 - `spec-kit/references/preflight.md`. Requires `tasks.md`. Load spec, plan, tasks, bugs, constitution, data-model, contracts, research, clarify, `history.md`, `evidence/`, `decisions.md`, `acceptance.md`, `review-final.md`.
 - **Gate**: latest `review-final.md` round READY / READY-WITH-FOLLOWUPS and not stale — else **BLOCK** ("run the final review"; AWAITING-OWNER → get the owner's answer, Round N+1). Open bug → **BLOCK**.
+- Rigor lean (`spec-kit/references/rigor.md`): short `close.md`, change record optional, an ADR only when one is obvious; AGENTS.md patch always. Strict: change record required.
 - Mode: "close" / "summarize" as said; else S/M → close, L → summarize. Reopen (close doc exists) → APPEND a dated section.
 
 ## Steps

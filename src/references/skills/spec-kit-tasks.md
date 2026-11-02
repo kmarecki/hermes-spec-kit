@@ -7,8 +7,10 @@ Load plan, spec, data-model, contracts. `tasks.md` present and not bugfix mode �
 Complete Overwrite). Bugfix mode → load tasks, bugs, the plan's rounds; append only.
 
 ## TDD question
-ASK "Generate test tasks (TDD) or skip tests?" — every time. Skip → header
-`> **TDD**: Bypassed by user request` (the final review notes the weaker guarantee).
+Decided by the constitution, not asked per feature (`spec-kit/references/rigor.md`): Principle 1
+A / B or rigor strict → TDD active · Principle 1 C → header `> **TDD**: test-after (Principle 1 C)`.
+Only when the constitution has no Principle 1: ASK "Generate test tasks (TDD) or skip tests?";
+skip → `> **TDD**: Bypassed by user request` (the final review notes the weaker guarantee).
 
 ## Layout
 - S: one flat list, `[TEST]` tasks first, then code. M/L: Setup/Foundational → one phase per

@@ -7,6 +7,7 @@ in context; open `spec-kit/references/skills/<skill>.md` only for the step you a
 ```
 1. BRANCH   git rev-parse --abbrev-ref HEAD ∈ blocked_branches (git-conventions.md)
             → BLOCK "feature branch required: git checkout -b {feature_prefix}/NNN-name"
+            `blocked_branches: none` (rigor lean, trunk) → commits on main are allowed
 2. MODE     specs/[feature]/bugs.md has Status: open | in-progress
             → bugfix mode: code only through 'bugfix [feature]' (plan → tasks → implement)
 3. LOG BEFORE FIX   the user reports a bug with no BUG-NNN entry
@@ -14,7 +15,8 @@ in context; open `spec-kit/references/skills/<skill>.md` only for the step you a
 4. CONVENTIONS      specs/git-conventions.md missing → create from
             spec-kit/templates/git-conventions-template.md; `Conventions version:` < 1 → say so
 5. PHASE CARD       MCP: mcp_spec_kit_get_next_actions(feature) — read it; no MCP: derive the
-            phase from the files and state it in one line. Source code outside Implement → BLOCK
+            phase from the files and state it in one line. The card names the RIGOR (lean |
+            standard | strict, spec-kit/references/rigor.md): ceremony = rigor × size. Source code outside Implement → BLOCK
             history ON for this feature (phase card; history-tracking.md) and history.md missing
             → create it (spec-kit/templates/history-template.md)
 6. ASSUMPTIONS      at every ASK / WAIT with no human answer: record an `assumption` in

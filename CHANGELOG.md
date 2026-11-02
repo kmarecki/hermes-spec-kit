@@ -8,6 +8,31 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — project rigor (lean / standard / strict) and Hermes ↔ Claude Code parity checks
+
+- **`references/rigor.md`**: `ceremony = rigor (project) × size (feature)`. The constitution asks
+  **Level 0 — context** first (hobby / indie / team / platform / regulated) and recommends rigor,
+  doc scale and compliance; `rigor:` goes into git-conventions (absent = standard), a spec can raise
+  it (`**Rigor**:`), lowering needs a ruling. Principle defaults: matrix → rigor → traits.
+- **lean**: trunk — commits on `main` (`blocked_branches: none`, preflight allows it); 4 principles
+  asked; TDD from Principle 1 (C → `> **TDD**: test-after`, no RED files, freeze after GREEN);
+  default size S; two commits per feature; no acceptance loop (the gate opens without
+  acceptance.md); a self-check final round; change record optional; history never.
+  **strict**: RED/GREEN always, other-agent review + human approver for L, change record
+  required, history always. The floor never moves.
+- TDD is no longer asked per feature — tasks reads Principle 1 (asks only when there is none).
+- Constitution: **Engineering guidelines** section (layout and boundaries of the option, lint /
+  format config, testing shape per purpose, coverage per rigor); in standard / strict every MUST
+  becomes a merge-checklist P-item.
+- Server: `rigor` in the state and on the phase card; history default from the rigor; lint skips
+  RED-file warnings for test-after, probe and change-record warnings for lean, warns on a spec
+  lowering the rigor without a ruling and on trunk outside lean.
+- **Parity**: `install-claude.sh` refuses to link a Hermes tree that differs from `src/` (run
+  `install.sh` first, or `--from-src`); design's argument hint advertises `map`;
+  `test_skills.py` generates the Claude edition in a temp dir and checks it against the Hermes
+  sources (same skills and steps, no untranslated names, every named file present, references
+  byte-identical) and that every `spec-kit/…` path in the Hermes sources exists.
+
 ### Added — project documents at setup: scale, `design map`, retroactive ADRs
 
 - **Constitution Step 7 — project documents**: asks the scale (*small*: no ADR / design / epic

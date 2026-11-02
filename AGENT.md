@@ -44,7 +44,7 @@ The system has three operational layers plus an optional MCP state layer:
 │              Artifact & Storage Layer                         │
 │  Markdown files in specs/ — additive-only, never overwritten │
 │  Templates in spec-kit/templates/ — 17 templates             │
-│  References in spec-kit/references/ — 7 shared files         │
+│  References in spec-kit/references/ — 10 shared files        │
 │  history.md — per-phase record, kept for size L by default   │
 │  (history: large); change-record.md at close carries the     │
 │  timeline that survives the squash-merge                     │
@@ -297,7 +297,7 @@ hermes-spec-kit/
 │   │   ├── git-conventions-template.md
 │   │   └── gitignore-template.md
 │   ├── scripts/spec-kit-log.sh · spec-kit-history.sh   # no-MCP history appender · git timeline when history is off
-│   └── references/                   # 8 shared files + skills/ (full procedures — the delta over SKILL.md)
+│   └── references/                   # 10 shared files + skills/ (full procedures — the delta over SKILL.md)
 │       ├── preflight.md              # Pre-action self-check + commit procedure + no-overwrite rule
 │       ├── commits.md                # Commit messages per skill (history entry first)
 │       ├── history-tracking.md       # history.md: when kept (history: always|large|never, spec override), format, guard
@@ -357,8 +357,10 @@ paths resolved to `~/.claude/skills/spec-kit/references/…`), symlinks
 `references/`, `templates/`, `mcp-server/` and per-skill `references/` to
 `~/.hermes/skills/…`, and runs `claude mcp add -s user spec-kit …`. The transform
 lives in that one script — when you add a Hermes tool name or a new shared path to
-a skill, extend the `subs` table there and re-run both installers. Never edit
-`~/.claude/skills/spec-kit*/SKILL.md` by hand.
+a skill, extend the `subs` table there and re-run both installers (`install.sh` first — the
+Claude installer refuses a Hermes tree that differs from `src/`; `--from-src` copies instead).
+`test_skills.py` (`test_claude_edition_parity`, `test_hermes_paths_resolve`) keeps both editions
+in parity. Never edit `~/.claude/skills/spec-kit*/SKILL.md` by hand.
 
 ### Testing
 

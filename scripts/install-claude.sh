@@ -20,6 +20,8 @@
 # Usage:
 #   ./scripts/install-claude.sh            # install / refresh
 #   ./scripts/install-claude.sh --no-mcp   # skills only, skip MCP registration
+#   ./scripts/install-claude.sh --from-src # copy references/templates/mcp-server from src/ instead of
+#                                          # linking the Hermes tree (no Hermes, or a stale one)
 #   ./scripts/install-claude.sh --uninstall
 
 set -euo pipefail
@@ -31,11 +33,13 @@ HERMES_SPEC_KIT="$HERMES_SKILLS_DIR/spec-kit"
 
 DO_MCP=1
 DO_UNINSTALL=0
+FROM_SRC=0
 for arg in "$@"; do
   case "$arg" in
     --no-mcp) DO_MCP=0 ;;
     --uninstall) DO_UNINSTALL=1 ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    --from-src) FROM_SRC=1 ;;
+    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
     *) echo "Unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -63,6 +67,26 @@ fi
 # ───────────────────────────── install ───────────────────────────────
 echo "Installing spec-kit (Claude Code edition) from $PROJECT_DIR to $CLAUDE_SKILLS_DIR..."
 mkdir -p "$CLAUDE_SKILLS_DIR"
+
+# Parity guard: the Claude edition links references/, templates/ and mcp-server/ to the installed
+# Hermes tree. A stale tree would hand Claude skills that name files it does not have — refuse,
+# unless --from-src copies them from this checkout instead.
+if [ "$FROM_SRC" -eq 0 ] && [ -d "$HERMES_SPEC_KIT" ]; then
+  stale=()
+  for f in "$PROJECT_DIR"/src/references/*.md "$PROJECT_DIR"/src/references/skills/*.md; do
+    rel="${f#"$PROJECT_DIR"/src/}"
+    cmp -s "$f" "$HERMES_SPEC_KIT/$rel" || stale+=("$rel")
+  done
+  for f in "$PROJECT_DIR"/src/templates/*.md; do
+    cmp -s "$f" "$HERMES_SPEC_KIT/templates/$(basename "$f")" || stale+=("templates/$(basename "$f")")
+  done
+  cmp -s "$PROJECT_DIR/spec-kit-mcp-server/server.py" "$HERMES_SPEC_KIT/mcp-server/server.py" || stale+=("mcp-server/server.py")
+  if [ "${#stale[@]}" -gt 0 ]; then
+    echo "ERROR: the Hermes tree $HERMES_SPEC_KIT is out of date with src/ (${#stale[@]} file(s), e.g. ${stale[0]})." >&2
+    echo "       Run ./scripts/install.sh first (both agents stay in parity), or re-run with --from-src." >&2
+    exit 1
+  fi
+fi
 
 # The transform: Hermes skill source → Claude Code SKILL.md.
 # Kept in one place so a diff of the two editions is ONLY the translation.
@@ -94,7 +118,7 @@ arg_hint = {
     "spec-kit-constitution": "[project description]",
     "spec-kit-workflow": "[command] [feature]",
     "spec-kit-epic": "[epic]",
-    "spec-kit-design": "[module]",
+    "spec-kit-design": "[module | map]",
 }.get(skill, "[feature]")
 
 out = ["---", f"name: {skill}", f"description:{description}"]
@@ -187,7 +211,7 @@ link_or_copy() {
   if [ -e "$link" ] && [ ! -L "$link" ]; then
     rm -rf "$link"            # replace an earlier copied directory with the link
   fi
-  if [ -d "$target" ]; then
+  if [ "$FROM_SRC" -eq 0 ] && [ -d "$target" ]; then
     ln -sfn "$target" "$link"
     echo "  Linking $label -> $target"
   elif [ -n "$fallback_src" ] && [ -d "$fallback_src" ]; then

@@ -46,6 +46,15 @@ IF specs/constitution.md EXISTS:
   HALT — constitution is one-time setup, do not overwrite without user intent
 ```
 
+### Step 0.5: Level 0 — context and rigor (both modes, asked first)
+
+ASK who the project is for and what is at stake — hobby / learning · indie or solo product ·
+startup or small team · established product or platform · regulated or safety-critical. Recommend
+the rigor, doc scale and compliance from the Level 0 table in `spec-kit/references/rigor.md`
+(recommendation first); a regulated / safety-critical trait found later forces strict. RECORD
+rigor (written to git-conventions in Step 7). The rigor changes the principle defaults (Step 2c),
+how many principles are asked (Step 3) and the engineering guidelines (Step 5).
+
 ### Step 1: Detect mode — brownfield vs greenfield
 
 ```
@@ -166,7 +175,9 @@ FOR each principle:
 
 **For each principle, present the 3 options as a formatted table.**
 Always show pros and cons. Never skip the choice — even if a detected default
-exists, the user may disagree.
+exists, the user may disagree. **Rigor lean**: present only Testing, Architecture, Git workflow
+and Config / secrets; list the other 8 with their defaults in one table and open any the user
+names — the rest are recorded as "default (lean)".
 
 ```
 PRESENT for each principle:
@@ -213,6 +224,16 @@ IF project has no database (no DB config, no ORM, no schema files):
 ```
 COPY spec-kit/templates/constitution-template.md → specs/constitution.md
 
+ENGINEERING GUIDELINES (the template section) from stack + Level 2 option + rigor:
+  lean      one line — "framework defaults; <formatter> on save"
+  standard  layout and boundaries of the option (e.g. A2: modules own their data, no
+            cross-module tables), the lint / format config to add, the testing shape of the
+            purpose (A integration + Testcontainers · D unit + property · A5 evals · H4 data
+            tests · G e2e in the host), coverage on changed core logic; each MUST → a P-item
+            in specs/merge-checklist.md (create from the template) — WAIT
+  strict    standard + architecture tests (ArchUnitNET / dependency-cruiser / import-linter),
+            coverage ≥ 80 %, mutation testing optional
+
 FILL each section with:
   - Chosen option letter and name
   - Full rule text from the reference
@@ -244,7 +265,9 @@ The constitution decides the rules; this step decides which living documents the
 (document roles: ADR = why · design doc = how it works now · epic = what, in what order).
 
 ```
-ASK scale (recommendation first):
+WRITE rigor: <lean|standard|strict>; lean + Principle 5 = A → blocked_branches: none (trunk).
+SCALE follows Level 0 (hobby / indie / small team → small; platform / regulated → platform);
+ASK only when Level 0 left it unclear (recommendation first):
   small     — one deployable, one team: no adr_dir / design_dir / epics_dir; the plan's
               Current Design is the design; ADRs only if a close finds one worth it
   ⭐ platform — several deployables, modules or teams (brownfield with > 1 project ⇒ platform):

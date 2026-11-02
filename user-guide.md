@@ -720,6 +720,25 @@ the ACs by the id in the test name. Failures become bugs, the bugfix chain runs,
 acceptance round repeats — until every automated AC passes, or it stops and asks after 5
 rounds, no progress, a needed spec or frozen-test change, or a run that cannot execute.
 
+### Rigor (lean / standard / strict) — per project
+The constitution's first question (Level 0) asks who the project is for: hobby / indie →
+**lean**, team → **standard**, platform → standard or **strict**, regulated / safety-critical →
+**strict** (forced). It is written as `rigor:` in `specs/git-conventions.md` (absent = standard);
+a spec may raise it with `**Rigor**:`, lowering needs a ruling. `ceremony = rigor × size`:
+
+- **lean** — trunk (commits on `main`, `blocked_branches: none`), only 4 principles asked, TDD
+  follows Principle 1 (C → test-after, no RED files), default size S, spec + plan + tasks in one
+  commit and the implementation in one, no acceptance loop, a one-paragraph self-check as the
+  final review, change record optional, no history.md.
+- **standard** — the workflow described in this guide.
+- **strict** — RED/GREEN on every phase, acceptance loop + CI, the final review by another agent,
+  a named human approver for L, change record required, history.md always.
+
+The floor never moves: a spec exists, something not written by the agent shows it works (test
+output, CI, or your quoted words), the diff scan runs, and the close patches AGENTS.md. TDD is
+no longer asked per feature — the tasks phase reads it from the constitution. See
+`references/rigor.md`.
+
 ### Size tiers (S / M / L)
 Specify always asks for the tier, with its recommendation first. S trims the templates and
 chains specify → plan → tasks into one commit; M is the default; L adds the full artifact
