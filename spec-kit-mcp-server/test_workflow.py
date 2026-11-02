@@ -581,6 +581,48 @@ async def test_rigor(s, root):
     check("  with a ruling in decisions.md → quiet", not any("lowers" in f["msg"] for f in d["findings"]))
 
 
+async def test_rigor_gates(s, root):
+    print("\n═══ rigor: trunk diff_scan, test-after regex, strict approver, lean oracle ═══")
+    conv = Path(root) / "specs/git-conventions.md"
+    conv.write_text("rigor: lean\nblocked_branches: none\nbranch_source: main\n")
+    git(root, "init", "-q", "-b", "main")
+    (Path(root) / "src").mkdir(); (Path(root) / "src/app.py").write_text("x = 1\n")
+    write(root, "t1", "spec.md", "# Spec\n\n**Size**: S — x\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
+    write(root, "t1", "plan.md", "# plan\n- src/app.py\n")
+    write(root, "t1", "tasks.md", "# Tasks\n\n**Input**: x · **TDD**: active\n*(or `> **TDD**: test-after (Principle 1 C)` …)*\n- [x] T001 [TEST] [AC-001] change — src/app.py\n")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "spec(phase-1-3): t1 spec, plan, tasks")
+    (Path(root) / "src/app.py").write_text("x = 2\npassword = 'hunter2hunter2'\n")
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "feat: t1 - on trunk")
+    d = await call(s, "diff_scan", {"feature": "t1"})
+    checks = {f["check"] for f in d.get("findings", [])}
+    check("trunk: diff_scan scans from the spec commit and finds the secret", "secret-assignment" in checks and d["files_changed"] == 1 and d["base"].startswith("trunk since"), json.dumps(d)[:300])
+    d = await call(s, "lint_artifacts", {"feature": "t1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("template example text does not count as test-after → RED warning stays", "-red" in msgs, msgs)
+    head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=root, capture_output=True, text=True).stdout.strip()
+    write(root, "t1", "review-final.md", FINAL.format(n=1, v="READY", c=head))
+    d = await call(s, "lint_artifacts", {"feature": "t1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("lean, no acceptance.md, round without an oracle → warning", "name the oracle" in msgs, msgs)
+    write(root, "t1", "review-final.md", FINAL.format(n=1, v="READY", c=head) + "Oracle: output:evidence/p1-green.txt\n")
+    d = await call(s, "lint_artifacts", {"feature": "t1"})
+    check("  round naming output: → quiet", not any("oracle" in f["msg"] for f in d["findings"]))
+
+    conv.write_text("rigor: strict\n")
+    write(root, "t2", "spec.md", "# Spec\n\n**Size**: L — x\n")
+    write(root, "t2", "plan.md", "# Plan\n"); write(root, "t2", "tasks.md", "# Tasks\n- [x] T001 t — src/b.py\n")
+    write(root, "t2", "history.md", "# Process History\n")
+    write(root, "t2", "review-final.md", FINAL.format(n=1, v="READY", c=head) + "**Approved-by**: [<human> — quoted]\n")
+    d = await call(s, "advance_phase", {"feature": "t2", "from_phase": 5})
+    check("strict + L, placeholder approver → close blocked", "Approved-by" in d.get("error", "") and "strict + size L" in d.get("error", ""), json.dumps(d))
+    write(root, "t2", "review-final.md", FINAL.format(n=1, v="READY", c=head) + '**Approved-by**: K. Owner — "approved"\n')
+    d = await call(s, "advance_phase", {"feature": "t2", "from_phase": 5})
+    check("  named human → gate opens", d.get("success"), json.dumps(d))
+    write(root, "t3", "spec.md", "# Spec\n\n**Size**: M — x\n"); write(root, "t3", "plan.md", "# Plan\n")
+    write(root, "t3", "tasks.md", "# Tasks\n- [x] T001 t — src/c.py\n"); write(root, "t3", "history.md", "# Process History\n")
+    write(root, "t3", "review-final.md", FINAL.format(n=1, v="READY", c=head))
+    d = await call(s, "advance_phase", {"feature": "t3", "from_phase": 5})
+    check("strict + M → no approver needed", d.get("success"), json.dumps(d))
+
+
 async def run_in_tmp(test_fn):
     root = tempfile.mkdtemp(prefix="spec-kit-test-")
     try:
@@ -600,7 +642,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor]:
+              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates]:
         try:
             await run_in_tmp(t)
         except Exception as e:

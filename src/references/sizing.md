@@ -35,7 +35,7 @@ Typo, rename, config value → no spec-kit at all.
 | Specify → Plan → Tasks | **auto-chained**, ONE commit `spec(phase-1-3)` | one commit per phase | one commit per phase |
 | tasks.md | flat list, ≤ ~8 tasks | phases | phases |
 | Pre-implement review (3.5) | skip | **lite**: coverage, underspecification, codebase fit, devil's advocate | **required, full** + devil's advocate by a separate sub-agent |
-| Implement evidence | **same for every tier**: `probe:` per `[SEAM]`, RED and GREEN file per phase, AC tests frozen after RED | same | same |
+| Implement evidence | **same for every tier**: `probe:` per `[SEAM]`, RED and GREEN file per phase (test-after: GREEN only — `rigor.md`), AC tests frozen after RED (test-after: after GREEN) | same | same |
 | **Acceptance round** (`acceptance.md`) | **every tier**: automated ACs run and recorded; manual ACs carry the user's quoted confirmation | same | same |
 | `ci:<id>` | when a pipeline exists | yes | yes |
 | Final review (5.5) | §1 coverage line + exceptions, §2 rules, §4 devil's advocate (brief), §5 checklist; no stack research | full, exceptions-only tables | full, by the other agent or a fresh-context sub-agent; devil's advocate separate |
@@ -43,7 +43,7 @@ Typo, rename, config value → no spec-kit at all.
 | ADR / AGENTS.md step | yes ("none met the bar" is fine) | yes | yes |
 | `history.md` (default `history: large`; spec `**History**:` overrides) | off — timeline from git at close | off | **on** — entry before every commit |
 
-**What never shrinks**: the RED/GREEN files, the probe per seam, the acceptance round that
+**What never shrinks with size** (the rigor may: `rigor.md`): the RED/GREEN files, the probe per seam, the acceptance round that
 documents every AC passing (automated where a harness exists, `manual` with the user's quoted
 words where none can), the oracle rule (your word is not evidence), the final-review gate,
 the change record. A small change still has to prove it works.

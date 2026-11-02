@@ -1,6 +1,6 @@
 # Hermes Spec-Kit
 
-Spec-driven development for Hermes Agent. 11 skills implementing a structured phase-based workflow with three development modes, a constitution decision tree (11 purposes × 44 architecture options + project traits), mandatory close with spec health scoring, and a reopen flow for fixing closed features. Includes an optional MCP server for deterministic state management.
+Spec-driven development for Hermes Agent. 14 skills implementing a structured phase-based workflow with three development modes, a constitution decision tree (11 purposes × 44 architecture options + project traits), mandatory close with spec health scoring, and a reopen flow for fixing closed features. Includes an optional MCP server for deterministic state management.
 
 ## Quick Start
 
@@ -71,7 +71,7 @@ spec-kit-mcp-server/
 
 ## Skills
 
-11 skills covering every phase + refresh and workflow routing.
+14 skills covering every phase + refresh, review, epic, design and workflow routing.
 (The former `spec-kit-bugfix` alias skill was removed — its function is absorbed into the
 workflow skill's bugfix routing.)
 

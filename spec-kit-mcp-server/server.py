@@ -88,7 +88,9 @@ _HISTORY_ENTRY_RE = re.compile(r"^## \[?([0-9T:\-+.Z]+)\]? *\| *(.*)$", re.M)
 _SIZE_RE = re.compile(r"^\*\*Size\*\*:\s*\[?([SML])\b", re.M)
 _HISTORY_RE = re.compile(r"^\*\*History\*\*:\s*\[?(on|off)\b", re.M | re.I)
 _RIGOR_RE = re.compile(r"^\*\*Rigor\*\*:\s*\[?(lean|standard|strict)\b", re.M | re.I)
-_TEST_AFTER_RE = re.compile(r"\*\*TDD\*\*:\s*(test-after|Bypassed)", re.I)
+_TEST_AFTER_RE = re.compile(r"^>?\s*\*\*TDD\*\*:\s*(test-after|Bypassed)", re.M | re.I)
+_APPROVED_BY_RE = re.compile(r"^\*\*Approved-by\*\*:\s*(?!\[|pending\b)\S", re.M | re.I)
+_ORACLE_RE = re.compile(r"\boutput:|\bci:|\buser\b|\bprobe:", re.I)
 RIGOR_LEVELS = ("lean", "standard", "strict")
 RIGOR_HISTORY = {"lean": "never", "standard": "large", "strict": "always"}
 _EPIC_RE = re.compile(r"^\*\*Epic\*\*:\s*\[?([A-Za-z0-9][\w.-]*)", re.M)
@@ -374,8 +376,17 @@ def _acceptance_problem(fd):
     return None
 
 
+def _approval_required(fd):
+    """Why the latest final-review round must name a human approver (references/rigor.md:
+    rigor strict + size L); None when no rule applies. Other profiles add their reasons here."""
+    if _rigor(fd)[0] == "strict" and (_parse_size(fd) or "M") == "L":
+        return "rigor strict + size L"
+    return None
+
+
 def _final_review(fd):
-    """The latest round of review-final.md: verdict, reviewed commit, and whether code changed since."""
+    """The latest round of review-final.md: verdict, reviewed commit, whether code changed since,
+    and whether a required human approval is missing."""
     f = fd / FINAL_REVIEW
     if not f.exists():
         return {"present": False, "rounds": 0, "verdict": None, "reviewed_commit": None, "stale": None}
@@ -386,8 +397,10 @@ def _final_review(fd):
     cm = _REVIEWED_COMMIT_RE.search(last)
     commit = cm.group(1) if cm else None
     stale = _code_changed_since(commit) if commit else None
+    why = _approval_required(fd)
     return {"present": True, "rounds": len(rounds), "verdict": vm.group(1) if vm else None,
-            "reviewed_commit": commit, "stale": stale}
+            "reviewed_commit": commit, "stale": stale,
+            "approval_missing": why if (why and not _APPROVED_BY_RE.search(last)) else None}
 
 
 def _final_review_problem(fr):
@@ -404,6 +417,8 @@ def _final_review_problem(fr):
         return f"{FINAL_REVIEW}: latest round has no '**Reviewed-commit**:' sha"
     if fr["stale"]:
         return f"{FINAL_REVIEW}: code changed after the reviewed commit {fr['reviewed_commit']} — re-run the final review"
+    if fr.get("approval_missing"):
+        return f"{FINAL_REVIEW}: {fr['approval_missing']} needs '**Approved-by**: <human> — \"<quoted words>\"' in the latest round (references/rigor.md)"
     return None
 
 
@@ -477,7 +492,7 @@ def _phase_card(state):
         1: "spec.md written → commit spec(phase-1)",
         2: "plan artifacts written → commit spec(phase-2)",
         3: "tasks.md written, TDD from the constitution (Principle 1 / rigor) → commit spec(phase-3)",
-        4: "phase RED/GREEN evidence saved, probes per [SEAM], tasks [X], history entry with Implemented-by → one commit per phase; then accept",
+        4: "phase RED/GREEN evidence saved (test-after: GREEN only), probes per [SEAM], tasks [X], history entry with Implemented-by → one commit per phase (lean: one); then accept",
         5: f"{state['bugs']['open']} open, {state['bugs']['claimed']} claimed-unverified → verify with user/ci/other-agent or run 'bugfix {f}'; then the final review ({FINAL_REVIEW}) must say READY",
         6: "final review READY and fresh, every bug verified/superseded, close.md (Architecture Decisions) + change-record.md → one commit spec(phase-6)",
     }[phase]
@@ -1040,6 +1055,11 @@ def lint_artifacts(feature: str) -> str:
         if not (Path(design_dir) / f"{module}.md").exists():
             findings.append({"file": "plan.md", "severity": "warning", "msg": f"module {module} has no {design_dir}/{module}.md — the close cannot patch it (spec-kit design {module})"})
 
+    if _rigor(fd)[0] == "lean" and _parse_acs(fd) and not (fd / ACCEPTANCE).exists() and (fd / FINAL_REVIEW).exists():
+        rtext = (fd / FINAL_REVIEW).read_text(errors="replace")
+        rr = list(_ROUND_RE.finditer(rtext))
+        if rr and not _ORACLE_RE.search(rtext[rr[-1].start():]):
+            findings.append({"file": FINAL_REVIEW, "severity": "warning", "msg": "rigor lean without acceptance.md — the latest round must name the oracle (output:<file>, ci:<id> or the user's quoted words) (references/rigor.md floor)"})
     spec_rigor = _RIGOR_RE.search((fd / "spec.md").read_text(errors="replace")) if (fd / "spec.md").exists() else None
     project_rigor = (conv.get("rigor") or "standard").lower()
     if spec_rigor and project_rigor in RIGOR_LEVELS and RIGOR_LEVELS.index(spec_rigor.group(1).lower()) < RIGOR_LEVELS.index(project_rigor) \
@@ -1217,8 +1237,30 @@ def diff_scan(feature: str, base: str = None) -> str:
         return _json({"error": f"cannot find merge-base of '{base}' and HEAD — fetch the base branch or pass base="})
     mb = mb.strip()
     findings = []
+    _, head = _git("rev-parse", "HEAD")
+    trunk = mb == head.strip() or _conventions().get("blocked_branches", "").lower() == "none"
+    if trunk:
+        # On the base itself (rigor lean, trunk) merge-base..HEAD is empty. Scan from the
+        # feature's first commit: its spec commit, else the last close of any feature, else HEAD~1.
+        start = None
+        for pattern in (f"spec(phase-1-3): {feature}", f"spec(phase-1): {feature}"):
+            _, log = _git("log", "--fixed-strings", f"--grep={pattern}", "--format=%H")
+            if log.strip():
+                start = log.strip().splitlines()[-1]
+                break
+        if start is None:
+            _, log = _git("log", "--fixed-strings", "--grep=spec(phase-6)", "-1", "--format=%H")
+            start = log.strip() or None
+        if start is None:
+            _, prev = _git("rev-parse", "--verify", "--quiet", "HEAD~1")
+            start = prev.strip() or mb
+        if start == head.strip():  # the spec commit is HEAD: nothing after it yet
+            _, prev = _git("rev-parse", "--verify", "--quiet", f"{start}~1")
+            start = prev.strip() or start
+        mb = start
+        base = f"trunk since {start[:12]}"
 
-    rc, out = _git("merge-tree", "--write-tree", "--name-only", "--no-messages", base, "HEAD")
+    rc, out = (0, "") if trunk else _git("merge-tree", "--write-tree", "--name-only", "--no-messages", base, "HEAD")
     if rc == 1:
         conflicted = [l for l in out.splitlines()[1:] if l.strip()]
         findings.append({"check": "merge-conflict", "severity": "error", "file": None,

@@ -49,7 +49,9 @@ defaults the user may open.
 ## Floor — never below, at any rigor
 
 A spec exists · something **not written by the agent** shows it works (test output, `ci:`, or the
-user's quoted words) · the diff scan (secrets, conflict markers) runs · the close patches AGENTS.md.
+user's quoted words — lean without `acceptance.md`: named in the final round, lint checks for it) ·
+the diff scan (secrets, conflict markers) runs — on trunk it scans from the feature's spec commit ·
+the close patches AGENTS.md. Strict + size L: `**Approved-by**:` a named human (gate).
 
 ## Test-after (Principle 1 = C, or TDD bypassed)
 

@@ -19,7 +19,7 @@ accept, status) is `spec-kit-workflow`; phase skills trigger themselves.
 
 ```text
 Constitution → Specify (size S/M/L, ACs, Security & Privacy) → [Clarify] → Plan → Tasks → [Review 3.5]
-  → Implement (RED/GREEN + probes, every tier) → Accept loop → Test → Final review 5.5 (+ devil's advocate)
+  → Implement (RED/GREEN + probes; test-after when Principle 1 = C) → Accept loop → Test → Final review 5.5 (+ devil's advocate)
   → Close (close.md + change-record.md, ADRs, AGENTS.md)            bugfix loop: Plan → Tasks → Implement → Accept
 ```
 
@@ -38,8 +38,8 @@ Constitution → Specify (size S/M/L, ACs, Security & Privacy) → [Clarify] →
 **Mandatory**: constitution once per project; size asked at specify; the final review; the close.
 
 ## Conventions
-- **Record** (`spec-kit/references/history-tracking.md`): `history: large` by default — size L keeps `history.md` (one fixed-field entry per phase, appended before every commit via `mcp_spec_kit_append_history` / `spec-kit/scripts/spec-kit-log.sh`, guarded by `mcp_spec_kit_history_guard`); S/M do not, and the close builds the timeline from git (`spec-kit/scripts/spec-kit-history.sh`). `**History**: on|off` in a spec overrides. Either way `change-record.md` carries the timeline that survives the squash-merge. Messages: `spec-kit/references/commits.md`.
-- **Evidence** (`spec-kit/references/evidence.md`): the agent's word is never evidence; probes per seam, RED/GREEN files every tier, `ci:`/`user`/`review:<other-agent>` verify.
+- **Record** (`spec-kit/references/history-tracking.md`): `history: large` is the standard default (lean never · strict always) — size L keeps `history.md` (one fixed-field entry per phase, appended before every commit via `mcp_spec_kit_append_history` / `spec-kit/scripts/spec-kit-log.sh`, guarded by `mcp_spec_kit_history_guard`); S/M do not, and the close builds the timeline from git (`spec-kit/scripts/spec-kit-history.sh`). `**History**: on|off` in a spec overrides. Either way `change-record.md` carries the timeline that survives the squash-merge. Messages: `spec-kit/references/commits.md`.
+- **Evidence** (`spec-kit/references/evidence.md`): the agent's word is never evidence; probes per seam, RED/GREEN files every size (test-after: GREEN), `ci:`/`user`/`review:<other-agent>` verify.
 - **Rigor** (`spec-kit/references/rigor.md`): project-wide lean / standard / strict from the constitution's Level 0 — lean: trunk, test-after when Principle 1 = C, self-check review; strict: RED/GREEN always, other-agent + human approval. `ceremony = rigor × size`; the floor never moves.
 - **Size** (`spec-kit/references/sizing.md`): S / M / L — leaner workflow and shorter artifacts (S = a bugfix or small enhancement: a few-line spec, 1–2 ACs, one commit for spec+plan+tasks); evidence and the acceptance round never shrink.
 - **Additive only**: no spec artifact is ever rewritten (`spec-kit/references/preflight.md`).

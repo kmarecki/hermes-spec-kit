@@ -152,7 +152,7 @@ cons, mark them *(not from the reference tables)* in the constitution's Architec
 
 | Option | Name | Description | Pros | Cons |
 |---|---|---|---|---|
-| **I1** | Bare-Metal / RTOS | Zephyr, FreeRTOS, ESP-IDF, Rust Embassy. | Lowest latency and power | No memory protection |
+| **I1** ⭐ | Bare-Metal / RTOS | Zephyr, FreeRTOS, ESP-IDF, Rust Embassy. | Lowest latency and power | No memory protection |
 | **I2** | Linux Embedded | Yocto, Buildroot, Ubuntu Core, containers, A/B OTA. | Rich ecosystem | Footprint, patching duty |
 | **I3** | High-Level Firmware | Arduino, MicroPython, CircuitPython. | Fastest prototype | Limited control |
 | **I4** | Connected Fleet | Devices + cloud: provisioning and identity per device, MQTT / IoT hub (AWS IoT, Azure IoT Hub), signed OTA with rollback, telemetry pipeline. | Manageable at scale | Two systems to secure; update failures brick devices |

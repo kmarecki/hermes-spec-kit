@@ -27,6 +27,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 - Server: `rigor` in the state and on the phase card; history default from the rigor; lint skips
   RED-file warnings for test-after, probe and change-record warnings for lean, warns on a spec
   lowering the rigor without a ruling and on trunk outside lean.
+- Gates that the rigor rules promise are mechanical: `diff_scan` on trunk (rigor lean, HEAD on the
+  base) scans from the feature's spec commit instead of an empty merge-base range; strict + size L
+  needs a named human `**Approved-by**:` in the latest final round (`_approval_required`, shared
+  with the compliance profile); lean without `acceptance.md` lints the final round for its oracle;
+  the test-after header regex is line-anchored (the tasks template's example text no longer
+  switches RED warnings off); `history:` ships commented so the rigor decides it.
 - **Parity**: `install-claude.sh` refuses to link a Hermes tree that differs from `src/` (run
   `install.sh` first, or `--from-src`); design's argument hint advertises `map`;
   `test_skills.py` generates the Claude edition in a temp dir and checks it against the Hermes

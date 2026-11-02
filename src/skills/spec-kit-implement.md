@@ -34,7 +34,7 @@ metadata:
 - A question the user would want to decide → `decisions.md` assumption (preflight 6).
 
 ## After all phases
-6. Spec has ACs → route `accept [feature]` (`spec-kit-test` accept mode — full fast suites + this feature's e2e, failures → bugs → bugfix chain). No ACs → full regression `evidence/regression-<date>.txt` + `ci:<id>`; failures → `BF-REGRESSION-001`.
+6. Spec has ACs → route `accept [feature]` (rigor lean: ONE recorded run, no loop — failures → bugs, the user decides; else `spec-kit-test` accept mode — full fast suites + this feature's e2e, failures → bugs → bugfix chain). No ACs → full regression `evidence/regression-<date>.txt` + `ci:<id>`; failures → `BF-REGRESSION-001`.
 7. Build verification. MCP: `mcp_spec_kit_advance_phase(from_phase=4)`.
 
 ## Done when

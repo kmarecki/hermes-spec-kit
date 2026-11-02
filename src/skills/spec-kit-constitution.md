@@ -32,7 +32,7 @@ metadata:
 6. **Project documents** (full procedure Step 7): write `rigor:`; lean + Principle 5 A → `blocked_branches: none` (trunk); the scale follows Level 0 (**ASK** only if unclear) — small (no ADR / design / epic dirs) or ⭐ platform (`adr_dir`, `design_dir`, `epics_dir`; brownfield with > 1 deployable ⇒ platform); write the keys into `specs/git-conventions.md`; existing doc dirs → point at them; AGENTS.md missing → `spec-kit/templates/AGENTS-template.md`, exists → patch the spec-kit block only (**WAIT**).
 
 ## Done when
-- [ ] Every principle chosen by the user (never silently); skipped ones listed with a reason.
+- [ ] Every principle chosen by the user (never silently) — lean: the 4 asked, the other 8 recorded as "default (lean)"; skipped ones listed with a reason.
 - [ ] MCP (optional): `mcp_spec_kit_project_set_constitution(status="present")` (checks the file exists).
 - [ ] Commit directly (`spec-kit/references/commits.md`): `spec(phase-0): constitution for [PROJECT]`.
 

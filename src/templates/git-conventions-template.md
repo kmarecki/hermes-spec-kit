@@ -65,7 +65,7 @@ use the default.
 agents_file: AGENTS.md          # the agent context file kept current at close (also CLAUDE.md if it restates it)
 merge_checklist: specs/merge-checklist.md
 # rigor: standard             # lean | standard | strict — set by the constitution (Level 0); absent = standard (spec-kit/references/rigor.md)
-history: large                  # always | large | never — keep specs/<feature>/history.md: large = size L only (default); spec.md `**History**: on|off` overrides
+# history: large              # always | large | never — keep specs/<feature>/history.md; absent → from the rigor (lean never · standard large = size L only · strict always); spec.md `**History**: on|off` overrides
 # design_dir: docs/design       # living module design docs (design-doc-template.md); ABSENT → plan.md's Current Design is the only design, nothing else is created
 # epics_dir: specs/epics        # epics as specs/epics/NNN-name/{epic,plan,features,review}.md (NNN = tracker epic id, e.g. ADO); ABSENT → every feature is its own epic
 # epics_index: on               # on | off — keep [epics_dir]/README.md, the roadmap table (one row per epic), maintained by spec-kit-epic

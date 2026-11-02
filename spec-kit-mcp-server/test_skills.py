@@ -14,7 +14,7 @@ Tests:
  10. No orphan references and no missing phases
 """
 
-import re, sys, yaml, json
+import os, re, sys, yaml, json
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -472,6 +472,13 @@ def test_hermes_paths_resolve():
             if not (REPO / "src" / kind / rel).exists():
                 missing.add(f"{f.name} → spec-kit/{kind}/{rel}")
     check("every spec-kit/references|templates path exists", not missing, ", ".join(sorted(missing)))
+    # the server imports the mcp SDK; read its regex from the source instead of importing it
+    src = (REPO / "spec-kit-mcp-server" / "server.py").read_text()
+    line = next(l for l in src.splitlines() if l.startswith("_TEST_AFTER_RE = "))
+    test_after = eval(line.split("=", 1)[1].strip(), {"re": re})
+    tmpl = (TEMPLATES_DIR / "tasks-template.md").read_text()
+    check("tasks template example text does not trip the test-after regex", not test_after.search(tmpl))
+    check("  a real test-after header does", bool(test_after.search("# T\n> **TDD**: test-after (Principle 1 C)\n")))
 
 
 def test_claude_edition_parity():
@@ -480,7 +487,7 @@ def test_claude_edition_parity():
     print("\n═══ Claude Code edition: parity with the Hermes sources ═══")
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
-        env = {"PATH": "/usr/bin:/bin", "HOME": str(tmp), "CLAUDE_SKILLS_DIR": str(tmp / "claude"),
+        env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(tmp), "CLAUDE_SKILLS_DIR": str(tmp / "claude"),
                "HERMES_SKILLS_DIR": str(tmp / "no-hermes")}
         r = subprocess.run(["bash", str(REPO / "scripts/install-claude.sh"), "--no-mcp"], env=env,
                            capture_output=True, text=True)

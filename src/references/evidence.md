@@ -23,7 +23,7 @@ its own misunderstanding. Every gate needs an **oracle** the agent did not autho
 | File | When |
 |------|------|
 | `<TASK>-probe-<seam>.txt` — read-only probe before a `[SEAM]` fixture | every `[SEAM]` task |
-| `<phase>-red.txt` — the phase's `[TEST]` tasks failing for the right reason | every implement phase (S: the one phase) |
+| `<phase>-red.txt` — the phase's `[TEST]` tasks failing for the right reason | every implement phase with TDD active (S: the one phase); test-after (`rigor.md`) → none |
 | `<phase>-green.txt` — the phase's tests passing | every implement phase |
 | `<TASK>-characterisation.txt` — legacy code pinned before change | when it applies |
 | `acceptance-r<N>.txt` (+ `-AC-###.txt` per command/probe AC) | every acceptance round |
@@ -31,7 +31,7 @@ its own misunderstanding. Every gate needs an **oracle** the agent did not autho
 | `final-<check>.txt` — diff scan, build, test, lint, format | every final review |
 
 The history entry's `Evidence:` field (history on) or the commit body (history off) names these files. `lint_artifacts` warns about a done `[TEST]`
-task without a RED file and a done `[SEAM]` without a probe — every tier.
+task without a RED file (TDD active) and a done `[SEAM]` without a probe (rigor standard / strict) — every tier.
 
 ## Acceptance criteria are always documented
 
@@ -58,7 +58,7 @@ L), which opens the merge gate but never verifies a bug.
 
 | Gate | Minimum evidence |
 |------|------------------|
-| Implement phase commit | `output:` RED + GREEN of the phase; probe per seam |
+| Implement phase commit | `output:` RED + GREEN of the phase (test-after: GREEN); probe per seam (lean: recommended) |
 | Acceptance round | `acceptance.md` round with Result + Commit; `output:`; frozen tests unchanged |
 | Bug `claimed` | `output:` of the reproducing test green; `probe:` per seam touched |
 | Bug `verified` | `Verified-by:` oracle |
