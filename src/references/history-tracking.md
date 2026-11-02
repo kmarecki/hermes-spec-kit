@@ -1,12 +1,12 @@
 # Process History — the record, not the story
 
 `specs/[feature]/history.md` is an append-only **record**: one fixed-field entry per phase
-completion, bugfix, regression run or close. It exists so that an agent (or a human) can read
-in ten seconds what was done, when, with what evidence, and by whom — and so the pre-commit
-guard can prove the entry was written before the commit.
+completion, bugfix, regression run or close. An agent or a human reads in ten
+seconds what was done, when, with what evidence, by whom; the pre-commit guard proves the entry
+preceded the commit.
 
-It is **not** the place for narrative. Decisions, rationale and what-went-wrong belong in
-`close.md` / `change-record.md` (phase 6), `decisions.md` (assumptions) or the commit body.
+Not narrative: decisions, rationale and what-went-wrong belong in `close.md` /
+`change-record.md`, `decisions.md` or the commit body.
 The close copies its timeline into `change-record.md`, then `archive_feature` moves it to
 `history-archive.md` (cold). Capped, machine-appended; P3 only (`rigor.md`).
 
