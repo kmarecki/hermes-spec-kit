@@ -1,12 +1,9 @@
 # Git Conventions for this project
 # Conventions version: 1
 #
-# When this version is incremented, projects with existing specs/git-conventions.md
-# will be prompted to re-copy. Skills check the version at startup.
+# A new version prompts projects to re-copy.
 
-Copy this file to `specs/git-conventions.md` in your project and edit.
-Spec-kit skills load it automatically if it exists.
-If it doesn't exist, built-in defaults (shown below) apply.
+Copy to `specs/git-conventions.md` and edit; absent → the defaults shown.
 
 ---
 
@@ -65,7 +62,7 @@ use the default.
 agents_file: AGENTS.md          # the agent context file kept current at close (also CLAUDE.md if it restates it)
 merge_checklist: specs/merge-checklist.md
 # rigor: standard             # lean | standard | strict — set by the constitution (Level 0); absent = standard (spec-kit/references/rigor.md)
-# history: large              # always | large | never — keep specs/<feature>/history.md; absent → from the rigor (lean never · standard large = size L only · strict always); spec.md `**History**: on|off` overrides
+# history: large              # always | large | never — keep specs/<feature>/history.md; absent → process level P3 only (rigor.md); spec.md `**History**: on|off` overrides
 # design_dir: docs/design       # living module design docs (design-doc-template.md); ABSENT → plan.md's Current Design is the only design, nothing else is created
 # epics_dir: specs/epics        # epics as specs/epics/NNN-name/{epic,plan,features,review}.md (NNN = tracker epic id, e.g. ADO); ABSENT → every feature is its own epic
 # epics_index: on               # on | off — keep [epics_dir]/README.md, the roadmap table (one row per epic), maintained by spec-kit-epic
@@ -73,9 +70,8 @@ merge_checklist: specs/merge-checklist.md
 # runbooks_dir: docs/runbooks   # operational docs the close checks for statements the diff made wrong; ABSENT → skipped
 ```
 
-The commented keys are written by the constitution's scale question (small: none · platform: adr / design / epics). A small project leaves `design_dir` and `epics_dir` out: the close then has nothing to patch
-and nothing is ever created unprompted. A platform sets both; `spec-kit-design` and
-`spec-kit-epic` create the documents, the feature close keeps them true.
+The commented keys are written by the constitution's scale question (small: none · platform: adr /
+design / epics). Without `design_dir` / `epics_dir` nothing is created unprompted.
 
 ---
 
@@ -88,21 +84,7 @@ push_remote: origin
 
 ---
 
-## Customising for your project
+## Customising
 
-1. Copy this file to `specs/git-conventions.md` in your project root
-2. Edit the values to match your project's conventions
-3. Spec-kit skills will automatically detect and follow them
-4. No need to edit any skill files
-
-### Examples
-
-```yaml
-# Project uses "feature/" prefix and "develop" as base branch:
-feature_prefix: feature
-branch_source: develop
-
-# Project uses custom commit format:
-style: custom
-commit_phase: "[{feature}] Phase {N}: {Phase Name}"
-```
+Edit the values; the skills follow them. Custom commit format: `style: custom` +
+`commit_phase: "[{feature}] Phase {N}: {Phase Name}"`.

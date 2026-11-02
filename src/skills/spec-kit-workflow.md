@@ -35,7 +35,7 @@ Inject constitution principles as guidance (not gates) when routing.
 ## Bugfix loop
 `bugfix [feature]`: closed feature → say "use `reopen`". Every open bug needs a **Plan Ref** (else `spec-kit-plan` first). *Requires Clarification* → `spec-kit-clarify` first. Then **auto-chain** `spec-kit-plan` → `spec-kit-tasks` → `spec-kit-implement`; review only on request. `quickfix [feature]` (explicit opt-in): plan section + task + fix in one commit, documents still written.
 - `accept [feature]` (also automatic after implement when spec.md has ACs): accept round → FAIL → auto-chain `bugfix` → accept again; no prompt between rounds; stop conditions → **ASK** (`spec-kit/references/acceptance.md`). PASS → final review. Never auto-close.
-- Rigor (`spec-kit/references/rigor.md`, on the phase card): lean auto-chains specify → plan → tasks at every size, no accept loop, final = self-check; strict adds the other agent + human approver. Size (`spec-kit/references/sizing.md`): S auto-chains specify → plan → tasks; M lite pre-implement review; L full pre-implement review required.
+- Rigor (`spec-kit/references/rigor.md`, on the phase card): size × rigor → process level P1 / P2 / P3 on the phase card: P1 auto-chains specify → plan → tasks, no accept loop, final = self-check; P2 lite pre-implement review; P3 full pre-implement review, devil's advocate by a different agent, strict L a human approver.
 - `reopen [feature]`: needs a close doc; bugfix branch per `specs/git-conventions.md`; the close appends.
 
 ## Guardrails

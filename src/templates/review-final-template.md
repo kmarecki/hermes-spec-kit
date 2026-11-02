@@ -5,7 +5,7 @@
 > code commit after that sha makes the round stale. **Exceptions only**: the full AC → test
 > matrix is in acceptance.md, the FR → task map in tasks.md — do not repeat them here.
 
-> **Rigor lean**: a self-check round — Verdict, Reviewed-commit, one line per section, §5 checklist results, and the oracle (test output or the user's quoted words); no devil's advocate.
+> **Process level P1**: a self-check round ≤ 30 lines — Verdict, Reviewed-commit, one line per section, §5 results, the oracle (test output or the user's quoted words), §4 inline. P2 ≤ 80 lines, later rounds the delta only; P3 ≤ 150.
 
 ## Round 1 — [YYYY-MM-DD] — [review:<agent> | self-review by <agent> (fresh context: yes/no)]
 

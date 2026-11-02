@@ -26,30 +26,40 @@ it (`**Rigor**: strict`); lowering it needs a quoted ruling in `decisions.md`.
 | 9 Code review | C | matrix | A |
 | others | matrix | matrix | stricter of matrix and A |
 
-Lean asks only Testing, Architecture, Git and Config / secrets; the other 8 are listed as
-defaults the user may open.
+## Process level — P1 light · P2 normal · P3 full (`ceremony = rigor × size`)
 
-## Ceremony
-
-| Step | lean | standard | strict |
+| Size | lean | standard | strict |
 |---|---|---|---|
-| Branch | trunk: commits on `main` (`blocked_branches: none`, Principle 5 = A) | feature branch | feature branch + PR |
-| Size question | default S; ask only when a signal says M+ | ask | ask |
-| spec.md | intent, FRs, 1–3 ACs (`manual` / `command` fine), Security & Privacy one line | template | template + compliance rows |
-| TDD | **from Principle 1, never asked**: A/B → RED/GREEN, C → test-after | from Principle 1 (asked only if the constitution has none) | RED/GREEN every phase |
-| Probe per `[SEAM]` | recommended | required | required |
-| Commits | spec+plan+tasks one commit, implementation one commit | per phase | per phase |
+| S | P1 | P1 | P2 |
+| M | P1 | P2 | P3 |
+| L | P2 | P3 | P3 |
+
+Phase card `process: P2`; compliance adds security evidence on top.
+
+| Practice | P1 | P2 | P3 |
+|---|---|---|---|
+| Branch | lean: trunk (`blocked_branches: none`, Principle 5 = A) · else feature branch | feature branch | feature branch + PR |
+| spec / plan / tasks | S shapes (sizing.md), auto-chained, one `spec(phase-1-3)` commit | template, one commit per phase | template (+ compliance rows), per phase |
+| TDD | from Principle 1 (lean: never asked; C → test-after) | from Principle 1 | RED/GREEN every phase |
+| RED evidence file | none — `<phase>-green.txt` (or `ci:`) | `<phase>-red.txt` only for a phase with an `[AC-###]` test or a `[SEAM]` | `<phase>-red.txt` + `-green.txt` per phase |
+| Probe per `[SEAM]` | lean: recommended · else required | required | required |
+| Commits | implementation in ONE commit; lint once before it | per phase; lint + history guard at phase end | per phase; lint before every commit |
+| Pre-implement review | skip | lite | full |
+| Devil's advocate | pre-implement: optional · final: **required** — the same reviewer, inline | pre-implement: **required** · final: optional | both **required**, by a **different agent** (the other agent, else a separate sub-agent) · objections never capped at any level |
 | Acceptance | one recorded run **or** the user's quoted "works" in the final round | acceptance loop | loop + `ci:<id>` |
-| Pre-implement review | never | by size | M lite, L full |
-| Final review | **self-check round**: checklist commands + diff scan, one line per section, no devil's advocate | as today | other agent + devil's advocate; L: named human `**Approved-by**:` |
-| Close | short `close.md`; change record optional; AGENTS.md patch; ADR only if obvious | as today | change record required |
-| `history.md` (when `history:` is not set) | never | large (L) | always |
-| Engineering guidelines (constitution) | one line: framework defaults | MUSTs → merge-checklist P-items | MUSTs → P-items + architecture tests |
+| Re-runs | one run, or cite CI | bugfix rounds re-run what the fix touched; the final review cites CI (`review_run`) | final review cites CI on the final commit; local only what CI did not run |
+| Final review | self-check round ≤ 30 lines: checklist + diff scan, one line per section, the floor's oracle quoted | exceptions only, ≤ 80 lines; round N+1 records the delta | ≤ 150 lines; the other agent; strict L: named human `**Approved-by**:` |
+| Close | short `close.md`, change record optional, AGENTS.md patch, ADR only if obvious; health = the server's | close + change record; health = the server's | `summarize` (full gap table) + change record |
+| `history.md` (when `history:` is not set) | off | off — timeline from git at close | on |
+| Archive (close, reopen) | — | rounds before the latest → `review-archive.md` · verified / superseded bugs → `bugs-archive.md` | + earlier rounds' entries → `history-archive.md`; lint warns at 40 KB |
+| Engineering guidelines | lean: one line · else MUSTs → merge-checklist P-items | MUSTs → P-items | + architecture tests |
+
+Lint warns past the line caps and at 40 KB per live file; `next_id` reads the archives.
 
 ## Floor — never below, at any rigor
 
 A spec exists · something **not written by the agent** shows it works (test output, `ci:`, or the
-user's quoted words — lean without `acceptance.md`: named in the final round, lint checks for it) ·
+user's quoted words — P1 without `acceptance.md`: named in the final round, lint checks for it) ·
 the diff scan (secrets, conflict markers) runs — on trunk it scans from the feature's spec commit ·
 the close patches AGENTS.md. Strict + size L: `**Approved-by**:` a named human (gate).
 

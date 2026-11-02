@@ -243,14 +243,14 @@ async def test_next_id_and_lint(s, root):
     write(root, "f5", "plan.md", "# plan\n\n## Current Design\n\nbuilt\n")
     d = await call(s, "lint_artifacts", {"feature": "f5"})
     check("  with Current Design → no warning", not any("Current Design" in f["msg"] for f in d["findings"]))
-    write(root, "f5", "tasks.md", "# Tasks\n- [x] T001 [TEST] tests — t.py\n- [x] T002 [SEAM] rates — src/r.py\n- [ ] T003 later — src/l.py\n")
+    write(root, "f5", "tasks.md", "# Tasks\n- [x] T001 [TEST] [AC-001] tests — t.py\n- [x] T002 [SEAM] rates — src/r.py\n- [ ] T003 later — src/l.py\n")
     d = await call(s, "lint_artifacts", {"feature": "f5"})
     msgs = " | ".join(f["msg"] for f in d["findings"])
     check("[SEAM] done without probe → warning", "T002 [SEAM]" in msgs)
-    check("[TEST] done without red file → warning", "T001 [TEST]" in msgs)
+    check("[TEST] [AC-001] done without red file → warning (P2)", "T001 [TEST]" in msgs)
     write(root, "f5", "spec.md", "# Spec\n\n**Size**: S — tiny\n")
     d = await call(s, "lint_artifacts", {"feature": "f5"})
-    check("  size S → RED file still required", "T001 [TEST]" in " | ".join(f["msg"] for f in d["findings"]))
+    check("  size S → P1: no RED file required", "T001 [TEST]" not in " | ".join(f["msg"] for f in d["findings"]))
     write(root, "f5", "spec.md")
     write(root, "f9", "spec.md"); write(root, "f9", "plan.md")
     write(root, "f9", "tasks.md", "# Tasks\n- T001 [X] [TEST] t — t.py\n- T002 [ ] code — c.py\n- BF-001 [X] fix — c.py\n")
@@ -561,13 +561,14 @@ async def test_rigor(s, root):
     print("\n═══ rigor: lean / standard / strict ═══")
     write(root, "r1", "spec.md", "# Spec\n\n**Size**: L — x\n\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
     d = await call(s, "get_feature_state", {"feature": "r1"})
-    check("no rigor key → standard (default), history large → on for L",
+    check("no rigor key → standard (default), L = P3 → history on",
           d["state"]["rigor"] == {"level": "standard", "source": "default"} and d["state"]["history"]["on"], json.dumps(d["state"]["rigor"]))
     check("phase card shows the rigor", "rigor: standard (default)" in d["phase_card"])
     conv = Path(root) / "specs/git-conventions.md"
     conv.write_text("rigor: lean\nblocked_branches: none\n")
     d = await call(s, "get_feature_state", {"feature": "r1"})
-    check("rigor lean → history never, even for size L", d["state"]["rigor"]["level"] == "lean" and not d["state"]["history"]["on"])
+    check("rigor lean + L = P2 → history off", d["state"]["rigor"]["level"] == "lean" and not d["state"]["history"]["on"] and d["state"]["process"] == "P2")
+    write(root, "r1", "spec.md", "# Spec\n\n**Size**: M — x\n\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
     write(root, "r1", "plan.md", "# Plan\n")
     write(root, "r1", "tasks.md", "# Tasks\n> **TDD**: test-after (Principle 1 C)\n- [x] T001 [TEST] [AC-001] check — tests/a.py\n- [x] T002 [SEAM] call api — src/a.py\n")
     d = await call(s, "lint_artifacts", {"feature": "r1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
@@ -585,7 +586,10 @@ async def test_rigor(s, root):
     conv.write_text("rigor: strict\nblocked_branches: none\n")
     write(root, "r2", "spec.md", "# Spec\n\n**Size**: S — x\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
     d = await call(s, "get_feature_state", {"feature": "r2"})
-    check("rigor strict → history always, even for size S", d["state"]["history"]["on"])
+    check("rigor strict + size S = P2 → history off", not d["state"]["history"]["on"] and d["state"]["process"] == "P2", json.dumps(d["state"]["history"]))
+    write(root, "r2", "spec.md", "# Spec\n\n**Size**: M — x\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
+    d = await call(s, "get_feature_state", {"feature": "r2"})
+    check("rigor strict + size M = P3 → history on", d["state"]["history"]["on"] and d["state"]["process"] == "P3" and "process: P3" in d["phase_card"], d["phase_card"][:200])
     d = await call(s, "lint_artifacts", {"feature": "r2"}); msgs = " | ".join(f["msg"] for f in d["findings"])
     check("trunk on a strict project → warning", "trunk" in msgs, msgs)
     write(root, "r2", "plan.md", "# Plan\n"); write(root, "r2", "tasks.md", "# Tasks\n- [x] T001 [TEST] [AC-001] t — tests/b.py\n")
@@ -614,8 +618,10 @@ async def test_rigor_gates(s, root):
     d = await call(s, "diff_scan", {"feature": "t1"})
     checks = {f["check"] for f in d.get("findings", [])}
     check("trunk: diff_scan scans from the spec commit and finds the secret", "secret-assignment" in checks and d["files_changed"] == 1 and d["base"].startswith("trunk since"), json.dumps(d)[:300])
+    write(root, "t1", "spec.md", "# Spec\n\n**Size**: S — x\n**Rigor**: strict\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
     d = await call(s, "lint_artifacts", {"feature": "t1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
-    check("template example text does not count as test-after → RED warning stays", "-red" in msgs, msgs)
+    check("template example text does not count as test-after → RED warning stays (P2, [AC-] test)", "-red" in msgs, msgs)
+    write(root, "t1", "spec.md", "# Spec\n\n**Size**: S — x\n- **AC-001** (FR-001) Given a, When b, Then c — Verify: unit\n")
     head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=root, capture_output=True, text=True).stdout.strip()
     write(root, "t1", "review-final.md", FINAL.format(n=1, v="READY", c=head))
     d = await call(s, "lint_artifacts", {"feature": "t1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
@@ -686,6 +692,26 @@ async def test_cross_agent(s, root):
     check("commit trailers on feat commits → claude + hermes; spec commit's agent ignored", d4["state"]["implemented_by"] == ["claude", "hermes"], json.dumps(d4["state"]["implemented_by"]))
 
 
+async def test_process_levels(s, root):
+    print("\n═══ process levels: line caps, archive warning, next_id over archives, health ═══")
+    write(root, "p1", "spec.md", "# Spec\n\n**Size**: S — x\n")
+    write(root, "p1", "plan.md", "# Plan\n")
+    write(root, "p1", "tasks.md", "# Tasks\n- [x] T001 a — src/a.py\n- [ ] T002 b — src/b.py\n")
+    write(root, "p1", "bugs.md", "# Bugs\n\n### BUG-001: x\n**Status**: verified\n**Verified-by**: user\n\n### BUG-002: y\n**Status**: open\n")
+    d = await call(s, "get_feature_state", {"feature": "p1"})
+    check("health from files: 2 of 4 → 50 %, on the phase card", d["state"]["health"] == 50 and "health: 50%" in d["phase_card"], json.dumps(d["state"].get("health")) + d["phase_card"][:160])
+    check("standard + S = P1 on the card", d["state"]["process"] == "P1" and "process: P1" in d["phase_card"])
+    write(root, "p1", "review-final.md", "# Final review\n\n## Round 1 — 2026-11-03 — self-review by claude\n\n" + "\n".join(f"line {i}" for i in range(40)) + "\n**Verdict**: READY\n**Reviewed-commit**: abcdef1\n")
+    d = await call(s, "lint_artifacts", {"feature": "p1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("P1 round of 43 lines → cap warning (30)", "cap 30 at P1" in msgs, msgs)
+    write(root, "p1", "history.md", "# Process History\n" + ("## 2026-11-03T10:00:00+00:00 | Phase 4 — implement | spec-kit-implement | claude\n- Note: " + "x" * 200 + "\n") * 220)
+    d = await call(s, "lint_artifacts", {"feature": "p1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("history.md over 40 KB → archive warning", any("archive earlier rounds" in f["msg"] and f["file"] == "history.md" for f in d["findings"]), msgs[-200:])
+    write(root, "p1", "bugs-archive.md", "# Bugs archive\n\n### BUG-007: old\n**Status**: verified\n**Verified-by**: user\n")
+    d = await call(s, "next_id", {"feature": "p1", "kind": "BUG"})
+    check("next_id reads bugs-archive.md → BUG-008", d.get("next_id") == "BUG-008", json.dumps(d))
+
+
 async def run_in_tmp(test_fn):
     root = tempfile.mkdtemp(prefix="spec-kit-test-")
     try:
@@ -705,7 +731,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates, test_cross_agent]:
+              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates, test_cross_agent, test_process_levels]:
         try:
             await run_in_tmp(t)
         except Exception as e:

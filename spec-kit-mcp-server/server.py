@@ -94,7 +94,10 @@ _TEST_AFTER_RE = re.compile(r"^>?\s*\*\*TDD\*\*:\s*(test-after|Bypassed)", re.M 
 _APPROVED_BY_RE = re.compile(r"^\*\*Approved-by\*\*:\s*(?!\[|pending\b)\S", re.M | re.I)
 _ORACLE_RE = re.compile(r"\boutput:|\bci:|\buser\b|\bprobe:", re.I)
 RIGOR_LEVELS = ("lean", "standard", "strict")
-RIGOR_HISTORY = {"lean": "never", "standard": "large", "strict": "always"}
+# references/rigor.md: size × rigor → process level (P1 light · P2 normal · P3 full)
+PROCESS_LEVEL = {"S": {"lean": 1, "standard": 1, "strict": 2}, "M": {"lean": 1, "standard": 2, "strict": 3}, "L": {"lean": 2, "standard": 3, "strict": 3}}
+REVIEW_LINE_CAP = {1: 30, 2: 80, 3: 150}
+ARCHIVE_WARN_BYTES = 40_000
 _EPIC_RE = re.compile(r"^\*\*Epic\*\*:\s*\[?([A-Za-z0-9][\w.-]*)", re.M)
 _MODULES_RE = re.compile(r"^\*\*Modules\*\*:\s*(.+)$", re.M)
 _ROUND_RE = re.compile(r"^## Round (\d+)\b[^\n]*$", re.M)
@@ -203,6 +206,11 @@ def _rigor(fd):
     return (level if level in RIGOR_LEVELS else "standard"), "project" if _conventions().get("rigor") else "default"
 
 
+def _process(fd):
+    """The feature's process level 1–3 (references/rigor.md: size × rigor)."""
+    return PROCESS_LEVEL[_parse_size(fd) or "M"][_rigor(fd)[0]]
+
+
 def _implemented_by(fd):
     """Every agent that implemented the feature (references/evidence.md): the <agent> of the
     history.md implement entries plus the tasks.md `**Implemented-by**:` list. Sorted, lower-case."""
@@ -243,12 +251,15 @@ def _history_setting(fd, size):
         m = _HISTORY_RE.search(f.read_text(errors="replace"))
         if m:
             return m.group(1).lower() == "on", "spec override"
-    default = (_conventions().get("history") or RIGOR_HISTORY[_rigor(fd)[0]]).lower()
+    default = (_conventions().get("history") or "").lower()
     if default == "always":
         return True, "project default: always"
     if default == "never":
         return False, "project default: never"
-    return (size or "M") == "L", f"project default: large (size {size or 'M'})"
+    if default == "large":
+        return (size or "M") == "L", f"project default: large (size {size or 'M'})"
+    p = _process(fd)
+    return p == 3, f"process level P{p} (rigor.md: P3 only)"
 
 
 def _epic_of(fd):
@@ -432,7 +443,7 @@ def _acceptance_problem(fd):
     if not _parse_acs(fd):
         return None
     ar = _acceptance_round(fd)
-    if not ar["present"] and _rigor(fd)[0] == "lean":
+    if not ar["present"] and _process(fd) == 1:
         return None
     if not ar["present"]:
         return f"no {ACCEPTANCE} — run the acceptance loop ('accept [feature]') first"
@@ -545,6 +556,8 @@ def _derive(feature):
         "rigor": dict(zip(("level", "source"), _rigor(fd))),
         "implemented_by": _implemented_by(fd),
         "review_run": _review_run(),
+        "process": f"P{_process(fd)}",
+        "health": _health(fd, tasks, bugs, _parse_acs(fd)),
         "history": dict(zip(("on", "source"), _history_setting(fd, size))),
         "final_review": _final_review(fd) if phase >= 5 else None,
         "acceptance": ({"criteria": len(acs), "round": _acceptance_round(fd) if phase >= 5 else None}
@@ -556,6 +569,18 @@ def _derive(feature):
                  "superseded": sum(b["status"] == "superseded" for b in bugs)},
         "derived_at": _now(),
     }
+
+
+def _health(fd, tasks, bugs, acs):
+    """Mechanical health 0–100 from the files (rigor.md: P1 / P2 close use it as the score):
+    done tasks + verified/superseded bugs + ACs passing in the latest round, over their totals."""
+    done = sum(1 for t in tasks if t["done"]) + sum(1 for b in bugs if b["status"] in ("verified", "superseded"))
+    total = len(tasks) + len(bugs)
+    if acs:
+        ar = _acceptance_round(fd)
+        total += len(acs)
+        done += len(acs) if ar.get("present") and (ar.get("result") or "").upper().startswith("PASS") else 0
+    return 100 if total == 0 else round(done / total * 100)
 
 
 def _phase_card(state):
@@ -574,7 +599,7 @@ def _phase_card(state):
         1: "spec.md written → commit spec(phase-1)",
         2: "plan artifacts written → commit spec(phase-2)",
         3: "tasks.md written, TDD from the constitution (Principle 1 / rigor) → commit spec(phase-3)",
-        4: "phase RED/GREEN evidence saved (test-after: GREEN only), probes per [SEAM], tasks [X], history entry with Implemented-by → one commit per phase (lean: one); then accept",
+        4: "phase evidence saved (GREEN; RED by process level, test-after: GREEN only), probes per [SEAM], tasks [X], history entry with Implemented-by → one commit per phase (P1: one); then accept",
         5: f"{state['bugs']['open']} open, {state['bugs']['claimed']} claimed-unverified → verify with user/ci/other-agent or run 'bugfix {f}'; then the final review ({FINAL_REVIEW}) must say READY",
         6: "final review READY and fresh, every bug verified/superseded, close.md (Architecture Decisions) + change-record.md → one commit spec(phase-6)",
     }[phase]
@@ -594,7 +619,7 @@ def _phase_card(state):
         acc_line = None
     lines = [
         f"PHASE CARD — {f}",
-        f"phase: {phase} ({state['phase_name']})  status: {state['status']}  size: {state['size']}{'' if state['size_declared'] else ' (undeclared — treated as M)'}  rigor: {state['rigor']['level']} ({state['rigor']['source']})",
+        f"phase: {phase} ({state['phase_name']})  status: {state['status']}  size: {state['size']}{'' if state['size_declared'] else ' (undeclared — treated as M)'}  rigor: {state['rigor']['level']} ({state['rigor']['source']})  process: {state['process']}  health: {state['health']}%",
         f"allowed writes: {allowed}",
         f"next gate: {gate}",
         f"tasks: {state['tasks']['done']}/{state['tasks']['total']} done ({state['tasks']['bugfix']} BF) · implemented by: {', '.join(state['implemented_by']) or '—'} (a reviewer in this list = self-review)",
@@ -966,7 +991,7 @@ def next_id(feature: str, kind: str) -> str:
     fd = _feature_dir(feature)
     kind = kind.upper()
     if kind == "BUG":
-        nums = [b["num"] for b in _parse_bugs((fd / "bugs.md").read_text(errors="replace"))] if (fd / "bugs.md").exists() else []
+        nums = [b["num"] for n in ("bugs.md", "bugs-archive.md") if (fd / n).exists() for b in _parse_bugs((fd / n).read_text(errors="replace"))]
         fmt = "BUG-{:03d}"
     elif kind == "AC":
         nums = [a["num"] for a in _parse_acs(fd)]
@@ -1043,6 +1068,7 @@ def lint_artifacts(feature: str) -> str:
         tasks = _parse_tasks(tasks_text)
         evidence = [p.name for p in (fd / "evidence").glob("*")] if (fd / "evidence").is_dir() else []
         rigor = _rigor(fd)[0]
+        process = _process(fd)
         test_after = bool(_TEST_AFTER_RE.search(tasks_text))
         for line in tasks_text.splitlines():
             m = _TASK_RE.match(line)
@@ -1051,8 +1077,9 @@ def lint_artifacts(feature: str) -> str:
             tid = m.group("id")
             if "[SEAM]" in line and rigor != "lean" and not any(e.startswith(f"{tid}-probe") for e in evidence):
                 findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [SEAM] marked done without evidence/{tid}-probe-*.txt"})
-            if "[TEST]" in line and not test_after and not any("-red" in e for e in evidence):
-                findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [TEST] marked done but no *-red* file in evidence/"})
+            if "[TEST]" in line and not test_after and not any("-red" in e for e in evidence) \
+                    and (process == 3 or (process == 2 and "[AC-" in line)):
+                findings.append({"file": "tasks.md", "severity": "warning", "msg": f"{tid} [TEST] marked done but no *-red* file in evidence/ (process P{process}, rigor.md)"})
         for kind in ("T", "BF"):
             nums = [t["num"] for t in tasks if t["kind"] == kind]
             if nums != sorted(nums):
@@ -1143,11 +1170,18 @@ def lint_artifacts(feature: str) -> str:
         if not (Path(design_dir) / f"{module}.md").exists():
             findings.append({"file": "plan.md", "severity": "warning", "msg": f"module {module} has no {design_dir}/{module}.md — the close cannot patch it (spec-kit design {module})"})
 
-    if _rigor(fd)[0] == "lean" and _parse_acs(fd) and not (fd / ACCEPTANCE).exists() and (fd / FINAL_REVIEW).exists():
+    process = _process(fd)
+    if (fd / FINAL_REVIEW).exists():
         rtext = (fd / FINAL_REVIEW).read_text(errors="replace")
         rr = list(_ROUND_RE.finditer(rtext))
-        if rr and not _ORACLE_RE.search(rtext[rr[-1].start():]):
-            findings.append({"file": FINAL_REVIEW, "severity": "warning", "msg": "rigor lean without acceptance.md — the latest round must name the oracle (output:<file>, ci:<id> or the user's quoted words) (references/rigor.md floor)"})
+        last = rtext[rr[-1].start():] if rr else ""
+        if rr and process == 1 and _parse_acs(fd) and not (fd / ACCEPTANCE).exists() and not _ORACLE_RE.search(last):
+            findings.append({"file": FINAL_REVIEW, "severity": "warning", "msg": "P1 without acceptance.md — the latest round must name the oracle (output:<file>, ci:<id> or the user's quoted words) (references/rigor.md floor)"})
+        if rr and (n := len([l for l in last.splitlines() if l.strip()])) > REVIEW_LINE_CAP[process]:
+            findings.append({"file": FINAL_REVIEW, "severity": "warning", "msg": f"latest round is {n} lines, cap {REVIEW_LINE_CAP[process]} at P{process} — exceptions only; round N+1 records the delta (rigor.md)"})
+    for name in ("history.md", "bugs.md", FINAL_REVIEW, "plan.md"):
+        if (fd / name).exists() and (fd / name).stat().st_size > ARCHIVE_WARN_BYTES:
+            findings.append({"file": name, "severity": "warning", "msg": f"{(fd / name).stat().st_size // 1024} KB — archive earlier rounds / closed entries (rigor.md Archive; *-archive.md)"})
     if _review_run() != "local" and (fd / FINAL_REVIEW).exists():
         rtext = (fd / FINAL_REVIEW).read_text(errors="replace")
         rr = list(_ROUND_RE.finditer(rtext))

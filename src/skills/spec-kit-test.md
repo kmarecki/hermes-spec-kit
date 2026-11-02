@@ -26,7 +26,7 @@ metadata:
 3. 0 open → suggest `final review [feature]`; > 0 → `bugfix [feature]`. **Never fix directly.**
 
 ## Accept mode — one round (`spec-kit/references/acceptance.md` §5–6)
-Rigor lean: one recorded run (or the user's quoted "works", kept for the final self-check) — no loop, no round limit.
+Process level P1 (phase card): one recorded run (or the user's quoted "works", kept for the final self-check) — no loop, no round limit.
 1. Commands = `specs/merge-checklist.md` `acceptance_*` (missing → add from `spec-kit/templates/merge-checklist-template.md`, **ASK** once). COMMIT = HEAD.
 2. Run `acceptance_fast` (full unit + integration + component = the regression) — or cite `ci:<id>` when only specs/docs changed since it (§5); `acceptance_e2e` with this feature's e2e specs only if `acceptance_e2e_ready` exits 0 (else deferred); command/probe ACs → `evidence/acceptance-r<N>-AC-###.txt` (`RESULT: PASS|FAIL`). Console → `evidence/acceptance-r<N>.txt`.
 3. `mcp_spec_kit_acceptance_status(feature, results, round=N)` → append `## Round N` to `acceptance.md` (`spec-kit/templates/acceptance-template.md`): Result, Commit, counts, matrix.

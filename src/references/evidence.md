@@ -23,7 +23,7 @@ its own misunderstanding. Every gate needs an **oracle** the agent did not autho
 | File | When |
 |------|------|
 | `<TASK>-probe-<seam>.txt` — read-only probe before a `[SEAM]` fixture | every `[SEAM]` task |
-| `<phase>-red.txt` — the phase's `[TEST]` tasks failing for the right reason | every implement phase with TDD active (S: the one phase); test-after (`rigor.md`) → none |
+| `<phase>-red.txt` — the phase's `[TEST]` tasks failing for the right reason | P3: every phase · P2: a phase with an `[AC-###]` test or a `[SEAM]` · P1 / test-after: none (`rigor.md`) |
 | `<phase>-green.txt` — the phase's tests passing | every implement phase |
 | `<TASK>-characterisation.txt` — legacy code pinned before change | when it applies |
 | `acceptance-r<N>.txt` (+ `-AC-###.txt` per command/probe AC) | every acceptance round |
@@ -31,14 +31,13 @@ its own misunderstanding. Every gate needs an **oracle** the agent did not autho
 | `final-<check>.txt` — diff scan, build, test, lint, format | every final review |
 
 The history entry's `Evidence:` field (history on) or the commit body (history off) names these files. `lint_artifacts` warns about a done `[TEST]`
-task without a RED file (TDD active) and a done `[SEAM]` without a probe (rigor standard / strict) — every tier.
+task without a RED file (P3; P2 for `[AC-###]` tests) and a done `[SEAM]` without a probe (rigor standard / strict).
 
 ## Acceptance criteria are always documented
 
-Every feature, S included, ends with an acceptance round in `acceptance.md` that lists every
-AC with its outcome. Automated wherever a harness exists (`unit` … `e2e`, `command`, `probe`);
-`manual` only where no tool can judge, and then the round (or the final review) quotes the
-user's confirmation — an unconfirmed manual AC is 👤 pending, never ✅.
+Every feature ends with an acceptance round (`acceptance.md`, P1: one run) listing every AC with
+its outcome; `manual` only where no tool can judge, with the user's quoted confirmation — an
+unconfirmed manual AC is 👤 pending, never ✅.
 
 ## Status vocabulary (bugs.md)
 

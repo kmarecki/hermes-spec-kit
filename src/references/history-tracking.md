@@ -7,9 +7,8 @@ guard can prove the entry was written before the commit.
 
 It is **not** the place for narrative. Decisions, rationale and what-went-wrong belong in
 `close.md` / `change-record.md` (phase 6), `decisions.md` (assumptions) or the commit body.
-It is the record that survives the squash-merge; the close copies its timeline into `change-record.md`.
-In one deployment history files reached 215 KB with 1 600-word entries and invented
-timestamps — nobody read them. The format below is capped and machine-appended.
+It survives the squash-merge; the close copies its timeline into `change-record.md`. The format
+below is capped and machine-appended; P3 only (`rigor.md`), earlier rounds archived at close.
 
 ## When it is kept
 

@@ -36,14 +36,15 @@ constitution or CI, pre-existing debt elsewhere, broad stack opinions, taste.
 | Best practice: research current guidance for each major technology / pattern | | ✓ |
 | Bugfix coverage (bugfix mode): every open bug → BF task + verifying test | ✓ | ✓ |
 
-**Devil's advocate** (M: a separate pass by the same reviewer; L: a separate sub-agent, a
-different model when available, briefed with the plan and the code — not the review so far):
+**Devil's advocate** (P1: optional · P2: required, a separate pass by the same reviewer · P3:
+required, a different agent — the other agent, else a separate sub-agent, another model when
+available — briefed with the plan and the code, not the review so far):
 1. the strongest case against the plan, and the simplest alternative delivering ~80 % of the value;
 2. pre-mortem — "it is three months later and this failed in production; why?";
 3. abuse cases per new seam: another tenant's id, unauthorized role, oversized / malformed input,
    data exposure in a response or a log, replay / concurrency;
 4. the riskiest assumptions in decisions.md — which would hurt most if wrong.
-≤ 5 objections with a concrete scenario each; the author answers every one (accepted →
+Every objection with a concrete scenario, never capped; the author answers every one (accepted →
 task / spec change; rebutted with evidence; deferred → follow-up). Unanswered → the report says so.
 
 Severity: CRITICAL (zero coverage, architecture violation, security, data integrity) · HIGH
@@ -90,8 +91,9 @@ CI RUN      review_run (merge-checklist; default local) — branch pushed (not �
 §4  devil's advocate (final): concrete break attempts — another tenant's id, empty / stale /
     boundary period, concurrent edit, failing dependency, unauthorized role, oversized input;
     "would this test still pass if the code were wrong?"; argue the opposite verdict.
-    L: a separate sub-agent that reads the code and the spec, not this round. ≤ 5 objections,
-    each answered (accepted → bug / rebutted with evidence / deferred); unanswered blocks READY for L.
+    P1: required, inline · P2: optional · P3: required, a different agent that reads the code and
+    the spec, not this round. Objections never capped, each answered (accepted → bug / rebutted
+    with evidence / deferred); unanswered blocks READY at P3. Round N+1 (P2+) = the delta since N.
 §5  checklist: every G-item and P-item with ✅ / ❌ and its evidence file.
 VERDICT  CRITICAL / HIGH or blocking ❌           → NOT READY
          no defect, owner confirmations pending   → AWAITING-OWNER   (👤 rows, ↔ rulings)

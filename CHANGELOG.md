@@ -8,6 +8,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed — process level P1 / P2 / P3 (size × rigor) scales the ceremony
+- `references/rigor.md`: one table sets, per level, the RED evidence file (P1 none · P2 `[AC-]`/`[SEAM]` phases · P3 every
+  phase), the devil's advocate (P1 final required inline, pre-implement optional · P2 pre-implement required, final
+  optional · P3 both, by a different agent; objections never capped), commits and lint cadence, re-runs (cite CI),
+  final-review length caps (30 / 80 / 150 lines; later rounds = the delta), close (P1/P2 health = the server's score),
+  `history.md` (P3 only unless `history:` is set) and the archive step (`review-archive.md`, `bugs-archive.md`,
+  `history-archive.md`). Sizing rows that moved there were removed from `sizing.md`.
+- Server: `process` and `health` in the state and on the phase card; RED-file lint by level; line-cap and 40 KB archive
+  warnings; `next_id` reads `bugs-archive.md`; the history default follows the level.
+
 ### Added — `review_run: pr`: the PR's required checks are the final review's evidence
 - On projects whose PRs carry required checks, the final review reads them (`pr_checks`) on the reviewed commit and
   cites each as `ci:<run>/<job>` instead of re-running the suite; only the diff scan, probes, rulings and checks CI

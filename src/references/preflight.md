@@ -15,8 +15,8 @@ in context; open `spec-kit/references/skills/<skill>.md` only for the step you a
 4. CONVENTIONS      specs/git-conventions.md missing → create from
             spec-kit/templates/git-conventions-template.md; `Conventions version:` < 1 → say so
 5. PHASE CARD       MCP: mcp_spec_kit_get_next_actions(feature) — read it; no MCP: derive the
-            phase from the files and state it in one line. The card names the RIGOR (lean |
-            standard | strict, spec-kit/references/rigor.md): ceremony = rigor × size. Source code outside Implement → BLOCK
+            phase from the files and state it in one line. The card names the RIGOR and the
+            PROCESS LEVEL P1 | P2 | P3 (spec-kit/references/rigor.md). Source code outside Implement → BLOCK
             history ON for this feature (phase card; history-tracking.md) and history.md missing
             → create it (spec-kit/templates/history-template.md)
 6. ASSUMPTIONS      at every ASK / WAIT with no human answer: record an `assumption` in

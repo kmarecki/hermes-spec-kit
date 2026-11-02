@@ -1,6 +1,6 @@
 # Commits
 
-Rigor lean (`rigor.md`): spec + plan + tasks in one commit `spec(phase-1-3)`, the implementation in one `feat: [feature] - [summary]`, on `main` when `blocked_branches: none`. Otherwise every phase ends in ONE commit, preceded by its `history.md` entry when history is on for the
+Process level P1 (`rigor.md`): spec + plan + tasks in one commit `spec(phase-1-3)`, the implementation in one `feat: [feature] - [summary]`, on `main` when `blocked_branches: none`. Otherwise every phase ends in ONE commit, preceded by its `history.md` entry when history is on for the
 feature (`history-tracking.md`: default size L only). Project overrides: `specs/git-conventions.md`.
 
 ## Per-skill messages
