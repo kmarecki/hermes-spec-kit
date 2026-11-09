@@ -288,7 +288,11 @@ def _modules_of(fd):
     m = _MODULES_RE.search(f.read_text(errors="replace"))
     if not m or m.group(1).lstrip().startswith("["):
         return []
-    return [x.strip().strip("`") for x in m.group(1).split(",") if x.strip()]
+    # "a, b — why" / "none — why": the list ends at the first dash separator
+    names = re.split(r"\s+[—–-]\s+", m.group(1), maxsplit=1)[0]
+    if names.strip().strip("`").lower() in ("none", "n/a", "-", "—"):
+        return []
+    return [x.strip().strip("`") for x in names.split(",") if x.strip()]
 
 
 def _parse_size(fd):
@@ -1182,9 +1186,12 @@ def lint_artifacts(feature: str) -> str:
         for lm in _REVIEW_LABEL_RE.finditer(text):
             if lm.group(1).lower() in authors:
                 findings.append({"file": FINAL_REVIEW, "severity": "warning", "msg": f"round labelled review:{lm.group(1)} but {lm.group(1)} implemented this feature ({', '.join(authors)}) — label it self-review (references/evidence.md)"})
-        nums = [int(m.group(1)) for m in rounds]
+        # archive_feature moves the earlier rounds to review-archive.md — the numbering spans both
+        arch = fd / "review-archive.md"
+        archived = [int(m.group(1)) for m in _ROUND_RE.finditer(arch.read_text(errors="replace"))] if arch.exists() else []
+        nums = archived + [int(m.group(1)) for m in rounds]
         if nums != list(range(1, len(nums) + 1)):
-            findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"rounds not numbered 1..N: {nums}"})
+            findings.append({"file": FINAL_REVIEW, "severity": "error", "msg": f"rounds not numbered 1..N (review-archive.md + {FINAL_REVIEW}): {nums}"})
 
     acs = _parse_acs(fd)
     if acs:
