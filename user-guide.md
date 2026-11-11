@@ -6,11 +6,6 @@ task breakdown, TDD implementation, testing, and a mandatory close phase.
 Three development modes span the full feature lifecycle: forward development
 (specify), bugfix loop, and reopen for closed features.
 
-Git conventions (branch naming, commit messages, merge behaviour) are
-defined in `specs/git-conventions.md`. Copy the template from
-`spec-kit/templates/git-conventions-template.md` and customise per
-project.
-
 This guide covers installation, the core workflow, the reopen flow for closed features, and
 day-to-day usage.
 
@@ -20,10 +15,10 @@ day-to-day usage.
 
 1.  [What is Spec-Kit?](#what-is-spec-kit)
 2.  [Quick Start: Your First Feature](#quick-start-your-first-feature)
-3.  [Four Development Modes](#four-development-modes)
+3.  [Three Development Modes](#three-development-modes)
 4.  [Constitution Decision Tree](#constitution-decision-tree)
     - [Level 1: Purpose (9 options)](#level-1-purpose-9-options)
-    - [Level 2: Architecture (25 options)](#level-2-architecture-25-options-across-9-purposes)
+    - [Level 2: Architecture (44 options)](#level-2-architecture-44-options-across-11-purposes)
     - [Level 3: Technology Choices](#level-3-technology-choices)
     - [Purpose-to-Principle Defaults](#after-level-3-purpose-to-principle-defaults)
     - [Monorepo Mode](#monorepo-mode)
@@ -34,8 +29,9 @@ day-to-day usage.
 7.  [Branch Strategy](#branch-strategy)
 8.  [Git Commit Conventions](#git-commit-conventions)
 9.  [Spec Health Score](#spec-health-score)
-10. [Troubleshooting](#troubleshooting)
-11. [Reference Tables](#reference-tables)
+10. [MCP Server](#mcp-server)
+11. [Troubleshooting](#troubleshooting)
+12. [Reference Tables](#reference-tables)
 
 ---
 
@@ -64,13 +60,15 @@ mode).
 - Without close, features accumulate half-finished
 
 **What tools does it add?**
-- 13 spec-kit skills in `~/.hermes/skills/` — respond to `spec-kit` prefix, `speckit` prefix,
+- 11 spec-kit skills in `~/.hermes/skills/` — respond to `spec-kit` prefix, `speckit` prefix,
   and natural language phrases
   (e.g. `"speckit plan 001-user-auth"`, `"spec-kit plan 001-user-auth"`, or
   `"plan the implementation for 001-user-auth"` all trigger the same skill)
 - Templates in `~/.hermes/skills/spec-kit/templates/`
-- Reference files in `~/.hermes/skills/spec-kit/references/` (preflight checks, auto-commit patterns, history tracking)
+- Reference files in `~/.hermes/skills/spec-kit/references/` (preflight, commits, history tracking, sizing, evidence, acceptance)
 - A `specs/` directory in your project for feature artifacts
+- An optional MCP server (`mcp_spec_kit_*` tools) for deterministic state management
+  — auto-configured by install.sh, activates with `/reload-mcp`
 
 ---
 
@@ -214,7 +212,7 @@ Spec-kit has three modes, each suited to a different level of uncertainty:
 
 | Mode | When to use | How it runs | User involvement |
 |------|-------------|-------------|-----------------|
-| **Specify** (default) | You know what you want — low uncertainty | Starts with constitution decision tree (9 purposes × 25 architecture options). Then a linear forward phase sequence: Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close | Manual — you say "plan", "implement", etc. |
+| **Specify** (default) | You know what you want — low uncertainty | Starts with constitution decision tree (11 purposes × 44 architecture options). Then a linear forward phase sequence: Specify → Clarify (opt) → Plan → Tasks → [Review] → Implement → Test → [Review] → Close | Manual — you say "plan", "implement", etc. |
 | **Bugfix** | You have a working feature with known bugs | Auto-chains Plan→Tasks→Implement→Test once you say "bugfix". If new bugs are discovered mid-round, they're logged separately and the next round runs the full plan→tasks→implement cycle (separate commits per phase). For trivial fixes, "quickfix [feature]" batches plan+tasks+fix in one commit (user explicitly opts in). | Minimal — inner loop is automatic |
 | **Reopen** | A closed feature needs more fixes | Creates bugfix branch from main, preserves original close data, routes through bugfix loop | Additive-only edits; must close again after fixes |
 
@@ -244,7 +242,7 @@ two input methods are offered:
 
 - **Free-text description**: User describes the project in a sentence
   (e.g. "React Native mobile app for fitness, small team, Firebase"). The
-  agent maps the description to a purpose (A-I), architecture option (A1-I3),
+  agent maps the description to a purpose (A-K), architecture option (A1-K3), traits,
   technology choices, and principle defaults automatically. The user reviews
   the inference table and may accept or correct any item. Total time: ~30 seconds.
 - **Guided wizard**: Interactive 3-level decision tree with tradeoffs at
@@ -261,21 +259,37 @@ two input methods are offered:
 - **Greenfield**: Guides the user through every choice, recommending purpose-
   specific defaults at each level.
 
-### Level 1: Purpose (9 options)
+### Level 1: Purpose (11 options)
 
 The first question is always: *"What is this project's primary purpose?"*
 
-| Code | Purpose | Examples | Testing impact | Architecture impact | Docs impact |
-|------|---------|----------|---------------|-------------------|-------------|
-| **A** | User-Facing Application | SaaS, e-commerce, dashboard, CMS, API server | Integration + E2E tests needed. TDD pays off. | Architecture matters — will need to scale. | API docs, setup guide critical. |
-| **B** | Content Site / Marketing | Portfolio, blog, docs site, landing page | Minimal — visual checks + broken link checker. | Simple — SSG, template-driven, or plain HTML/CSS. | Content IS the documentation. |
-| **C** | Native / Desktop Client | iOS app, Android app, Electron, Tauri, Qt desktop app | UI/snapshot + integration tests. Manual QA for visuals. | Platform SDK defines architecture (MVC, MVVM, Compose). | Store listing, user help. |
-| **D** | Library / SDK / Package | npm package, PyPI lib, Go module, Rust crate | Exhaustive unit tests essential. API surface must be tested. | Clean public API, minimal coupling. | API docs, README, changelog mandatory. |
-| **E** | Infra / CLI / DevOps | CLI tool, Terraform module, CI pipeline, daemon, AI pipeline | Integration-heavy. Manual testing common. | Simple and composable. No over-engineering. | README + --help. Code IS the documentation. |
-| **F** | Game | Unity/Unreal/Godot game, WebGL game | Unit tests for game logic. Playtesting + visual QA critical. | ECS, scene graph, component-based. Engine-driven. | Design doc + mechanics + gameplay guide. |
-| **G** | Browser Extension | Chrome MV3, Firefox add-on, Safari extension | Manual browser testing. Playwright for E2E. | Manifest-driven. Content scripts + service worker + popup. | Store listing + permissions + privacy policy. |
-| **H** | Research / Notebook | Jupyter, R Markdown, Quarto, MATLAB | Minimal — visual inspection of outputs | Single notebook or notebook + scripts. No production infra. | README with reproduction steps. |
-| **I** | IoT / Embedded | Arduino, ESP32, STM32, Zephyr RTOS, RPi Linux | Hardware-in-the-loop. Simulation for CI. | HAL, RTOS tasks, driver layer. Memory-constrained. | Pinout docs, protocol specs, register maps. |
+| Code | Purpose | Examples | Weighs most |
+|------|---------|----------|-------------|
+| **A** | Applications & Services | SaaS, web / mobile backend, APIs, workers, AI apps | Integration tests, architecture, defensive errors |
+| **B** | Content Site | Marketing site, blog, docs | Publishing speed, Core Web Vitals |
+| **C** | Native / Desktop Client | iOS, Android, desktop (Flutter, Tauri, Qt) | UI tests, crash-free, store review |
+| **D** | Library / SDK | npm / PyPI / NuGet package, Rust crate, smart contract | Public API, exhaustive tests, docs |
+| **E** | Infrastructure / CLI / DevOps | CLI, IaC, CI pipeline, MCP server | Composability, static binaries |
+| **F** | Game / XR | Unity / Unreal / Godot game, WebGL, VR / AR | Frame budget, playtesting |
+| **G** | Extensions & Integrations | Browser extension, VS Code / JetBrains plugin, Office add-in, Slack / Teams bot | Host APIs, permissions, store review |
+| **H** | Research, Data & ML | Notebooks, data warehouse / dbt, model training and serving | Reproducibility, data quality, evals |
+| **I** | IoT / Embedded | Firmware, embedded Linux, connected device fleets | No hotfix once flashed, hard limits |
+| **J** | Systems Software | Kernel, driver, database engine, compiler, HPC | Memory safety, fuzzing, performance gates |
+| **K** | Business Platform | Salesforce, Dynamics / Power Platform, SAP, ServiceNow | Vendor limits, release cadence, metadata deploys |
+
+Nothing fits → **Other**: the agent takes the closest purpose, writes three options of its own
+and marks them *(not from the reference tables)* in the constitution.
+
+### Level 1.5: Project traits
+
+One multi-select question that adjusts the defaults (the stricter option wins):
+
+- **Runs where** — multi-tenant SaaS, single-tenant, on-prem, local-first / offline, edge
+- **Regulated domain** — none, personal data, finance, health, safety-critical, EU AI Act high-risk
+  (safety-critical → Testing, Review, Docs and Error handling A; regulated or personal data →
+  suggests `compliance: baseline`)
+- **Lifecycle** — prototype, product, modernization (characterisation tests first, strangler-fig
+  target, an ADR for the cut-over)
 
 Each option comes with pros/cons so the user understands tradeoffs before
 committing.
@@ -285,46 +299,56 @@ is a multi-project monorepo (e.g., one repo containing a web app + mobile
 app + shared library). If yes, Levels 1-3 run independently per sub-project,
 and the constitution gets a `Projects` table at the top.
 
-### Level 2: Architecture (25 options across 9 purposes)
+### Level 2: Architecture (44 options across 11 purposes)
 
 Based on the chosen purpose, the agent presents architecture options.
-Each option has a description, pros, cons, and best-use guidance.
+Each option has a description, pros, cons, and best-use guidance; ⭐ marks the 2026 default
+for the purpose (refreshed 2026-11).
 
-**A — User-Facing App**: Monolith (A1), Modular Monolith (A2),
-Microservices (A3), Serverless/FaaS (A4)
+**A — User-Facing App**: Monolith (A1), Modular Monolith ⭐ (A2),
+Microservices (A3), Serverless — functions or scale-to-zero containers (A4),
+AI-native / Agentic — model gateway, retrieval, tools, evals (A5),
+Event-driven / Workers / Streams (A6)
 
-**B — Content Site**: Static Site Generator (B1), Headless CMS + SSG (B2),
+**B — Content Site**: Static / Islands ⭐ (B1), Headless CMS + SSG (B2),
 Lightweight Backend (B3)
 
-**C — Native / Desktop Client**: Native Platform (C1), Cross-Platform
-Framework (C2), Web Wrapper (C3)
+**C — Native / Desktop Client**: Native Platform (C1), Cross-Platform ⭐
+(C2), Web Wrapper (C3)
 
-**D — Library / SDK**: Zero-Dependency (D1), Curated (D2),
-Umbrella/Multi-Package (D3)
+**D — Library / SDK**: Zero-Dependency (D1), Curated ⭐ (D2),
+Umbrella/Multi-Package (D3), Smart Contracts (D4)
 
-**E — Infra / CLI / DevOps**: Single Binary (E1), Multi-Binary (E2),
-Plugin-Based (E3), Script/Pipeline/Declarative (E4)
+**E — Infra / CLI / DevOps**: Single Binary ⭐ (E1), Multi-Binary (E2),
+Plugin-Based (E3), Declarative / Pipeline (E4), MCP Server / Agent Tool (E5)
 
-**F — Game**: Engine-Centric (F1), Custom Engine (F2), Web/Retro (F3)
+**F — Game / XR**: Engine-Centric ⭐ (F1), Custom Engine (F2), Web (F3), XR / Spatial (F4)
 
-**G — Browser Extension**: Simple/Single-Browser (G1), Full MV3 (G2),
-Cross-Browser (G3)
+**G — Extensions & Integrations**: Simple browser (G1), Full MV3 (G2),
+Cross-Browser ⭐ (G3), Host Plugin / Bot — IDE, Office, Figma, Slack / Teams, SaaS marketplace (G4)
 
-**H — Research / Notebook**: Single Notebook (H1), Notebook + Scripts (H2),
-Package + Notebooks (H3)
+**H — Research, Data & ML**: Single Notebook (H1), Notebook + Modules ⭐ (H2),
+Package + Notebooks (H3), Data Platform (H4), ML Training & Serving (H5)
 
 **I — IoT / Embedded**: Bare-Metal / RTOS (I1), Linux-Based Embedded (I2),
-MicroPython / Arduino (I3)
+High-Level Firmware — Arduino / MicroPython (I3), Connected Fleet — devices + cloud + OTA (I4)
+
+**J — Systems Software**: Kernel / Driver (J1), Engine / Runtime / Compiler ⭐ (J2),
+Scientific / HPC (J3)
+
+**K — Business Platform**: Configuration / Low-code ⭐ (K1), Platform Code (K2),
+Marketplace App (K3)
 
 ### Level 3: Technology Choices
 
 With purpose + architecture settled, the agent brackets recommended
 languages and frameworks. Examples:
 
-- **A1 (Monolith web app)**: Django, Rails, Laravel, Next.js, ASP.NET
-- **C1 (Native client)**: Swift (iOS/macOS), Kotlin (Android), C# (WinUI), C++ (Qt)
+- **A1 (Monolith web app)**: Rails 8, Laravel, Django, ASP.NET Core, Next.js / SvelteKit
+- **A5 (AI-native app)**: Python (FastAPI + LangGraph / Pydantic AI), TypeScript (Vercel AI SDK), C# (Microsoft.Extensions.AI) + an eval harness
+- **C1 (Native client)**: Swift (SwiftUI), Kotlin (Compose), C# (WinUI 3), C++ (Qt 6)
 - **F1 (Engine-based game)**: C# + Unity, C++ + Unreal, GDScript + Godot, Rust + Bevy
-- **I1 (Bare-metal IoT)**: C, C++ (constrained), Rust no-std, Zig
+- **I1 (Bare-metal IoT)**: C (Zephyr, FreeRTOS, ESP-IDF), Rust (Embassy), C++ (constrained)
 
 Each bracket presents 3-4 options with framework suggestions, pros, and
 cons. The user picks one.
@@ -547,15 +571,23 @@ purpose-weighted defaults. Three input modes:
   Agent maps description to purpose, architecture, tech, and principle
   defaults. User reviews the inference table.
 - **Wizard** (guided, new project): Walks the user through all 3 levels:
-  Level 1 (9 purposes A–I), Level 2 (2–4 architecture options per purpose),
+  Level 1 (11 purposes A–K), Level 1.5 (project traits), Level 2 (3–6 architecture options per purpose),
   Level 3 (language/framework bracketing).
 
 Supports multi-project monorepos: after Level 1, asks whether the repo
 contains multiple sub-projects. If yes, Levels 1-3 run independently per
 sub-project, and the constitution gets a `Projects` table.
 
+**Project documents**: the last step asks the project's **scale** — *small* (no ADR / design /
+epic directories) or *platform* (`adr_dir`, `design_dir`, `epics_dir` written to
+`specs/git-conventions.md`) — and creates or patches `AGENTS.md`. Platform then runs
+**`spec-kit design map`**: brownfield recovers `system.md`, proposes the module split, writes
+a design doc per approved module, indexes existing ADRs and proposes `Accepted (retroactive)`
+ADRs for decisions the code already embodies; greenfield writes the target `system.md`, the
+planned module map and ADRs 0001–0003 from the decision tree. Every step waits for approval.
+
 See the [Constitution Decision Tree](#constitution-decision-tree) section
-for a full walkthrough with all 9 purposes, 25 architecture options, and
+for a full walkthrough with all 11 purposes, 44 architecture options, and
 purpose-to-principle default mappings.
 
 ### Phase 1: Specify
@@ -638,7 +670,7 @@ say "bugfix [feature]" to start the fix loop.
 **Bug format**: Each bug gets an ID (BUG-NNN), severity
 (critical/major/minor/trivial), area, steps to reproduce, expected vs actual
 result, Requires Clarification flag, and status
-(open/in-progress/resolved/verified).
+(open/in-progress/claimed/verified/superseded — `claimed` is the agent's word, `verified` needs a user, CI or other-agent oracle; see Evidence of Done).
 
 **Plan Ref enforcement**: During bugfix, each open bug must have a Plan Ref
 linking to the plan section that addresses it — no Plan Ref, no implementation.
@@ -647,23 +679,70 @@ linking to the plan section that addresses it — no Plan Ref, no implementation
 supersedes specific original (buggy) tasks, append `[T###-fix]` to trace the
 relationship (e.g., `BF-001 [BUGFIX] [T051-fix] Fix validate_cluster_shape`).
 
-### Phase 5.5: Review — Post-Implement Gate (Optional)
-**Skill**: `spec-kit-review` · **Trigger**: "Review [feature]" after
-code + tests
+### Phase 5.5: Final Review — Merge Gate (Mandatory)
+**Skill**: `spec-kit-review` · **Trigger**: "Final review [feature]", "Is [feature] ready
+to merge", or "Review [feature]" once every task is done and no bug is open ·
+**Artifact**: `review-final.md` (one round per run)
 
-Same skill as pre-implement, auto-detects mode. Three modes total:
-- **Pre-implement** (Phase 3.5): Cross-artifact consistency check before coding
-- **Post-implement** (Phase 5.5): Code quality, spec fulfillment, test quality
-- **Closed-review**: Read-only audit of a closed feature — does not update history.md.
-  If issues found, offers to add refactoring tasks and reopen the feature.
+Same skill as pre-implement, auto-detects mode (pre-implement / final / closed-review).
+The final review answers four questions and ends with a verdict:
 
-Post-implement checks:
-- Spec fulfillment (does code satisfy every FR-###?)
-- Constitution alignment
-- Architecture compliance with plan
-- Code quality (error handling, duplication, security)
-- Test quality
-- Documentation completeness
+1. **Does the code do what the spec says?** Every FR, success criterion, acceptance
+   scenario and edge case → the code (`path:line`) and the test that proves it; contracts
+   and data model vs code; unplanned changes.
+2. **Does it obey the constitution and project rules?** Every applicable MUST in
+   `specs/constitution.md`, every rule in `specs/merge-checklist.md` and AGENTS.md — each
+   verdicted with evidence. This is where the constitution is enforced.
+3. **Is it good code?** Architecture, error handling, security, data integrity,
+   concurrency, duplication, complexity, API surface, current best practice; test quality.
+4. **Can it merge?** `diff_scan` (conflicts, secrets, forbidden files, focused tests,
+   TODOs) and the checklist commands (build, full tests, lint, format), outputs saved under
+   `evidence/final-*`.
+
+**Verdict**: `READY`, `READY-WITH-FOLLOWUPS` (only MEDIUM findings) or `NOT READY` (any
+CRITICAL/HIGH or failing blocking check → logged as bugs → bugfix loop → new round). The
+round records the reviewed commit; a later code commit makes it stale. The close refuses
+without a fresh READY round. Run it by the other agent, or a fresh-context sub-agent.
+
+### Acceptance criteria and the acceptance loop
+Every scenario in spec.md is an acceptance criterion with an id and a verify level:
+`**AC-003** (FR-002) Given … When … Then … — Verify: unit`. The level is the lowest that can
+prove it — unit, integration, component, e2e (with a reason), command, probe, manual (with a
+reason). The plan maps each AC to a harness and test file; its tests are ordinary `[TEST]`
+tasks tagged `[AC-003]`, written RED in the implement phase that delivers the behaviour and
+then **frozen** (checksummed) so the loop cannot pass by weakening them.
+
+After the last implement phase, `accept [feature]` runs automatically: the full unit,
+integration and component suites (this is also the regression run), this feature's own e2e
+specs only if the stack is up (otherwise deferred to the final review — the full e2e suite
+never runs in the loop), and any command/probe checks. Results (JUnit XML / TRX) map back to
+the ACs by the id in the test name. Failures become bugs, the bugfix chain runs, and the
+acceptance round repeats — until every automated AC passes, or it stops and asks after 5
+rounds, no progress, a needed spec or frozen-test change, or a run that cannot execute.
+
+### Rigor (lean / standard / strict) — per project
+The constitution's first question (Level 0) asks who the project is for: hobby / indie →
+**lean**, team → **standard**, platform → standard or **strict**, regulated / safety-critical →
+**strict** (forced). It is written as `rigor:` in `specs/git-conventions.md` (absent = standard);
+a spec may raise it with `**Rigor**:`, lowering needs a ruling. `ceremony = rigor × size`:
+
+- **lean** — trunk (commits on `main`, `blocked_branches: none`), only 4 principles asked, TDD
+  follows Principle 1 (C → test-after, no RED files), default size S, spec + plan + tasks in one
+  commit and the implementation in one, no acceptance loop, a one-paragraph self-check as the
+  final review, change record optional, no history.md.
+- **standard** — the workflow described in this guide.
+- **strict** — RED/GREEN on every phase, acceptance loop + CI, the final review by another agent,
+  a named human approver for L, change record required, history.md always.
+
+The floor never moves: a spec exists, something not written by the agent shows it works (test
+output, CI, or your quoted words), the diff scan runs, and the close patches AGENTS.md. TDD is
+no longer asked per feature — the tasks phase reads it from the constitution. See
+`references/rigor.md`.
+
+### Size tiers (S / M / L)
+Specify always asks for the tier, with its recommendation first. S trims the templates and
+chains specify → plan → tasks into one commit; M is the default; L adds the full artifact
+set and a required pre-implement review. See `references/sizing.md`.
 
 ### Phase 6: Close/Summarize — Mandatory
 **Skill**: `spec-kit-summarize` · **Trigger**: "Close [feature]" or
@@ -680,6 +759,15 @@ Two modes:
   intentional deviations (with per-change user approval).
 - **Lightweight close** ("close [feature]"): Quick health score, artifact
   state table, key decisions.
+
+Both modes, after the final-review gate:
+- **ADRs**: decisions harvested from decisions.md, plan rounds, research and reviews are
+  tested against the ADR bar (cross-feature, hard to reverse, real alternatives, changes an
+  existing ADR); passing ones become new / superseding / amending project ADRs (approved one
+  by one) and the ADR index is updated. The close's *Architecture Decisions* table lists
+  every candidate.
+- **AGENTS.md**: statements the change made wrong (commands, layout, boundaries, versions,
+  conventions, debt, ADR list) get targeted patches, approved one by one.
 
 **Output rule**: Length proportional to actual git changes, not spec size.
 A one-line bugfix gets one line; a multi-file feature gets thorough
@@ -788,6 +876,88 @@ before proceeding.
 health score is compared against the original. Any requirements that
 changed status (e.g., from ✅ Resolved to ❌ Not Done) are flagged for
 user resolution.
+
+## MCP Server (Optional)
+
+An MCP server acts as a **derive-and-enforce** service. It keeps no state: on every call it
+derives the current phase from the files under `specs/<feature>/` and validates against them.
+It exists for the things an agent does badly — allocating the next id, linting `bugs.md` and
+`tasks.md`, stamping real times, guarding that `history.md` was written before the commit, freezing acceptance tests — and
+to hand back a ten-line **phase card** that survives context compaction.
+
+### How it works
+
+```
+Hermes / Claude Code ─→ mcp_spec_kit_* tools ─→ MCP Server (server.py)
+                                                        ↓ reads only
+                                              specs/<feature>/*.md
+```
+
+The server uses the official [mcp Python SDK](https://pypi.org/project/mcp/) (`FastMCP`) for stdio transport. Nothing is persisted; a legacy `specs/.spec-kit/state.json` is ignored and should be deleted and gitignored.
+
+### Tools provided
+
+| Tool | Purpose |
+|------|---------|
+| `mcp_spec_kit_init_feature` | Create `specs/<feature>/` with a history.md header |
+| `mcp_spec_kit_get_feature_state` | Derived phase, artifacts, task/bug counts, phase card |
+| `mcp_spec_kit_get_next_actions` | Available actions + the phase card |
+| `mcp_spec_kit_advance_phase` | Validate a transition against the files (writes nothing) |
+| `mcp_spec_kit_project_status` | Constitution present?, feature count, legacy state file? |
+| `mcp_spec_kit_project_set_constitution` | Confirm `specs/constitution.md` exists |
+| `mcp_spec_kit_list_features` | Every feature's derived state |
+| `mcp_spec_kit_reopen_feature` | Check the feature is closed; return the branch hint |
+| `mcp_spec_kit_close_feature` | Validate the close (no open bugs, verified bugs have Verified-by) |
+| `mcp_spec_kit_update_artifact` | Confirm an artifact is on disk |
+| `mcp_spec_kit_auto_detect_features` | Derived state of all features |
+| `mcp_spec_kit_next_id` | Next BUG / T / BF id |
+| `mcp_spec_kit_lint_artifacts` | Schema lint of bugs.md, tasks.md, history.md, ACs, rounds |
+| `mcp_spec_kit_history_guard` | Fresh history entry since the last commit? |
+| `mcp_spec_kit_append_history` | Append a fixed-field, time-stamped, word-capped history entry |
+| `mcp_spec_kit_archive_feature` | Cold the folder: history, verified bugs, earlier rounds → `*-archive.md`; refresh context.md |
+| `mcp_spec_kit_timestamp` | Real UTC time |
+
+### Benefits
+
+- **No drift**: nothing to keep in sync — the files are the state
+- **Enforced transitions**: `advance_phase` and `close_feature` reject moves the files do not support
+- **Mechanical hygiene**: ids, statuses, timestamps, probes, RED files and the history guard are checked by code, not by prose
+- **Backward compatible**: without the server every skill falls back to filesystem detection, `date -u` and manual id counting
+
+Bug tracking is deliberately NOT in the MCP server: `bugs.md` is the single
+source of truth and is written directly by `spec-kit-test`. The server only reads it.
+
+### Installation
+
+The install script (`./scripts/install.sh`) automatically:
+
+1. Copies `server.py` to `~/.hermes/skills/spec-kit/mcp-server/`
+2. Creates a Python venv at `~/.hermes-venv` if the `mcp` SDK is not found
+3. Runs `hermes mcp add spec-kit` to register the server in `config.yaml`
+4. Prints instructions to activate with `/reload-mcp`
+
+If `hermes mcp add` times out during connection verification, add the config
+manually to `~/.hermes/config.yaml`:
+
+```yaml
+mcp_servers:
+  spec-kit:
+    command: "/home/krzys/.hermes-venv/bin/python3"
+    args: ["/home/krzys/.hermes/skills/spec-kit/mcp-server/server.py"]
+```
+
+Then run `/reload-mcp` in Hermes and verify with `/toolsets` — the
+`mcp_spec_kit_*` tools should appear.
+
+### Skill integration
+
+When the MCP server is available (its tools exist in the Hermes toolset), skills
+defer to it for state queries and transitions. When unavailable, the same skills
+use the filesystem-based detection and routing from the table above.
+
+`spec-kit-test` logs bugs and stops in both modes; with MCP it allocates the
+BUG id with `mcp_spec_kit_next_id` and lints before committing. The user
+starts the fix loop with "bugfix [feature]".
 
 ---
 
@@ -918,14 +1088,19 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | bugs-template.md | Phase 5 | Bug tracking |
 | implementation-summary-template.md | Phase 6 | Full summary |
 | close-template.md | Phase 6 | Lightweight close |
-| comparison-template.md | Compare | Variant comparison matrix |
-| history-template.md | Phase transitions | Append-only log entries |
+| history-template.md | Phase transitions (size L by default — `history: large`) | Append-only log entries |
+| epic-template.md · epic-plan-template.md · epic-features-template.md · epic-review-template.md · epics-index-template.md | `spec-kit epic` (opt-in `epics_dir`) | E1 specify (goal, EACs, rules) · E2 plan (target architecture, ED decisions, sequencing) · E3 breakdown (ordered features) · E3.5 / E6 reviews with devil's advocate |
+| design-doc-template.md | `spec-kit design` (opt-in `design_dir`) | Living module design: components, flow, seams, invariants, security, debt |
+| change-record-template.md | Close | The auditor's one page: ticket, risk tier, security impact, approvals, verification, rollback, timeline |
 | git-conventions-template.md | Project setup | Git branch/commit conventions |
 | gitignore-template.md | Project setup | .gitignore starter |
 | AGENTS-template.md | Project setup | Starting AGENTS.md |
-| soul-template.md | Hermes setup | Neutral persona |
 
 ### Artifact Detection (Phase Detection)
+
+When the MCP server is configured, `mcp_spec_kit_get_feature_state` derives the
+current phase, artifact status and bug counts from the files below — the same
+table, applied by code. Use it (or the table) before any write.
 
 | Artifacts present | Current phase |
 |-------------------|---------------|
@@ -942,7 +1117,7 @@ Installed to `~/.hermes/skills/spec-kit/templates/`:
 | `implementation-summary.md` exists | Summarized — complete |
 | `variants/` directory with ≥2 entries | Exploring |
 | `comparison.md` exists | Compared — decision made |
-| `history.md` last entry | Current phase (fastest lookup) |
+| `history.md` last entry | Current phase (fastest lookup) — or the MCP phase card |
 
 ### Quick CLI Reference
 
@@ -964,9 +1139,14 @@ hermes -w -s spec-kit-workflow
 
 # Check installed skills
 hermes skills list | grep spec-kit
+
+# MCP server commands (if installed)
+/reload-mcp                    # Activate MCP server after install/config change
+hermes mcp status              # Check MCP server status
+mcp_spec_kit_list_features     # List all registered features via MCP
 ```
 
-|### Workflow Diagram
+### Workflow Diagram
 
 ```text
                                             ┌── Explore ───────────────┐
@@ -974,8 +1154,8 @@ hermes skills list | grep spec-kit
                                             │   delegate_task × N      │
                                             ▼                          │
 Constitution (3-level tree) → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
-  │ Level 1: 9 purposes (A-I)                                                        │
-  │ Level 2: 25 architecture options                                                 │
+  │ Level 1: 11 purposes (A-K) + traits                                              │
+  │ Level 2: 44 architecture options                                                 │
   │ Level 3: Tech bracketing                                              ┌──────────┘
   │ After: 12 principles with purpose-mapped defaults                     ▼
   └─────────────────────→                    ┌─→ [Clarify] → Plan → Tasks → Implement → Test → Close (mandatory)

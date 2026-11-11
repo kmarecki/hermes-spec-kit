@@ -1,7 +1,7 @@
 ---
 name: spec-kit-test
-description: Load when the user says 'spec-kit test [feature]', 'speckit test [feature]', 'spec-kit bug [feature]', 'speckit bug [feature]', 'spec-kit log [feature]', 'speckit log [feature]', "test [feature]", "run tests for [feature]", "log bugs for [feature]", or "bug [feature]" — Phase 5 bug tracking and manual testing.
-version: 1.1.0
+description: Load when the user says 'spec-kit accept [feature]', 'speckit accept [feature]', "accept [feature]", "run acceptance for [feature]", 'spec-kit test [feature]', 'speckit test [feature]', 'spec-kit bug [feature]', 'speckit bug [feature]', 'spec-kit log [feature]', 'speckit log [feature]', "test [feature]", "run tests for [feature]", "log bugs for [feature]", or "bug [feature]" — Phase 5 bug tracking and manual testing.
+version: 1.2.0
 author: Hermes Agent
 license: MIT
 category: software-development
@@ -13,86 +13,29 @@ metadata:
 
 # spec-kit-test
 
-**Task Persona**: Adopt the mindset of a QA engineer. Your primary deliverable is a detailed, structured bugs.md. Every bug must have: clear steps to reproduce, expected vs actual behavior, severity, environment context. Vague bug reports are worse than no report — they waste time. Be systematic, be thorough, be precise.
+**Phase**: 5 · **Persona**: QA engineer — steps, observed vs expected, severity; a vague bug report is worse than none.
+**Purpose**: log user-reported bugs in `bugs.md`; mark bugs verified **only with an oracle**; **accept mode** runs the acceptance criteria and logs every failure for the loop. Log, then STOP — never fix here.
+**Full procedure**: `spec-kit/references/skills/spec-kit-test.md` · status rules `spec-kit/references/evidence.md`.
 
-**Phase**: 5 (Testing)
+## Before writing
+- `spec-kit/references/preflight.md`. **ERROR** if `spec.md` is missing. `bugs.md` missing → `spec-kit/templates/bugs-template.md`; exists → summary, **ASK**: add, bugfix, or verify?
 
-**Purpose**: Log user-discovered bugs in `bugs.md` and orchestrate the bugfix loop. User reports bugs in natural language; agent formats them into structured entries.
+## Log a bug
+1. Id `mcp_spec_kit_next_id(kind="BUG")`. Entry `### BUG-NNN: summary` — Severity, Area, Description (observed vs expected), Steps, Actual, Expected, Requires Clarification, Plan Ref (empty), **Status: open**.
+2. Insert before the `---` preceding `## Summary`; add the Summary row; fix counts. Confirm each: "Logged BUG-NNN — correct?"
+3. 0 open → suggest `final review [feature]`; > 0 → `bugfix [feature]`. **Never fix directly.**
 
-**When NOT to use**: During implementation or before the full regression run (Step 7 of implement) completes.
+## Accept mode — one round (`spec-kit/references/acceptance.md` §5–6)
+Process level P1 (phase card): one recorded run (or the user's quoted "works", kept for the final self-check) — no loop, no round limit.
+1. Commands = `specs/merge-checklist.md` `acceptance_*` (missing → add from `spec-kit/templates/merge-checklist-template.md`, **ASK** once). COMMIT = HEAD.
+2. Run `acceptance_fast` (full unit + integration + component = the regression) — or cite `ci:<id>` when only specs/docs changed since it (§5); `acceptance_e2e` with this feature's e2e specs only if `acceptance_e2e_ready` exits 0 (else deferred); command/probe ACs → `evidence/acceptance-r<N>-AC-###.txt` (`RESULT: PASS|FAIL`). Console → `evidence/acceptance-r<N>.txt`.
+3. `mcp_spec_kit_acceptance_status(feature, results, round=N)` → append `## Round N` to `acceptance.md` (`spec-kit/templates/acceptance-template.md`): Result, Commit, counts, matrix.
+4. FAIL → per failing/missing AC and regression: existing bug → back to `open` ("failed again in round N"); else new bug (Area `AC-###`, Steps = Given/When, Actual = first failing assertion, Source: round N) — no per-bug confirmation in the loop.
+5. **Stop and ASK** when: round = `acceptance_max_rounds` (5); same ACs + same assertion two rounds running; the fix needs a spec or frozen-test change; STOPPED; the run cannot execute twice. Regression outside the feature's files → isolation re-run, **ASK**, `flaky=` (§6). Else hand to `bugfix [feature]` (then `accept` again). PASS → final review.
+6. Commit `spec(phase-5): [feature] acceptance round N (RESULT a/b)` — acceptance.md, evidence, bugs.md.
 
-**Routing**: Load this skill when the user says "test [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
+## Verify a bug
+Only with an oracle: the user's quoted words, a green `ci:<id>` on that commit, or `review:<other-agent>`. Else refuse: "claimed, not verified." Set `Status: verified` + `Verified-by:`.
 
-## Pre-flight
-Load and follow `spec-kit/references/preflight.md` before any action in this skill.
-
-## Git Commit Guidelines
-See `spec-kit/references/auto-commit.md`. Commits use `--no-verify`. Branch guard handled by preflight.md.
-
-
-**Artifacts**: `specs/[feature]/bugs.md`
-
-## Safety Block: Log Before Fix
-
-**Rule**: ALWAYS write the bug to bugs.md first. HALT after logging. Do NOT fix, plan, or read source code. Only proceed when user says "bugfix [feature]".
-
-## Execution
-
-### Validate prerequisites
-```
-IF specs/[feature]/spec.md NOT EXISTS: ERROR "Run spec-kit-specify first"
-```
-
-### Check for existing bugs.md
-```
-IF bugs.md EXISTS:
-  LOAD, report current summary
-  ASK: "Add new bugs, continue bugfixing, or mark bugs as verified?"
-ELSE:
-  COPY spec-kit/templates/bugs-template.md → bugs.md
-```
-
-### User reports bugs — agent formats them
-User describes in natural language. Agent structures into:
-```
-### BUG-NNN: [Summary]
-- **Severity**: critical/major/minor/trivial
-- **Description**: observed vs expected
-- **Steps to Reproduce**: [numbered steps]
-- **Requires Clarification**: [ ] no / [ ] yes
-- **Status**: open
-```
-
-**Smart insert**: INSERT the new bug entry BEFORE the `---` separator that precedes `## Summary`. Then UPDATE the Summary table: add a row for the new bug, increment counts, and correct the open/in-progress/resolved/verified tallies. Never place new bugs after `---` or inside `## Summary`.
-
-After each bug, confirm: "Logged BUG-NNN: [summary] — correct?"
-
-### Bug status validation
-When user finishes logging → count open bugs. If 0, feature complete. If >0, suggest "bugfix [feature]".
-
-### Mark bugs as verified
-```
-FIND bug → SET Status: verified → REPORT
-```
-
-### Completion check
-```
-IF all bugs verified:
-  REPORT: "All bugs verified — run 'close [feature]' to complete."
-```
-
-### Append to history.md and Commit
-
-Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
-- Phase: Phase 5 — Testing
-- Artifact: `specs/[feature]/bugs.md`
-- Scope: `specs/[feature]/bugs.md`
-- Message: `"spec(phase-5): [feature] bug log"`
-
-## Common Pitfalls
-1. **Fixing before logging**: Procedural lock. Log first, fix later. Violating this causes workflow corruption.
-2. **Setting bugs to resolved/verified preemptively**: Only the user marks a bug verified — after they test the fix.
-3. **Skipping confirmation**: After each bug entry, confirm with user. They may have additional details.
-
-## Prerequisite Enforcement
-**ERROR** if: spec.md does not exist.
+## Done when
+- [ ] Bugs confirmed with the user (loop-logged bugs carry their round); ids ascending; Summary counts match (`mcp_spec_kit_lint_artifacts` → 0 errors). history.md entry, then commit (`spec-kit/references/preflight.md` procedure): `spec(phase-5): [feature] bug log`.

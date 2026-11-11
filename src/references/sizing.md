@@ -1,0 +1,48 @@
+# Size Tiers (S / M / L)
+
+Size × rigor = the process level (`rigor.md`). Ceremony follows the size of the change — the
+**workflow** and the **length of the artifacts** shrink; the evidence does not. `spec-kit-specify` **always asks** the tier, recommendation first
+("(Recommended)") with its signals. The answer is a ruling in
+decisions.md and `**Size**: S | M | L — <reason>` in spec.md. Unattended → the recommendation is
+recorded as an assumption. A spec without the line is treated as M.
+
+**S is for a single bugfix or a small enhancement** — one layer, a handful of files, nothing
+new at the boundary. Anything with a new seam, a second layer or a security / tenant / data
+dimension is at least M.
+
+## Choosing — the highest tier any row triggers
+
+| Signal | S | M | L |
+|--------|---|---|---|
+| Layers touched (UI, API, DB, infra, jobs) | 1 | 2 | 3+ |
+| Files expected to change | ≤ ~6 | ~7–25 | > 25 |
+| New external seam (schema, HTTP contract, message, file format) | none | one, additive | several, or breaking |
+| New dependency / new pattern | no | one, conventional | yes |
+| Security, auth, money, deletion, tenant boundary, personal data | no | — | yes |
+| Expected tasks | ≤ ~8 | ~9–25 | > 25 |
+| Unknowns to research | none | a few | many / spike |
+
+Typo, rename, config value → no spec-kit.
+
+## What each tier produces — the workflow and the artifacts get leaner, the evidence stays
+
+| Step | S | M | L |
+|------|---|---|---|
+| spec.md | **a few lines**: one sentence of intent, 1–3 FRs, **1–2 ACs**, the Security & Privacy line ("None — because …" allowed), 1 SC | full template | full template |
+| Clarify | only if a marker remains | if markers remain | recommended |
+| plan.md | **half a page**: Summary, Current Design, seams, the AC → test row(s), Rounds | full; research / data-model / contracts / quickstart only when needed | full + all that apply |
+| Specify → Plan → Tasks | **auto-chained**, ONE commit `spec(phase-1-3)` | one commit per phase | one commit per phase |
+| tasks.md | flat list, ≤ ~8 tasks | phases | phases |
+| Pre-implement review, evidence files, devil's advocate, re-runs, final review, close, history | **by process level** (`rigor.md`: size × rigor → P1 / P2 / P3) | | |
+| **Acceptance round** (`acceptance.md`) | **every tier**: automated ACs run and recorded; manual ACs carry the user's quoted confirmation (P1: one run) | same | same |
+| ADR / AGENTS.md step | yes ("none met the bar" is fine) | yes | yes |
+
+**What never shrinks with size** (the process level may: `rigor.md`): the GREEN evidence, the probe per seam, the acceptance round that
+documents every AC passing (automated where a harness exists, `manual` with the user's quoted
+words where none can), the oracle rule (your word is not evidence), the final-review gate,
+the change record. A small change still has to prove it works.
+
+## Changing the tier
+
+A bigger change than the tier (new seam, third layer): stop, ask; on approval edit `**Size**:`,
+add the missing artifacts additively, record the ruling. No downgrade once higher-tier artifacts exist.

@@ -1,114 +1,59 @@
 ---
 name: spec-kit
-description: Spec-Driven Development (SDD) workflow for Hermes Agent. Load via 'spec-kit' or 'speckit' prefix commands or natural language phrases (e.g. 'spec-kit bugfix [feature]', 'speckit bugfix [feature]', 'spec-kit implement [feature]', 'speckit implement [feature]', "bugfix [feature]", "implement [feature]", "plan [feature]").
+description: Spec-Driven Development (SDD) for Hermes Agent — the overview, conventions and project layout. Load for "how does spec-kit work", "spec-kit conventions", "spec-kit help". Phase commands ('spec-kit specify|plan|tasks|implement|test|review|close [feature]', 'speckit …', "implement [feature]", "plan [feature]") load their own phase skill; routing commands (bugfix, quickfix, reopen, accept, status) load spec-kit-workflow.
+version: 2.1.0
+author: Hermes Agent
+license: MIT
 category: software-development
+metadata:
+  hermes:
+    tags: [spec-kit, sdd, overview]
+    related_skills: [spec-kit-workflow, spec-kit-constitution, spec-kit-specify, spec-kit-clarify, spec-kit-plan, spec-kit-tasks, spec-kit-review, spec-kit-implement, spec-kit-test, spec-kit-summarize, spec-kit-refresh]
 ---
 
 # Spec-Driven Development (SDD)
 
-Spec-driven development for Hermes Agent. Specifications drive code, not the other way around.
-
-**For phase routing (bugfix, implement, plan, reopen, close), load `spec-kit-workflow` instead.** The workflow skill handles all routing decisions based on artifact state and trigger phrases. This skill only documents the overall workflow, conventions, and project structure.
-
-## ⚠️ Critical Approach Rule: Read First, Build Second
-
-**ALWAYS read the source repository design documents before implementing a skill or template that mirrors an existing system.** This prevents creating simplified approximations instead of faithful implementations.
-
-When a user asks to implement parity with an existing system:
-1. Read the actual source design docs, templates, and workflows FIRST
-2. Analyze all commands, templates, and their exact structures
-3. Only then build or update templates
-
-## Core Workflow
+Specifications drive code. Every phase is a one-screen skill with a full procedure under
+`spec-kit/references/skills/<skill>.md`, loaded on demand. Routing (bugfix, quickfix, reopen,
+accept, status) is `spec-kit-workflow`; phase skills trigger themselves.
 
 ```text
-Constitution → Specify → Clarify (opt) → Plan → Tasks → Implement → Test
-                                                                      │
-                                                                      └── bugfix loop ──┐
-                                                                ┌──────────────────────┘
-                                                                ▼
-                                                          [Clarify] → Plan → Tasks → [Review] → Implement → Test → Close (mandatory)
+Constitution → Specify (size S/M/L, ACs, Security & Privacy) → [Clarify] → Plan → Tasks → [Review 3.5]
+  → Implement (RED/GREEN + probes; test-after when Principle 1 = C) → Accept loop → Test → Final review 5.5 (+ devil's advocate)
+  → Close (close.md + change-record.md, ADRs, AGENTS.md)            bugfix loop: Plan → Tasks → Implement → Accept
 ```
 
-| Mode | Trigger | Behavior |
-|------|---------|----------|
-| **specify** (default) | "Create a spec for [feature]" | Full forward phase sequence, manual transitions |
-| **bugfix** | "bugfix [feature]" | Auto-chains Plan→Tasks→Implement, prompts to close |
-| **reopen** | "Reopen [feature]" | Creates bugfix branch from closed feature, preserves original close |
+| Phase | Skill | Produces |
+|-------|-------|----------|
+| 0 | `spec-kit-constitution` | `specs/constitution.md` (brownfield / free-text / wizard) |
+| 1 · 1.5 | `spec-kit-specify` · `spec-kit-clarify` | `spec.md` (FR, AC, Security & Privacy, size), `clarify.md`, `decisions.md` |
+| 2 · 3 | `spec-kit-plan` · `spec-kit-tasks` | `plan.md` (+ research / data-model / contracts / quickstart by tier), `tasks.md` |
+| 3.5 · 5.5 | `spec-kit-review` | pre-implement report (M lite, L full) · `review-final.md` — the merge gate |
+| 4 | `spec-kit-implement` | code, `evidence/` (RED/GREEN/probes), one commit per phase |
+| 5 | `spec-kit-test` | `bugs.md`; accept mode → `acceptance.md` rounds |
+| 6 | `spec-kit-summarize` | `close.md`, **`change-record.md`**, ADRs, AGENTS.md patches |
+| — | `spec-kit-refresh` | spec/plan reconciled with the code mid-stream |
+| — | `spec-kit-epic` · `spec-kit-design` | optional, only when `epics_dir` / `design_dir` are set: an epic (many features, one goal — **time**) run as E1 specify → E2 plan → E3 breakdown into features → E3.5 review + devil's advocate → build → E6 close · a living module design doc (how a part works now — **space**); feature closes patch both |
 
-**Constitution is mandatory** in every mode. **Phase 6 (Close) is mandatory** to mark a feature complete.
+**Mandatory**: constitution once per project; size asked at specify; the final review; the close.
 
-## Phase Reference
+## Conventions
+- **Record** (`spec-kit/references/history-tracking.md`): by process level — P3 (`rigor.md`) keeps `history.md` (one fixed-field entry per phase, appended before every commit via `mcp_spec_kit_append_history` / `spec-kit/scripts/spec-kit-log.sh`, guarded by `mcp_spec_kit_history_guard`); P1 / P2 do not, and the close builds the timeline from git (`spec-kit/scripts/spec-kit-history.sh`). `**History**: on|off` in a spec overrides. Either way `change-record.md` carries the timeline that survives the squash-merge. Messages: `spec-kit/references/commits.md`.
+- **Evidence** (`spec-kit/references/evidence.md`): the agent's word is never evidence; probes per seam, GREEN files every level (RED by process level; test-after: GREEN), `ci:`/`user`/`review:<other-agent>` verify.
+- **Rigor** (`spec-kit/references/rigor.md`): project-wide lean / standard / strict from the constitution's Level 0 — lean: trunk, test-after when Principle 1 = C, self-check review; strict: RED/GREEN always, other-agent + human approval. `ceremony = rigor × size` → process level P1 / P2 / P3 (evidence files, devil's advocate, commits, review length, history, archive); the floor never moves.
+- **Size** (`spec-kit/references/sizing.md`): S / M / L — leaner workflow and shorter artifacts (S = a bugfix or small enhancement: a few-line spec, 1–2 ACs, one commit for spec+plan+tasks); evidence and the acceptance round never shrink.
+- **Additive only**: no spec artifact is ever rewritten (`spec-kit/references/preflight.md`).
+- **Decisions**: questions the user would want to decide → `decisions.md` (ruling quotes them; assumption otherwise); design choices stay in plan.md.
+- Templates: `spec-kit/templates/<name>-template.md`. Git: `specs/git-conventions.md` (`feat/NNN-name`, `bug/NNN-name`, reopen suffix `-bugfixing`).
+- AGENTS.md carries: available skills, active spec dirs, build commands, project conventions — not routing tables or phase mechanics.
+- **Scale**: a small project keeps no `design_dir` / `epics_dir` / `adr_dir` and the close has nothing to patch; a platform sets all three. Document roles: spec = one feature · epic = what and in what order · design doc = how it works now · ADR = why · AGENTS.md = where things are and what never to do.
 
-Load `spec-kit-workflow` for the full routing table, prerequisite checks, phase detection, and guardrails.
+## MCP server (optional, stateless)
+`spec-kit-mcp-server/server.py` derives the phase from `specs/<feature>/` on every call and validates: `mcp_spec_kit_get_next_actions` (phase card — re-read after compaction), `mcp_spec_kit_advance_phase` (only from the owning phase skill), `mcp_spec_kit_next_id`, `mcp_spec_kit_lint_artifacts` (before every commit), `mcp_spec_kit_acceptance_freeze` / `mcp_spec_kit_acceptance_status`, `mcp_spec_kit_diff_scan`, `mcp_spec_kit_close_feature`, `mcp_spec_kit_archive_feature`, `mcp_spec_kit_timestamp`, `mcp_spec_kit_append_history`, `mcp_spec_kit_history_guard`, `mcp_spec_kit_init_feature`, `mcp_spec_kit_get_feature_state`, `mcp_spec_kit_list_features`, `mcp_spec_kit_project_status`, `mcp_spec_kit_project_set_constitution`, `mcp_spec_kit_reopen_feature`, `mcp_spec_kit_update_artifact`, `mcp_spec_kit_auto_detect_features`. Bugs are file-based (`bugs.md`) — no bug tools. Setup: `spec-kit-mcp-server/README.md`; enable by adding to `~/.hermes/config.yaml`:
 
-| Phase | Skill | Purpose |
-|-------|-------|---------|
-| 0 — Constitution | `spec-kit-constitution` | Project principles (brownfield/free-text/wizard) |
-| 1 — Specify | `spec-kit-specify` | Functional requirements, user scenarios |
-| 1.5 — Clarify | `spec-kit-clarify` | Resolve ambiguities in the spec |
-| 2 — Plan | `spec-kit-plan` | Architecture, data flow, module boundaries |
-| 3 — Tasks | `spec-kit-tasks` | Executable task breakdown with TDD flag |
-| 3.5 — Review | `spec-kit-review` | Pre/post implement quality check (optional) |
-| 4 — Implement | `spec-kit-implement` | Phase-level TDD execution |
-| 5 — Test | `spec-kit-test` | Bug tracking and manual testing |
-| 6 — Close | `spec-kit-summarize` | Spec health score, gap analysis, deviation patching |
-| — Refresh | `spec-kit-refresh` | Standalone artifact reconciliation |
-
-## AGENTS.md Conventions
-
-**Put in AGENTS.md**: which skills are available, active spec directories, project-specific context (tech stack, build commands), project conventions.
-
-**Keep out of AGENTS.md**: trigger phrase lists, routing tables, workflow mechanics, phase diagrams, bugfix loop details. Routing belongs in skill files.
-
-## Workflow Tracking
-
-Every spec directory maintains `specs/NNN-name/history.md` — an append-only process log. Each phase skill appends one entry on completion:
-
-```markdown
-## [ISO_TIMESTAMP] | Phase N → [Name] → Complete
-- **Skill**: [skill-name]
-- **Artifacts**: [files created/updated]
-- **Notes**: [key decisions, user input, deviations]
+```yaml
+mcp_servers:
+  spec-kit:
+    command: <python-with-mcp-sdk>
+    args: ["~/.hermes/skills/spec-kit/mcp-server/server.py"]
 ```
-
-**Phase detection shortcut**: Read `history.md` last `→ Complete` line instead of scanning directory artifacts. See `references/history-tracking.md` for the full design.
-
-## Template Path Convention
-
-All skills reference templates as `spec-kit/templates/<name>-template.md` — NOT bare paths like `templates/<name>.md`. This ensures correct resolution regardless of Hermes profile or working directory.
-
-## Project Structure
-
-```text
-src/
-  skills/                # Skill source files (12 .md + umbrella directory)
-    spec-kit/SKILL.md    # This file
-  templates/             # Template source files (13 templates, all *-template.md)
-  references/            # Reference files (5: preflight, auto-commit, etc.)
-scripts/
-  install.sh             # Copies src/* to ~/.hermes/skills/
-```
-
-Skills and templates are maintained in the project directory and installed via `./scripts/install.sh`. Do not edit files in `~/.hermes/skills/` directly.
-
-## Git Branch Naming
-
-Default patterns (customise via `specs/git-conventions.md`):
-- Forward development: `{feature_prefix}/NNN-short-name` (default: `feat/`)
-- Bugfix: `{bugfix_prefix}/NNN-short-name` (default: `bug/`)
-- Reopen: `{original_prefix}/NNN-short-name{reopen_suffix}` (default: `-bugfixing`)
-
-During the bugfix loop, all work happens on the existing feature branch. Post-close branch management (squash/merge) follows the project's git workflow.
-
-## Available Templates
-
-Installed via `./scripts/install.sh` — see `src/templates/` for the full list: spec, plan, tasks, constitution, bugs, data-model, research, history, implementation-summary, close, AGENTS, git-conventions, gitignore (13 total).
-
-## References
-
-- `references/preflight.md` — Pre-action self-check (branch, mode, workflow, history)
-- `references/auto-commit.md` — Standard commit patterns across all phases
-- `references/history-tracking.md` — Process history design rationale
-- `references/constitution-principles.md` — 12 principles × 3 options with pros/cons
-- `references/constitution-tables.md` — Wizard tables and brownfield detection data

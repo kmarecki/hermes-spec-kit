@@ -13,88 +13,28 @@ metadata:
 
 # spec-kit-specify
 
-**Task Persona**: Adopt the mindset of a curious detail-gatherer. Your job is to extract every relevant detail from the user before writing anything. Ask clarifying questions. Probe edge cases. Challenge vague statements. A complete spec answers WHAT and WHY — the HOW comes later. Every requirement must be testable.
+**Phase**: 1 · **Persona**: curious detail-gatherer — WHAT and WHY, every requirement testable; the HOW comes later.
+**Purpose**: create `specs/[feature]/spec.md` — user scenarios, FR-###, AC-### (Given/When/Then + verify level), Security & Privacy, success criteria, edge cases. No technology choices.
+**Full procedure**: `spec-kit/references/skills/spec-kit-specify.md` · **Not for**: typo / rename / config value.
 
-**Phase**: 1
+## Before writing
+- `spec-kit/references/preflight.md`. **BLOCK** if `spec.md` exists → `bugfix` / `reopen`.
+- Do not load `spec-kit-workflow` (routing only).
 
-**Purpose**: Create or update a feature specification at `specs/[feature]/spec.md`. Defines **WHAT** users need and **WHY** — the feature, refactoring, or enhancement in full detail. Captures functional requirements (FR-###), user scenarios, success criteria, entities, and edge cases. 
+## Steps
+1. Parse the description into actors, actions, data, constraints; empty → error.
+2. Name: 2–4 words action-noun + next number → `specs/NNN-short-name/` (MCP: `mcp_spec_kit_init_feature`).
+3. Copy `spec-kit/templates/spec-template.md`. Fill stories (P1/P2/P3), FR-### (testable, technology-agnostic), **Security & Privacy table** (every row answered — "None — because …" is valid), SC-###, entities, edge cases.
+4. **ACs** (`spec-kit/references/acceptance.md`): every scenario and important edge case → `**AC-###** (FR-…) Given/When/Then — Verify: <lowest level that proves it>`; every FR named by ≥ 1 AC; ids `mcp_spec_kit_next_id(kind="AC")`.
+5. ≤ 3 `[NEEDS CLARIFICATION]` markers — more → ask first. Priority: scope > security > UX > technical.
+6. `epics_dir` kept (`specs/git-conventions.md`) → `**Epic**: <name>` in the header (ASK which, or none); the epic must be reviewed (`[epics_dir]/<name>/review.md` GO) — its `features.md` row gets this spec dir and size now (add the row if missing, with approval).
+7. **Size — ASK** (`spec-kit/references/sizing.md`; rigor lean → default S, ask only when a signal says M+, `spec-kit/references/rigor.md`): score the signals, offer S/M/L with the recommendation first "(Recommended)" + reason + what each produces. Write `**Size**: X — <reason>`; ruling in `decisions.md` (unattended → assumption).
+8. Size S (single bugfix / small enhancement): the spec is a few lines — 1–3 FRs, 1–2 ACs, one Security & Privacy line. After the user confirms it: auto-chain `spec-kit-plan` → `spec-kit-tasks`, ONE commit `spec(phase-1-3): [feature] spec, plan, tasks`.
 
-**No implementation details, no code, no technology choices.** The spec describes what the system should do, not how to build it. Architecture decisions, data models, and technical approach belong in the Plan phase.
+## Done when
+- [ ] spec.md written; FR/AC ids ascending; Security & Privacy filled; `**Size**:` set from the user's answer.
+- [ ] MCP: `mcp_spec_kit_update_artifact(spec.md)` · `mcp_spec_kit_advance_phase(from_phase=1)` · `mcp_spec_kit_lint_artifacts` → 0 errors.
+- [ ] history.md entry, then commit (preflight commit procedure): `spec(phase-1): [feature] spec`.
 
-**When NOT to use**: For tiny unambiguous changes (typo fix, rename), skip straight to implementation.
-
-**Routing**: Load this skill when the user says "create a spec for [feature]" or "specify [feature]". If loaded directly, load spec-kit-workflow first to check prerequisites.
-
-
-**Artifacts**:
-- `specs/[feature]/spec.md`
-
-## Pre-flight
-Load and follow `spec-kit/references/preflight.md` before any action in this skill.
-
-## Execution
-
-### Validate prerequisites
-```
-IF specs/constitution.md NOT EXISTS:
-  BLOCK: "No constitution found. Project setup is mandatory — run spec-kit-constitution first."
-  HALT
-```
-
-### Parse user description
-- Extract: actors, actions, data, constraints
-- If empty: ERROR "No feature description provided"
-
-### Generate short name
-2-4 word action-noun format: "user-auth", "oauth2-api-integration"
-
-### Create feature directory
-```
-DETERMINE prefix (next sequential number: 001, 002...)
-CREATE: specs/[###]-[short-name]/
-```
-
-### Generate spec.md
-Copy `spec-kit/templates/spec-template.md` → `specs/[feature]/spec.md`
-
-Populate with:
-- **User Scenarios**: P1/P2/P3 with Given/When/Then
-- **Functional Requirements**: FR-001, FR-002... — testable, technology-agnostic
-- **Success Criteria**: Measurable outcomes
-- **Key Entities**: Domain objects only (no implementation)
-- **Edge Cases**: Error conditions, boundaries
-
-### Apply constraints
-- MAX 3 `[NEEDS CLARIFICATION]` markers
-- NO implementation details (tech stack, frameworks, APIs)
-- Prioritize: scope > security > UX > technical
-
-
-### Note on commits
-Each skill commits its own artifacts immediately. See `spec-kit/references/auto-commit.md`.
-
-### Append to history.md and Commit
-
-Follow the **Shared Commit Procedure** in `spec-kit/references/preflight.md`:
-- Phase: Phase 1 — Specify
-- Artifact: `specs/[feature]/spec.md`
-- Scope: `specs/[feature]/spec.md`
-- Message: `"spec(phase-1): [feature] spec"`
-
-### Done When
-- [ ] spec.md created with FR-### requirements numbered sequentially
-- [ ] No existing content deleted; modifications minimal (additive-safe)
-- [ ] history.md entry appended
-- [ ] Committed
-
-## Completion
-- Feature directory path, spec file path
-- Propose: `spec-kit-clarify` or `spec-kit-plan`
-
-## Common Pitfalls
-1. **Implementation details in spec**: Focus on user value. Move architecture decisions to the Plan phase.
-2. **Too many `[NEEDS CLARIFICATION]` markers**: Keep to 3 max. If more, the feature scope is too vague — clarify with the user first.
-3. **Over-specifying**: For simple features, a single paragraph + 2-3 FRs is enough. Don't force full template on trivial changes.
-
-## Prerequisite Enforcement
-**BLOCKED** if: constitution.md does not exist.
+## Next
+Markers remain → `spec-kit-clarify`; else `spec-kit-plan`. S: plan + tasks chained → `spec-kit-implement`. L: plan, then the pre-implement review is required.

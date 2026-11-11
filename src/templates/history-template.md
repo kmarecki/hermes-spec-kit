@@ -1,7 +1,12 @@
-[Process History: FEATURE NAME]
+# Process History: [FEATURE NAME]
 
-## [TIMESTAMP] | Phase N → [Phase Name] → Complete
-- **Skill**: [skill-name]
-- **Artifacts**: [list of created/updated files]
-- **Commit**: [commit hash from `git rev-parse HEAD`, or "N/A" if no git commit]
-- **Notes**: [key decisions, deviations, user input summary]
+> Append-only record. One entry per phase / bugfix / regression / close. Format and rules:
+> `spec-kit/references/history-tracking.md`. Append with `mcp_spec_kit_append_history` or
+> `spec-kit/scripts/spec-kit-log.sh` — never type the timestamp yourself.
+
+## [UTC ISO timestamp] | Phase 1 | spec-kit-specify | [agent]
+- Artifacts: spec.md
+- Tests: none
+- Evidence: none
+- Commit: spec(phase-1): [feature] spec
+- Note: [≤ 25 words]
