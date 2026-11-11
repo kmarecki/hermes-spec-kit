@@ -44,6 +44,11 @@ Architecture, data flow, module boundaries, error handling, project structure de
 Details in `research.md` (decision → rationale → alternatives), `data-model.md`, `contracts/`,
 `quickstart.md` — only those the feature needs.
 
+## Threat Model *(only `compliance: baseline` + `**Security**: high`)*
+
+| Boundary crossing | STRIDE | Threat | Mitigation (task / `path`) | Residual (accepted by — decisions.md) |
+|---|---|---|---|---|
+
 ## Complexity Tracking *(only if the Constitution Check has violations)*
 
 | Violation | Why needed | Simpler alternative rejected because |

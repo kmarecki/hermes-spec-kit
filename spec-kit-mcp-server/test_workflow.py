@@ -162,8 +162,10 @@ async def test_close_and_reopen(s, root):
     d = await call(s, "close_feature", {"feature": "f3"})
     check("close with AWAITING-OWNER → error naming the owner", "AWAITING-OWNER" in d.get("error", ""))
     write(root, "f3", "review-final.md", FINAL.format(n=1, v="NOT READY", c="abc1234") + FINAL.format(n=2, v="READY", c="abc1234"))
+    write(root, "f3", "spec.md", "# Spec\n\n**Size**: L — x\n")
     d = await call(s, "close_feature", {"feature": "f3"})
-    check("close without change-record.md → error", "change-record.md" in d.get("error", ""))
+    check("close without change-record.md at P3 → error", "change-record.md" in d.get("error", ""), json.dumps(d))
+    write(root, "f3", "spec.md")
     write(root, "f3", "change-record.md", "# Change Record\n")
     write(root, "f3", "bugs.md", BUGS.format(s1="verified", e1="output:x", v1="", s2="claimed"))
     d = await call(s, "close_feature", {"feature": "f3"})
@@ -761,6 +763,42 @@ async def test_context_and_archive(s, root):
     check("closed → context.md says COLD", "**COLD**" in ctx.read_text(), ctx.read_text()[:200])
 
 
+async def test_compliance(s, root):
+    print("\n═══ compliance: baseline (security level, [SEC], threat model, approver) ═══")
+    write(root, "c1", "spec.md", "# Spec\n\n**Size**: S — x\n")
+    write(root, "c1", "history.md", "# Process History\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"})
+    check("compliance absent → no security warning", not any("Security" in f["msg"] for f in d["findings"]))
+    (Path(root) / "specs/git-conventions.md").write_text("compliance: baseline\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"})
+    check("baseline + no **Security** line → warning", any("'**Security**:" in f["msg"] for f in d["findings"]) and d["success"])
+    write(root, "c1", "spec.md", "# Spec\n\n**Size**: S — x\n**Security**: none — docs only\n")
+    write(root, "c1", "tasks.md", "# Tasks\n- [ ] T001 docs — README.md\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"})
+    check("  Security none → no [SEC] expected", not any("Security" in f["msg"] or "[SEC]" in f["msg"] for f in d["findings"]))
+    write(root, "c1", "spec.md", "# Spec\n\n**Size**: S — x\n**Security**: high — tenant boundary\n")
+    write(root, "c1", "plan.md", "# Plan\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("Security high → threat model + [SEC] warnings", "Threat Model" in msgs and "[SEC]" in msgs)
+    write(root, "c1", "plan.md", "# Plan\n\n## Threat Model\n")
+    write(root, "c1", "tasks.md", "# Tasks\n- [x] T001 [SEC] negative test — src/a.py\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("  threat model + [SEC] present → quiet", "Threat Model" not in msgs and "[SEC]" not in msgs, msgs)
+    write(root, "c1", "tasks.md", "# Tasks\n- [x] T001 [TEST] [SEC] negative test — tests/a.py\n")
+    d = await call(s, "lint_artifacts", {"feature": "c1"}); msgs = " | ".join(f["msg"] for f in d["findings"])
+    check("  [TEST] [SEC] done without RED file → warning even at P1 (compliance.md §6)", "T001 [TEST]" in msgs and "[SEC] at every level" in msgs, msgs)
+    write(root, "c1", "tasks.md", "# Tasks\n- [x] T001 [SEC] negative test — src/a.py\n")
+
+    git(root, "init", "-q", "-b", "main"); git(root, "add", "-A"); git(root, "commit", "-q", "-m", "base")
+    head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=root, capture_output=True, text=True).stdout.strip()
+    write(root, "c1", "review-final.md", FINAL.format(n=1, v="READY", c=head) + "**Approved-by**: [<human> — quoted]\n")
+    d = await call(s, "advance_phase", {"feature": "c1", "from_phase": 5})
+    check("Security high, READY, placeholder approver → close blocked", "Approved-by" in d.get("error", ""), json.dumps(d))
+    write(root, "c1", "review-final.md", FINAL.format(n=1, v="READY", c=head) + '**Approved-by**: K. Owner — "approved"\n')
+    d = await call(s, "advance_phase", {"feature": "c1", "from_phase": 5})
+    check("  named human approver → gate opens", d.get("success"), json.dumps(d))
+
+
 async def run_in_tmp(test_fn):
     root = tempfile.mkdtemp(prefix="spec-kit-test-")
     try:
@@ -780,7 +818,7 @@ async def main():
     print("═" * 55)
     for t in [test_derivation, test_advance_validation, test_close_and_reopen, test_update_artifact,
               test_project_tools, test_next_id_and_lint, test_timestamp_and_history_guard,
-              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates, test_cross_agent, test_process_levels, test_context_and_archive]:
+              test_size_final_review_adr_and_diff_scan, test_epics_and_design, test_acceptance, test_rigor, test_rigor_gates, test_cross_agent, test_process_levels, test_context_and_archive, test_compliance]:
         try:
             await run_in_tmp(t)
         except Exception as e:

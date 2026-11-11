@@ -66,6 +66,21 @@ chased unrelated, load-induced timeouts.
   (Claude Code keeps its own). Git history now shows which agent wrote each commit, and `Implemented-by` also reads
   the trailers of the feature's `feat:`/`fix:` commits (`references/commits.md`, `evidence.md`).
 
+### Added — security compliance profile `baseline` (opt-in)
+
+- Security level scales evidence **on top of** the process level (`compliance.md` §6): medium → `[TEST] [SEC]` keeps
+  its RED file at every level, abuse cases in the final §4; high → the security pass of the devil's advocate by a
+  different agent even at P1 / P2, approver (may be the PR's), change record required (close gate). Budget 260 KB.
+- `compliance: baseline` in git-conventions turns on: a per-feature `**Security**: none | low |
+  medium | high` level asked at specify (`none` skips the assessment); four extended Security &
+  Privacy rows for medium/high; a `## Threat Model` (STRIDE) for high; `[SEC]` task marker with
+  negative tests per authorization row; merge-checklist security scans (S1–S5); a named human
+  `**Approved-by**:` for high, enforced by the close gate; `Security` field on bugs; security row in
+  the change record. New reference `references/compliance.md`; lint warnings for the missing pieces.
+- `docs/compliance.md` — ISO/IEC 27001:2022 Annex A, NIS2 Art. 21(2) and NIST SSDF mapping; the
+  `formal` profile documented as a future upgrade (not implemented).
+- Skill-set size budget raised from 250 KB to 256 KB (rigor + compliance together are ~255 KB).
+
 ### Added — project rigor (lean / standard / strict) and Hermes ↔ Claude Code parity checks
 
 - **`references/rigor.md`**: `ceremony = rigor (project) × size (feature)`. The constitution asks

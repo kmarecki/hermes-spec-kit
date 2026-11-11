@@ -34,6 +34,17 @@ acceptance_e2e:           [ONE feature's specs only — {specs} is replaced, e.g
 acceptance_e2e_results:   [e.g. test-results/e2e-*.xml]
 acceptance_e2e_ready:     [exit 0 when the stack is up, e.g. curl -sf http://localhost:4200 >/dev/null]
 acceptance_max_rounds:    5
+
+# Security scans — only with `compliance: baseline` (spec-kit/references/compliance.md); every final review.
+# Exit 0 = pass, non-zero = finding. Check the tool really exits non-zero: `dotnet list package
+# --vulnerable` exits 0 even with findings — filter its JSON. Legacy findings → an allowlist with
+# reason + expiry (.trivyignore exp:, osv-scanner.toml ignoreUntil, checkov --baseline), or diff mode.
+security_deps:     [.NET: dotnet list package --vulnerable --include-transitive --format json | jq -e '[.. | .vulnerabilities? // empty | .[] | select(.severity=="High" or .severity=="Critical")] | length == 0'
+                    npm: npm audit --omit=dev --audit-level=high · Python: pip-audit --strict · Go: govulncheck ./...
+                    any: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .]
+security_secrets:  [gitleaks git --redact --log-opts="<base>..HEAD"   (gitleaks < 8.19: gitleaks detect)]
+security_sast:     [semgrep scan --error --config p/default --baseline-commit "$(git merge-base <base> HEAD)" | CodeQL / SonarQube new-code gate]
+security_iac:      [checkov -d infra --compact --quiet | trivy config --severity HIGH,CRITICAL --exit-code 1 infra — delete when the project has no IaC]
 ```
 
 ## Generic gate (default — edit, drop or add rows)
@@ -55,6 +66,16 @@ acceptance_max_rounds:    5
 | G13 | User-facing docs, runbooks, AGENTS.md touched where the change makes them wrong | no |
 | G14 | Commit messages follow `specs/git-conventions.md` | no |
 | G15 | PR description drafted (what / why / how verified / risks / rollback) | no |
+
+## Security gate (only with `compliance: baseline`)
+
+| # | Item | Blocking |
+|---|------|----------|
+| S1 | No known high/critical vulnerability in new or changed dependencies (`security_deps`) | yes |
+| S2 | Secret scan clean on the branch range (`security_secrets`) | yes |
+| S3 | Static analysis: no new high finding (`security_sast`) | yes |
+| S4 | IaC scan: no new high finding (`security_iac`) | yes |
+| S5 | Security high: threat model rows mitigated or accepted; `**Approved-by**` a named human | yes |
 
 ## Project rules (edit — these are this project's non-negotiables)
 

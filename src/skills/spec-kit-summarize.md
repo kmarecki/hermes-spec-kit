@@ -21,7 +21,7 @@ metadata:
 ## Before writing
 - `spec-kit/references/preflight.md`. Requires `tasks.md`. Load spec, plan, tasks, bugs, constitution, data-model, contracts, research, clarify, `history.md`, `evidence/`, `decisions.md`, `acceptance.md`, `review-final.md`.
 - **Gate**: latest `review-final.md` round READY / READY-WITH-FOLLOWUPS and not stale — else **BLOCK** ("run the final review"; AWAITING-OWNER → get the owner's answer, Round N+1). Open bug → **BLOCK**.
-- Process level (`spec-kit/references/rigor.md`, phase card): P1 → short `close.md`, change record optional, an ADR only when one is obvious, AGENTS.md patch always · P1 / P2 → health = the server's `health` (phase card), no gap prose · P3 → full gap table, change record required.
+- Process level (`spec-kit/references/rigor.md`, phase card): P1 → short `close.md`, change record optional, an ADR only when one is obvious, AGENTS.md patch always · P1 / P2 → health = the server's `health` (phase card), no gap prose · P3 or Security high → full gap table / change record required.
 - Mode: "close" / "summarize" as said; else S/M → close, L → summarize. Reopen (close doc exists) → APPEND a dated section.
 
 ## Steps
@@ -34,7 +34,7 @@ metadata:
 6. **AGENTS.md** (+ CLAUDE.md / rule files): statements the diff or new ADRs make wrong (commands, layout, boundaries, versions, conventions, debt, ADR list) → targeted patches; **WAIT**; never rewrite.
 6a. **Runbooks + changelog** (only what git-conventions keeps: `runbooks_dir`, `changelog`): runbook statements the diff makes wrong (commands, settings, endpoints, procedures) → targeted patches, **WAIT**; one *Unreleased* line in the changelog (Keep a Changelog: Added / Changed / Fixed, one sentence, the ticket) — no narrative.
 6b. **Design doc + epic row** (only when `specs/git-conventions.md` sets `design_dir` / `epics_dir`; else skip in one line): for each module in plan.md `**Modules**:` → the `[design_dir]/[module].md` sections the diff makes wrong (components, flow, seams, invariants, debt) → targeted patches + a change-log line; **WAIT** per patch; a module without a doc → say so, never create one here (`spec-kit-design`). `**Epic**:` in spec.md → set this feature's row in `[epics_dir]/[epic]/features.md` (status closed, PR, health, ADRs) and the epic's row in `[epics_dir]/README.md` when `epics_index: on`; last row → suggest `close epic`.
-7. **`change-record.md`** from `spec-kit/templates/change-record-template.md`: ticket, branch/PR, size, what/why, Security & Privacy impact (from spec), data/config changes, implemented-by, reviewed-by (agent + human PR reviewer or `pending`), verification, decisions, deployment approval (or `pending`), rollback, follow-ups; **Timeline** = one row per `history.md` entry (history on) or `spec-kit/scripts/spec-kit-history.sh [feature]` run now on the branch (history off — before the squash).
+7. **`change-record.md`** from `spec-kit/templates/change-record-template.md`: ticket, branch/PR, size, what/why, Security & Privacy impact (from spec), data/config changes, implemented-by, reviewed-by (agent + human PR reviewer or `pending`), verification, decisions, deployment approval (or `pending`), rollback, follow-ups, `compliance: baseline` → security level, scan results, approver; **Timeline** = one row per `history.md` entry (history on) or `spec-kit/scripts/spec-kit-history.sh [feature]` run now on the branch (history off — before the squash).
 8. ❌ Not Done gaps → new `open` bugs. Write `close.md` from `spec-kit/templates/close-template.md`.
 
 ## Done when
